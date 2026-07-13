@@ -10,14 +10,15 @@
 1. Go to [supabase.com](https://supabase.com) and sign up with GitHub or Email.
 2. Click **New Project**.
    - Name: `metrocardz`
-   - Database Password: Create a strong password (write it down!)
+   - Database Password: Create a strong password (write it down!) ikEWbgykvtyBiZoV
    - Region: **Southeast Asia (Singapore)** (closest to India, lowest latency)
    - Plan: **Free**
 3. Click **Create new project**. Wait 2 minutes for it to provision.
-4. Go to **Project Settings** (gear icon) → **Database** → **Connection String** → select **URI**.
-5. Copy the connection string. It will look like this:
+4. Go to **Project Settings** (gear icon) → **Database** → **Connection String** → select the **Pooler** tab.
+5. Make sure the Mode is set to **Session** (do not use Transaction mode, as it can cause issues with Alembic).
+6. Copy the connection URI. It will look like this:
    ```
-   postgresql://postgres:[YOUR-PASSWORD]@db.xxxxxxxxxx.supabase.co:5432/postgres
+   postgresql://postgres.[your-project-id]:[YOUR-PASSWORD]@aws-0-[region].pooler.supabase.com:6543/postgres
    ```
    Replace `[YOUR-PASSWORD]` with the password you created in step 2.
    *This is your `DATABASE_URL`.*
@@ -36,7 +37,7 @@
 3. Click **Create**.
 4. Scroll down to the **Endpoint** section and copy the **Redis URL** (starts with `redis://` or `rediss://`).
    *This is your `REDIS_URL`.*
-
+redis-cli --tls -u redis://default:gQAAAAAAAcjKAAIgcDExZmFhYTM3ZGEwNmU0MWU4YTQ2OWQwNDY4ZjdjMWJlNw@powerful-aardvark-116938.upstash.io:6379
 ---
 
 ## 3. Deploy the Backend (Render.com) — 7 Mins
