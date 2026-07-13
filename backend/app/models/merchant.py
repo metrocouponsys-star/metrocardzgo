@@ -1,6 +1,6 @@
 """Merchant and MerchantUser ORM models."""
 import uuid
-from sqlalchemy import Column, String, Text, DateTime, ForeignKey, func, Enum
+from sqlalchemy import Column, String, Text, DateTime, ForeignKey, func, Enum, Numeric
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 
