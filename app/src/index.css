@@ -1,0 +1,357 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f9f9ff;
+    color: #151c27;
+    min-height: 100dvh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  input, button, select, textarea {
+    font-family: inherit;
+  }
+}
+
+@layer components {
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    display: inline-block;
+    line-height: 1;
+    text-transform: none;
+    letter-spacing: normal;
+    word-wrap: normal;
+    white-space: nowrap;
+    direction: ltr;
+    user-select: none;
+  }
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(197, 197, 211, 0.3);
+  }
+
+  .tonal-shadow {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04), 0 12px 24px rgba(0, 0, 0, 0.02);
+  }
+
+  .active-scale {
+    transition: transform 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .active-scale:active {
+    transform: scale(0.95);
+  }
+
+  .prime-gradient {
+    background: linear-gradient(135deg, #00236f 0%, #1e3a8a 100%);
+  }
+
+  .scanner-line {
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #6cf8bb, transparent);
+    animation: scan 2s infinite linear;
+    position: absolute;
+    width: 100%;
+    left: 0;
+  }
+
+  @keyframes scan {
+    0% { top: 0%; }
+    100% { top: 100%; }
+  }
+
+  /* Hide scrollbars */
+  .hide-scrollbar::-webkit-scrollbar { display: none; }
+  .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* Custom scrollbar */
+  .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: #f0f3ff; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: #c5c5d3; border-radius: 4px; }
+
+  /* Input focus styles */
+  .input-field {
+    width: 100%;
+    height: 3rem;
+    background-color: #f9f9ff;
+    border: 1px solid #c5c5d3;
+    border-radius: 0.5rem;
+    padding: 0 1rem;
+    color: #151c27;
+    font-size: 16px;
+    line-height: 24px;
+    outline: none;
+    transition: all 0.2s;
+  }
+  .input-field::placeholder { color: #757682; }
+  .input-field:focus { border-color: #00236f; box-shadow: 0 0 0 2px rgba(0, 35, 111, 0.12); }
+
+  /* Card base */
+  .card {
+    background-color: #ffffff;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04), 0 12px 24px rgba(0, 0, 0, 0.02);
+    border: 1px solid rgba(197, 197, 211, 0.3);
+  }
+
+  /* Primary button */
+  .btn-primary {
+    background-color: #00236f;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    transition: background-color 0.15s;
+    cursor: pointer;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .btn-primary:hover { background-color: #1e3a8a; }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-primary:active { transform: scale(0.95); }
+
+  /* Secondary button */
+  .btn-secondary {
+    background-color: #e7eefe;
+    color: #151c27;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    transition: background-color 0.15s;
+    cursor: pointer;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .btn-secondary:hover { background-color: #dce2f3; }
+  .btn-secondary:active { transform: scale(0.95); }
+
+  /* Outline button */
+  .btn-outline {
+    border: 1px solid #00236f;
+    color: #00236f;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    transition: background-color 0.15s;
+    cursor: pointer;
+    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .btn-outline:hover { background-color: rgba(0, 35, 111, 0.05); }
+  .btn-outline:active { transform: scale(0.95); }
+
+  /* Stat card */
+  .stat-card {
+    background-color: #ffffff;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04), 0 12px 24px rgba(0, 0, 0, 0.02);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    border: 1px solid #e7eefe;
+  }
+
+  /* Page layout helpers */
+  .page-header { margin-bottom: 2rem; }
+
+  .page-title {
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 32px;
+    letter-spacing: -0.01em;
+    color: #151c27;
+    margin-bottom: 0.25rem;
+  }
+
+  @media (min-width: 768px) {
+    .page-title {
+      font-size: 32px;
+      line-height: 40px;
+      letter-spacing: -0.02em;
+    }
+  }
+
+  .page-subtitle {
+    font-size: 16px;
+    line-height: 24px;
+    color: #444651;
+  }
+
+  .form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: #151c27;
+    margin-bottom: 4px;
+  }
+
+  .section-title {
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 28px;
+    color: #151c27;
+  }
+}
+
+/* Transitions for page routing */
+.page-enter {
+  opacity: 0;
+  transform: translateY(8px);
+}
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms ease, transform 300ms ease;
+}
+
+/* ─── Landing Page Utilities ─────────────────────────────────────────────── */
+
+/* Font families */
+.font-poppins { font-family: 'Poppins', sans-serif; }
+.font-mono-card { font-family: 'Space Mono', monospace; }
+
+/* Gold gradient text */
+.text-gold-gradient {
+  background: linear-gradient(135deg, #FDF6E3 0%, #D4AF37 40%, #7A5C12 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Gold gradient background */
+.bg-gold-gradient {
+  background: linear-gradient(135deg, #D4AF37 0%, #C9A227 50%, #7A5C12 100%);
+}
+
+/* Shimmer effect on gold elements */
+.shimmer-gold {
+  background: linear-gradient(90deg, #C9A227 0%, #FDF6E3 40%, #D4AF37 60%, #C9A227 100%);
+  background-size: 200% auto;
+  animation: shimmer 2.5s linear infinite;
+}
+
+/* Dark glass panel */
+.glass-dark {
+  background: rgba(17, 17, 17, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(201, 162, 39, 0.15);
+}
+
+/* Gold glass panel */
+.glass-gold {
+  background: rgba(201, 162, 39, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(201, 162, 39, 0.25);
+}
+
+/* CSS 3D card perspective container */
+.perspective-card {
+  perspective: 1000px;
+  perspective-origin: center center;
+}
+
+/* Physical card base (reusable) */
+.membership-card {
+  border-radius: 12px;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.membership-card-front,
+.membership-card-back {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.membership-card-back {
+  transform: rotateY(180deg);
+}
+.membership-card.flipped {
+  transform: rotateY(180deg);
+}
+
+/* Gold border glow */
+.gold-border-glow {
+  border: 1px solid rgba(201, 162, 39, 0.5);
+  box-shadow: 0 0 20px rgba(201, 162, 39, 0.15), inset 0 0 20px rgba(201, 162, 39, 0.05);
+}
+.gold-border-glow:hover {
+  border-color: rgba(201, 162, 39, 0.8);
+  box-shadow: 0 0 35px rgba(201, 162, 39, 0.3), inset 0 0 20px rgba(201, 162, 39, 0.08);
+}
+
+/* Landing section dark bg */
+.landing-dark {
+  background-color: #0D0D0D;
+  color: #FAF7EF;
+}
+
+/* Foil card texture overlay */
+.foil-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.04) 50%, transparent 100%);
+  pointer-events: none;
+}
+
+/* Tilt hover cards */
+.tilt-card {
+  transform-style: preserve-3d;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+}
+
+/* Section reveal animation */
+.reveal-up {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal-up.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Landing page override — prevent admin app bg bleeding */
+.landing-root {
+  background: #0D0D0D;
+  color: #FAF7EF;
+  font-family: 'Inter', sans-serif;
+}
+

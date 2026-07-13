@@ -1,0 +1,50 @@
+# Metro Cardz — FastAPI Backend Dependencies
+# Install: pip install -r requirements.txt
+# Compatible with Python 3.11+ (recommended) and Python 3.14
+
+# ── Web Framework ─────────────────────────────────────────────────────────────
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+gunicorn==23.0.0
+
+# ── Database ──────────────────────────────────────────────────────────────────
+sqlalchemy==2.0.36
+alembic==1.14.0
+# psycopg[binary] supports Python 3.14+ (psycopg2-binary does not)
+psycopg[binary]==3.2.3
+
+# ── Redis / Task Queue ────────────────────────────────────────────────────────
+redis==5.2.1
+celery==5.4.0
+
+# ── Auth / Security ───────────────────────────────────────────────────────────
+python-jose[cryptography]==3.3.0   # JWT tokens
+passlib[bcrypt]==1.7.4             # Password hashing (bcrypt)
+python-multipart==0.0.17           # Form data (file uploads, OAuth)
+
+# ── Data Validation ───────────────────────────────────────────────────────────
+pydantic==2.10.3
+pydantic-settings==2.7.0           # Settings loaded from env vars
+email-validator==2.2.0
+
+# ── HTTP Client ───────────────────────────────────────────────────────────────
+httpx==0.28.1                      # For SMS/WhatsApp API calls
+
+# ── Image Processing ──────────────────────────────────────────────────────────
+Pillow==10.4.0                     # Server-side logo compression (WebP output)
+supabase==2.10.0                   # Supabase Storage SDK for logo bucket uploads
+
+# ── Utilities ─────────────────────────────────────────────────────────────────
+python-dateutil==2.9.0.post0
+pytz==2024.1                       # Timezone support for Celery worker reminder sweep
+
+# ── PDF Generation ────────────────────────────────────────────────────────────
+reportlab==4.2.5
+
+# ── Error Tracking ────────────────────────────────────────────────────────────
+sentry-sdk[fastapi]==2.19.2
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+pytest==8.3.4
+pytest-asyncio==0.24.0
+httpx==0.28.1                      # Used as ASGI test client (also listed above)

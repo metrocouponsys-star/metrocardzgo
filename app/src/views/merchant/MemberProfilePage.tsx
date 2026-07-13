@@ -1,0 +1,426 @@
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../../store/authStore';
+import { useToastStore } from '../../store/toastStore';
+import { StatusBadge, MembershipBadge } from '../../components/ui/StatusBadge';
+import { OfferCard } from '../../components/ui/OfferCard';
+import { ConfirmModal } from '../../components/ui/Modal';
+import { CardSkeleton, Skeleton } from '../../components/ui/Skeleton';
+import type { Member, MemberOfferState, Redemption, LoyaltyTransaction } from '../../types';
+import * as api from '../../api';
+import { format, differenceInDays } from 'date-fns';
+
+type Tab = 'offers' | 'history' | 'points';
+
+export default function MemberProfilePage() {
+  const { id } = useParams<{ id: string }>();
+  const { user } = useAuthStore();
+  const { addToast } = useToastStore();
+  const navigate = useNavigate();
+
+  const [member, setMember] = useState<(Member & { offer_states: MemberOfferState[] }) | null>(null);
+  const [redemptions, setRedemptions] = useState<Redemption[]>([]);
+  const [loyaltyHistory, setLoyaltyHistory] = useState<LoyaltyTransaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<Tab>('offers');
+
+  // Redemption confirm modal
+  const [redeemState, setRedeemState] = useState<{ offerStateId: string; offerTitle: string; remainingBefore: number | null; isPointsRedemption?: boolean; pointsCost?: number } | null>(null);
+  const [redeeming, setRedeeming] = useState(false);
+  const [successAnimation, setSuccessAnimation] = useState(false);
+
+  const fetchMember = async () => {
+    if (!id) return;
+    try {
+      const [m, reds, loyalty] = await Promise.all([
+        api.getMember(user?.merchant_id || '', id),
+        api.getMemberRedemptions(user?.merchant_id || '', id),
+        api.getLoyaltyHistory(user?.merchant_id || '', id),
+      ]);
+      setMember(m);
+      setRedemptions(reds);
+      setLoyaltyHistory(loyalty);
+    } catch {
+      addToast('error', 'Member not found');
+      navigate('/members');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchMember(); }, [id]);
+
+  const handleRedeem = async () => {
+    if (!redeemState || !member || !user) return;
+    setRedeeming(true);
+    try {
+      if (redeemState.isPointsRedemption) {
+        // Feature 1: points redemption flow
+        await api.redeemPoints(user.merchant_id || '', member.id, redeemState.offerStateId, user.id);
+      } else {
+        await api.redeemOffer(user.merchant_id || '', member.id, redeemState.offerStateId, user.id);
+      }
+      setSuccessAnimation(true);
+      setTimeout(() => {
+        setSuccessAnimation(false);
+        setRedeemState(null);
+        fetchMember(); // refresh — also updates loyalty_points balance
+        addToast('success', `"${redeemState.offerTitle}" redeemed successfully!`);
+      }, 1800);
+    } catch (e: any) {
+      setRedeemState(null);
+      addToast('error', e.message || 'Redemption failed');
+    } finally {
+      setRedeeming(false);
+    }
+  };
+
+  const daysToExpiry = member ? differenceInDays(new Date(member.expiry_date), new Date()) : 0;
+  const isOwner = user?.role === 'owner';
+
+  if (loading) {
+    return (
+      <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-5xl mx-auto space-y-xl">
+        <div className="prime-gradient rounded-2xl p-lg animate-pulse">
+          <div className="flex gap-4">
+            <Skeleton className="w-20 h-20 rounded-full" />
+            <div className="flex-1 space-y-3">
+              <Skeleton className="h-7 w-48" />
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-4 w-24" />
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
+          {Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)}
+        </div>
+      </div>
+    );
+  }
+
+  if (!member) return null;
+
+  const offerTitle = redeemState?.offerTitle;
+  const offerStateBefore = member.offer_states?.find(s => s.id === redeemState?.offerStateId);
+  const remainingAfter = offerStateBefore?.remaining_qty !== null && offerStateBefore?.remaining_qty !== undefined
+    ? offerStateBefore.remaining_qty - 1 : null;
+
+  return (
+    <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-5xl mx-auto space-y-xl animate-fade-in">
+      {/* Back */}
+      <button onClick={() => navigate('/members')} className="flex items-center gap-1 text-on-surface-variant hover:text-on-surface text-body-md transition-colors">
+        <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+        Back to Search
+      </button>
+
+      {/* Header Card */}
+      <section className="prime-gradient rounded-2xl p-lg text-white shadow-elevated relative overflow-hidden">
+        <div className="absolute -right-16 -top-16 w-56 h-56 bg-primary-container/20 rounded-full blur-3xl" />
+
+        {/* Expiry warning */}
+        {member.status === 'expiring_soon' && (
+          <div className="relative z-10 mb-4 bg-amber-500/20 border border-amber-400/30 rounded-xl px-4 py-2 flex items-center gap-2">
+            <span className="material-symbols-outlined text-amber-300 text-[18px]">warning</span>
+            <span className="text-sm text-amber-100">Membership expires in {daysToExpiry} days — renew to continue</span>
+          </div>
+        )}
+        {member.status === 'expired' && (
+          <div className="relative z-10 mb-4 bg-error/20 border border-error/30 rounded-xl px-4 py-2 flex items-center gap-2">
+            <span className="material-symbols-outlined text-red-300 text-[18px]">cancel</span>
+            <span className="text-sm text-red-100">Membership expired — renew to enable redemptions</span>
+          </div>
+        )}
+
+        <div className="relative z-10 flex flex-col md:flex-row gap-lg items-start md:items-center">
+          {/* Avatar */}
+          <div className="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-white/20 overflow-hidden shadow-xl bg-primary-container flex items-center justify-center text-on-primary-container text-headline-lg font-bold">
+            {member.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+          </div>
+
+          {/* Info */}
+          <div className="flex-1">
+            <div className="flex flex-wrap items-center gap-2 mb-1">
+              <h2 className="text-headline-lg-mobile md:text-headline-lg font-headline-lg-mobile">{member.name}</h2>
+              {member.membership_type && <MembershipBadge name={member.membership_type.name} />}
+              <StatusBadge status={member.status} />
+            </div>
+            <p className="text-body-md opacity-90 mb-1">#{member.member_code}</p>
+            <div className="flex flex-wrap gap-4 text-label-sm opacity-80">
+              <span className="flex items-center gap-1">
+                <span className="material-symbols-outlined text-[14px]">phone</span>
+                {member.phone}
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="material-symbols-outlined text-[14px]">calendar_today</span>
+                Expires: {format(new Date(member.expiry_date), 'dd MMM yyyy')}
+              </span>
+            </div>
+          </div>
+
+          {/* Feature 1: Loyalty Points (renamed from Wallet Balance) */}
+          <div className="bg-white/10 backdrop-blur-md rounded-xl p-md border border-white/10 w-full md:w-auto">
+            <p className="text-label-md font-label-md uppercase opacity-70 mb-1 flex items-center gap-1">
+              <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
+              Loyalty Points
+            </p>
+            <p className="text-headline-lg-mobile md:text-headline-lg font-headline-lg-mobile">
+              {member.loyalty_points.toLocaleString()} <span className="text-body-md font-normal opacity-70">pts</span>
+            </p>
+            {loyaltyHistory.length > 0 && (
+              <p className="text-label-sm opacity-60 mt-1">
+                {loyaltyHistory.filter(t => t.type === 'earn').length} earn events
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Owner actions */}
+        {isOwner && (
+          <div className="relative z-10 flex gap-2 mt-4">
+            <button
+              onClick={() => navigate(`/members/${member.id}/edit`)}
+              className="bg-white/15 hover:bg-white/25 text-white px-4 py-2 rounded-lg text-label-md font-label-md flex items-center gap-1 transition-colors"
+            >
+              <span className="material-symbols-outlined text-[16px]">edit</span>
+              Edit
+            </button>
+            <button
+              className="bg-white/15 hover:bg-white/25 text-white px-4 py-2 rounded-lg text-label-md font-label-md flex items-center gap-1 transition-colors"
+              onClick={() => navigate(`/members/${member.id}/card`)}
+            >
+              <span className="material-symbols-outlined text-[16px]">print</span>
+              Print Card
+            </button>
+          </div>
+        )}
+
+        {/* Physical Card Row */}
+        <div className="relative z-10 mt-4 border-t border-white/10 pt-4 flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-white/60 text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>credit_card</span>
+            {member.physical_card_number ? (
+              <span className="font-mono text-white font-bold tracking-widest text-body-md">{member.physical_card_number}</span>
+            ) : (
+              <span className="text-white/50 text-label-md italic">No physical card linked</span>
+            )}
+          </div>
+          {isOwner && (
+            member.physical_card_number ? (
+              <button
+                onClick={() => navigate('/cards')}
+                className="bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-lg text-label-sm transition-colors"
+              >
+                Manage Card
+              </button>
+            ) : (
+              <button
+                onClick={() => navigate('/cards')}
+                className="bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-lg text-label-sm flex items-center gap-1 transition-colors"
+              >
+                <span className="material-symbols-outlined text-[14px]">add_card</span>
+                Assign Card
+              </button>
+            )
+          )}
+        </div>
+      </section>
+
+      {/* Tabs — Feature 1: added 'points' tab */}
+      <div className="flex border-b border-outline-variant/30">
+        {(['offers', 'history', 'points'] as Tab[]).map(t => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`px-6 py-3 text-label-md font-label-md border-b-2 transition-all capitalize flex items-center gap-1
+              ${tab === t ? 'text-primary border-primary' : 'text-on-surface-variant border-transparent hover:bg-surface-container'}`}
+          >
+            {t === 'offers' && <span className="material-symbols-outlined text-[16px]">local_offer</span>}
+            {t === 'history' && <span className="material-symbols-outlined text-[16px]">history</span>}
+            {t === 'points' && <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>}
+            {t === 'offers' ? 'Active Offers' : t === 'history' ? 'Redemption History' : 'Points History'}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab: Active Offers */}
+      {tab === 'offers' && (
+        <div>
+          {member.status === 'expired' && (
+            <div className="mb-4 p-4 bg-error-container rounded-xl border border-error/20 text-on-error-container flex items-center gap-2">
+              <span className="material-symbols-outlined">block</span>
+              Redemptions are disabled — membership expired
+            </div>
+          )}
+          {member.offer_states && member.offer_states.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
+              {member.offer_states.map(state => (
+                state.offer && (
+                  <div key={state.id} className="relative">
+                    {/* Feature 1: points redemption badge */}
+                    {state.offer.is_points_redemption && (
+                      <div className="absolute top-2 right-2 z-10 bg-amber-100 text-amber-700 border border-amber-200 rounded-full px-2 py-0.5 text-label-sm flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
+                        {state.offer.loyalty_points_cost} pts
+                      </div>
+                    )}
+                    {/* Feature 1: earn badge */}
+                    {state.offer.loyalty_points_earn && !state.offer.is_points_redemption && (
+                      <div className="absolute top-2 right-2 z-10 bg-green-100 text-green-700 border border-green-200 rounded-full px-2 py-0.5 text-label-sm flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>add_circle</span>
+                        +{state.offer.loyalty_points_earn} pts
+                      </div>
+                    )}
+                    <OfferCard
+                      offer={state.offer}
+                      offerState={state}
+                      readOnly={member.status === 'expired'}
+                      onRedeem={(offerStateId) => {
+                        setRedeemState({
+                          offerStateId,
+                          offerTitle: state.offer?.title || '',
+                          remainingBefore: state.remaining_qty,
+                          isPointsRedemption: state.offer?.is_points_redemption,
+                          pointsCost: state.offer?.loyalty_points_cost ?? undefined,
+                        });
+                      }}
+                    />
+                  </div>
+                )
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 text-on-surface-variant">
+              <span className="material-symbols-outlined text-[48px] mb-2">local_offer</span>
+              <p>No active offers for this member.</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Tab: Redemption History */}
+      {tab === 'history' && (
+        <div className="space-y-2">
+          {redemptions.length === 0 ? (
+            <div className="text-center py-12 text-on-surface-variant">
+              <span className="material-symbols-outlined text-[48px] mb-2">history</span>
+              <p>No redemptions yet</p>
+            </div>
+          ) : (
+            redemptions.map(r => (
+              <div key={r.id} className="card p-md flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-secondary-container/30 flex items-center justify-center text-secondary">
+                  <span className="material-symbols-outlined text-[20px]">check_circle</span>
+                </div>
+                <div className="flex-1">
+                  <p className="text-body-md font-bold">{r.offer?.title}</p>
+                  <p className="text-label-sm text-on-surface-variant">
+                    {format(new Date(r.created_at), 'dd MMM yyyy, HH:mm')} · Staff: {r.staff_name}
+                  </p>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {/* Tab: Points History — Feature 1 */}
+      {tab === 'points' && (
+        <div className="space-y-3">
+          {/* Balance summary bar */}
+          <div className="card p-md flex items-center gap-4 bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200">
+            <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
+              <span className="material-symbols-outlined text-amber-600 text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
+            </div>
+            <div>
+              <p className="text-label-sm text-amber-700 uppercase font-semibold">Current Balance</p>
+              <p className="text-headline-md font-bold text-amber-900">{member.loyalty_points.toLocaleString()} points</p>
+            </div>
+            <div className="ml-auto text-right">
+              <p className="text-label-sm text-amber-700">Total earned</p>
+              <p className="text-body-md font-bold text-amber-900">
+                +{loyaltyHistory.filter(t => t.type === 'earn').reduce((s, t) => s + t.points, 0)} pts
+              </p>
+            </div>
+          </div>
+
+          {loyaltyHistory.length === 0 ? (
+            <div className="text-center py-12 text-on-surface-variant">
+              <span className="material-symbols-outlined text-[48px] mb-2">stars</span>
+              <p>No loyalty points earned yet.</p>
+              <p className="text-label-sm mt-1">Points are earned when offers with point rewards are redeemed.</p>
+            </div>
+          ) : (
+            loyaltyHistory.map(tx => (
+              <div key={tx.id} className="card p-md flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${tx.type === 'earn' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                  <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                    {tx.type === 'earn' ? 'add_circle' : 'remove_circle'}
+                  </span>
+                </div>
+                <div className="flex-1">
+                  <p className="text-body-md font-bold">{tx.source_offer_title || (tx.type === 'earn' ? 'Points Earned' : 'Points Redeemed')}</p>
+                  <p className="text-label-sm text-on-surface-variant">
+                    {format(new Date(tx.created_at), 'dd MMM yyyy, HH:mm')}
+                    {' '}· Balance after: {tx.balance_after.toLocaleString()} pts
+                  </p>
+                </div>
+                <div className={`text-body-lg font-bold ${tx.type === 'earn' ? 'text-green-600' : 'text-red-600'}`}>
+                  {tx.type === 'earn' ? '+' : ''}{tx.points} pts
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {/* Redemption Confirm Modal */}
+      <ConfirmModal
+        isOpen={!!redeemState && !successAnimation}
+        onClose={() => !redeeming && setRedeemState(null)}
+        onConfirm={handleRedeem}
+        title={redeemState?.isPointsRedemption ? 'Redeem Loyalty Points' : 'Confirm Redemption'}
+        confirmLabel={redeemState?.isPointsRedemption ? `Redeem ${redeemState.pointsCost} Points` : 'Confirm Redemption'}
+        isLoading={redeeming}
+        description={
+          <div className="space-y-3">
+            <div className="bg-surface-container rounded-xl p-4">
+              <p className="font-bold text-on-surface">{redeemState?.offerTitle}</p>
+              {redeemState?.isPointsRedemption && redeemState.pointsCost && (
+                <div className="mt-2 flex items-center gap-2 text-body-md">
+                  <span className="text-amber-600 font-bold">{member.loyalty_points} pts available</span>
+                  <span className="material-symbols-outlined text-on-surface-variant text-[16px]">arrow_forward</span>
+                  <span className={`font-bold ${member.loyalty_points - redeemState.pointsCost < 0 ? 'text-error' : 'text-amber-600'}`}>
+                    {member.loyalty_points - redeemState.pointsCost} pts after
+                  </span>
+                </div>
+              )}
+              {redeemState?.remainingBefore !== null && redeemState?.remainingBefore !== undefined && !redeemState?.isPointsRedemption && (
+                <div className="flex items-center gap-2 mt-2 text-body-md">
+                  <span className="font-bold text-primary">{redeemState.remainingBefore} remaining</span>
+                  <span className="material-symbols-outlined text-on-surface-variant text-[16px]">arrow_forward</span>
+                  <span className="font-bold text-amber-600">{(redeemState.remainingBefore || 0) - 1} remaining</span>
+                </div>
+              )}
+            </div>
+            <p className="text-body-md text-on-surface-variant">
+              This action is irreversible. Confirm that you want to redeem this offer for <strong>{member?.name}</strong>.
+            </p>
+          </div>
+        }
+      />
+
+      {/* Success Animation */}
+      {successAnimation && (
+        <div className="fixed inset-0 z-[950] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-8 flex flex-col items-center gap-4 animate-scale-in">
+            <div className="w-20 h-20 rounded-full bg-secondary-container flex items-center justify-center">
+              <span className="material-symbols-outlined text-secondary text-[48px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+            </div>
+            <p className="text-headline-md font-headline-md text-on-surface">Redeemed!</p>
+            <p className="text-body-md text-on-surface-variant text-center">{offerTitle}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

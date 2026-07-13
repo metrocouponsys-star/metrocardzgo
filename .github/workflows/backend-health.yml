@@ -1,0 +1,40 @@
+name: Keep Backend Alive (Prevent Render.com Sleep)
+
+# -------------------------------------------------------
+# Render.com free tier sleeps after 15 minutes of inactivity.
+# This workflow pings the health endpoint every 14 minutes
+# to prevent cold starts during business hours.
+#
+# On weekends or off-hours, a 30-second cold start is acceptable.
+# -------------------------------------------------------
+on:
+  schedule:
+    # Every 14 minutes, 24/7
+    # Free GitHub Actions allows up to 2000 min/month — this uses ~2000 min/month.
+    # If you upgrade Render to Starter ($7/mo), delete this file entirely.
+    - cron: '*/14 * * * *'
+
+  workflow_dispatch:   # Allow manual trigger to test
+
+jobs:
+  ping-backend:
+    name: Ping API Health Endpoint
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+
+    steps:
+      - name: Ping Metro Cardz API
+        run: |
+          API_URL="${{ secrets.NEXT_PUBLIC_API_BASE_URL || 'https://metrocardz-api.onrender.com' }}/health"
+          echo "Pinging: $API_URL"
+          HTTP_STATUS=$(curl -s -o /tmp/health_response.json -w "%{http_code}" "$API_URL" --max-time 60 || echo "000")
+          echo "HTTP Status: $HTTP_STATUS"
+          cat /tmp/health_response.json || true
+
+          if [ "$HTTP_STATUS" = "200" ]; then
+            echo "✅ Backend is alive"
+          elif [ "$HTTP_STATUS" = "000" ]; then
+            echo "⚠️  Backend timed out (possible cold start) — this is expected on free tier"
+          else
+            echo "❌ Backend returned unexpected status: $HTTP_STATUS"
+          fi

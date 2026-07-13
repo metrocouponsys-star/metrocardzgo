@@ -1,0 +1,33 @@
+# Local environment files
+.env
+.env.local
+.env.production.local
+.env.development.local
+
+# Python
+backend/.env
+backend/venv/
+backend/env/
+backend/test.db
+backend/__pycache__/
+backend/.pytest_cache/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Node / Frontend
+app/node_modules/
+app/dist/
+app/out/
+app/.next/
+.eslintcache
+.parcel-cache
+
+# OS Files
+.DS_Store
+Thumbs.db

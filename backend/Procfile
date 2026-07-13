@@ -1,0 +1,5 @@
+# Render.com process definitions
+# web: the FastAPI HTTP server (auto-detects PORT from env)
+# worker: Celery background worker (handles reminder emails, PDF generation)
+web: gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --timeout 120 --preload
+worker: celery -A app.worker.celery_app worker --loglevel=info --concurrency=2
