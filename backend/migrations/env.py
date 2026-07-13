@@ -7,7 +7,7 @@ from alembic import context
 config = context.config
 
 # Override sqlalchemy.url from env var (safer than hardcoding in alembic.ini)
-db_url = os.environ.get("DATABASE_URL", "")
+db_url = os.environ.get("DATABASE_URL", "").strip()
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql+psycopg://", 1)
 elif db_url.startswith("postgresql://"):

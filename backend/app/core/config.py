@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     @classmethod
     def assemble_db_url(cls, v: str) -> str:
         if isinstance(v, str):
+            v = v.strip()
             if v.startswith("postgres://"):
                 return v.replace("postgres://", "postgresql+psycopg://", 1)
             elif v.startswith("postgresql://"):
