@@ -1,8 +1,9 @@
-"""Auth router — login, OTP, token refresh, logout."""
+"""Auth router — login, OTP, token refresh, logout, Google OAuth."""
 import redis as redis_lib
 from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 
 from app.core.deps import get_db, get_current_user
 from app.core.security import verify_password, create_access_token, create_refresh_token, decode_token, generate_otp
@@ -13,6 +14,7 @@ from app.schemas import LoginRequest, OtpRequest, OtpVerifyRequest, LoginRespons
 import redis as redis_lib
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
 
 # Redis for OTP storage
 def _get_redis():
@@ -134,3 +136,59 @@ def logout():
     # JWT is stateless — client discards the token. For true invalidation,
     # add token ID to a Redis blacklist here.
     return {"message": "Logged out successfully"}
+
+
+# ── Google OAuth (via Supabase) ───────────────────────────────────────────────
+
+class GoogleLoginRequest(BaseModel):
+    supabase_token: str
+
+
+@router.post("/google", response_model=LoginResponse)
+def google_login(payload: GoogleLoginRequest, request: Request, db: Session = Depends(get_db)):
+    """
+    Accept a Supabase JWT from the frontend (after Google OAuth).
+    Validate it with Supabase, extract the user email, find the matching
+    MerchantUser, and return our app JWT + user profile.
+    """
+    auth_rate_limit(request)
+
+    # Validate Supabase token by calling Supabase's /auth/v1/user endpoint
+    supabase_url = settings.supabase_url
+    supabase_service_key = settings.supabase_service_key
+    if not supabase_url:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Google login is not configured on this server."
+        )
+
+    try:
+        import httpx
+        resp = httpx.get(
+            f"{supabase_url}/auth/v1/user",
+            headers={
+                "Authorization": f"Bearer {payload.supabase_token}",
+                "apikey": supabase_service_key,
+            },
+            timeout=10,
+        )
+        if resp.status_code != 200:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Google token")
+
+        supabase_user = resp.json()
+        email = supabase_user.get("email")
+        if not email:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="No email in Google account")
+
+    except httpx.RequestError:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Could not verify Google token")
+
+    # Find the MerchantUser by email
+    user = db.query(MerchantUser).filter(MerchantUser.email == email).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found. Contact Metro Cardz support to get onboarded."
+        )
+
+    return _build_login_response(user, db)

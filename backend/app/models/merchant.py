@@ -40,6 +40,7 @@ class MerchantUser(Base):
     merchant_id = Column(String, ForeignKey("merchants.id", ondelete="CASCADE"), nullable=True)
     name = Column(Text, nullable=False)
     phone = Column(Text, nullable=False, unique=True)
+    email = Column(Text, unique=True, nullable=True)   # Used for Google OAuth login
     role = Column(
         Enum("super_admin", "owner", "staff", name="user_role"),
         default="staff",
@@ -47,6 +48,7 @@ class MerchantUser(Base):
     )
     password_hash = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
 
     # Relationships
     merchant = relationship("Merchant", back_populates="users")
