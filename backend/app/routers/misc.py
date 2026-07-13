@@ -491,3 +491,29 @@ health_router = APIRouter(tags=["health"])
 def health_check():
     """Used by UptimeRobot and GitHub Actions keep-alive cron to prevent Render.com sleep."""
     return {"status": "ok", "service": "Metro Cardz API"}
+
+
+# ── Internal Cron Trigger ─────────────────────────────────────────────────────
+internal_router = APIRouter(prefix="/internal", tags=["internal"])
+
+
+@internal_router.post("/run-reminders")
+def run_reminders_now(request: Request, db: Session = Depends(get_db)):
+    """
+    Called by GitHub Actions hourly cron.
+    Protected by X-Internal-Key header so only the cron can trigger it.
+    On Render free tier, runs the reminder scan synchronously instead of via Celery.
+    """
+    from app.core.config import settings
+    key = request.headers.get("X-Internal-Key", "")
+    if settings.internal_cron_key and key != settings.internal_cron_key:
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+    # Run the reminder scan synchronously
+    from app.worker import hourly_reminder_scan
+    try:
+        result = hourly_reminder_scan.apply()
+        return {"triggered": True, "dispatched": result.result.get("dispatched", 0) if result.result else 0, "message": "OK"}
+    except Exception as e:
+        return {"triggered": False, "dispatched": 0, "message": str(e)}
+
