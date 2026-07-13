@@ -66,7 +66,23 @@ def send_otp(payload: OtpRequest, request: Request, db: Session = Depends(get_db
     except Exception:
         pass  # Redis unavailable — still succeed (OTP won't work, but don't crash)
 
-    # TODO: Send OTP via Msg91 / WhatsApp
+    # Send OTP via Msg91 in production if API key is set
+    if settings.msg91_api_key and settings.msg91_template_id_otp:
+        try:
+            import httpx
+            httpx.post(
+                "https://api.msg91.com/api/v5/flow/",
+                json={
+                    "template_id": settings.msg91_template_id_otp,
+                    "short_url": "0",
+                    "recipients": [{"mobiles": f"91{phone}", "var1": otp}],
+                },
+                headers={"authkey": settings.msg91_api_key, "content-type": "application/json"},
+                timeout=10,
+            )
+        except Exception as e:
+            print(f"❌ Failed to send Msg91 SMS: {e}")
+
     # In development, log OTP to console
     if not settings.is_production:
         print(f"[DEV] OTP for {phone}: {otp}")
