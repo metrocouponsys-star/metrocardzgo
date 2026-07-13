@@ -1,6 +1,6 @@
 """Member, MembershipType, MemberOfferState, and MembershipTypeOffer ORM models."""
 import uuid
-from sqlalchemy import Column, String, Text, Numeric, Date, DateTime, ForeignKey, func, Enum
+from sqlalchemy import Column, String, Text, Numeric, Integer, Date, DateTime, ForeignKey, func, Enum
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 
@@ -46,17 +46,26 @@ class Member(Base):
     physical_card_number = Column(Text, nullable=True)   # 16-digit physical card if linked
     name = Column(Text, nullable=False)
     phone = Column(Text, nullable=False)
+    email = Column(Text, nullable=True)                  # optional customer email
     date_of_birth = Column(Date, nullable=True)
     anniversary_date = Column(Date, nullable=True)
     membership_type_id = Column(String, ForeignKey("membership_types.id"), nullable=False)
     joined_date = Column(Date, nullable=False)
     expiry_date = Column(Date, nullable=False)
-    loyalty_points = Column(Numeric, default=0)   # renamed from wallet_balance — IS the loyalty points balance
+    loyalty_points = Column(Numeric, default=0)   # loyalty points balance
     status = Column(
         Enum("active", "expiring_soon", "expired", "deactivated", name="member_status"),
         default="active",
         nullable=False,
     )
+    # Industry features
+    notes = Column(Text, nullable=True)              # merchant notes about the customer
+    total_visits = Column(Integer, default=0, nullable=False, server_default="0")  # incremented on each redemption
+    referral_code = Column(Text, nullable=True, unique=True)  # 8-char code; members share this to refer friends
+    referred_by_member_id = Column(
+        String, ForeignKey("members.id", ondelete="SET NULL"), nullable=True
+    )
+
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
@@ -66,6 +75,7 @@ class Member(Base):
     redemptions = relationship("RedemptionLog", back_populates="member")
     message_logs = relationship("MessageLog", back_populates="member")
     loyalty_transactions = relationship("LoyaltyTransaction", back_populates="member")
+    referred_by = relationship("Member", remote_side="Member.id", foreign_keys=[referred_by_member_id])
 
 
 class MemberOfferState(Base):

@@ -21,7 +21,15 @@ class Merchant(Base):
         default="active",
         nullable=False,
     )
+    approval_status = Column(
+        Enum("pending", "approved", "rejected", name="merchant_approval_status"),
+        default="approved",   # existing and new merchants default to approved (Super Admin controls)
+        nullable=False,
+        server_default="approved",
+    )
+    referral_bonus_points = Column(Numeric, nullable=True, default=50)  # points credited to referrer
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
 
     # Relationships
     users = relationship("MerchantUser", back_populates="merchant", cascade="all, delete-orphan")

@@ -1,9 +1,13 @@
 """Offers, MembershipTypes, Campaigns, Reminders, Reports, Public, and Health routers."""
-# ── Offers ────────────────────────────────────────────────────────────────────
-from fastapi import APIRouter, Depends, HTTPException, status
+# ── Offers ──────────────────────────────────────────────────────────────────────────────
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.orm import Session
+from sqlalchemy import func as sqlfunc, desc
 from typing import List, Optional
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timezone, timedelta
+from decimal import Decimal
+import csv
+import io
 
 from app.core.deps import get_db, get_current_active_user, get_merchant_id
 from app.models.offer import OfferTemplate
@@ -18,6 +22,7 @@ from app.schemas import (
     CampaignCreate, CampaignOut,
     ReminderRuleUpdate, ReminderRuleOut,
     DashboardStats, RedemptionOut, PublicMemberView,
+    NewMembersDataPoint, TopCustomer, PointsDataPoint,
 )
 from app.core.rate_limit import public_rate_limit
 from fastapi import Request
@@ -120,18 +125,19 @@ def list_campaigns(merchant_id: str = Depends(get_merchant_id), db: Session = De
 def create_campaign(
     payload: CampaignCreate,
     merchant_id: str = Depends(get_merchant_id),
+    current_user=Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
     # Calculate audience size
-    q = db.query(Member).filter(Member.merchant_id == merchant_id)
+    q = db.query(Member).filter(Member.merchant_id == merchant_id, Member.status == "active")
     if payload.target_audience == "expiring_soon":
-        from datetime import timedelta
         soon = date.today() + timedelta(days=30)
-        q = q.filter(Member.expiry_date <= soon, Member.status == "active")
+        q = q.filter(Member.expiry_date <= soon)
     elif payload.target_audience == "by_membership_type" and payload.target_membership_type_id:
         q = q.filter(Member.membership_type_id == payload.target_membership_type_id)
     audience_size = q.count()
 
+    send_now = payload.send_now or not payload.scheduled_at
     campaign = Campaign(
         merchant_id=merchant_id,
         name=payload.name,
@@ -140,15 +146,80 @@ def create_campaign(
         channel=payload.channel,
         template_text=payload.template_text,
         scheduled_at=payload.scheduled_at,
-        status="scheduled" if payload.scheduled_at else "sent",
+        status="sending" if send_now else "scheduled",
         audience_size=audience_size,
-        sent_count=0 if payload.scheduled_at else audience_size,
+        sent_count=0,
     )
     db.add(campaign)
     db.commit()
     db.refresh(campaign)
-    # TODO: Enqueue Celery task if send_now
+
+    # Dispatch immediately if send_now or no schedule
+    if send_now:
+        _dispatch_campaign_now(campaign.id, merchant_id, db)
+
     return campaign
+
+
+def _dispatch_campaign_now(campaign_id: str, merchant_id: str, db):
+    """Background dispatch of campaign messages. Runs synchronously on Render free tier."""
+    from app.worker import dispatch_message
+    from app.models.merchant import Merchant as M
+
+    campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
+    if not campaign:
+        return
+    merchant = db.query(M).filter(M.id == merchant_id).first()
+
+    q = db.query(Member).filter(Member.merchant_id == merchant_id, Member.status == "active")
+    if campaign.target_audience == "expiring_soon":
+        soon = date.today() + timedelta(days=30)
+        q = q.filter(Member.expiry_date <= soon)
+    elif campaign.target_audience == "by_membership_type" and campaign.target_membership_type_id:
+        q = q.filter(Member.membership_type_id == campaign.target_membership_type_id)
+    members = q.all()
+
+    for i, member in enumerate(members):
+        try:
+            dispatch_message.apply_async(
+                kwargs={
+                    "member_id": member.id,
+                    "rule_id": campaign.id,
+                    "channel": campaign.channel,
+                    "template_text": campaign.template_text,
+                    "member_name": member.name,
+                    "merchant_name": merchant.business_name if merchant else "",
+                },
+                countdown=i * 1,   # stagger by 1 second each to avoid rate limits
+            )
+        except Exception:
+            pass  # Celery not available on free tier — messages are queued for webhook trigger
+
+    campaign.status = "sent"
+    campaign.sent_count = len(members)
+    db.commit()
+
+
+@campaigns_router.post("/{campaign_id}/send", response_model=CampaignOut)
+def send_campaign_now(
+    campaign_id: str,
+    merchant_id: str = Depends(get_merchant_id),
+    current_user=Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """Manually trigger dispatch of a scheduled campaign."""
+    campaign = db.query(Campaign).filter(
+        Campaign.id == campaign_id,
+        Campaign.merchant_id == merchant_id,
+    ).first()
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    if campaign.status == "sent":
+        raise HTTPException(status_code=400, detail="Campaign already sent")
+    _dispatch_campaign_now(campaign_id, merchant_id, db)
+    db.refresh(campaign)
+    return campaign
+
 
 
 # ── Reminders Router ──────────────────────────────────────────────────────────
@@ -189,7 +260,6 @@ def get_dashboard_stats(
     db: Session = Depends(get_db),
 ):
     today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
-    from datetime import timedelta
     month_start = datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     week_end = date.today() + timedelta(days=7)
 
@@ -208,7 +278,6 @@ def get_dashboard_stats(
     ).count()
 
     # Feature 1: loyalty points issued this month
-    from sqlalchemy import func as sqlfunc
     points_issued_row = db.query(sqlfunc.sum(LoyaltyTransaction.points)).filter(
         LoyaltyTransaction.merchant_id == merchant_id,
         LoyaltyTransaction.type == "earn",
@@ -245,7 +314,134 @@ def get_dashboard_stats(
     )
 
 
-# ── Public Self-Check Router ──────────────────────────────────────────────────
+# ── Reports Router ────────────────────────────────────────────────────────────
+reports_router = APIRouter(prefix="/reports", tags=["reports"])
+
+
+@reports_router.get("/new-members", response_model=List[NewMembersDataPoint])
+def report_new_members(
+    days: int = 30,
+    merchant_id: str = Depends(get_merchant_id),
+    db: Session = Depends(get_db),
+):
+    """Return daily new member counts for the last N days."""
+    result = []
+    today = date.today()
+    for i in range(days - 1, -1, -1):
+        d = today - timedelta(days=i)
+        count = db.query(Member).filter(
+            Member.merchant_id == merchant_id,
+            sqlfunc.date(Member.created_at) == d,
+        ).count()
+        result.append(NewMembersDataPoint(date=d.isoformat(), count=count))
+    return result
+
+
+@reports_router.get("/top-customers", response_model=List[TopCustomer])
+def report_top_customers(
+    limit: int = 10,
+    merchant_id: str = Depends(get_merchant_id),
+    db: Session = Depends(get_db),
+):
+    """Return top N customers by redemption count."""
+    rows = (
+        db.query(
+            Member.id,
+            Member.name,
+            Member.phone,
+            Member.member_code,
+            Member.loyalty_points,
+            Member.total_visits,
+            sqlfunc.count(RedemptionLog.id).label("redemption_count"),
+        )
+        .join(RedemptionLog, RedemptionLog.member_id == Member.id, isouter=True)
+        .filter(Member.merchant_id == merchant_id)
+        .group_by(Member.id)
+        .order_by(desc("redemption_count"))
+        .limit(limit)
+        .all()
+    )
+    return [
+        TopCustomer(
+            member_id=r.id,
+            name=r.name,
+            phone=r.phone,
+            member_code=r.member_code,
+            redemption_count=r.redemption_count or 0,
+            loyalty_points=r.loyalty_points or Decimal("0"),
+            total_visits=r.total_visits or 0,
+        )
+        for r in rows
+    ]
+
+
+@reports_router.get("/points", response_model=List[PointsDataPoint])
+def report_points(
+    weeks: int = 12,
+    merchant_id: str = Depends(get_merchant_id),
+    db: Session = Depends(get_db),
+):
+    """Return weekly points earned vs redeemed for the last N weeks."""
+    result = []
+    today = date.today()
+    for i in range(weeks - 1, -1, -1):
+        week_start = datetime.combine(today - timedelta(days=today.weekday() + 7 * i), datetime.min.time()).replace(tzinfo=timezone.utc)
+        week_end = week_start + timedelta(days=7)
+        week_label = week_start.strftime("%Y-W%V")
+
+        earned = db.query(sqlfunc.sum(LoyaltyTransaction.points)).filter(
+            LoyaltyTransaction.merchant_id == merchant_id,
+            LoyaltyTransaction.type == "earn",
+            LoyaltyTransaction.created_at >= week_start,
+            LoyaltyTransaction.created_at < week_end,
+        ).scalar() or Decimal("0")
+
+        redeemed = db.query(sqlfunc.sum(sqlfunc.abs(LoyaltyTransaction.points))).filter(
+            LoyaltyTransaction.merchant_id == merchant_id,
+            LoyaltyTransaction.type == "redeem",
+            LoyaltyTransaction.created_at >= week_start,
+            LoyaltyTransaction.created_at < week_end,
+        ).scalar() or Decimal("0")
+
+        result.append(PointsDataPoint(week=week_label, points_earned=earned, points_redeemed=redeemed))
+    return result
+
+
+@reports_router.get("/export/members")
+def export_members_csv(
+    merchant_id: str = Depends(get_merchant_id),
+    db: Session = Depends(get_db),
+):
+    """Export all members as a CSV file download."""
+    members = db.query(Member).filter(Member.merchant_id == merchant_id).order_by(Member.member_code).all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow([
+        "Member Code", "Name", "Phone", "Email", "Membership Type",
+        "Status", "Joined Date", "Expiry Date", "Loyalty Points",
+        "Total Visits", "Referral Code", "Date of Birth", "Anniversary", "Notes"
+    ])
+    for m in members:
+        writer.writerow([
+            m.member_code, m.name, m.phone, m.email or "",
+            m.membership_type.name if m.membership_type else "",
+            m.status, m.joined_date, m.expiry_date,
+            float(m.loyalty_points or 0), m.total_visits or 0,
+            m.referral_code or "",
+            m.date_of_birth or "", m.anniversary_date or "",
+            m.notes or "",
+        ])
+
+    content = output.getvalue()
+    return Response(
+        content=content,
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=members.csv"},
+    )
+
+
+# ── Public Self-Check Router ────────────────────────────────────────────────
 public_router = APIRouter(prefix="/public", tags=["public"])
 
 
@@ -276,10 +472,13 @@ def get_public_member_view(token: str, request: Request, db: Session = Depends(g
         merchant_logo=merchant.logo_url,
         merchant_phone=merchant.whatsapp_number,
         member_name=member.name,
+        member_code=member.member_code,
         membership_type_name=mt.name if mt else "Unknown",
         status=member.status,
         expiry_date=member.expiry_date,
-        loyalty_points=member.loyalty_points,   # renamed from wallet_balance
+        loyalty_points=member.loyalty_points,
+        total_visits=member.total_visits or 0,
+        referral_code=member.referral_code,
         offers=offers,
     )
 

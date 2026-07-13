@@ -1,6 +1,6 @@
 """OfferTemplate ORM model."""
 import uuid
-from sqlalchemy import Column, String, Text, Numeric, Boolean, DateTime, ForeignKey, func, Enum
+from sqlalchemy import Column, String, Text, Numeric, Integer, Boolean, DateTime, ForeignKey, func, Enum
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 
@@ -15,19 +15,22 @@ class OfferTemplate(Base):
     offer_type = Column(
         Enum(
             "percent_off", "free_service", "wallet_points", "referral", "birthday",
-            "points_redemption",
+            "points_redemption", "visit_milestone",
             name="offer_type",
         ),
         nullable=False,
     )
     value = Column(Numeric, default=0)
     active = Column(Boolean, default=True)
-    # Loyalty: how many points this offer earns when redeemed (null = earns nothing)
-    loyalty_points_earn = Column(Numeric, nullable=True)
-    # If True, this offer is a "points redemption reward" — costs loyalty_points_cost points
+
+    # Loyalty points configuration
+    loyalty_points_earn = Column(Numeric, nullable=True)   # points earned when redeemed
     is_points_redemption = Column(Boolean, default=False, nullable=False)
-    # For points_redemption offers: how many points this reward costs the member
-    loyalty_points_cost = Column(Numeric, nullable=True)
+    loyalty_points_cost = Column(Numeric, nullable=True)   # points cost for points_redemption offers
+
+    # Visit-milestone & amount-based reward thresholds (null = no threshold)
+    min_visits = Column(Integer, nullable=True)            # offer unlocks after N total visits
+    min_purchase_amount = Column(Numeric, nullable=True)   # offer unlocks after spending ₹X total
 
     # Relationships
     merchant = relationship("Merchant", back_populates="offer_templates")

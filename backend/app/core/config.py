@@ -67,6 +67,13 @@ class Settings(BaseSettings):
     aisensy_api_key: str = ""
     aisensy_campaign_name: str = "metrocardz_reminder"
 
+    # ── Email (SendGrid) ──────────────────────────────────────────────────
+    sendgrid_api_key: str = ""
+    sendgrid_from_email: str = "noreply@metrocardz.in"
+
+    # ── Internal Cron Auth ────────────────────────────────────────────────
+    internal_cron_key: str = ""   # secret key for /internal/* endpoints (set in Render env)
+
     # ── Sentry ───────────────────────────────────────────────────────────
     sentry_dsn: str = ""
     sentry_traces_sample_rate: float = 0.1

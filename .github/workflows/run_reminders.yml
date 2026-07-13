@@ -1,0 +1,21 @@
+name: Hourly Reminder Trigger
+
+# Calls the backend /internal/run-reminders endpoint every hour.
+# This is used on Render's free tier where a persistent Celery worker cannot run.
+# The endpoint triggers the hourly_reminder_scan function synchronously.
+on:
+  schedule:
+    - cron: '0 * * * *'   # every hour on the :00
+  workflow_dispatch:
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Hourly Reminder Scan
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X POST \
+            -H "X-Internal-Key: ${{ secrets.INTERNAL_CRON_KEY }}" \
+            https://metrocardz-api.onrender.com/internal/run-reminders)
+          echo "Reminder scan returned HTTP $STATUS"

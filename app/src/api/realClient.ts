@@ -280,3 +280,36 @@ export async function unlinkCard(_merchantId: string, _cardId: string): Promise<
 export async function searchMemberByCard(_merchantId: string, _cardNumber: string): Promise<Member | null> {
   return null; // TODO: add card search endpoint
 }
+
+export async function applyReferral(merchantId: string, memberId: string, referralCode: string): Promise<Member> {
+  return post<Member>(`/members/${memberId}/apply-referral`, { referral_code: referralCode });
+}
+
+export async function renewMember(merchantId: string, memberId: string): Promise<Member> {
+  return post<Member>(`/members/${memberId}/renew`);
+}
+
+export async function getNewMembersReport(merchantId: string, days = 30): Promise<{ date: string; count: number }[]> {
+  return get<{ date: string; count: number }[]>(`/reports/new-members?days=${days}`);
+}
+
+export async function getTopCustomersReport(merchantId: string, limit = 10): Promise<any[]> {
+  return get<any[]>(`/reports/top-customers?limit=${limit}`);
+}
+
+export async function getPointsReport(merchantId: string, weeks = 12): Promise<any[]> {
+  return get<any[]>(`/reports/points?weeks=${weeks}`);
+}
+
+export async function approveMerchant(merchantId: string): Promise<Merchant> {
+  return post<Merchant>(`/admin/merchants/${merchantId}/approve`);
+}
+
+export async function rejectMerchant(merchantId: string): Promise<Merchant> {
+  return post<Merchant>(`/admin/merchants/${merchantId}/reject`);
+}
+
+export async function sendCampaign(merchantId: string, campaignId: string): Promise<Campaign> {
+  return post<Campaign>(`/campaigns/${campaignId}/send`);
+}
+

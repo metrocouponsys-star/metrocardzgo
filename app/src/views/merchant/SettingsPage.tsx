@@ -3,7 +3,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useToastStore } from '../../store/toastStore';
 import { Modal, ConfirmModal } from '../../components/ui/Modal';
 import type { Merchant, MerchantUser } from '../../types';
-import * as api from '../../api/client';
+import * as api from '../../api';
 
 export default function SettingsPage() {
   const { user } = useAuthStore();
@@ -17,7 +17,7 @@ export default function SettingsPage() {
   const [staffForm, setStaffForm] = useState({ name: '', phone: '', role: 'staff' as 'staff' | 'owner' });
   const [addingStaff, setAddingStaff] = useState(false);
 
-  const [profileForm, setProfileForm] = useState({ business_name: '', category: '', address: '', whatsapp_number: '' });
+  const [profileForm, setProfileForm] = useState({ business_name: '', category: '', address: '', whatsapp_number: '', referral_bonus_points: 50 });
 
   useEffect(() => {
     Promise.all([
@@ -25,11 +25,21 @@ export default function SettingsPage() {
       api.getMerchantUsers(user?.merchant_id || ''),
     ]).then(([merchants, staff]) => {
       const m = merchants.find(x => x.id === user?.merchant_id);
-      if (m) { setMerchant(m); setProfileForm({ business_name: m.business_name, category: m.category, address: m.address || '', whatsapp_number: m.whatsapp_number }); }
+      if (m) {
+        setMerchant(m);
+        setProfileForm({
+          business_name: m.business_name,
+          category: m.category,
+          address: m.address || '',
+          whatsapp_number: m.whatsapp_number,
+          referral_bonus_points: m.referral_bonus_points || 50
+        });
+      }
       setStaffList(staff);
       setLoading(false);
     });
   }, []);
+
 
   const saveProfile = async () => {
     if (!merchant) return;
@@ -100,7 +110,13 @@ export default function SettingsPage() {
               <label className="form-label">Address</label>
               <input className="input-field" placeholder="Shop address" value={profileForm.address} onChange={e => setProfileForm(f => ({ ...f, address: e.target.value }))} />
             </div>
+            <div>
+              <label className="form-label">Referral Bonus (Loyalty Points)</label>
+              <input type="number" className="input-field" placeholder="50" value={profileForm.referral_bonus_points} onChange={e => setProfileForm(f => ({ ...f, referral_bonus_points: parseInt(e.target.value) || 0 }))} />
+              <p className="text-label-sm text-on-surface-variant mt-1">Points credited to a member when their referral code is successfully applied by a new customer.</p>
+            </div>
           </div>
+
           <button onClick={saveProfile} disabled={saving} className="btn-primary flex items-center gap-2">
             {saving && <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>}
             Save Changes

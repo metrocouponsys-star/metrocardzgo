@@ -36,13 +36,16 @@ def admin_stats(admin=Depends(require_super_admin), db: Session = Depends(get_db
     active_merchants = db.query(Merchant).filter(Merchant.status == "active").count()
     inactive_merchants = total_merchants - active_merchants
     redemptions_today = db.query(RedemptionLog).filter(RedemptionLog.created_at >= today_start).count()
+    pending_approvals = db.query(Merchant).filter(Merchant.approval_status == "pending").count()
     return AdminDashboardStats(
         total_merchants=total_merchants,
         total_members=total_members,
         redemptions_today=redemptions_today,
         active_merchants=active_merchants,
         inactive_merchants=inactive_merchants,
+        pending_approvals=pending_approvals,
     )
+
 
 
 # ── Merchant CRUD ─────────────────────────────────────────────────────────────
@@ -134,6 +137,46 @@ def activate_merchant(
     db.commit()
     db.refresh(merchant)
     return merchant
+
+
+@router.post("/merchants/{merchant_id}/approve", response_model=MerchantOut)
+def approve_merchant(
+    merchant_id: str,
+    admin=Depends(require_super_admin),
+    db: Session = Depends(get_db),
+):
+    """Approve a pending merchant — sets approval_status to 'approved' and activates them."""
+    merchant = db.query(Merchant).filter(Merchant.id == merchant_id).first()
+    if not merchant:
+        raise HTTPException(status_code=404, detail="Merchant not found")
+    merchant.approval_status = "approved"
+    merchant.status = "active"
+    _log_action(db, admin.id, merchant_id, "approve_merchant", merchant.business_name)
+    db.commit()
+    db.refresh(merchant)
+    merchant.member_count = db.query(Member).filter(Member.merchant_id == merchant.id).count()
+    db.commit()
+    return merchant
+
+
+@router.post("/merchants/{merchant_id}/reject", response_model=MerchantOut)
+def reject_merchant(
+    merchant_id: str,
+    admin=Depends(require_super_admin),
+    db: Session = Depends(get_db),
+):
+    """Reject a pending merchant — sets approval_status to 'rejected' and suspends them."""
+    merchant = db.query(Merchant).filter(Merchant.id == merchant_id).first()
+    if not merchant:
+        raise HTTPException(status_code=404, detail="Merchant not found")
+    merchant.approval_status = "rejected"
+    merchant.status = "suspended"
+    _log_action(db, admin.id, merchant_id, "reject_merchant", merchant.business_name)
+    db.commit()
+    db.refresh(merchant)
+    merchant.member_count = 0
+    return merchant
+
 
 
 # ── Merchant Logo Upload ──────────────────────────────────────────────────────

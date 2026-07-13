@@ -202,6 +202,11 @@ def dispatch_message(self, member_id: str, rule_id: str, channel: str,
             delivery_status = _send_sms(member.phone, message)
         elif channel == "whatsapp":
             delivery_status = _send_whatsapp(member.phone, message)
+        elif channel == "email":
+            if member.email:
+                delivery_status = _send_email_message(member.email, message, merchant_name)
+            else:
+                delivery_status = "skipped_no_email"
 
         # Log the result
         log = MessageLog(
@@ -219,6 +224,7 @@ def dispatch_message(self, member_id: str, rule_id: str, channel: str,
         raise self.retry(exc=exc, countdown=60 * (self.request.retries + 1))
     finally:
         db.close()
+
 
 
 def _send_sms(phone: str, message: str) -> str:
@@ -266,3 +272,21 @@ def _send_whatsapp(phone: str, message: str) -> str:
         return "sent" if resp.status_code == 200 else "failed"
     except Exception:
         return "failed"
+
+
+
+def _send_email_message(email: str, message: str, merchant_name: str) -> str:
+    """Send Email via SendGrid. Returns 'sent' or 'failed'."""
+    from app.utils.email_utils import send_email
+    subject = f"Notification from {merchant_name}"
+    html_body = f"""
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px">
+      <h2 style="color:#6366f1">{merchant_name}</h2>
+      <p>{message}</p>
+      <hr style="border:1px solid #e5e7eb;margin:24px 0"/>
+      <p style="color:#9ca3af;font-size:12px">Metro Cardz — Loyalty Platform</p>
+    </div>
+    """
+    success = send_email(to_email=email, subject=subject, html_body=html_body, plain_text=message)
+    return "sent" if success else "failed"
+

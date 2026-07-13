@@ -56,3 +56,12 @@ export const getMerchantCards = api.getMerchantCards;
 export const linkCardToMember = api.linkCardToMember;
 export const unlinkCard = api.unlinkCard;
 export const searchMemberByCard = api.searchMemberByCard;
+export const applyReferral = api.applyReferral;
+export const renewMember = api.renewMember;
+export const getNewMembersReport = api.getNewMembersReport;
+export const getTopCustomersReport = api.getTopCustomersReport;
+export const getPointsReport = api.getPointsReport;
+export const approveMerchant = api.approveMerchant;
+export const rejectMerchant = api.rejectMerchant;
+export const sendCampaign = api.sendCampaign;
+

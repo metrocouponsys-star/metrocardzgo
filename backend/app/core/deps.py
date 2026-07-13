@@ -69,7 +69,22 @@ def get_current_active_user(
         merchant = db.query(Merchant).filter(
             Merchant.id == current_user.merchant_id
         ).first()
-        if not merchant or merchant.status != "active":
+        if not merchant:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Merchant not found",
+            )
+        if merchant.approval_status == "pending":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Merchant account pending approval",
+            )
+        if merchant.approval_status == "rejected":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Merchant account request rejected",
+            )
+        if merchant.status != "active":
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Merchant account is suspended",

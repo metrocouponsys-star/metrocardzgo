@@ -3,8 +3,9 @@ import { useAuthStore } from '../../store/authStore';
 import { useToastStore } from '../../store/toastStore';
 import { Modal } from '../../components/ui/Modal';
 import type { Campaign, ReminderRule, MembershipType } from '../../types';
-import * as api from '../../api/client';
+import * as api from '../../api';
 import { format } from 'date-fns';
+
 
 const TRIGGER_LABELS: Record<string, string> = {
   birthday: '🎂 Birthday Reminder', anniversary: '💍 Anniversary Reminder',
@@ -99,7 +100,8 @@ export default function CampaignsPage() {
         channel: form.channel,
         template_text: form.template_text,
         scheduled_at: form.schedule === 'schedule' ? form.scheduled_at : undefined,
-      });
+        send_now: form.schedule === 'now',
+      } as any);
       setCampaigns(c => [newCampaign, ...c]);
       setShowNewCampaign(false);
       setForm({ name: '', target_audience: 'all', target_membership_type_id: '', channel: 'whatsapp', template_text: '', schedule: 'now', scheduled_at: '' });
@@ -110,6 +112,7 @@ export default function CampaignsPage() {
       setSubmitting(false);
     }
   };
+
 
   return (
     <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-4xl mx-auto space-y-xl animate-fade-in">
@@ -242,7 +245,7 @@ export default function CampaignsPage() {
         ) : (
           <div className="space-y-3">
             {campaigns.map(c => (
-              <div key={c.id} className="card p-md flex items-start justify-between gap-4">
+              <div key={c.id} className="card p-md flex items-center justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <h4 className="text-body-lg font-bold">{c.name}</h4>
@@ -255,12 +258,29 @@ export default function CampaignsPage() {
                   <div className="flex gap-4 text-label-sm text-on-surface-variant">
                     <span>{c.audience_size} recipients</span>
                     {c.sent_count !== undefined && c.sent_count > 0 && <span>✓ {c.sent_count} sent</span>}
-                    {c.scheduled_at && <span>📅 {format(new Date(c.scheduled_at), 'dd MMM yyyy')}</span>}
+                    {c.scheduled_at && <span>📅 {format(new Date(c.scheduled_at), 'dd MMM yyyy, HH:mm')}</span>}
                     <span>{format(new Date(c.created_at), 'dd MMM yyyy')}</span>
                   </div>
                 </div>
+                {c.status === 'scheduled' && (
+                  <button
+                    onClick={async () => {
+                      try {
+                        const updated = await api.sendCampaign(user?.merchant_id || '', c.id);
+                        setCampaigns(list => list.map(x => x.id === c.id ? updated : x));
+                        addToast('success', `Campaign "${c.name}" sent now!`);
+                      } catch {
+                        addToast('error', 'Failed to send campaign');
+                      }
+                    }}
+                    className="btn-outline py-1 px-3 text-label-sm shrink-0 whitespace-nowrap"
+                  >
+                    Send Now
+                  </button>
+                )}
               </div>
             ))}
+
           </div>
         )}
       </section>

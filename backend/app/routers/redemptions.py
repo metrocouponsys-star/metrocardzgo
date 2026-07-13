@@ -113,7 +113,36 @@ def redeem_offer(
         )
         db.add(loyalty_tx)
 
-    db.commit()  # Single commit for decrement, redemption log, and loyalty earn — atomic
+    # Step 7: Increment visit counter (every redemption = 1 visit)
+    member.total_visits = (member.total_visits or 0) + 1
+
+    # Step 8: Check if any visit-milestone offers just unlocked
+    # If an offer has min_visits set and the member just hit that threshold,
+    # create a MemberOfferState for it (if not already present)
+    from app.models.offer import OfferTemplate as OT
+    from app.models.member import MembershipTypeOffer
+    visit_milestone_offers = db.query(OT).filter(
+        OT.merchant_id == merchant_id,
+        OT.active == True,
+        OT.min_visits == member.total_visits,  # exactly hit the threshold this visit
+    ).all()
+    for vmo in visit_milestone_offers:
+        already_has = db.query(MemberOfferState).filter(
+            MemberOfferState.member_id == member.id,
+            MemberOfferState.offer_template_id == vmo.id,
+        ).first()
+        if not already_has:
+            new_state = MemberOfferState(
+                member_id=member.id,
+                offer_template_id=vmo.id,
+                remaining_qty=1,
+                initial_qty=1,
+                status="active",
+            )
+            db.add(new_state)
+
+    db.commit()  # Single commit for decrement, redemption log, loyalty earn, visit++, milestones — atomic
+
     db.refresh(redemption)
 
     # Enrich the response

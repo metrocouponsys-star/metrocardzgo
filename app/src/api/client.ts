@@ -680,3 +680,88 @@ export async function searchMemberByCard(merchantId: string, cardNumber: string)
   return { ...member, membership_type: db.membershipTypes.find(mt => mt.id === member.membership_type_id) };
 }
 
+export async function applyReferral(merchantId: string, memberId: string, referralCode: string): Promise<Member> {
+  await delay(FAKE_DELAY);
+  const member = db.members.find(m => m.id === memberId);
+  if (!member) throw new Error('Member not found');
+  member.referred_by_member_id = 'some-referrer-id';
+  return member;
+}
+
+export async function renewMember(merchantId: string, memberId: string): Promise<Member> {
+  await delay(FAKE_DELAY);
+  const member = db.members.find(m => m.id === memberId);
+  if (!member) throw new Error('Member not found');
+  const d = new Date(member.expiry_date);
+  d.setFullYear(d.getFullYear() + 1);
+  member.expiry_date = d.toISOString().split('T')[0];
+  member.status = 'active';
+  return member;
+}
+
+export async function getNewMembersReport(_merchantId: string, days = 30): Promise<{ date: string; count: number }[]> {
+  await delay(FAKE_DELAY);
+  const result = [];
+  const today = new Date();
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(today.getDate() - i);
+    result.push({ date: d.toISOString().split('T')[0], count: Math.floor(Math.random() * 5) });
+  }
+  return result;
+}
+
+export async function getTopCustomersReport(_merchantId: string, limit = 10): Promise<any[]> {
+  await delay(FAKE_DELAY);
+  return db.members.slice(0, limit).map((m, i) => ({
+    member_id: m.id,
+    name: m.name,
+    phone: m.phone,
+    member_code: m.member_code,
+    redemption_count: 10 - i,
+    loyalty_points: m.loyalty_points,
+    total_visits: 12 - i,
+  }));
+}
+
+export async function getPointsReport(_merchantId: string, weeks = 12): Promise<any[]> {
+  await delay(FAKE_DELAY);
+  const result = [];
+  for (let i = weeks - 1; i >= 0; i--) {
+    result.push({
+      week: `2026-W${10 + i}`,
+      points_earned: 500 + Math.floor(Math.random() * 200),
+      points_redeemed: 300 + Math.floor(Math.random() * 150),
+    });
+  }
+  return result;
+}
+
+export async function approveMerchant(merchantId: string): Promise<Merchant> {
+  await delay(FAKE_DELAY);
+  const merchant = db.merchants.find(m => m.id === merchantId);
+  if (!merchant) throw new Error('Merchant not found');
+  merchant.approval_status = 'approved';
+  merchant.status = 'active';
+  return merchant;
+}
+
+export async function rejectMerchant(merchantId: string): Promise<Merchant> {
+  await delay(FAKE_DELAY);
+  const merchant = db.merchants.find(m => m.id === merchantId);
+  if (!merchant) throw new Error('Merchant not found');
+  merchant.approval_status = 'rejected';
+  merchant.status = 'suspended';
+  return merchant;
+}
+
+export async function sendCampaign(merchantId: string, campaignId: string): Promise<Campaign> {
+  await delay(FAKE_DELAY);
+  const campaign = db.campaigns.find(c => c.id === campaignId);
+  if (!campaign) throw new Error('Campaign not found');
+  campaign.status = 'sent';
+  campaign.sent_count = campaign.audience_size;
+  return campaign;
+}
+
+

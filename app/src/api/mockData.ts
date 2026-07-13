@@ -183,6 +183,7 @@ export const adminStats: AdminDashboardStats = {
   redemptions_today: 127,
   active_merchants: 2,
   inactive_merchants: 1,
+  pending_approvals: 1,
   recent_merchant_activity: [
     { merchant_id: 'mer-001', business_name: 'Glamour Salon & Spa', action: '42 redemptions today', at: new Date().toISOString() },
     { merchant_id: 'mer-002', business_name: 'Lakshmi Kirana & General Stores', action: '12 new members added', at: new Date(Date.now() - 7200000).toISOString() },

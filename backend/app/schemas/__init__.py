@@ -29,6 +29,7 @@ class AuthUserOut(BaseModel):
     id: str
     name: str
     phone: str
+    email: Optional[str] = None
     role: str
     merchant_id: Optional[str] = None
     merchant_name: Optional[str] = None
@@ -57,6 +58,8 @@ class MerchantOut(BaseModel):
     logo_url: Optional[str] = None
     address: Optional[str] = None
     status: str
+    approval_status: str = "approved"
+    referral_bonus_points: Optional[Decimal] = Decimal("50")
     created_at: datetime
     member_count: Optional[int] = None
 
@@ -71,6 +74,8 @@ class MerchantCreate(BaseModel):
     address: Optional[str] = None
     owner_name: str
     owner_phone: str
+    owner_email: Optional[str] = None
+    referral_bonus_points: Optional[Decimal] = Decimal("50")
 
 
 class MerchantUpdate(BaseModel):
@@ -80,6 +85,7 @@ class MerchantUpdate(BaseModel):
     whatsapp_number: Optional[str] = None
     address: Optional[str] = None
     logo_url: Optional[str] = None
+    referral_bonus_points: Optional[Decimal] = None
 
 
 # ── MerchantUser ──────────────────────────────────────────────────────────────
@@ -88,6 +94,7 @@ class MerchantUserOut(BaseModel):
     merchant_id: Optional[str]
     name: str
     phone: str
+    email: Optional[str] = None
     role: str
     created_at: datetime
 
@@ -97,6 +104,7 @@ class MerchantUserOut(BaseModel):
 class MerchantUserCreate(BaseModel):
     name: str
     phone: str
+    email: Optional[str] = None
     role: Literal["owner", "staff"] = "staff"
 
 
@@ -126,10 +134,13 @@ class OfferTemplateOut(BaseModel):
     value: Decimal
     active: bool
     applicable_membership_type_ids: Optional[List[str]] = []
-    # Feature 1: Loyalty
-    loyalty_points_earn: Optional[Decimal] = None      # points earned when this offer is redeemed
-    is_points_redemption: bool = False                  # True if this is a points-redemption reward
-    loyalty_points_cost: Optional[Decimal] = None      # points cost for points_redemption offers
+    # Loyalty
+    loyalty_points_earn: Optional[Decimal] = None
+    is_points_redemption: bool = False
+    loyalty_points_cost: Optional[Decimal] = None
+    # Visit / amount thresholds
+    min_visits: Optional[int] = None
+    min_purchase_amount: Optional[Decimal] = None
 
     model_config = {"from_attributes": True}
 
@@ -139,14 +150,17 @@ class OfferTemplateCreate(BaseModel):
     description: str = ""
     offer_type: Literal[
         "percent_off", "free_service", "wallet_points", "referral", "birthday",
-        "points_redemption"
+        "points_redemption", "visit_milestone"
     ]
     value: Decimal = Decimal("0")
     applicable_membership_type_ids: List[str] = []
-    # Feature 1: Loyalty
+    # Loyalty
     loyalty_points_earn: Optional[Decimal] = None
     is_points_redemption: bool = False
     loyalty_points_cost: Optional[Decimal] = None
+    # Thresholds
+    min_visits: Optional[int] = None
+    min_purchase_amount: Optional[Decimal] = None
 
 
 class OfferTemplateUpdate(BaseModel):
@@ -155,10 +169,13 @@ class OfferTemplateUpdate(BaseModel):
     value: Optional[Decimal] = None
     active: Optional[bool] = None
     applicable_membership_type_ids: Optional[List[str]] = None
-    # Feature 1: Loyalty
+    # Loyalty
     loyalty_points_earn: Optional[Decimal] = None
     is_points_redemption: Optional[bool] = None
     loyalty_points_cost: Optional[Decimal] = None
+    # Thresholds
+    min_visits: Optional[int] = None
+    min_purchase_amount: Optional[Decimal] = None
 
 
 # ── Member ────────────────────────────────────────────────────────────────────
@@ -182,14 +199,20 @@ class MemberOut(BaseModel):
     physical_card_number: Optional[str] = None
     name: str
     phone: str
+    email: Optional[str] = None
     date_of_birth: Optional[date] = None
     anniversary_date: Optional[date] = None
     membership_type_id: str
     membership_type: Optional[MembershipTypeOut] = None
     joined_date: date
     expiry_date: date
-    loyalty_points: Decimal          # renamed from wallet_balance — IS the loyalty points balance
+    loyalty_points: Decimal
     status: str
+    # Industry features
+    notes: Optional[str] = None
+    total_visits: int = 0
+    referral_code: Optional[str] = None
+    referred_by_member_id: Optional[str] = None
     created_at: datetime
     offer_states: Optional[List[MemberOfferStateOut]] = None
 
@@ -199,18 +222,27 @@ class MemberOut(BaseModel):
 class MemberCreate(BaseModel):
     name: str
     phone: str
+    email: Optional[str] = None
     membership_type_id: str
     date_of_birth: Optional[date] = None
     anniversary_date: Optional[date] = None
+    referral_code: Optional[str] = None   # referral code of the person who referred this new member
 
 
 class MemberUpdate(BaseModel):
     name: Optional[str] = None
     phone: Optional[str] = None
+    email: Optional[str] = None
     date_of_birth: Optional[date] = None
     anniversary_date: Optional[date] = None
     membership_type_id: Optional[str] = None
     status: Optional[str] = None
+    notes: Optional[str] = None           # merchant can save notes about the customer
+
+
+class ApplyReferralRequest(BaseModel):
+    """Apply a referral code to a member (must be done at signup or within a grace period)."""
+    referral_code: str
 
 
 # ── Redemption ────────────────────────────────────────────────────────────────
@@ -238,11 +270,11 @@ class LoyaltyTransactionOut(BaseModel):
     id: str
     member_id: str
     merchant_id: str
-    type: str                          # 'earn' | 'redeem'
-    points: Decimal                    # positive for earn, negative for redeem
+    type: str                          # 'earn' | 'redeem' | 'referral_bonus'
+    points: Decimal
     source_redemption_id: Optional[str] = None
     source_offer_id: Optional[str] = None
-    source_offer_title: Optional[str] = None   # enriched for display
+    source_offer_title: Optional[str] = None
     balance_after: Decimal
     created_at: datetime
 
@@ -250,9 +282,9 @@ class LoyaltyTransactionOut(BaseModel):
 
 
 class RedeemPointsRequest(BaseModel):
-    """Request to redeem loyalty points via a points_redemption offer."""
+    """Redeem loyalty points via a points_redemption offer."""
     member_id: str
-    offer_state_id: str   # The MemberOfferState row for the points_redemption offer
+    offer_state_id: str
 
 
 # ── Campaign ──────────────────────────────────────────────────────────────────
@@ -280,6 +312,7 @@ class CampaignCreate(BaseModel):
     channel: Literal["sms", "whatsapp"]
     template_text: str
     scheduled_at: Optional[datetime] = None
+    send_now: bool = False   # if True, dispatch immediately regardless of scheduled_at
 
 
 # ── Reminder Rule ─────────────────────────────────────────────────────────────
@@ -291,9 +324,8 @@ class ReminderRuleOut(BaseModel):
     template_text: str
     threshold_value: Optional[Decimal] = None
     active: bool
-    # Feature 2: merchant-configurable timing
-    send_time: Optional[time] = None       # e.g. "09:00:00"
-    days_before: int = 0                   # days before event to send
+    send_time: Optional[time] = None
+    days_before: int = 0
     timezone: str = "Asia/Kolkata"
 
     model_config = {"from_attributes": True}
@@ -304,9 +336,8 @@ class ReminderRuleUpdate(BaseModel):
     channel: Optional[Literal["sms", "whatsapp"]] = None
     threshold_value: Optional[Decimal] = None
     active: Optional[bool] = None
-    # Feature 2: merchant-configurable timing
     send_time: Optional[time] = None
-    days_before: Optional[int] = Field(default=None, ge=0)  # must be >= 0
+    days_before: Optional[int] = Field(default=None, ge=0)
     timezone: Optional[str] = None
 
 
@@ -316,10 +347,13 @@ class PublicMemberView(BaseModel):
     merchant_logo: Optional[str] = None
     merchant_phone: Optional[str] = None
     member_name: str
+    member_code: str
     membership_type_name: str
     status: str
     expiry_date: date
-    loyalty_points: Decimal           # renamed from wallet_balance
+    loyalty_points: Decimal
+    total_visits: int = 0
+    referral_code: Optional[str] = None
     offers: List[dict]
 
 
@@ -328,7 +362,7 @@ class DashboardStats(BaseModel):
     total_active_members: int
     redemptions_today: int
     expiring_this_week: int
-    wallet_points_issued_month: Decimal    # kept for compat — total loyalty_points earned this month
+    wallet_points_issued_month: Decimal
     recent_redemptions: List[RedemptionOut]
 
 
@@ -338,8 +372,29 @@ class ReportSummary(BaseModel):
     active_members: int
     expiring_soon: int
     most_used_offer: str
-    points_issued_month: Decimal = Decimal("0")    # Feature 1: points earned this month
-    points_redeemed_month: Decimal = Decimal("0")  # Feature 1: points redeemed this month
+    points_issued_month: Decimal = Decimal("0")
+    points_redeemed_month: Decimal = Decimal("0")
+
+
+class NewMembersDataPoint(BaseModel):
+    date: str       # ISO date string "YYYY-MM-DD"
+    count: int
+
+
+class TopCustomer(BaseModel):
+    member_id: str
+    name: str
+    phone: str
+    member_code: str
+    redemption_count: int
+    loyalty_points: Decimal
+    total_visits: int
+
+
+class PointsDataPoint(BaseModel):
+    week: str           # "YYYY-WW"
+    points_earned: Decimal
+    points_redeemed: Decimal
 
 
 # ── Card Inventory ────────────────────────────────────────────────────────────
@@ -374,3 +429,11 @@ class AdminDashboardStats(BaseModel):
     redemptions_today: int
     active_merchants: int
     inactive_merchants: int
+    pending_approvals: int = 0
+
+
+# ── Internal Cron ─────────────────────────────────────────────────────────────
+class CronTriggerResponse(BaseModel):
+    triggered: bool
+    dispatched: int
+    message: str

@@ -42,9 +42,12 @@ export interface Merchant {
   logo_url?: string;
   address?: string;
   status: MerchantStatus;
+  approval_status?: 'pending' | 'approved' | 'rejected';
+  referral_bonus_points?: number;
   created_at: string;
   member_count?: number;
 }
+
 
 export interface MerchantUser {
   id: string;
@@ -72,6 +75,7 @@ export interface Member {
   physical_card_number?: string; // 16-digit card number if a physical card is linked
   name: string;
   phone: string;
+  email?: string;
   date_of_birth?: string;
   anniversary_date?: string;
   membership_type_id: string;
@@ -83,6 +87,10 @@ export interface Member {
   status: MemberStatus;
   created_at: string;
   offer_states?: MemberOfferState[];
+  referred_by_member_id?: string;
+  referral_code?: string;
+  total_visits?: number;
+  notes?: string;
 }
 
 export interface OfferTemplate {
@@ -100,6 +108,8 @@ export interface OfferTemplate {
   is_points_redemption?: boolean;
   /** Feature 1: how many loyalty points this reward costs the member */
   loyalty_points_cost?: number | null;
+  min_visits?: number | null;
+  min_purchase_amount?: number | null;
 }
 
 export interface MemberOfferState {
@@ -209,6 +219,7 @@ export interface AdminDashboardStats {
   redemptions_today: number;
   active_merchants: number;
   inactive_merchants: number;
+  pending_approvals?: number;
   recent_merchant_activity: { merchant_id: string; business_name: string; action: string; at: string }[];
 }
 
