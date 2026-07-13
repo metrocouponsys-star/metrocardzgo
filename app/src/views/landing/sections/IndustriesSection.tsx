@@ -2,10 +2,23 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
+interface IndustryData {
+  id: string;
+  label: string;
+  icon: string;
+  span: string;
+  bg: string;
+  border: string;
+  href: string;
+  cardImage: string;
+  type: string;
+  pattern?: string;
+}
+
 // ─── Industry data ────────────────────────────────────────────────────────────
 // Top 4: show real card image peek
 // Remaining: show SVG line-art background pattern
-const INDUSTRIES = [
+const INDUSTRIES: IndustryData[] = [
   {
     id: 'retail',
     label: 'Retail Stores',
