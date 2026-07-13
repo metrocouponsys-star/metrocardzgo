@@ -134,11 +134,13 @@ export default function LoginPage() {
                 <a href="#" className="text-primary font-bold hover:underline">Contact support to get onboarded</a>
               </p>
               {/* Demo Hint */}
-              <div className="bg-surface-container rounded-xl p-3 border border-outline-variant/20">
-                <p className="text-label-sm text-on-surface-variant font-medium mb-1">🧪 Demo Credentials</p>
-                <p className="text-label-sm text-on-surface-variant">Owner: any number (OTP: 123456)</p>
-                <p className="text-label-sm text-on-surface-variant">Super Admin: 9000000000</p>
-              </div>
+              {process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true' && (
+                <div className="bg-surface-container rounded-xl p-3 border border-outline-variant/20">
+                  <p className="text-label-sm text-on-surface-variant font-medium mb-1">🧪 Demo Credentials</p>
+                  <p className="text-label-sm text-on-surface-variant">Owner: any number (OTP: 123456)</p>
+                  <p className="text-label-sm text-on-surface-variant">Super Admin: 9000000000</p>
+                </div>
+              )}
             </div>
           ) : (
             <div className="space-y-4">
