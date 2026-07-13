@@ -26,6 +26,16 @@ class Settings(BaseSettings):
     # ── Database ─────────────────────────────────────────────────────────
     database_url: str
 
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def assemble_db_url(cls, v: str) -> str:
+        if isinstance(v, str):
+            if v.startswith("postgres://"):
+                return v.replace("postgres://", "postgresql+psycopg://", 1)
+            elif v.startswith("postgresql://"):
+                return v.replace("postgresql://", "postgresql+psycopg://", 1)
+        return v
+
     # ── Redis ────────────────────────────────────────────────────────────
     redis_url: str
 
