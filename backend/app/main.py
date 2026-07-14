@@ -26,6 +26,15 @@ from app.routers.misc import (
     reports_router,
     internal_router,
 )
+from app.routers.rewards import (
+    rewards_router,
+    coupons_router,
+    vouchers_router,
+    points_rules_router,
+    scratch_router,
+    lucky_draw_router,
+    feedback_router,
+)
 
 log = logging.getLogger(__name__)
 
@@ -122,6 +131,15 @@ app.include_router(public_router, prefix=API_PREFIX)
 app.include_router(reports_router, prefix=API_PREFIX)
 app.include_router(internal_router)   # no API_PREFIX — /internal/* directly
 
+# New feature routers
+app.include_router(rewards_router, prefix=API_PREFIX)
+app.include_router(coupons_router, prefix=API_PREFIX)
+app.include_router(vouchers_router, prefix=API_PREFIX)
+app.include_router(points_rules_router, prefix=API_PREFIX)
+app.include_router(scratch_router, prefix=API_PREFIX)
+app.include_router(lucky_draw_router, prefix=API_PREFIX)
+app.include_router(feedback_router, prefix=API_PREFIX)
+
 # Health check at root level (no /api/v1 prefix — for UptimeRobot and Render keep-alive)
 app.include_router(health_router)
 
@@ -139,6 +157,11 @@ async def startup_event():
     from app.models.campaign import Campaign, ReminderRule, MessageLog
     from app.models.redemption import RedemptionLog
     from app.models.loyalty import LoyaltyTransaction
+    from app.models.rewards import (
+        RewardCatalog, RewardClaim, CouponCode, GiftVoucher,
+        PointsRule, ScratchCard, LuckyDraw, LuckyDrawEntry,
+    )
+    from app.models.feedback import MemberFeedback
 
     try:
         with engine.connect() as conn:

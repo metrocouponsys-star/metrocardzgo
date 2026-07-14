@@ -406,6 +406,11 @@ export async function getAllMerchants(): Promise<Merchant[]> {
   return db.merchants;
 }
 
+export async function getAdminMerchants(): Promise<Merchant[]> {
+  await delay(FAKE_DELAY);
+  return db.merchants;
+}
+
 export async function updateMerchantStatus(merchantId: string, status: 'active' | 'suspended'): Promise<Merchant> {
   await delay(FAKE_DELAY);
   const idx = db.merchants.findIndex(m => m.id === merchantId);
@@ -760,8 +765,170 @@ export async function sendCampaign(merchantId: string, campaignId: string): Prom
   const campaign = db.campaigns.find(c => c.id === campaignId);
   if (!campaign) throw new Error('Campaign not found');
   campaign.status = 'sent';
-  campaign.sent_count = campaign.audience_size;
   return campaign;
 }
+
+// ── Mock Referral & Card PDF ──────────────────────────────────────────────────
+export async function getReferralLink(memberId: string): Promise<any> {
+  return { referral_code: 'REF-' + memberId.slice(-4), referral_link: 'http://localhost:3000/m/ref-' + memberId, bonus_points: 50 };
+}
+export async function downloadCardPdf(memberId: string): Promise<void> {
+  console.log('Generating PDF for ' + memberId);
+}
+
+// ── Mock Retention ────────────────────────────────────────────────────────────
+export async function getRetentionReport(merchantId: string, limit = 6): Promise<any[]> {
+  return [
+    { cohort: 'Jan 2026', joined: 45, retained: 30, retention_rate: 66.7 },
+    { cohort: 'Feb 2026', joined: 60, retained: 45, retention_rate: 75.0 },
+    { cohort: 'Mar 2026', joined: 50, retained: 20, retention_rate: 40.0 },
+  ];
+}
+
+// ── Mock Rewards ──────────────────────────────────────────────────────────────
+const rewardsDb: any[] = [
+  { id: 'rew-1', name: 'Free Coffee', description: 'One hot cappuccino or latte', points_cost: 100, quantity_available: 50, is_active: true },
+  { id: 'rew-2', name: 'Hair wash', description: 'Premium salon hair wash service', points_cost: 250, quantity_available: null, is_active: true },
+];
+export async function getRewards(): Promise<any[]> { return rewardsDb; }
+export async function createReward(data: any): Promise<any> {
+  const r = { id: `rew-${Date.now()}`, ...data, is_active: true };
+  rewardsDb.push(r);
+  return r;
+}
+export async function updateReward(id: string, data: any): Promise<any> {
+  const idx = rewardsDb.findIndex(x => x.id === id);
+  if (idx !== -1) rewardsDb[idx] = { ...rewardsDb[idx], ...data };
+  return rewardsDb[idx];
+}
+export async function deleteReward(id: string): Promise<void> {
+  const idx = rewardsDb.findIndex(x => x.id === id);
+  if (idx !== -1) rewardsDb.splice(idx, 1);
+}
+export async function claimReward(memberId: string, rewardId: string): Promise<any> { return { success: true }; }
+export async function getRewardClaims(memberId: string): Promise<any[]> { return []; }
+
+// ── Mock Coupons ──────────────────────────────────────────────────────────────
+const couponsDb: any[] = [
+  { id: 'cop-1', code: 'WELCOME10', discount_type: 'percent', value: 10, min_purchase: 0, max_uses: null, used_count: 5, expires_at: '', is_active: true },
+];
+export async function getCoupons(): Promise<any[]> { return couponsDb; }
+export async function createCoupon(data: any): Promise<any> {
+  const c = { id: `cop-${Date.now()}`, ...data, used_count: 0, is_active: true };
+  couponsDb.push(c);
+  return c;
+}
+export async function updateCoupon(id: string, data: any): Promise<any> {
+  const idx = couponsDb.findIndex(x => x.id === id);
+  if (idx !== -1) couponsDb[idx] = { ...couponsDb[idx], ...data };
+  return couponsDb[idx];
+}
+export async function deleteCoupon(id: string): Promise<void> {
+  const idx = couponsDb.findIndex(x => x.id === id);
+  if (idx !== -1) couponsDb.splice(idx, 1);
+}
+export async function validateCoupon(code: string, amount: number): Promise<any> { return { valid: true, discount_amount: 50 }; }
+
+// ── Mock Vouchers ─────────────────────────────────────────────────────────────
+const vouchersDb: any[] = [
+  { id: 'voc-1', code: 'GIFT500', value: 500, expires_at: '', is_redeemed: false },
+];
+export async function getVouchers(): Promise<any[]> { return vouchersDb; }
+export async function generateVouchers(value: number, quantity: number, expiresAt?: string): Promise<any[]> {
+  const generated = [];
+  for (let i = 0; i < quantity; i++) {
+    const v = { id: `voc-${Date.now()}-${i}`, code: `GFT-${Math.random().toString(36).substr(2, 6).toUpperCase()}`, value, expires_at: expiresAt || '', is_redeemed: false };
+    vouchersDb.push(v);
+    generated.push(v);
+  }
+  return generated;
+}
+export async function redeemVoucher(code: string): Promise<any> {
+  const v = vouchersDb.find(x => x.code === code);
+  if (v) v.is_redeemed = true;
+  return v;
+}
+
+// ── Mock Points Rules ─────────────────────────────────────────────────────────
+const rulesDb: any[] = [
+  { id: 'rule-1', rule_type: 'per_visit', points_value: 10, is_active: true },
+];
+export async function getPointsRules(): Promise<any[]> { return rulesDb; }
+export async function createPointsRule(data: any): Promise<any> {
+  const r = { id: `rule-${Date.now()}`, ...data, is_active: true };
+  rulesDb.push(r);
+  return r;
+}
+export async function updatePointsRule(id: string, data: any): Promise<any> {
+  const idx = rulesDb.findIndex(x => x.id === id);
+  if (idx !== -1) rulesDb[idx] = { ...rulesDb[idx], ...data };
+  return rulesDb[idx];
+}
+export async function deletePointsRule(id: string): Promise<void> {
+  const idx = rulesDb.findIndex(x => x.id === id);
+  if (idx !== -1) rulesDb.splice(idx, 1);
+}
+
+// ── Mock Scratch Cards ────────────────────────────────────────────────────────
+const scratchDb: any[] = [];
+export async function getScratchCards(memberId: string): Promise<any[]> { return scratchDb; }
+export async function issueScratchCard(memberId: string, triggerVisit: number): Promise<any> {
+  const sc = { id: `sc-${Date.now()}`, member_id: memberId, trigger_visit: triggerVisit, is_revealed: false, reward_type: 'points', reward_value: '50 points' };
+  scratchDb.push(sc);
+  return sc;
+}
+export async function revealScratchCard(id: string): Promise<any> {
+  const sc = scratchDb.find(x => x.id === id);
+  if (sc) sc.is_revealed = true;
+  return sc;
+}
+
+// ── Mock Lucky Draws ──────────────────────────────────────────────────────────
+const drawsDb: any[] = [];
+export async function getLuckyDraws(): Promise<any[]> { return drawsDb; }
+export async function createLuckyDraw(data: any): Promise<any> {
+  const d = { id: `draw-${Date.now()}`, ...data, entry_count: 5, status: 'open', winner_member_id: null, winner_name: null };
+  drawsDb.push(d);
+  return d;
+}
+export async function updateLuckyDraw(id: string, data: any): Promise<any> {
+  const idx = drawsDb.findIndex(x => x.id === id);
+  if (idx !== -1) drawsDb[idx] = { ...drawsDb[idx], ...data };
+  return drawsDb[idx];
+}
+export async function enterLuckyDraw(drawId: string, memberId: string): Promise<any> { return { success: true }; }
+export async function runLuckyDraw(drawId: string): Promise<any> {
+  const d = drawsDb.find(x => x.id === drawId);
+  if (d) { d.status = 'drawn'; d.winner_name = 'Amit Kumar'; d.winner_member_id = 'mem-1'; }
+  return d;
+}
+export async function deleteLuckyDraw(id: string): Promise<void> {
+  const idx = drawsDb.findIndex(x => x.id === id);
+  if (idx !== -1) drawsDb.splice(idx, 1);
+}
+
+// ── Mock Admin Members & Reports ──────────────────────────────────────────────
+export async function getAdminAllMembers(params?: any): Promise<any[]> { return []; }
+export async function getAdminReportStats(params?: any): Promise<any> {
+  return { total_redemptions: 120, total_members: 500, active_merchants: 8, new_members_this_month: 25, total_points_issued: 5000, total_points_redeemed: 3200 };
+}
+export async function getAdminReportsByMerchant(): Promise<any[]> {
+  return [
+    { merchant_id: 'm1', merchant_name: 'Glamour Spa', member_count: 150, redemption_count: 85 },
+    { merchant_id: 'm2', merchant_name: 'Perfect Opticals', member_count: 90, redemption_count: 35 },
+  ];
+}
+export async function getAdminMerchantDetail(merchantId: string): Promise<any> { return { id: merchantId, business_name: 'Mock Merchant' }; }
+export async function updateStaffRole(merchantId: string, userId: string, role: string): Promise<any> { return { id: userId, role }; }
+export async function deleteStaff(merchantId: string, userId: string): Promise<void> { console.log('Deleted staff: ' + userId); }
+
+// ── Mock Feedback ─────────────────────────────────────────────────────────────
+const feedbackDb: any[] = [];
+export async function submitFeedback(memberId: string, rating: number, comment?: string): Promise<any> {
+  const f = { id: `fb-${Date.now()}`, member_id: memberId, rating, comment, created_at: new Date().toISOString() };
+  feedbackDb.push(f);
+  return f;
+}
+export async function getMerchantFeedback(): Promise<any[]> { return feedbackDb; }
 
 

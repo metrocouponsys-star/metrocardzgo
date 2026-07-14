@@ -6,6 +6,11 @@ from app.models.campaign import Campaign, ReminderRule, MessageLog
 from app.models.loyalty import LoyaltyTransaction
 from app.models.card import CardInventoryItem
 from app.models.admin import AdminAuditLog
+from app.models.rewards import (
+    RewardCatalog, RewardClaim, CouponCode, GiftVoucher,
+    PointsRule, ScratchCard, LuckyDraw, LuckyDrawEntry,
+)
+from app.models.feedback import MemberFeedback
 
 __all__ = [
     "Merchant", "MerchantUser",
@@ -16,4 +21,7 @@ __all__ = [
     "LoyaltyTransaction",
     "CardInventoryItem",
     "AdminAuditLog",
+    "RewardCatalog", "RewardClaim", "CouponCode", "GiftVoucher",
+    "PointsRule", "ScratchCard", "LuckyDraw", "LuckyDrawEntry",
+    "MemberFeedback",
 ]

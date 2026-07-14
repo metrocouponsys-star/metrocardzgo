@@ -268,6 +268,7 @@ class RedemptionOut(BaseModel):
 class RedeemRequest(BaseModel):
     member_id: str
     offer_state_id: str
+    amount: Optional[Decimal] = None
 
 
 # ── Loyalty Transactions ──────────────────────────────────────────────────────
@@ -290,6 +291,7 @@ class RedeemPointsRequest(BaseModel):
     """Redeem loyalty points via a points_redemption offer."""
     member_id: str
     offer_state_id: str
+    amount: Optional[Decimal] = None
 
 
 # ── Campaign ──────────────────────────────────────────────────────────────────
@@ -348,6 +350,7 @@ class ReminderRuleUpdate(BaseModel):
 
 # ── Public Member View ────────────────────────────────────────────────────────
 class PublicMemberView(BaseModel):
+    member_id: str
     merchant_name: str
     merchant_logo: Optional[str] = None
     merchant_phone: Optional[str] = None
@@ -442,3 +445,232 @@ class CronTriggerResponse(BaseModel):
     triggered: bool
     dispatched: int
     message: str
+
+
+# ── Reward Catalog ────────────────────────────────────────────────────────────
+class RewardCatalogCreate(BaseModel):
+    name: str
+    description: str = ""
+    points_cost: Decimal
+    quantity_available: Optional[int] = None
+
+
+class RewardCatalogUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    points_cost: Optional[Decimal] = None
+    quantity_available: Optional[int] = None
+    is_active: Optional[bool] = None
+
+
+class RewardCatalogOut(BaseModel):
+    id: str
+    merchant_id: str
+    name: str
+    description: str
+    points_cost: Decimal
+    quantity_available: Optional[int] = None
+    is_active: bool
+    created_at: datetime
+    model_config = {"from_attributes": True}
+
+
+class RewardClaimOut(BaseModel):
+    id: str
+    reward_id: str
+    member_id: str
+    merchant_id: str
+    points_spent: Decimal
+    created_at: datetime
+    model_config = {"from_attributes": True}
+
+
+# ── Coupon Codes ──────────────────────────────────────────────────────────────
+class CouponCodeCreate(BaseModel):
+    code: str
+    discount_type: Literal["flat", "percent"]
+    value: Decimal
+    min_purchase: Decimal = Decimal("0")
+    max_uses: Optional[int] = None
+    expires_at: Optional[date] = None
+
+
+class CouponCodeUpdate(BaseModel):
+    is_active: Optional[bool] = None
+    max_uses: Optional[int] = None
+    expires_at: Optional[date] = None
+
+
+class CouponCodeOut(BaseModel):
+    id: str
+    merchant_id: str
+    code: str
+    discount_type: str
+    value: Decimal
+    min_purchase: Decimal
+    max_uses: Optional[int] = None
+    used_count: int
+    expires_at: Optional[date] = None
+    is_active: bool
+    created_at: datetime
+    model_config = {"from_attributes": True}
+
+
+class CouponValidateRequest(BaseModel):
+    code: str
+    purchase_amount: Decimal
+
+
+class CouponValidateOut(BaseModel):
+    valid: bool
+    coupon_id: Optional[str] = None
+    discount_type: Optional[str] = None
+    value: Optional[Decimal] = None
+    discount_amount: Optional[Decimal] = None
+    message: str
+
+
+# ── Gift Vouchers ─────────────────────────────────────────────────────────────
+class GiftVoucherCreate(BaseModel):
+    value: Decimal
+    quantity: int = 1
+    expires_at: Optional[date] = None
+
+
+class GiftVoucherOut(BaseModel):
+    id: str
+    merchant_id: str
+    code: str
+    value: Decimal
+    is_redeemed: bool
+    redeemed_by_member_id: Optional[str] = None
+    redeemed_at: Optional[datetime] = None
+    expires_at: Optional[date] = None
+    created_at: datetime
+    model_config = {"from_attributes": True}
+
+
+class GiftVoucherRedeemRequest(BaseModel):
+    code: str
+    member_id: str
+
+
+# ── Points Rules ──────────────────────────────────────────────────────────────
+class PointsRuleCreate(BaseModel):
+    rule_type: Literal["per_visit", "per_rupee"]
+    points_value: Decimal
+
+
+class PointsRuleUpdate(BaseModel):
+    points_value: Optional[Decimal] = None
+    is_active: Optional[bool] = None
+
+
+class PointsRuleOut(BaseModel):
+    id: str
+    merchant_id: str
+    rule_type: str
+    points_value: Decimal
+    is_active: bool
+    created_at: datetime
+    model_config = {"from_attributes": True}
+
+
+# ── Scratch Cards ─────────────────────────────────────────────────────────────
+class ScratchCardOut(BaseModel):
+    id: str
+    merchant_id: str
+    member_id: str
+    reward_type: str
+    reward_value: str
+    is_revealed: bool
+    revealed_at: Optional[datetime] = None
+    trigger_visit: Optional[int] = None
+    created_at: datetime
+    model_config = {"from_attributes": True}
+
+
+# ── Lucky Draws ───────────────────────────────────────────────────────────────
+class LuckyDrawCreate(BaseModel):
+    name: str
+    prize: str
+    draw_date: date
+    min_points: Decimal = Decimal("0")
+    min_visits: int = 0
+
+
+class LuckyDrawUpdate(BaseModel):
+    name: Optional[str] = None
+    prize: Optional[str] = None
+    draw_date: Optional[date] = None
+    min_points: Optional[Decimal] = None
+    min_visits: Optional[int] = None
+    status: Optional[str] = None
+
+
+class LuckyDrawOut(BaseModel):
+    id: str
+    merchant_id: str
+    name: str
+    prize: str
+    draw_date: date
+    min_points: Decimal
+    min_visits: int
+    status: str
+    winner_member_id: Optional[str] = None
+    entry_count: int = 0
+    created_at: datetime
+    model_config = {"from_attributes": True}
+
+
+# ── Member Feedback ───────────────────────────────────────────────────────────
+class FeedbackCreate(BaseModel):
+    member_id: str
+    rating: int = Field(..., ge=1, le=5)
+    comment: Optional[str] = None
+
+
+class FeedbackOut(BaseModel):
+    id: str
+    member_id: str
+    merchant_id: str
+    rating: int
+    comment: Optional[str] = None
+    created_at: datetime
+    model_config = {"from_attributes": True}
+
+
+# ── Admin Cross-Merchant Member ───────────────────────────────────────────────
+class AdminMemberOut(BaseModel):
+    id: str
+    member_code: str
+    name: str
+    phone: str
+    email: Optional[str] = None
+    status: str
+    merchant_id: str
+    merchant_name: Optional[str] = None
+    membership_type_name: Optional[str] = None
+    loyalty_points: Decimal
+    total_visits: int
+    joined_date: date
+    expiry_date: date
+    created_at: datetime
+    model_config = {"from_attributes": True}
+
+
+# ── Admin Platform Reports ────────────────────────────────────────────────────
+class AdminReportStats(BaseModel):
+    total_redemptions: int
+    total_members: int
+    total_points_issued: Decimal
+    total_points_redeemed: Decimal
+    new_members_this_month: int
+    active_merchants: int
+
+
+class MerchantRedemptionStat(BaseModel):
+    merchant_id: str
+    merchant_name: str
+    redemption_count: int
+    member_count: int

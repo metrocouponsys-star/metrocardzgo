@@ -8,6 +8,7 @@ const MERCHANT_NAV = [
   { to: '/cards',            icon: 'credit_card',     label: 'Cards',       roles: ['owner'] },
   { to: '/offers',           icon: 'local_offer',     label: 'Offers',      roles: ['owner'] },
   { to: '/membership-types', icon: 'card_membership', label: 'Memberships', roles: ['owner'] },
+  { to: '/rewards',          icon: 'workspace_premium', label: 'Rewards & Loyalty', roles: ['owner'] },
   { to: '/campaigns',        icon: 'campaign',        label: 'Campaigns',   roles: ['owner'] },
   { to: '/reports',          icon: 'bar_chart',       label: 'Reports',     roles: ['owner'] },
   { to: '/settings',         icon: 'settings',        label: 'Settings',    roles: ['owner'] },
@@ -16,12 +17,13 @@ const MERCHANT_NAV = [
 const ADMIN_NAV = [
   { to: '/admin',           icon: 'dashboard',   label: 'Dashboard',      roles: ['super_admin'] },
   { to: '/admin/merchants', icon: 'storefront',  label: 'Merchants',      roles: ['super_admin'] },
+  { to: '/admin/members',   icon: 'groups',      label: 'All Members',    roles: ['super_admin'] },
   { to: '/admin/cards',     icon: 'credit_card', label: 'Card Inventory', roles: ['super_admin'] },
   { to: '/admin/reports',   icon: 'bar_chart',   label: 'Reports',        roles: ['super_admin'] },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { user, logout } = useAuthStore();
+  const { user, logout, originalAdminUser, stopImpersonating } = useAuthStore();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -110,8 +112,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 md:ml-64 pt-14 md:pt-0 pb-20 md:pb-0 animate-fade-in">
-        {children}
+      <main className="flex-1 md:ml-64 pt-14 md:pt-0 pb-20 md:pb-0 animate-fade-in flex flex-col min-h-screen">
+        {originalAdminUser && (
+          <div className="bg-amber-600 text-white font-bold px-4 py-3 flex items-center justify-between shadow-md relative z-30 shrink-0">
+            <div className="flex items-center gap-2 text-body-md">
+              <span className="material-symbols-outlined animate-pulse text-[20px]">admin_panel_settings</span>
+              <span>Impersonating {user?.merchant_name} (Logged in as Owner)</span>
+            </div>
+            <button onClick={stopImpersonating} className="bg-white text-amber-800 font-bold px-3 py-1 rounded-lg text-label-sm shadow hover:bg-amber-50 transition-colors">
+              Exit Impersonation
+            </button>
+          </div>
+        )}
+        <div className="flex-1">
+          {children}
+        </div>
       </main>
 
       {/* Mobile Bottom Navigation */}

@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import date
 
-from app.core.deps import get_db, require_super_admin
+from app.core.deps import get_db, require_super_admin, require_super_admin_or_merchant_owner
 from app.models.merchant import Merchant, MerchantUser
 from app.models.member import Member
 from app.models.card import CardInventoryItem
@@ -95,7 +95,7 @@ def create_merchant(
 def update_merchant(
     merchant_id: str,
     payload: MerchantUpdate,
-    admin=Depends(require_super_admin),
+    user=Depends(require_super_admin_or_merchant_owner),
     db: Session = Depends(get_db),
 ):
     merchant = db.query(Merchant).filter(Merchant.id == merchant_id).first()
@@ -185,7 +185,7 @@ def reject_merchant(
 async def upload_merchant_logo(
     merchant_id: str,
     file: UploadFile = File(..., description="PNG, JPEG, or WebP logo image. Max 10 MB."),
-    admin=Depends(require_super_admin),
+    user=Depends(require_super_admin_or_merchant_owner),
     db: Session = Depends(get_db),
 ):
     """
@@ -238,14 +238,14 @@ async def upload_merchant_logo(
     db.commit()
     db.refresh(merchant)
     merchant.member_count = db.query(Member).filter(Member.merchant_id == merchant.id).count()
-    _log_action(db, admin.id, merchant_id, "upload_logo", f"size={len(compressed_webp)} bytes")
+    _log_action(db, user.id, merchant_id, "upload_logo", f"size={len(compressed_webp)} bytes")
     db.commit()
     return merchant
 
 
 # ── Merchant Users ────────────────────────────────────────────────────────────
 @router.get("/merchants/{merchant_id}/users", response_model=List[MerchantUserOut])
-def get_merchant_users(merchant_id: str, admin=Depends(require_super_admin), db: Session = Depends(get_db)):
+def get_merchant_users(merchant_id: str, user=Depends(require_super_admin_or_merchant_owner), db: Session = Depends(get_db)):
     return db.query(MerchantUser).filter(MerchantUser.merchant_id == merchant_id).all()
 
 
@@ -253,20 +253,20 @@ def get_merchant_users(merchant_id: str, admin=Depends(require_super_admin), db:
 def create_merchant_user(
     merchant_id: str,
     payload: MerchantUserCreate,
-    admin=Depends(require_super_admin),
+    user=Depends(require_super_admin_or_merchant_owner),
     db: Session = Depends(get_db),
 ):
-    user = MerchantUser(
+    new_user = MerchantUser(
         merchant_id=merchant_id,
         name=payload.name,
         phone=payload.phone.replace(" ", ""),
         role=payload.role,
-        password_hash=hash_password(payload.phone[-4:]),
+        password_hash=hash_password(payload.phone.replace(" ", "")),  # default to full phone number
     )
-    db.add(user)
+    db.add(new_user)
     db.commit()
-    db.refresh(user)
-    return user
+    db.refresh(new_user)
+    return new_user
 
 
 # ── Card Inventory ────────────────────────────────────────────────────────────
@@ -351,3 +351,209 @@ def deactivate_card(card_id: str, admin=Depends(require_super_admin), db: Sessio
     db.commit()
     db.refresh(card)
     return card
+
+
+# ── Admin Cross-Merchant Member List ──────────────────────────────────────────
+from app.schemas import AdminMemberOut, AdminReportStats, MerchantRedemptionStat
+from app.models.redemption import RedemptionLog
+from app.models.loyalty import LoyaltyTransaction
+from sqlalchemy import func as sqlfunc, or_, desc
+from decimal import Decimal
+
+
+@router.get("/members", response_model=List[AdminMemberOut])
+def admin_list_all_members(
+    admin=Depends(require_super_admin),
+    db: Session = Depends(get_db),
+    search: Optional[str] = Query(default=None),
+    merchant_id_filter: Optional[str] = Query(default=None, alias="merchant_id"),
+    status_filter: Optional[str] = Query(default=None, alias="status"),
+    limit: int = Query(default=100, le=500),
+    offset: int = Query(default=0, ge=0),
+):
+    q = db.query(Member)
+    if merchant_id_filter:
+        q = q.filter(Member.merchant_id == merchant_id_filter)
+    if status_filter:
+        q = q.filter(Member.status == status_filter)
+    if search:
+        s = f"%{search}%"
+        q = q.filter(or_(
+            Member.name.ilike(s),
+            Member.phone.ilike(s),
+            Member.member_code.ilike(s),
+        ))
+    members = q.order_by(desc(Member.created_at)).offset(offset).limit(limit).all()
+    result = []
+    for m in members:
+        merchant = db.query(Merchant).filter(Merchant.id == m.merchant_id).first()
+        result.append(AdminMemberOut(
+            id=m.id,
+            member_code=m.member_code,
+            name=m.name,
+            phone=m.phone,
+            email=m.email,
+            status=m.status,
+            merchant_id=m.merchant_id,
+            merchant_name=merchant.business_name if merchant else None,
+            membership_type_name=m.membership_type.name if m.membership_type else None,
+            loyalty_points=m.loyalty_points or Decimal("0"),
+            total_visits=m.total_visits or 0,
+            joined_date=m.joined_date,
+            expiry_date=m.expiry_date,
+            created_at=m.created_at,
+        ))
+    return result
+
+
+# ── Admin Platform-Wide Reports ───────────────────────────────────────────────
+@router.get("/reports/stats", response_model=AdminReportStats)
+def admin_platform_stats(
+    admin=Depends(require_super_admin),
+    db: Session = Depends(get_db),
+    date_from: Optional[date] = Query(default=None),
+    date_to: Optional[date] = Query(default=None),
+):
+    from datetime import timezone as tz
+    q_redemptions = db.query(RedemptionLog)
+    q_points = db.query(LoyaltyTransaction)
+    if date_from:
+        start_dt = datetime.combine(date_from, datetime.min.time()).replace(tzinfo=tz.utc)
+        q_redemptions = q_redemptions.filter(RedemptionLog.created_at >= start_dt)
+        q_points = q_points.filter(LoyaltyTransaction.created_at >= start_dt)
+    if date_to:
+        end_dt = datetime.combine(date_to, datetime.max.time()).replace(tzinfo=tz.utc)
+        q_redemptions = q_redemptions.filter(RedemptionLog.created_at <= end_dt)
+        q_points = q_points.filter(LoyaltyTransaction.created_at <= end_dt)
+
+    total_redemptions = q_redemptions.count()
+    total_members = db.query(Member).count()
+    active_merchants = db.query(Merchant).filter(Merchant.status == "active").count()
+
+    pts_issued = db.query(sqlfunc.sum(LoyaltyTransaction.points)).filter(
+        LoyaltyTransaction.type == "earn"
+    ).scalar() or Decimal("0")
+    pts_redeemed = db.query(sqlfunc.sum(sqlfunc.abs(LoyaltyTransaction.points))).filter(
+        LoyaltyTransaction.type == "redeem"
+    ).scalar() or Decimal("0")
+
+    from datetime import date as _date
+    month_start = _date.today().replace(day=1)
+    new_members_this_month = db.query(Member).filter(Member.joined_date >= month_start).count()
+
+    return AdminReportStats(
+        total_redemptions=total_redemptions,
+        total_members=total_members,
+        total_points_issued=pts_issued,
+        total_points_redeemed=pts_redeemed,
+        new_members_this_month=new_members_this_month,
+        active_merchants=active_merchants,
+    )
+
+
+@router.get("/reports/by-merchant", response_model=List[MerchantRedemptionStat])
+def admin_reports_by_merchant(
+    admin=Depends(require_super_admin),
+    db: Session = Depends(get_db),
+):
+    merchants = db.query(Merchant).filter(Merchant.status == "active").all()
+    result = []
+    for m in merchants:
+        redemption_count = db.query(RedemptionLog).join(
+            Member, RedemptionLog.member_id == Member.id
+        ).filter(Member.merchant_id == m.id).count()
+        member_count = db.query(Member).filter(Member.merchant_id == m.id).count()
+        result.append(MerchantRedemptionStat(
+            merchant_id=m.id,
+            merchant_name=m.business_name,
+            redemption_count=redemption_count,
+            member_count=member_count,
+        ))
+    result.sort(key=lambda x: x.redemption_count, reverse=True)
+    return result
+
+
+# ── Admin Merchant Staff Role Update ─────────────────────────────────────────
+@router.patch("/merchants/{merchant_id}/users/{user_id}/role")
+def update_staff_role(
+    merchant_id: str,
+    user_id: str,
+    role: str = Query(..., pattern="^(owner|staff)$"),
+    user=Depends(require_super_admin_or_merchant_owner),
+    db: Session = Depends(get_db),
+):
+    target_user = db.query(MerchantUser).filter(
+        MerchantUser.id == user_id,
+        MerchantUser.merchant_id == merchant_id,
+    ).first()
+    if not target_user:
+        raise HTTPException(404, "User not found")
+    target_user.role = role
+    db.commit()
+    return {"id": target_user.id, "role": target_user.role}
+
+
+@router.delete("/merchants/{merchant_id}/users/{user_id}", status_code=204)
+def delete_merchant_user(
+    merchant_id: str,
+    user_id: str,
+    user=Depends(require_super_admin_or_merchant_owner),
+    db: Session = Depends(get_db),
+):
+    target_user = db.query(MerchantUser).filter(
+        MerchantUser.id == user_id,
+        MerchantUser.merchant_id == merchant_id,
+    ).first()
+    if not target_user:
+        raise HTTPException(404, "User not found")
+    # Prevent deleting self
+    if target_user.id == user.id:
+        raise HTTPException(400, "Cannot delete yourself")
+    db.delete(target_user)
+    db.commit()
+
+
+# ── Admin Merchant Detail ─────────────────────────────────────────────────────
+@router.get("/merchants/{merchant_id}/detail")
+def get_merchant_detail(
+    merchant_id: str,
+    admin=Depends(require_super_admin),
+    db: Session = Depends(get_db),
+):
+    merchant = db.query(Merchant).filter(Merchant.id == merchant_id).first()
+    if not merchant:
+        raise HTTPException(404, "Merchant not found")
+
+    members = db.query(Member).filter(Member.merchant_id == merchant_id).order_by(desc(Member.created_at)).limit(10).all()
+    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    redemptions_today = db.query(RedemptionLog).join(
+        Member, RedemptionLog.member_id == Member.id
+    ).filter(Member.merchant_id == merchant_id, RedemptionLog.created_at >= today_start).count()
+    member_count = db.query(Member).filter(Member.merchant_id == merchant_id).count()
+    users = db.query(MerchantUser).filter(MerchantUser.merchant_id == merchant_id).all()
+
+    return {
+        "merchant": {
+            "id": merchant.id,
+            "business_name": merchant.business_name,
+            "category": merchant.category,
+            "plan_tier": merchant.plan_tier,
+            "status": merchant.status,
+            "approval_status": merchant.approval_status,
+            "whatsapp_number": merchant.whatsapp_number,
+            "address": merchant.address,
+            "created_at": merchant.created_at.isoformat() if merchant.created_at else None,
+        },
+        "stats": {
+            "member_count": member_count,
+            "redemptions_today": redemptions_today,
+        },
+        "recent_members": [
+            {"id": m.id, "name": m.name, "phone": m.phone, "status": m.status, "joined_date": str(m.joined_date)}
+            for m in members
+        ],
+        "users": [
+            {"id": u.id, "name": u.name, "phone": u.phone, "role": u.role}
+            for u in users
+        ],
+    }

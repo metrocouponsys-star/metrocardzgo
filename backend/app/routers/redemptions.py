@@ -90,7 +90,7 @@ def redeem_offer(
         member_id=member.id,
         offer_template_id=offer_state.offer_template_id,
         merchant_user_id=current_user.id,
-        amount=0,
+        amount=payload.amount or Decimal("0"),
         ip_address=client_ip,
     )
     db.add(redemption)
@@ -242,7 +242,7 @@ def redeem_points(
         member_id=member.id,
         offer_template_id=offer_state.offer_template_id,
         merchant_user_id=current_user.id,
-        amount=0,
+        amount=payload.amount or Decimal("0"),
         ip_address=client_ip,
     )
     db.add(redemption)

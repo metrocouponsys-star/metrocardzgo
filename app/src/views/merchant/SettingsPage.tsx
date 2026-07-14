@@ -64,6 +64,28 @@ export default function SettingsPage() {
     finally { setAddingStaff(false); }
   };
 
+  const toggleRole = async (userId: string, currentRole: string) => {
+    const newRole = currentRole === 'owner' ? 'staff' : 'owner';
+    try {
+      await api.updateStaffRole(user?.merchant_id || '', userId, newRole);
+      setStaffList(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
+      addToast('success', 'Staff role updated successfully');
+    } catch {
+      addToast('error', 'Failed to update role');
+    }
+  };
+
+  const removeStaff = async (userId: string) => {
+    if (!window.confirm('Are you sure you want to remove this staff member?')) return;
+    try {
+      await api.deleteStaff(user?.merchant_id || '', userId);
+      setStaffList(prev => prev.filter(u => u.id !== userId));
+      addToast('success', 'Staff member removed');
+    } catch {
+      addToast('error', 'Failed to remove staff');
+    }
+  };
+
   const CATEGORIES = ['Salon', 'Kirana', 'Restaurant', 'Jewellery', 'Boutique', 'Optician', 'Other'];
   const TABS = [{ k: 'profile', l: 'Business Profile', icon: 'store' }, { k: 'staff', l: 'Staff Accounts', icon: 'manage_accounts' }, { k: 'billing', l: 'Plan & Billing', icon: 'payments' }] as const;
 
@@ -137,17 +159,33 @@ export default function SettingsPage() {
             {loading ? (
               Array.from({ length: 3 }).map((_, i) => <div key={i} className="p-4 h-16 animate-pulse bg-surface-container" />)
             ) : staffList.map(u => (
-              <div key={u.id} className="flex items-center gap-3 p-4">
-                <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold">
-                  {u.name.charAt(0)}
+              <div key={u.id} className="flex items-center justify-between p-4 gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold">
+                    {u.name.charAt(0)}
+                  </div>
+                  <div>
+                    <p className="text-body-lg font-bold">{u.name} {u.id === user?.id && <span className="text-label-sm text-on-surface-variant">(You)</span>}</p>
+                    <p className="text-body-md text-on-surface-variant">{u.phone}</p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-body-lg font-bold">{u.name} {u.id === user?.id && <span className="text-label-sm text-on-surface-variant">(You)</span>}</p>
-                  <p className="text-body-md text-on-surface-variant">{u.phone}</p>
+                <div className="flex items-center gap-2">
+                  <span className={`text-label-sm px-2 py-0.5 rounded-full capitalize ${u.role === 'owner' ? 'bg-primary-fixed text-on-primary-fixed' : 'bg-surface-container text-on-surface-variant'}`}>
+                    {u.role}
+                  </span>
+                  {u.id !== user?.id && (
+                    <>
+                      <button onClick={() => toggleRole(u.id, u.role)}
+                        className="btn-outline !py-1 !px-2.5 text-label-sm" style={{ minHeight: 'auto' }} title="Change privilege role">
+                        Toggle Role
+                      </button>
+                      <button onClick={() => removeStaff(u.id)}
+                        className="flex items-center justify-center w-8 h-8 rounded-full border border-error/30 text-error hover:bg-error/10" title="Delete staff account">
+                        <span className="material-symbols-outlined text-[18px]">delete</span>
+                      </button>
+                    </>
+                  )}
                 </div>
-                <span className={`text-label-sm px-2 py-0.5 rounded-full capitalize ${u.role === 'owner' ? 'bg-primary-fixed text-on-primary-fixed' : 'bg-surface-container text-on-surface-variant'}`}>
-                  {u.role}
-                </span>
               </div>
             ))}
           </div>

@@ -285,3 +285,126 @@ def renew_membership(
     db.commit()
     db.refresh(member)
     return member
+
+
+@router.get("/{member_id}/referral-link")
+def get_referral_link(
+    member_id: str,
+    merchant_id: str = Depends(get_merchant_id),
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_active_user),
+):
+    """Return the shareable referral link for a member."""
+    member = db.query(Member).filter(
+        Member.id == member_id, Member.merchant_id == merchant_id
+    ).first()
+    if not member:
+        raise HTTPException(404, "Member not found")
+    # Ensure referral code exists
+    if not member.referral_code:
+        member.referral_code = _generate_referral_code(db)
+        db.commit()
+        db.refresh(member)
+    return {
+        "referral_code": member.referral_code,
+        "referral_link": f"https://metrocardz.in/join/{merchant_id}?ref={member.referral_code}",
+        "bonus_points": float(
+            db.query(Merchant).filter(Merchant.id == merchant_id).first().referral_bonus_points or 50
+        ),
+    }
+
+
+from fastapi import Response as FastAPIResponse
+
+
+@router.get("/{member_id}/card-pdf")
+def download_member_card_pdf(
+    member_id: str,
+    merchant_id: str = Depends(get_merchant_id),
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_active_user),
+):
+    """Generate and return a printable PDF membership card for the member."""
+    member = db.query(Member).filter(
+        Member.id == member_id, Member.merchant_id == merchant_id
+    ).first()
+    if not member:
+        raise HTTPException(404, "Member not found")
+
+    merchant = db.query(Merchant).filter(Merchant.id == merchant_id).first()
+    mt = member.membership_type
+
+    try:
+        import io
+        import qrcode
+        from reportlab.lib.pagesizes import landscape
+        from reportlab.lib import colors
+        from reportlab.lib.units import mm
+        from reportlab.pdfgen import canvas as rl_canvas
+        from reportlab.lib.utils import ImageReader
+
+        # Card dimensions: 85.6mm x 54mm (ISO/IEC 7810 ID-1 standard)
+        card_w = 85.6 * mm
+        card_h = 54 * mm
+
+        buf = io.BytesIO()
+        c = rl_canvas.Canvas(buf, pagesize=(card_w, card_h))
+
+        # Background gradient (dark blue)
+        c.setFillColor(colors.HexColor("#00236f"))
+        c.rect(0, 0, card_w, card_h, fill=1, stroke=0)
+
+        # Accent strip
+        c.setFillColor(colors.HexColor("#6c63ff"))
+        c.rect(0, card_h - 8 * mm, card_w, 8 * mm, fill=1, stroke=0)
+
+        # Business name
+        c.setFillColor(colors.white)
+        c.setFont("Helvetica-Bold", 10)
+        c.drawString(4 * mm, card_h - 6 * mm, (merchant.business_name or "")[:30])
+
+        # Tier badge
+        tier_text = mt.name if mt else "Member"
+        c.setFont("Helvetica", 7)
+        c.setFillColor(colors.HexColor("#ffd700"))
+        c.drawRightString(card_w - 4 * mm, card_h - 6 * mm, tier_text)
+
+        # Member name
+        c.setFillColor(colors.white)
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(4 * mm, card_h - 20 * mm, member.name[:25])
+
+        # Member code
+        c.setFont("Helvetica", 8)
+        c.setFillColor(colors.HexColor("#cdd8ff"))
+        c.drawString(4 * mm, card_h - 27 * mm, f"Card: {member.member_code}")
+
+        # Expiry
+        c.drawString(4 * mm, card_h - 33 * mm, f"Valid till: {member.expiry_date.strftime('%b %Y')}")
+
+        # QR code
+        qr = qrcode.QRCode(box_size=3, border=1)
+        qr.add_data(f"https://metrocardz.in/m/{member.public_token}")
+        qr.make(fit=True)
+        qr_img = qr.make_image(fill_color="black", back_color="white")
+        qr_buf = io.BytesIO()
+        qr_img.save(qr_buf, format="PNG")
+        qr_buf.seek(0)
+        qr_size = 22 * mm
+        c.drawImage(ImageReader(qr_buf), card_w - qr_size - 4 * mm, 4 * mm, qr_size, qr_size)
+
+        # Footer line
+        c.setFont("Helvetica", 6)
+        c.setFillColor(colors.HexColor("#aabbee"))
+        c.drawString(4 * mm, 4 * mm, "Powered by Metro Cardz • metrocardz.in")
+
+        c.save()
+        pdf_bytes = buf.getvalue()
+
+        return FastAPIResponse(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename=card_{member.member_code}.pdf"},
+        )
+    except ImportError as e:
+        raise HTTPException(500, f"PDF generation dependency missing: {e}")

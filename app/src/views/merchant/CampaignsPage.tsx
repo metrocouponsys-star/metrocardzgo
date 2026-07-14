@@ -33,6 +33,11 @@ export default function CampaignsPage() {
   const [expandedRuleId, setExpandedRuleId] = useState<string | null>(null);
   const [timingForm, setTimingForm] = useState<Record<string, { send_time: string; days_before: number }>>({});
 
+  // Lucky Draw states
+  const [luckyDraws, setLuckyDraws] = useState<any[]>([]);
+  const [showNewDraw, setShowNewDraw] = useState(false);
+  const [drawForm, setDrawForm] = useState({ name: '', prize: '', min_points: '0', min_visits: '0', draw_date: '' });
+
   const [form, setForm] = useState({
     name: '', target_audience: 'all' as Campaign['target_audience'],
     target_membership_type_id: '', channel: 'whatsapp' as Campaign['channel'],
@@ -44,10 +49,12 @@ export default function CampaignsPage() {
       api.getCampaigns(user?.merchant_id || ''),
       api.getReminderRules(user?.merchant_id || ''),
       api.getMembershipTypes(user?.merchant_id || ''),
-    ]).then(([c, r, mt]) => {
+      api.getLuckyDraws().catch(() => []),
+    ]).then(([c, r, mt, draws]) => {
       setCampaigns(c);
       setReminders(r);
       setMembershipTypes(mt);
+      setLuckyDraws(draws);
       setLoading(false);
     });
   }, []);
@@ -87,6 +94,45 @@ export default function CampaignsPage() {
           days_before: rule.days_before ?? 0,
         },
       }));
+    }
+  };
+
+  const createDraw = async () => {
+    try {
+      const newDraw = await api.createLuckyDraw({
+        name: drawForm.name,
+        prize: drawForm.prize,
+        min_points: Number(drawForm.min_points),
+        min_visits: Number(drawForm.min_visits),
+        draw_date: drawForm.draw_date,
+      });
+      setLuckyDraws(prev => [newDraw, ...prev]);
+      setShowNewDraw(false);
+      setDrawForm({ name: '', prize: '', min_points: '0', min_visits: '0', draw_date: '' });
+      addToast('success', 'Lucky draw created!');
+    } catch {
+      addToast('error', 'Failed to create lucky draw');
+    }
+  };
+
+  const handleRunDraw = async (drawId: string) => {
+    try {
+      const res = await api.runLuckyDraw(drawId);
+      addToast('success', `🎉 Winner Selected: ${res.winner_name} won "${res.prize}"!`);
+      api.getLuckyDraws().then(setLuckyDraws).catch(() => {});
+    } catch (e: any) {
+      addToast('error', e.message || 'Failed to select winner');
+    }
+  };
+
+  const handleDeleteDraw = async (drawId: string) => {
+    if (!window.confirm('Delete this lucky draw?')) return;
+    try {
+      await api.deleteLuckyDraw(drawId);
+      setLuckyDraws(prev => prev.filter(d => d.id !== drawId));
+      addToast('success', 'Lucky draw deleted');
+    } catch {
+      addToast('error', 'Failed to delete draw');
     }
   };
 
@@ -285,6 +331,63 @@ export default function CampaignsPage() {
         )}
       </section>
 
+      {/* Lucky Draws Section */}
+      <section>
+        <div className="flex items-center justify-between mb-md">
+          <h3 className="section-title">🎰 Lucky Draws</h3>
+          <button onClick={() => setShowNewDraw(true)} className="btn-primary flex items-center gap-2">
+            <span className="material-symbols-outlined text-[18px]">add_circle</span>
+            New Lucky Draw
+          </button>
+        </div>
+
+        {luckyDraws.length === 0 ? (
+          <div className="card p-8 text-center text-on-surface-variant">
+            <span className="material-symbols-outlined text-[48px] mb-2 font-variation-fill">casino</span>
+            <p>No lucky draws scheduled. Create one to reward your members!</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {luckyDraws.map(draw => (
+              <div key={draw.id} className="card p-md flex items-center justify-between gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <h4 className="text-body-lg font-bold">{draw.name}</h4>
+                    <span className={`text-label-sm px-2 py-0.5 rounded-full capitalize ${draw.status === 'drawn' ? 'bg-secondary-container text-secondary' : 'bg-amber-100 text-amber-600'}`}>
+                      {draw.status === 'drawn' ? 'Completed' : 'Open'}
+                    </span>
+                  </div>
+                  <p className="text-body-md text-on-surface-variant font-medium">Prize: {draw.prize}</p>
+                  <div className="flex gap-4 text-label-sm text-on-surface-variant mt-1.5 flex-wrap">
+                    <span>👥 {draw.entry_count} entries</span>
+                    <span>⭐ Min {Number(draw.min_points).toFixed(0)} pts</span>
+                    <span>📍 Min {draw.min_visits} visits</span>
+                    <span>📅 Draw Date: {draw.draw_date}</span>
+                  </div>
+                  {draw.status === 'drawn' && draw.winner_member_id && (
+                    <div className="mt-2 p-2 bg-green-50 text-green-800 rounded-lg text-body-sm font-semibold border border-green-200 inline-block">
+                      🎉 Winner selected!
+                    </div>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  {draw.status === 'open' && (
+                    <button onClick={() => handleRunDraw(draw.id)}
+                      className="btn-primary py-1 px-3 text-label-sm shrink-0 font-bold whitespace-nowrap" style={{ minHeight: 'auto' }}>
+                      Pick Winner
+                    </button>
+                  )}
+                  <button onClick={() => handleDeleteDraw(draw.id)}
+                    className="flex items-center justify-center w-8 h-8 rounded-full border border-error/30 text-error hover:bg-error/10">
+                    <span className="material-symbols-outlined text-[18px]">delete</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
       {/* New Campaign Modal */}
       <Modal isOpen={showNewCampaign} onClose={() => setShowNewCampaign(false)} title="New Campaign" maxWidth="max-w-lg">
         <div className="space-y-4">
@@ -357,6 +460,40 @@ export default function CampaignsPage() {
             >
               {submitting && <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>}
               {form.schedule === 'now' ? 'Send Campaign' : 'Schedule Campaign'}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* New Lucky Draw Modal */}
+      <Modal isOpen={showNewDraw} onClose={() => setShowNewDraw(false)} title="New Lucky Draw" maxWidth="max-w-lg">
+        <div className="space-y-4">
+          <div>
+            <label className="form-label">Draw Name *</label>
+            <input className="input-field" placeholder="e.g. Monthly Mega Giveaway" value={drawForm.name} onChange={e => setDrawForm(f => ({ ...f, name: e.target.value }))} />
+          </div>
+          <div>
+            <label className="form-label">Prize *</label>
+            <input className="input-field" placeholder="e.g. ₹5,000 Gift Voucher" value={drawForm.prize} onChange={e => setDrawForm(f => ({ ...f, prize: e.target.value }))} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="form-label">Min Points Requirement</label>
+              <input type="number" className="input-field" value={drawForm.min_points} onChange={e => setDrawForm(f => ({ ...f, min_points: e.target.value }))} />
+            </div>
+            <div>
+              <label className="form-label">Min Visits Requirement</label>
+              <input type="number" className="input-field" value={drawForm.min_visits} onChange={e => setDrawForm(f => ({ ...f, min_visits: e.target.value }))} />
+            </div>
+          </div>
+          <div>
+            <label className="form-label">Draw Date *</label>
+            <input type="date" className="input-field" value={drawForm.draw_date} onChange={e => setDrawForm(f => ({ ...f, draw_date: e.target.value }))} />
+          </div>
+          <div className="flex gap-3">
+            <button onClick={() => setShowNewDraw(false)} className="btn-secondary flex-1">Cancel</button>
+            <button onClick={createDraw} disabled={!drawForm.name || !drawForm.prize || !drawForm.draw_date} className="btn-primary flex-1">
+              Schedule Draw
             </button>
           </div>
         </div>

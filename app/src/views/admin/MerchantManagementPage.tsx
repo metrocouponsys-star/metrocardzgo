@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useToastStore } from '../../store/toastStore';
-import { ConfirmModal } from '../../components/ui/Modal';
+import { useAuthStore } from '../../store/authStore';
+import { ConfirmModal, Modal } from '../../components/ui/Modal';
 import type { Merchant } from '../../types';
 import * as api from '../../api';
 import { format } from 'date-fns';
@@ -20,6 +21,7 @@ type FilterTab = 'all' | 'pending' | 'approved' | 'rejected';
 
 export default function MerchantManagementPage() {
   const { addToast } = useToastStore();
+  const { impersonate } = useAuthStore();
   const [merchants, setMerchants] = useState<Merchant[]>([]);
   const [loading, setLoading] = useState(true);
   const [suspendTarget, setSuspendTarget] = useState<Merchant | null>(null);
@@ -27,6 +29,18 @@ export default function MerchantManagementPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
   const [actioningMerchant, setActioningMerchant] = useState<string | null>(null);
+
+  // Creation form state
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createLoading, setCreateLoading] = useState(false);
+  const [businessName, setBusinessName] = useState('');
+  const [category, setCategory] = useState('');
+  const [planTier, setPlanTier] = useState('Starter');
+  const [whatsappNumber, setWhatsappNumber] = useState('');
+  const [address, setAddress] = useState('');
+  const [ownerName, setOwnerName] = useState('');
+  const [ownerPhone, setOwnerPhone] = useState('');
+  const [ownerEmail, setOwnerEmail] = useState('');
 
   const fetchMerchants = async () => {
     setLoading(true);
@@ -43,6 +57,43 @@ export default function MerchantManagementPage() {
   useEffect(() => {
     fetchMerchants();
   }, []);
+
+  const handleCreateMerchant = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!businessName.trim() || !category.trim() || !ownerName.trim() || !ownerPhone.trim()) {
+      addToast('error', 'Please fill in all required fields');
+      return;
+    }
+    setCreateLoading(true);
+    try {
+      const newMerchant = await api.createMerchant({
+        business_name: businessName.trim(),
+        category: category.trim(),
+        plan_tier: planTier,
+        whatsapp_number: whatsappNumber.trim(),
+        address: address.trim() || undefined,
+        owner_name: ownerName.trim(),
+        owner_phone: ownerPhone.trim().replace(/\s+/g, ''),
+        owner_email: ownerEmail.trim() || undefined,
+      });
+      setMerchants(prev => [newMerchant, ...prev]);
+      addToast('success', 'Merchant created successfully!');
+      setCreateOpen(false);
+      // Reset form
+      setBusinessName('');
+      setCategory('');
+      setPlanTier('Starter');
+      setWhatsappNumber('');
+      setAddress('');
+      setOwnerName('');
+      setOwnerPhone('');
+      setOwnerEmail('');
+    } catch (err: any) {
+      addToast('error', err.message || 'Failed to create merchant');
+    } finally {
+      setCreateLoading(false);
+    }
+  };
 
   const toggleSuspend = async () => {
     if (!suspendTarget) return;
@@ -103,6 +154,13 @@ export default function MerchantManagementPage() {
           <h2 className="page-title">Merchant Management</h2>
           <p className="page-subtitle">Onboard, approve, and suspend merchant accounts on the platform.</p>
         </div>
+        <button
+          onClick={() => setCreateOpen(true)}
+          className="btn-primary flex items-center gap-2 h-10 px-4"
+        >
+          <span className="material-symbols-outlined text-[20px]">add</span>
+          Add Merchant
+        </button>
       </div>
 
       {/* Tabs & Search */}
@@ -212,16 +270,27 @@ export default function MerchantManagementPage() {
                             </button>
                           </>
                         ) : (
-                          <button
-                            onClick={() => setSuspendTarget(m)}
-                            disabled={isActioning}
-                            className={`text-label-md px-3 py-1 rounded-lg transition-colors font-bold border
-                              ${m.status === 'active'
-                                ? 'text-red-600 bg-red-50 hover:bg-red-100 border-red-200'
-                                : 'text-green-600 bg-green-50 hover:bg-green-100 border-green-200'}`}
-                          >
-                            {m.status === 'active' ? 'Suspend' : 'Reactivate'}
-                          </button>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => setSuspendTarget(m)}
+                              disabled={isActioning}
+                              className={`text-label-md px-3 py-1 rounded-lg transition-colors font-bold border
+                                ${m.status === 'active'
+                                  ? 'text-red-600 bg-red-50 hover:bg-red-100 border-red-200'
+                                  : 'text-green-600 bg-green-50 hover:bg-green-100 border-green-200'}`}
+                            >
+                              {m.status === 'active' ? 'Suspend' : 'Reactivate'}
+                            </button>
+                            {m.status === 'active' && (
+                              <button
+                                onClick={() => { impersonate(m.id, m.business_name); addToast('success', `Impersonating ${m.business_name}`); }}
+                                className="text-label-md bg-primary text-white hover:bg-primary-dark px-3 py-1 rounded-lg transition-colors font-bold shadow-sm"
+                                style={{ minHeight: 'auto' }}
+                              >
+                                Impersonate
+                              </button>
+                            )}
+                          </div>
                         )}
                       </div>
                     </td>
@@ -247,6 +316,131 @@ export default function MerchantManagementPage() {
             : `Reactivating "${suspendTarget?.business_name}" will immediately restore full portal access for the merchant.`
         }
       />
+
+      <Modal isOpen={createOpen} onClose={() => setCreateOpen(false)} title="Add New Merchant" maxWidth="max-w-lg">
+        <form onSubmit={handleCreateMerchant} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Business Info */}
+            <div className="space-y-3 md:col-span-2">
+              <h4 className="text-body-md font-bold text-primary border-b border-outline-variant/30 pb-1">Business Details</h4>
+            </div>
+
+            <div>
+              <label className="block text-label-sm text-on-surface-variant mb-1 font-medium">Business Name *</label>
+              <input
+                type="text"
+                required
+                value={businessName}
+                onChange={e => setBusinessName(e.target.value)}
+                placeholder="e.g. Glamour Salon"
+                className="input-field h-10 text-body-sm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-label-sm text-on-surface-variant mb-1 font-medium">Category *</label>
+              <input
+                type="text"
+                required
+                value={category}
+                onChange={e => setCategory(e.target.value)}
+                placeholder="e.g. Salon, Groceries"
+                className="input-field h-10 text-body-sm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-label-sm text-on-surface-variant mb-1 font-medium">Plan Tier *</label>
+              <select
+                value={planTier}
+                onChange={e => setPlanTier(e.target.value)}
+                className="input-field h-10 text-body-sm bg-surface"
+              >
+                <option value="Starter">Starter</option>
+                <option value="Pro">Pro</option>
+                <option value="Enterprise">Enterprise</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-label-sm text-on-surface-variant mb-1 font-medium">WhatsApp Number *</label>
+              <input
+                type="text"
+                required
+                value={whatsappNumber}
+                onChange={e => setWhatsappNumber(e.target.value)}
+                placeholder="e.g. 919876543210"
+                className="input-field h-10 text-body-sm"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-label-sm text-on-surface-variant mb-1 font-medium">Address</label>
+              <input
+                type="text"
+                value={address}
+                onChange={e => setAddress(e.target.value)}
+                placeholder="e.g. 123 Main Street"
+                className="input-field h-10 text-body-sm"
+              />
+            </div>
+
+            {/* Owner Info */}
+            <div className="space-y-3 md:col-span-2 mt-2">
+              <h4 className="text-body-md font-bold text-primary border-b border-outline-variant/30 pb-1">Owner Account Details</h4>
+            </div>
+
+            <div>
+              <label className="block text-label-sm text-on-surface-variant mb-1 font-medium">Owner Name *</label>
+              <input
+                type="text"
+                required
+                value={ownerName}
+                onChange={e => setOwnerName(e.target.value)}
+                placeholder="Owner's full name"
+                className="input-field h-10 text-body-sm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-label-sm text-on-surface-variant mb-1 font-medium">Owner Phone * (For Login)</label>
+              <input
+                type="text"
+                required
+                value={ownerPhone}
+                onChange={e => setOwnerPhone(e.target.value)}
+                placeholder="Owner's phone number"
+                className="input-field h-10 text-body-sm"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-label-sm text-on-surface-variant mb-1 font-medium">Owner Email (For Google/Email Login)</label>
+              <input
+                type="email"
+                value={ownerEmail}
+                onChange={e => setOwnerEmail(e.target.value)}
+                placeholder="owner@example.com"
+                className="input-field h-10 text-body-sm"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-outline-variant/30">
+            <button type="button" onClick={() => setCreateOpen(false)} className="btn-secondary h-10 px-4" disabled={createLoading}>
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={createLoading}
+              className="btn-primary flex items-center gap-2 h-10 px-6 font-bold"
+            >
+              {createLoading && <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>}
+              Save Merchant
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

@@ -12,9 +12,16 @@ const OFFER_ICONS: Record<string, string> = {
 
 export default function PublicMemberPage() {
   const { token } = useParams<{ token: string }>();
-  const [data, setData] = useState<PublicMemberView | null>(null);
+  const [data, setData] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+
+  // Feedback states
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [comment, setComment] = useState('');
+  const [submittingFeedback, setSubmittingFeedback] = useState(false);
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
 
   useEffect(() => {
     if (!token) return;
@@ -24,6 +31,20 @@ export default function PublicMemberPage() {
       setLoading(false);
     });
   }, [token]);
+
+  const handleFeedbackSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (rating === 0 || !data) return;
+    setSubmittingFeedback(true);
+    try {
+      await api.submitFeedback(data.member_id, rating, comment);
+      setFeedbackSubmitted(true);
+    } catch {
+      alert('Failed to submit feedback');
+    } finally {
+      setSubmittingFeedback(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -84,7 +105,7 @@ export default function PublicMemberPage() {
         <div className="card p-md">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold text-headline-md">
-              {data.member_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+              {data.member_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
             </div>
             <div>
               <h2 className="text-body-lg font-bold">{data.member_name}</h2>
@@ -115,7 +136,7 @@ export default function PublicMemberPage() {
           <div>
             <h3 className="section-title mb-3">Your Benefits</h3>
             <div className="space-y-3">
-              {data.offers.map(offer => (
+              {data.offers.map((offer: any) => (
                 <div key={offer.id} className="card p-md flex items-start gap-3">
                   <div className="w-10 h-10 rounded-lg bg-primary-container/10 flex items-center justify-center text-primary shrink-0">
                     <span className="material-symbols-outlined text-[20px]">{OFFER_ICONS[offer.offer_type] || 'star'}</span>
@@ -129,6 +150,52 @@ export default function PublicMemberPage() {
             </div>
           </div>
         )}
+
+        {/* Feedback Section */}
+        <div className="card p-md space-y-md">
+          <h3 className="section-title">Share Your Feedback</h3>
+          {feedbackSubmitted ? (
+            <div className="text-center py-4 text-success font-semibold space-y-1">
+              <span className="material-symbols-outlined text-[36px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+              <p>Thank you for your feedback!</p>
+            </div>
+          ) : (
+            <form onSubmit={handleFeedbackSubmit} className="space-y-3">
+              <p className="text-body-sm text-on-surface-variant">Rate your experience at {data.merchant_name}:</p>
+              <div className="flex justify-center gap-1">
+                {[1, 2, 3, 4, 5].map(star => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setRating(star)}
+                    onMouseEnter={() => setHoverRating(star)}
+                    onMouseLeave={() => setHoverRating(0)}
+                    className="p-1 text-amber-400 hover:scale-110 transition-transform"
+                  >
+                    <span className="material-symbols-outlined text-[32px]" style={{ fontVariationSettings: `'FILL' ${(hoverRating || rating) >= star ? 1 : 0}` }}>
+                      star
+                    </span>
+                  </button>
+                ))}
+              </div>
+              <textarea
+                placeholder="Tell us what you liked or how we can improve..."
+                value={comment}
+                onChange={e => setComment(e.target.value)}
+                rows={3}
+                className="w-full p-3 bg-surface-container-low border border-outline-variant rounded-lg text-body-md outline-none focus:border-primary transition-all resize-none"
+              />
+              <button
+                type="submit"
+                disabled={submittingFeedback || rating === 0}
+                className="btn-primary w-full py-2.5 flex items-center justify-center gap-2"
+              >
+                {submittingFeedback && <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>}
+                Submit Feedback
+              </button>
+            </form>
+          )}
+        </div>
 
         {/* Footer */}
         <div className="text-center py-4 border-t border-outline-variant/30">

@@ -118,3 +118,18 @@ def get_merchant_id(
             detail="No merchant associated with this account",
         )
     return current_user.merchant_id
+
+
+def require_super_admin_or_merchant_owner(
+    merchant_id: str,
+    current_user: MerchantUser = Depends(get_current_active_user),
+) -> MerchantUser:
+    """Only allow super_admin or the specific merchant's owner."""
+    if current_user.role == "super_admin":
+        return current_user
+    if current_user.role == "owner" and current_user.merchant_id == merchant_id:
+        return current_user
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Unauthorized. Merchant owner or super admin access required.",
+    )

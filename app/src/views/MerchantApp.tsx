@@ -25,11 +25,14 @@ import ReportsPage from './merchant/ReportsPage';
 import CampaignsPage from './merchant/CampaignsPage';
 import SettingsPage from './merchant/SettingsPage';
 import CardInventoryMerchantPage from './merchant/CardInventoryMerchantPage';
+import RewardsPage from './merchant/RewardsPage';
 
 // Admin views
 import AdminDashboardPage from './admin/AdminDashboardPage';
 import MerchantManagementPage from './admin/MerchantManagementPage';
 import CardInventoryPage from './admin/CardInventoryPage';
+import AdminMembersPage from './admin/AdminMembersPage';
+import AdminReportsPage from './admin/AdminReportsPage';
 
 // Public views
 import PublicMemberPage from './public/PublicMemberPage';
@@ -71,12 +74,14 @@ export default function MerchantApp() {
         <Route path="/campaigns" element={<ProtectedRoute roles={['owner']}><AppShell><CampaignsPage /></AppShell></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute roles={['owner']}><AppShell><SettingsPage /></AppShell></ProtectedRoute>} />
         <Route path="/cards" element={<ProtectedRoute roles={['owner']}><AppShell><CardInventoryMerchantPage /></AppShell></ProtectedRoute>} />
+        <Route path="/rewards" element={<ProtectedRoute roles={['owner']}><AppShell><RewardsPage /></AppShell></ProtectedRoute>} />
 
         {/* Admin Panel */}
         <Route path="/admin" element={<ProtectedRoute roles={['super_admin']}><AppShell><AdminDashboardPage /></AppShell></ProtectedRoute>} />
         <Route path="/admin/merchants" element={<ProtectedRoute roles={['super_admin']}><AppShell><MerchantManagementPage /></AppShell></ProtectedRoute>} />
+        <Route path="/admin/members" element={<ProtectedRoute roles={['super_admin']}><AppShell><AdminMembersPage /></AppShell></ProtectedRoute>} />
         <Route path="/admin/cards" element={<ProtectedRoute roles={['super_admin']}><AppShell><CardInventoryPage /></AppShell></ProtectedRoute>} />
-        <Route path="/admin/reports" element={<ProtectedRoute roles={['super_admin']}><AppShell><ReportsPage /></AppShell></ProtectedRoute>} />
+        <Route path="/admin/reports" element={<ProtectedRoute roles={['super_admin']}><AppShell><AdminReportsPage /></AppShell></ProtectedRoute>} />
 
         {/* Catch-all — redirect unknown paths to login */}
         <Route path="*" element={<Navigate to="/login" replace />} />

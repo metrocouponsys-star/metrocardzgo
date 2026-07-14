@@ -23,6 +23,14 @@ export default function LoginPage() {
 
   // ── Handle Google OAuth callback ──────────────────────────────────────────
   useEffect(() => {
+    // Clear any stale Supabase sessions on mount to prevent ghost redirects
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        // There's a stale session — sign out silently so it doesn't interfere
+        supabase.auth.signOut();
+      }
+    });
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.access_token) {
         setGoogleLoading(true);

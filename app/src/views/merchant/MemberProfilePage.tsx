@@ -24,6 +24,12 @@ export default function MemberProfilePage() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>('offers');
 
+  // New features states
+  const [referralLink, setReferralLink] = useState('');
+  const [scratchCards, setScratchCards] = useState<any[]>([]);
+  const [autoRenew, setAutoRenew] = useState(false);
+  const [purchaseAmount, setPurchaseAmount] = useState('');
+
   // Redemption confirm modal
   const [redeemState, setRedeemState] = useState<{ offerStateId: string; offerTitle: string; remainingBefore: number | null; isPointsRedemption?: boolean; pointsCost?: number } | null>(null);
   const [redeeming, setRedeeming] = useState(false);
@@ -45,8 +51,13 @@ export default function MemberProfilePage() {
       ]);
       setMember(m);
       setNotes(m.notes || '');
+      setAutoRenew((m as any).auto_renew || false);
       setRedemptions(reds);
       setLoyaltyHistory(loyalty);
+
+      // Load referral link and scratch cards asynchronously
+      api.getReferralLink(m.id).then(res => setReferralLink(res.referral_link)).catch(() => {});
+      api.getScratchCards(m.id).then(setScratchCards).catch(() => {});
     } catch {
       addToast('error', 'Member not found');
       navigate('/members');
@@ -61,14 +72,16 @@ export default function MemberProfilePage() {
   const handleRedeem = async () => {
     if (!redeemState || !member || !user) return;
     setRedeeming(true);
+    const amt = Number(purchaseAmount) || undefined;
     try {
       if (redeemState.isPointsRedemption) {
         // Feature 1: points redemption flow
-        await api.redeemPoints(user.merchant_id || '', member.id, redeemState.offerStateId, user.id);
+        await api.redeemPoints(user.merchant_id || '', member.id, redeemState.offerStateId, user.id, amt);
       } else {
-        await api.redeemOffer(user.merchant_id || '', member.id, redeemState.offerStateId, user.id);
+        await api.redeemOffer(user.merchant_id || '', member.id, redeemState.offerStateId, user.id, amt);
       }
       setSuccessAnimation(true);
+      setPurchaseAmount(''); // reset
       setTimeout(() => {
         setSuccessAnimation(false);
         setRedeemState(null);
@@ -123,6 +136,38 @@ export default function MemberProfilePage() {
       addToast('error', e.message || 'Renewal failed');
     } finally {
       setRenewing(false);
+    }
+  };
+
+  const handleToggleAutoRenew = async () => {
+    if (!member || !user) return;
+    try {
+      await api.updateMember(user.merchant_id || '', member.id, { auto_renew: !autoRenew } as any);
+      setAutoRenew(!autoRenew);
+      addToast('success', `Auto-renewal turned ${!autoRenew ? 'ON' : 'OFF'}`);
+    } catch {
+      addToast('error', 'Failed to toggle auto-renewal');
+    }
+  };
+
+  const handleScratch = async (cardId: string) => {
+    try {
+      const res = await api.revealScratchCard(cardId);
+      addToast('success', `Revealed reward: ${res.reward_value} (${res.reward_type})!`);
+      fetchMember();
+    } catch {
+      addToast('error', 'Failed to scratch card');
+    }
+  };
+
+  const handleDownloadCard = async () => {
+    if (!member) return;
+    try {
+      addToast('info', 'Generating PDF...');
+      await api.downloadCardPdf(member.id);
+      addToast('success', 'PDF downloaded successfully');
+    } catch {
+      addToast('error', 'Failed to download card PDF');
     }
   };
 
@@ -276,10 +321,10 @@ export default function MemberProfilePage() {
             </button>
             <button
               className="bg-white/15 hover:bg-white/25 text-white px-4 py-2 rounded-lg text-label-md font-label-md flex items-center gap-1 transition-colors"
-              onClick={() => navigate(`/members/${member.id}/card`)}
+              onClick={handleDownloadCard}
             >
-              <span className="material-symbols-outlined text-[16px]">print</span>
-              Print Card
+              <span className="material-symbols-outlined text-[16px]">download</span>
+              Download Card PDF
             </button>
           </div>
         )}
@@ -549,6 +594,63 @@ export default function MemberProfilePage() {
                 </div>
               </form>
             )}
+            <div className="pt-3 border-t border-outline-variant/30 space-y-1">
+              <p className="text-label-sm text-on-surface-variant font-medium">Customer Shareable Referral Link:</p>
+              <div className="flex items-center gap-1.5 bg-surface-container-low p-2 rounded-lg border border-outline-variant/50">
+                <input readOnly value={referralLink || 'Generating link...'} className="flex-1 bg-transparent text-body-sm font-mono outline-none" />
+                <button type="button" onClick={() => { navigator.clipboard.writeText(referralLink); addToast('success', 'Referral link copied!'); }}
+                  className="p-1 hover:bg-surface-container rounded">
+                  <span className="material-symbols-outlined text-[16px]">content_copy</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Scratch & Win */}
+          <div className="card p-md space-y-md">
+            <h4 className="text-label-md font-bold text-on-surface flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px]">card_giftcard</span>
+              Scratch & Win Rewards
+            </h4>
+            {scratchCards.length === 0 ? (
+              <p className="text-body-sm text-on-surface-variant">No scratch cards available yet.</p>
+            ) : (
+              <div className="space-y-2">
+                {scratchCards.map(c => (
+                  <div key={c.id} className="p-3 bg-surface-container border border-outline-variant rounded-xl flex items-center justify-between">
+                    <div>
+                      <p className="text-body-sm font-bold">{c.is_revealed ? `Revealed: ${c.reward_value}` : '🎁 Secret Reward Card'}</p>
+                      <p className="text-label-xs text-on-surface-variant">Issued on visit #{c.trigger_visit}</p>
+                    </div>
+                    {!c.is_revealed ? (
+                      <button onClick={() => handleScratch(c.id)} className="btn-secondary !py-1 !px-3 text-label-sm" style={{ minHeight: 'auto' }}>
+                        Scratch Now
+                      </button>
+                    ) : (
+                      <span className="text-label-sm text-success font-semibold uppercase">Claimed</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Auto-Renewal Setting */}
+          <div className="card p-md space-y-md">
+            <h4 className="text-label-md font-bold text-on-surface flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px]">sync</span>
+              Auto-Renewal Setting
+            </h4>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-body-sm font-medium">Automatic Membership Renewal</p>
+                <p className="text-label-xs text-on-surface-variant font-normal">If enabled, membership renews automatically upon expiration.</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" checked={autoRenew} onChange={handleToggleAutoRenew} className="sr-only peer" />
+                <div className="w-9 h-5 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-outline-variant after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+              </label>
+            </div>
           </div>
         </div>
       </div>
@@ -582,6 +684,16 @@ export default function MemberProfilePage() {
                   <span className="font-bold text-amber-600">{(redeemState.remainingBefore || 0) - 1} remaining</span>
                 </div>
               )}
+            </div>
+            <div className="space-y-1">
+              <label className="form-label !mb-1 text-label-sm font-semibold text-on-surface">Purchase Amount (₹) - Optional</label>
+              <input
+                type="number"
+                placeholder="e.g. 500 (used to track customer spending)"
+                value={purchaseAmount}
+                onChange={e => setPurchaseAmount(e.target.value)}
+                className="input-field font-semibold text-body-md"
+              />
             </div>
             <p className="text-body-md text-on-surface-variant">
               This action is irreversible. Confirm that you want to redeem this offer for <strong>{member?.name}</strong>.

@@ -135,8 +135,9 @@ export async function redeemOffer(
   memberId: string,
   offerStateId: string,
   _staffId: string,
+  amount?: number,
 ): Promise<Redemption> {
-  return post<Redemption>('/redemptions', { member_id: memberId, offer_state_id: offerStateId });
+  return post<Redemption>('/redemptions', { member_id: memberId, offer_state_id: offerStateId, amount });
 }
 
 export async function redeemPoints(
@@ -144,8 +145,9 @@ export async function redeemPoints(
   memberId: string,
   offerStateId: string,
   _staffId: string,
+  amount?: number,
 ): Promise<Redemption> {
-  return post<Redemption>('/redemptions/redeem-points', { member_id: memberId, offer_state_id: offerStateId });
+  return post<Redemption>('/redemptions/redeem-points', { member_id: memberId, offer_state_id: offerStateId, amount });
 }
 
 export async function getMemberRedemptions(_merchantId: string, memberId: string): Promise<Redemption[]> {
@@ -210,6 +212,10 @@ export async function getAllMerchants(): Promise<Merchant[]> {
   return get<Merchant[]>('/admin/merchants');
 }
 
+export async function getAdminMerchants(): Promise<Merchant[]> {
+  return get<Merchant[]>('/admin/merchants');
+}
+
 export async function updateMerchantStatus(merchantId: string, status: 'active' | 'suspended'): Promise<Merchant> {
   const endpoint = status === 'suspended' ? 'suspend' : 'activate';
   return post<Merchant>(`/admin/merchants/${merchantId}/${endpoint}`);
@@ -227,7 +233,7 @@ export async function updateMerchant(merchantId: string, data: Partial<Merchant>
   return patch<Merchant>(`/admin/merchants/${merchantId}`, data);
 }
 
-export async function createMerchant(data: Partial<Merchant> & { owner_name: string; owner_phone: string }): Promise<Merchant> {
+export async function createMerchant(data: Partial<Merchant> & { owner_name: string; owner_phone: string; owner_email?: string }): Promise<Merchant> {
   return post<Merchant>('/admin/merchants', data);
 }
 
@@ -313,3 +319,103 @@ export async function sendCampaign(merchantId: string, campaignId: string): Prom
   return post<Campaign>(`/campaigns/${campaignId}/send`);
 }
 
+// ── Referral & Card PDF ───────────────────────────────────────────────────────
+export async function getReferralLink(memberId: string): Promise<{ referral_code: string; referral_link: string; bonus_points: number }> {
+  return get(`/members/${memberId}/referral-link`);
+}
+
+export async function downloadCardPdf(memberId: string): Promise<void> {
+  const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://metrocardz-api.onrender.com/api/v1';
+  const token = getToken();
+  const res = await fetch(`${BASE}/members/${memberId}/card-pdf`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('PDF generation failed');
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `member_card.pdf`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function getRetentionReport(merchantId: string, cohortMonths = 6): Promise<any[]> {
+  return get<any[]>(`/reports/retention?cohort_months=${cohortMonths}`);
+}
+
+// ── Reward Catalog ────────────────────────────────────────────────────────────
+export interface Reward { id: string; merchant_id: string; name: string; description: string; points_cost: number; quantity_available: number | null; is_active: boolean; created_at: string; }
+export async function getRewards(): Promise<Reward[]> { return get<Reward[]>('/rewards'); }
+export async function createReward(data: Partial<Reward>): Promise<Reward> { return post<Reward>('/rewards', data); }
+export async function updateReward(id: string, data: Partial<Reward>): Promise<Reward> { return patch<Reward>(`/rewards/${id}`, data); }
+export async function deleteReward(id: string): Promise<void> { return del(`/rewards/${id}`); }
+export async function claimReward(rewardId: string, memberId: string): Promise<any> { return post(`/rewards/${rewardId}/claim?member_id=${memberId}`); }
+export async function getRewardClaims(memberId?: string): Promise<any[]> { return get(`/rewards/claims${memberId ? `?member_id=${memberId}` : ''}`); }
+
+// ── Coupon Codes ──────────────────────────────────────────────────────────────
+export interface Coupon { id: string; merchant_id: string; code: string; discount_type: 'flat' | 'percent'; value: number; min_purchase: number; max_uses: number | null; used_count: number; expires_at: string | null; is_active: boolean; created_at: string; }
+export async function getCoupons(): Promise<Coupon[]> { return get<Coupon[]>('/coupons'); }
+export async function createCoupon(data: Partial<Coupon>): Promise<Coupon> { return post<Coupon>('/coupons', data); }
+export async function updateCoupon(id: string, data: Partial<Coupon>): Promise<Coupon> { return patch<Coupon>(`/coupons/${id}`, data); }
+export async function deleteCoupon(id: string): Promise<void> { return del(`/coupons/${id}`); }
+export async function validateCoupon(code: string, purchaseAmount: number): Promise<any> { return post('/coupons/validate', { code, purchase_amount: purchaseAmount }); }
+
+// ── Gift Vouchers ─────────────────────────────────────────────────────────────
+export interface GiftVoucher { id: string; merchant_id: string; code: string; value: number; is_redeemed: boolean; redeemed_by_member_id: string | null; expires_at: string | null; created_at: string; }
+export async function getVouchers(): Promise<GiftVoucher[]> { return get<GiftVoucher[]>('/vouchers'); }
+export async function generateVouchers(value: number, quantity: number, expiresAt?: string): Promise<GiftVoucher[]> { return post<GiftVoucher[]>('/vouchers/generate', { value, quantity, expires_at: expiresAt }); }
+export async function redeemVoucher(code: string, memberId: string): Promise<GiftVoucher> { return post<GiftVoucher>('/vouchers/redeem', { code, member_id: memberId }); }
+
+// ── Points Rules ──────────────────────────────────────────────────────────────
+export interface PointsRule { id: string; merchant_id: string; rule_type: 'per_visit' | 'per_rupee'; points_value: number; is_active: boolean; created_at: string; }
+export async function getPointsRules(): Promise<PointsRule[]> { return get<PointsRule[]>('/points-rules'); }
+export async function createPointsRule(data: Partial<PointsRule>): Promise<PointsRule> { return post<PointsRule>('/points-rules', data); }
+export async function updatePointsRule(id: string, data: Partial<PointsRule>): Promise<PointsRule> { return patch<PointsRule>(`/points-rules/${id}`, data); }
+export async function deletePointsRule(id: string): Promise<void> { return del(`/points-rules/${id}`); }
+
+// ── Scratch Cards ─────────────────────────────────────────────────────────────
+export interface ScratchCard { id: string; merchant_id: string; member_id: string; reward_type: string; reward_value: string; is_revealed: boolean; revealed_at: string | null; trigger_visit: number | null; created_at: string; }
+export async function getScratchCards(memberId?: string): Promise<ScratchCard[]> { return get(`/scratch-cards${memberId ? `?member_id=${memberId}` : ''}`); }
+export async function issueScratchCard(memberId: string): Promise<ScratchCard> { return post(`/scratch-cards/issue?member_id=${memberId}`); }
+export async function revealScratchCard(cardId: string): Promise<ScratchCard> { return post(`/scratch-cards/${cardId}/reveal`); }
+
+// ── Lucky Draws ───────────────────────────────────────────────────────────────
+export interface LuckyDraw { id: string; merchant_id: string; name: string; prize: string; draw_date: string; min_points: number; min_visits: number; status: string; winner_member_id: string | null; entry_count: number; created_at: string; }
+export async function getLuckyDraws(): Promise<LuckyDraw[]> { return get<LuckyDraw[]>('/lucky-draws'); }
+export async function createLuckyDraw(data: Partial<LuckyDraw>): Promise<LuckyDraw> { return post<LuckyDraw>('/lucky-draws', data); }
+export async function updateLuckyDraw(id: string, data: Partial<LuckyDraw>): Promise<LuckyDraw> { return patch<LuckyDraw>(`/lucky-draws/${id}`, data); }
+export async function enterLuckyDraw(drawId: string, memberId: string): Promise<any> { return post(`/lucky-draws/${drawId}/enter?member_id=${memberId}`); }
+export async function runLuckyDraw(drawId: string): Promise<any> { return post(`/lucky-draws/${drawId}/run`); }
+export async function deleteLuckyDraw(id: string): Promise<void> { return del(`/lucky-draws/${id}`); }
+
+// ── Admin Members & Reports ───────────────────────────────────────────────────
+export async function getAdminAllMembers(params?: { search?: string; merchant_id?: string; status?: string; limit?: number; offset?: number }): Promise<any[]> {
+  const q = new URLSearchParams();
+  if (params?.search) q.set('search', params.search);
+  if (params?.merchant_id) q.set('merchant_id', params.merchant_id);
+  if (params?.status) q.set('status', params.status);
+  if (params?.limit) q.set('limit', String(params.limit));
+  if (params?.offset) q.set('offset', String(params.offset));
+  return get(`/admin/members?${q.toString()}`);
+}
+export async function getAdminReportStats(params?: { date_from?: string; date_to?: string }): Promise<any> {
+  const q = new URLSearchParams();
+  if (params?.date_from) q.set('date_from', params.date_from);
+  if (params?.date_to) q.set('date_to', params.date_to);
+  return get(`/admin/reports/stats?${q.toString()}`);
+}
+export async function getAdminReportsByMerchant(): Promise<any[]> { return get('/admin/reports/by-merchant'); }
+export async function getAdminMerchantDetail(merchantId: string): Promise<any> { return get(`/admin/merchants/${merchantId}/detail`); }
+export async function updateStaffRole(merchantId: string, userId: string, role: string): Promise<any> {
+  return patch(`/admin/merchants/${merchantId}/users/${userId}/role?role=${role}`);
+}
+export async function deleteStaff(merchantId: string, userId: string): Promise<void> {
+  return del(`/admin/merchants/${merchantId}/users/${userId}`);
+}
+
+// ── Feedback ──────────────────────────────────────────────────────────────────
+export async function submitFeedback(memberId: string, rating: number, comment?: string): Promise<any> {
+  return post('/public/feedback', { member_id: memberId, rating, comment });
+}
+export async function getMerchantFeedback(): Promise<any[]> { return get('/public/feedback/merchant'); }

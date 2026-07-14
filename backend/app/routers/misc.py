@@ -441,6 +441,64 @@ def export_members_csv(
     )
 
 
+@reports_router.get("/retention")
+def report_retention(
+    cohort_months: int = 6,
+    merchant_id: str = Depends(get_merchant_id),
+    db: Session = Depends(get_db),
+):
+    """Return monthly cohort retention: members who joined in month X and redeemed in last 30 days."""
+    from datetime import date as _date, timedelta as _td
+    today = _date.today()
+    last_30_start = today - _td(days=30)
+    result = []
+
+    for i in range(cohort_months - 1, -1, -1):
+        # Calculate cohort month (i months ago)
+        month_offset = (today.month - i - 1) % 12 + 1
+        year_offset = today.year - ((today.month - i - 1) // 12 + (1 if (today.month - i - 1) < 0 else 0))
+        try:
+            cohort_start = _date(year_offset, month_offset, 1)
+        except ValueError:
+            continue
+        # Last day of cohort month
+        if month_offset == 12:
+            cohort_end = _date(year_offset + 1, 1, 1)
+        else:
+            cohort_end = _date(year_offset, month_offset + 1, 1)
+
+        cohort_members = db.query(Member).filter(
+            Member.merchant_id == merchant_id,
+            Member.joined_date >= cohort_start,
+            Member.joined_date < cohort_end,
+        ).all()
+        cohort_count = len(cohort_members)
+
+        if cohort_count == 0:
+            result.append({
+                "cohort": cohort_start.strftime("%b %Y"),
+                "joined": 0,
+                "retained": 0,
+                "retention_rate": 0.0,
+            })
+            continue
+
+        member_ids = [m.id for m in cohort_members]
+        retained = db.query(RedemptionLog.member_id).filter(
+            RedemptionLog.member_id.in_(member_ids),
+            RedemptionLog.created_at >= datetime.combine(last_30_start, datetime.min.time()).replace(tzinfo=timezone.utc),
+        ).distinct().count()
+
+        result.append({
+            "cohort": cohort_start.strftime("%b %Y"),
+            "joined": cohort_count,
+            "retained": retained,
+            "retention_rate": round((retained / cohort_count) * 100, 1) if cohort_count > 0 else 0.0,
+        })
+
+    return result
+
+
 # ── Public Self-Check Router ────────────────────────────────────────────────
 public_router = APIRouter(prefix="/public", tags=["public"])
 
@@ -468,6 +526,7 @@ def get_public_member_view(token: str, request: Request, db: Session = Depends(g
             })
 
     return PublicMemberView(
+        member_id=member.id,
         merchant_name=merchant.business_name,
         merchant_logo=merchant.logo_url,
         merchant_phone=merchant.whatsapp_number,

@@ -21,7 +21,7 @@ const OFFER_LABELS: Record<string, string> = {
   visit_milestone: 'Milestone Reward',
 };
 
-type TabType = 'redemptions' | 'members' | 'points' | 'leaderboard';
+type TabType = 'redemptions' | 'members' | 'points' | 'leaderboard' | 'retention';
 
 export default function ReportsPage() {
   const { user } = useAuthStore();
@@ -30,6 +30,7 @@ export default function ReportsPage() {
   const [newMembers, setNewMembers] = useState<any[]>([]);
   const [topCustomers, setTopCustomers] = useState<any[]>([]);
   const [pointsData, setPointsData] = useState<any[]>([]);
+  const [retentionData, setRetentionData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<TabType>('redemptions');
   const [timeMode, setTimeMode] = useState<'daily' | 'weekly'>('daily');
@@ -38,16 +39,18 @@ export default function ReportsPage() {
     setLoading(true);
     try {
       const mId = user?.merchant_id || '';
-      const [reportSummary, membersGrowth, leaders, pointsHistory] = await Promise.all([
+      const [reportSummary, membersGrowth, leaders, pointsHistory, retention] = await Promise.all([
         api.getReportData(mId),
         api.getNewMembersReport(mId, 30),
         api.getTopCustomersReport(mId, 10),
         api.getPointsReport(mId, 12),
+        api.getRetentionReport(mId, 6),
       ]);
       setData(reportSummary);
       setNewMembers(membersGrowth);
       setTopCustomers(leaders);
       setPointsData(pointsHistory);
+      setRetentionData(retention);
     } catch (e: any) {
       addToast('error', e.message || 'Failed to fetch reporting analytics');
     } finally {
@@ -173,6 +176,7 @@ export default function ReportsPage() {
           { id: 'members', label: 'Member Growth', icon: 'person_add' },
           { id: 'points', label: 'Points Economy', icon: 'stars' },
           { id: 'leaderboard', label: 'Top Customers', icon: 'leaderboard' },
+          { id: 'retention', label: 'Customer Retention', icon: 'sync' },
         ] as const).map(t => (
           <button
             key={t.id}
@@ -367,6 +371,54 @@ export default function ReportsPage() {
                     <td className="px-4 py-3 text-body-md text-on-surface-variant">{c.redemption_count}</td>
                     <td className="px-4 py-3 text-body-md font-bold text-amber-600">
                       {parseFloat(c.loyalty_points || '0').toLocaleString()} pts
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Tab content: Cohort Retention */}
+      {tab === 'retention' && (
+        <div className="card overflow-hidden animate-fade-in">
+          <div className="p-lg border-b border-outline-variant/30">
+            <h3 className="section-title">Cohort Retention Report</h3>
+            <p className="text-body-sm text-on-surface-variant">Track signups by month and the percentage of members active (who redeemed an offer) in the last 30 days.</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-surface-container-low">
+                <tr>
+                  {['Signup Month', 'Joined Members', 'Retained (Active 30d)', 'Retention Rate'].map(h => (
+                    <th key={h} className="text-left px-4 py-3 text-label-md font-label-md text-on-surface-variant">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-outline-variant/20">
+                {loading ? (
+                  Array.from({ length: 4 }).map((_, i) => (
+                    <tr key={i}>
+                      {Array.from({ length: 4 }).map((_, j) => (
+                        <td key={j} className="px-4 py-3">
+                          <div className="h-4 bg-surface-container rounded animate-pulse" />
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                ) : retentionData.map(c => (
+                  <tr key={c.cohort} className="hover:bg-surface-container-low transition-colors">
+                    <td className="px-4 py-3 text-body-md font-bold">{c.cohort}</td>
+                    <td className="px-4 py-3 text-body-md font-medium text-on-surface">{c.joined} members</td>
+                    <td className="px-4 py-3 text-body-md text-on-surface-variant">{c.retained} members</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 bg-surface-container-highest rounded-full h-2 max-w-[120px] overflow-hidden">
+                          <div className="bg-primary h-full rounded-full" style={{ width: `${c.retention_rate}%` }} />
+                        </div>
+                        <span className="text-body-md font-bold text-primary">{c.retention_rate}%</span>
+                      </div>
                     </td>
                   </tr>
                 ))}
