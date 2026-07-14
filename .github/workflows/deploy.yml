@@ -93,8 +93,10 @@ jobs:
       - name: Create production .env
         run: |
           cat > .env.production.local << EOF
-          NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL || 'https://api.metrocardz.in' }}
+          NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL || 'https://metrocardz-api.onrender.com' }}
           NEXT_PUBLIC_USE_MOCK_DATA=${{ secrets.NEXT_PUBLIC_USE_MOCK_DATA || 'false' }}
+          NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://dyzjsykvziquqsadnqzu.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           NEXT_PUBLIC_APP_NAME=Metro Cardz
           NEXT_PUBLIC_APP_VERSION=${{ github.ref_name }}
           NEXT_PUBLIC_APP_ENV=production
