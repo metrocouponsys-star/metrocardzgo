@@ -8,20 +8,26 @@ import { supabase } from '../../lib/supabaseClient';
 const BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '');
 
 export default function LoginPage() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [emailError, setEmailError] = useState('');
+  const [googleError, setGoogleError] = useState('');
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
   const { setAuth } = useAuthStore();
   const { addToast } = useToastStore();
   const navigate = useNavigate();
 
-  // Handle the OAuth callback — Supabase redirects back here with a session
+  // ── Handle Google OAuth callback ──────────────────────────────────────────
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.access_token) {
-        setLoading(true);
-        setError('');
+        setGoogleLoading(true);
+        setGoogleError('');
         try {
-          // Exchange Supabase token for our app JWT + user profile
           const res = await fetch(`${BASE_URL}/api/v1/auth/google`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -34,28 +40,22 @@ export default function LoginPage() {
           }
 
           const data = await res.json();
-          // Store refresh token
           if (data.refresh_token) {
             localStorage.setItem('metro-cardz-refresh', data.refresh_token);
           }
           setAuth(data.user, data.access_token);
           addToast('success', `Welcome, ${data.user.name}! 👋`);
-
-          if (data.user.role === 'super_admin') {
-            navigate('/admin');
-          } else {
-            navigate('/dashboard');
-          }
+          navigate(data.user.role === 'super_admin' ? '/admin' : '/dashboard');
         } catch (e: unknown) {
           const msg = e instanceof Error ? e.message : 'Login failed';
-          setError(msg === 'User not found'
-            ? 'Your Google account is not registered on Metro Cardz. Contact support to get onboarded.'
-            : msg
+          setGoogleError(
+            msg.toLowerCase().includes('not found')
+              ? 'Your Google account is not registered on Metro Cardz. Contact support to get onboarded.'
+              : msg
           );
-          // Sign out from Supabase so user can try again
           await supabase.auth.signOut();
         } finally {
-          setLoading(false);
+          setGoogleLoading(false);
         }
       }
     });
@@ -63,9 +63,43 @@ export default function LoginPage() {
     return () => subscription.unsubscribe();
   }, [setAuth, addToast, navigate]);
 
+  // ── Email + Password login ────────────────────────────────────────────────
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim() || !password) return;
+
+    setEmailLoading(true);
+    setEmailError('');
+    try {
+      const res = await fetch(`${BASE_URL}/api/v1/auth/login-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: 'Login failed' }));
+        throw new Error(err.detail || 'Invalid email or password');
+      }
+
+      const data = await res.json();
+      if (data.refresh_token) {
+        localStorage.setItem('metro-cardz-refresh', data.refresh_token);
+      }
+      setAuth(data.user, data.access_token);
+      addToast('success', `Welcome, ${data.user.name}! 👋`);
+      navigate(data.user.role === 'super_admin' ? '/admin' : '/dashboard');
+    } catch (e: unknown) {
+      setEmailError(e instanceof Error ? e.message : 'Login failed');
+    } finally {
+      setEmailLoading(false);
+    }
+  };
+
+  // ── Google login ──────────────────────────────────────────────────────────
   const handleGoogleLogin = async () => {
-    setLoading(true);
-    setError('');
+    setGoogleLoading(true);
+    setGoogleError('');
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -73,11 +107,13 @@ export default function LoginPage() {
       },
     });
     if (oauthError) {
-      setError('Google login failed. Please try again.');
-      setLoading(false);
+      setGoogleError('Google login failed. Please try again.');
+      setGoogleLoading(false);
     }
     // If no error, browser redirects to Google — loading stays true
   };
+
+  const isAnyLoading = emailLoading || googleLoading;
 
   return (
     <div className="min-h-screen bg-surface flex flex-col justify-center items-center px-4 relative overflow-hidden">
@@ -87,7 +123,7 @@ export default function LoginPage() {
         <div className="absolute -bottom-[10%] -left-[10%] w-[40%] h-[40%] rounded-full bg-secondary-fixed opacity-20 blur-[120px]" />
       </div>
 
-      <div className="w-full max-w-[400px] animate-slide-up">
+      <div className="w-full max-w-[420px] animate-slide-up">
         {/* Logo */}
         <div className="mb-8 text-center">
           <div className="inline-flex items-center justify-center p-3 bg-primary rounded-2xl mb-3 shadow-elevated">
@@ -99,35 +135,127 @@ export default function LoginPage() {
 
         {/* Card */}
         <div className="bg-surface-container-lowest rounded-2xl p-8 border border-outline-variant/30 shadow-tonal">
-          <div className="mb-7 text-center">
+          <div className="mb-6 text-center">
             <h2 className="text-headline-lg-mobile font-headline-lg-mobile text-on-surface mb-1">
               Welcome Back
             </h2>
             <p className="text-body-md text-on-surface-variant">
-              Sign in to your Metro Cardz merchant account.
+              Sign in to your merchant account.
             </p>
           </div>
 
-          {error && (
+          {/* ── Email/Password Form ── */}
+          <form onSubmit={handleEmailLogin} noValidate>
+            {/* Email field */}
+            <div className="mb-3">
+              <label htmlFor="login-email" className="block text-label-sm text-on-surface-variant mb-1.5 font-medium">
+                Email address
+              </label>
+              <div className="relative">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px] pointer-events-none">
+                  mail
+                </span>
+                <input
+                  id="login-email"
+                  type="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  disabled={isAnyLoading}
+                  placeholder="you@example.com"
+                  className="w-full h-12 pl-10 pr-4 rounded-xl border border-outline-variant bg-surface-container text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 disabled:opacity-60"
+                />
+              </div>
+            </div>
+
+            {/* Password field */}
+            <div className="mb-4">
+              <label htmlFor="login-password" className="block text-label-sm text-on-surface-variant mb-1.5 font-medium">
+                Password
+              </label>
+              <div className="relative">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px] pointer-events-none">
+                  lock
+                </span>
+                <input
+                  id="login-password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  disabled={isAnyLoading}
+                  placeholder="Enter your password"
+                  className="w-full h-12 pl-10 pr-11 rounded-xl border border-outline-variant bg-surface-container text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 disabled:opacity-60"
+                />
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  onClick={() => setShowPassword(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface transition-colors"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  <span className="material-symbols-outlined text-[18px]">
+                    {showPassword ? 'visibility_off' : 'visibility'}
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            {/* Email login error */}
+            {emailError && (
+              <div className="mb-4 bg-error-container rounded-xl p-3 border border-error/20 flex items-start gap-2">
+                <span className="material-symbols-outlined text-error text-[18px] mt-0.5">error</span>
+                <p className="text-body-sm text-error">{emailError}</p>
+              </div>
+            )}
+
+            {/* Sign In button */}
+            <button
+              id="email-login-btn"
+              type="submit"
+              disabled={isAnyLoading || !email.trim() || !password}
+              className="w-full h-12 rounded-xl bg-primary text-on-primary font-semibold text-body-lg flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+            >
+              {emailLoading ? (
+                <span className="material-symbols-outlined animate-spin text-[20px]">progress_activity</span>
+              ) : (
+                <>
+                  <span className="material-symbols-outlined text-[18px]">login</span>
+                  Sign In
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* ── Divider ── */}
+          <div className="flex items-center gap-3 my-5">
+            <div className="flex-1 h-px bg-outline-variant/40" />
+            <span className="text-label-sm text-on-surface-variant font-medium">or</span>
+            <div className="flex-1 h-px bg-outline-variant/40" />
+          </div>
+
+          {/* Google error */}
+          {googleError && (
             <div className="mb-4 bg-error-container rounded-xl p-3 border border-error/20 flex items-start gap-2">
               <span className="material-symbols-outlined text-error text-[18px] mt-0.5">error</span>
-              <p className="text-body-sm text-error">{error}</p>
+              <p className="text-body-sm text-error">{googleError}</p>
             </div>
           )}
 
+          {/* ── Google button ── */}
           <button
             id="google-login-btn"
             onClick={handleGoogleLogin}
-            disabled={loading}
-            className="w-full h-14 rounded-xl border border-outline-variant flex items-center justify-center gap-3 font-medium text-body-lg text-on-surface bg-surface-container hover:bg-surface-container-high transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+            disabled={isAnyLoading}
+            className="w-full h-12 rounded-xl border border-outline-variant flex items-center justify-center gap-3 font-medium text-body-md text-on-surface bg-surface-container hover:bg-surface-container-high transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
             style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}
           >
-            {loading ? (
+            {googleLoading ? (
               <span className="material-symbols-outlined animate-spin text-primary">progress_activity</span>
             ) : (
               <>
                 {/* Google icon SVG */}
-                <svg width="20" height="20" viewBox="0 0 48 48" fill="none">
+                <svg width="18" height="18" viewBox="0 0 48 48" fill="none">
                   <path d="M47.5 24.6c0-1.6-.1-3.2-.4-4.7H24v9h13.1c-.6 3-2.4 5.6-5 7.3v6h8c4.7-4.3 7.4-10.7 7.4-17.6z" fill="#4285F4"/>
                   <path d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-8-6c-2.1 1.4-4.8 2.3-7.9 2.3-6.1 0-11.2-4.1-13-9.6H2.8v6.2C6.8 42.6 14.9 48 24 48z" fill="#34A853"/>
                   <path d="M11 28.9c-.5-1.4-.7-2.9-.7-4.9s.3-3.5.7-4.9v-6.2H2.8C1 16.6 0 20.2 0 24s1 7.4 2.8 10.1L11 28.9z" fill="#FBBC05"/>

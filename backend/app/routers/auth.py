@@ -10,7 +10,7 @@ from app.core.security import verify_password, create_access_token, create_refre
 from app.core.rate_limit import auth_rate_limit, otp_rate_limit
 from app.core.config import settings
 from app.models.merchant import MerchantUser, Merchant
-from app.schemas import LoginRequest, OtpRequest, OtpVerifyRequest, LoginResponse, AuthUserOut, RefreshRequest
+from app.schemas import LoginRequest, EmailLoginRequest, OtpRequest, OtpVerifyRequest, LoginResponse, AuthUserOut, RefreshRequest
 import redis as redis_lib
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -49,6 +49,18 @@ def login(payload: LoginRequest, request: Request, db: Session = Depends(get_db)
     ).first()
     if not user or not user.password_hash or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+    return _build_login_response(user, db)
+
+
+@router.post("/login-email", response_model=LoginResponse)
+def login_with_email(payload: EmailLoginRequest, request: Request, db: Session = Depends(get_db)):
+    """Authenticate a merchant user using email address and password."""
+    auth_rate_limit(request)
+    user = db.query(MerchantUser).filter(
+        MerchantUser.email == payload.email.strip().lower()
+    ).first()
+    if not user or not user.password_hash or not verify_password(payload.password, user.password_hash):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
     return _build_login_response(user, db)
 
 
