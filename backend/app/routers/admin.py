@@ -78,8 +78,9 @@ def create_merchant(
         merchant_id=merchant.id,
         name=payload.owner_name,
         phone=payload.owner_phone.replace(" ", ""),
+        email=payload.owner_email or None,
         role="owner",
-        password_hash=hash_password(payload.owner_phone[-4:]),  # Temp password = last 4 digits of phone
+        password_hash=hash_password(payload.owner_phone.replace(" ", "")),  # Default password = full phone number
     )
     db.add(owner)
     db.commit()
