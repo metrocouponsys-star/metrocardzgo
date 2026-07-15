@@ -53,9 +53,25 @@ export async function verifyOtp(_phone: string, otp: string): Promise<{ user: Au
 }
 
 // ---- Dashboard ----
-export async function getDashboardStats(_merchantId: string): Promise<DashboardStats> {
+export async function getDashboardStats(merchantId: string): Promise<DashboardStats> {
   await delay(FAKE_DELAY);
-  return db.dashboardStats;
+  const today = new Date().toDateString();
+  const merchantMembers = db.members.filter(m => m.merchant_id === merchantId);
+  const now = new Date();
+  const weekFromNow = new Date(now.getTime() + 7 * 86400_000);
+  return {
+    total_active_members: merchantMembers.filter(m => m.status === 'active').length,
+    redemptions_today: db.redemptions.filter(r => new Date(r.created_at).toDateString() === today).length,
+    expiring_this_week: merchantMembers.filter(m => {
+      const exp = new Date(m.expiry_date);
+      return exp >= now && exp <= weekFromNow;
+    }).length,
+    wallet_points_issued_month: merchantMembers.reduce((sum, m) => sum + (m.loyalty_points || 0), 0),
+    recent_redemptions: db.redemptions
+      .filter(r => merchantMembers.some(m => m.id === r.member_id))
+      .slice(-10)
+      .reverse(),
+  };
 }
 
 // ---- Members ----

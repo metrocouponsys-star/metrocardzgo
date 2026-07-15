@@ -1,13 +1,12 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { getAdminAllMembers, getAdminMerchantDetail } from '../../api/realClient';
-import * as api from '../../api/realClient';
+import * as api from '../../api';
 
-const STATUS_COLORS: Record<string, string> = {
-  active: 'var(--clr-success)',
-  expiring_soon: 'var(--clr-warning)',
-  expired: 'var(--clr-error)',
-  deactivated: 'var(--clr-neutral)',
+const STATUS_CONFIG: Record<string, { badge: string; label: string }> = {
+  active: { badge: 'bg-green-100 text-green-800 border-green-200', label: 'Active' },
+  expiring_soon: { badge: 'bg-amber-100 text-amber-800 border-amber-200', label: 'Expiring Soon' },
+  expired: { badge: 'bg-red-100 text-red-800 border-red-200', label: 'Expired' },
+  deactivated: { badge: 'bg-surface-container text-on-surface-variant border-outline-variant/30', label: 'Deactivated' },
 };
 
 export default function AdminMembersPage() {
@@ -26,7 +25,7 @@ export default function AdminMembersPage() {
 
   useEffect(() => {
     setLoading(true);
-    getAdminAllMembers({ search, merchant_id: merchantFilter, status: statusFilter, limit: 200 })
+    api.getAdminAllMembers({ search, merchant_id: merchantFilter, status: statusFilter, limit: 200 })
       .then(setMembers)
       .catch(() => setMembers([]))
       .finally(() => setLoading(false));
@@ -34,125 +33,219 @@ export default function AdminMembersPage() {
 
   const openDetail = async (merchantId: string) => {
     try {
-      const d = await getAdminMerchantDetail(merchantId);
+      const d = await api.getAdminMerchantDetail(merchantId);
       setDetail(d);
       setDetailOpen(true);
     } catch {}
   };
 
   return (
-    <div style={{ padding: '1.5rem' }}>
-      <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1rem', color: 'var(--clr-text-primary)' }}>
-        All Members (Platform-Wide)
-      </h1>
-
-      {/* Filters */}
-      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
-        <input
-          placeholder="Search name, phone, code…"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          style={{ padding: '0.5rem 0.75rem', borderRadius: 8, border: '1px solid var(--clr-border)', minWidth: 220 }}
-        />
-        <select value={merchantFilter} onChange={e => setMerchantFilter(e.target.value)}
-          style={{ padding: '0.5rem 0.75rem', borderRadius: 8, border: '1px solid var(--clr-border)', minWidth: 180 }}>
-          <option value="">All Merchants</option>
-          {merchants.map((m: any) => <option key={m.id} value={m.id}>{m.business_name}</option>)}
-        </select>
-        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-          style={{ padding: '0.5rem 0.75rem', borderRadius: 8, border: '1px solid var(--clr-border)' }}>
-          <option value="">All Statuses</option>
-          <option value="active">Active</option>
-          <option value="expiring_soon">Expiring Soon</option>
-          <option value="expired">Expired</option>
-          <option value="deactivated">Deactivated</option>
-        </select>
-        <span style={{ alignSelf: 'center', color: 'var(--clr-text-secondary)', fontSize: '0.875rem' }}>
-          {members.length} members
-        </span>
+    <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-7xl mx-auto space-y-xl animate-fade-in">
+      {/* Page Header */}
+      <div className="page-header">
+        <h2 className="page-title flex items-center gap-2">
+          <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>groups</span>
+          All Members (Platform-Wide)
+        </h2>
+        <p className="page-subtitle">Search, filter, and inspect members across all onboarded merchants.</p>
       </div>
 
-      {/* Table */}
-      <div style={{ overflowX: 'auto', background: 'var(--clr-surface)', borderRadius: 12, boxShadow: 'var(--shadow-sm)' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
-          <thead>
-            <tr style={{ background: 'var(--clr-surface-alt)' }}>
-              {['Code', 'Name', 'Phone', 'Merchant', 'Tier', 'Status', 'Points', 'Visits', 'Expiry'].map(h => (
-                <th key={h} style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, color: 'var(--clr-text-secondary)', whiteSpace: 'nowrap' }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan={9} style={{ padding: '2rem', textAlign: 'center', color: 'var(--clr-text-secondary)' }}>Loading…</td></tr>
-            ) : members.length === 0 ? (
-              <tr><td colSpan={9} style={{ padding: '2rem', textAlign: 'center', color: 'var(--clr-text-secondary)' }}>No members found</td></tr>
-            ) : members.map(m => (
-              <tr key={m.id} style={{ borderTop: '1px solid var(--clr-border)', cursor: 'pointer' }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'var(--clr-surface-alt)')}
-                onMouseLeave={e => (e.currentTarget.style.background = '')}>
-                <td style={{ padding: '0.65rem 1rem', fontFamily: 'monospace', fontWeight: 600 }}>{m.member_code}</td>
-                <td style={{ padding: '0.65rem 1rem', fontWeight: 500 }}>{m.name}</td>
-                <td style={{ padding: '0.65rem 1rem' }}>{m.phone}</td>
-                <td style={{ padding: '0.65rem 1rem' }}>
-                  <button onClick={() => openDetail(m.merchant_id)}
-                    style={{ background: 'none', border: 'none', color: 'var(--clr-primary)', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>
-                    {m.merchant_name || m.merchant_id.slice(0, 8)}
-                  </button>
-                </td>
-                <td style={{ padding: '0.65rem 1rem', color: 'var(--clr-text-secondary)' }}>{m.membership_type_name || '—'}</td>
-                <td style={{ padding: '0.65rem 1rem' }}>
-                  <span style={{ background: STATUS_COLORS[m.status] + '22', color: STATUS_COLORS[m.status], padding: '2px 8px', borderRadius: 99, fontSize: '0.75rem', fontWeight: 600 }}>
-                    {m.status.replace('_', ' ')}
-                  </span>
-                </td>
-                <td style={{ padding: '0.65rem 1rem', fontWeight: 600, color: 'var(--clr-primary)' }}>{Number(m.loyalty_points).toFixed(0)}</td>
-                <td style={{ padding: '0.65rem 1rem' }}>{m.total_visits}</td>
-                <td style={{ padding: '0.65rem 1rem', color: 'var(--clr-text-secondary)' }}>{m.expiry_date}</td>
-              </tr>
+      {/* Filters Bar */}
+      <div className="flex flex-wrap gap-3 items-center bg-surface-container-low p-md rounded-2xl border border-outline-variant/20 shadow-sm">
+        <div className="flex-1 min-w-[240px] relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-[18px]">search</span>
+          <input
+            placeholder="Search name, phone, member code..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="input-field pl-10 w-full"
+          />
+        </div>
+
+        <div className="w-full sm:w-auto">
+          <select
+            value={merchantFilter}
+            onChange={e => setMerchantFilter(e.target.value)}
+            className="input-field min-w-[180px]"
+          >
+            <option value="">All Merchants</option>
+            {merchants.map((m: any) => (
+              <option key={m.id} value={m.id}>{m.business_name}</option>
             ))}
-          </tbody>
-        </table>
+          </select>
+        </div>
+
+        <div className="w-full sm:w-auto">
+          <select
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}
+            className="input-field min-w-[150px]"
+          >
+            <option value="">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="expiring_soon">Expiring Soon</option>
+            <option value="expired">Expired</option>
+            <option value="deactivated">Deactivated</option>
+          </select>
+        </div>
+
+        <div className="text-label-md text-on-surface-variant font-medium whitespace-nowrap bg-surface-container-high px-3 py-2 rounded-xl">
+          {members.length} member{members.length !== 1 ? 's' : ''} found
+        </div>
+      </div>
+
+      {/* Members Table */}
+      <div className="card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-left">
+            <thead className="bg-surface-container-low border-b border-outline-variant/30">
+              <tr>
+                {['Code', 'Name', 'Phone', 'Merchant', 'Tier', 'Status', 'Points', 'Visits', 'Expiry'].map(h => (
+                  <th key={h} className="px-4 py-3 text-label-md font-bold text-on-surface-variant whitespace-nowrap">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-outline-variant/20">
+              {loading ? (
+                Array.from({ length: 6 }).map((_, i) => (
+                  <tr key={i}>
+                    {Array.from({ length: 9 }).map((_, j) => (
+                      <td key={j} className="px-4 py-3"><div className="h-4 bg-surface-container rounded animate-pulse w-3/4" /></td>
+                    ))}
+                  </tr>
+                ))
+              ) : members.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="px-4 py-16 text-center text-on-surface-variant">
+                    <span className="material-symbols-outlined text-[48px] block mb-2 opacity-40">person_off</span>
+                    No members match your current filters.
+                  </td>
+                </tr>
+              ) : (
+                members.map(m => {
+                  const statusCfg = STATUS_CONFIG[m.status] || { badge: 'bg-surface-container text-on-surface-variant', label: m.status };
+                  return (
+                    <tr key={m.id} className="hover:bg-surface-container-low transition-colors group">
+                      <td className="px-4 py-3 text-body-md font-mono font-bold text-on-surface-variant">{m.member_code}</td>
+                      <td className="px-4 py-3 text-body-md font-bold text-on-surface">{m.name}</td>
+                      <td className="px-4 py-3 text-body-md text-on-surface-variant whitespace-nowrap">{m.phone}</td>
+                      <td className="px-4 py-3 text-body-md">
+                        <button
+                          onClick={() => openDetail(m.merchant_id)}
+                          className="text-primary hover:underline font-semibold text-left transition-colors"
+                        >
+                          {m.merchant_name || m.merchant_id.slice(0, 8)}
+                        </button>
+                      </td>
+                      <td className="px-4 py-3 text-body-md text-on-surface-variant">{m.membership_type_name || '—'}</td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex items-center text-label-sm px-2.5 py-0.5 rounded-full border ${statusCfg.badge}`}>
+                          {statusCfg.label}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-body-md font-bold text-primary">{Number(m.loyalty_points).toFixed(0)}</td>
+                      <td className="px-4 py-3 text-body-md text-on-surface-variant font-mono">{m.total_visits || 0}</td>
+                      <td className="px-4 py-3 text-body-md text-on-surface-variant whitespace-nowrap">{m.expiry_date}</td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Merchant Detail Slide-Over */}
       {detailOpen && detail && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', justifyContent: 'flex-end' }}
-          onClick={() => setDetailOpen(false)}>
-          <div style={{ width: 420, background: 'var(--clr-surface)', height: '100%', overflowY: 'auto', padding: '1.5rem', boxShadow: '-4px 0 20px rgba(0,0,0,0.2)' }}
-            onClick={e => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-              <h2 style={{ fontWeight: 700, fontSize: '1.2rem' }}>{detail.merchant?.business_name}</h2>
-              <button onClick={() => setDetailOpen(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
+        <div
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[900] flex justify-end animate-fade-in"
+          onClick={() => setDetailOpen(false)}
+        >
+          <div
+            className="w-full max-w-md bg-surface h-full shadow-2xl overflow-y-auto flex flex-col animate-slide-in border-l border-outline-variant/30"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Slide-over Header */}
+            <div className="p-lg border-b border-outline-variant/30 flex items-center justify-between">
+              <div>
+                <span className="text-label-sm font-bold uppercase tracking-widest text-on-surface-variant">Merchant Insights</span>
+                <h3 className="text-headline-md font-bold mt-1 text-primary">{detail.merchant?.business_name}</h3>
+              </div>
+              <button
+                onClick={() => setDetailOpen(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1.25rem' }}>
-              {[
-                ['Category', detail.merchant?.category],
-                ['Plan', detail.merchant?.plan_tier],
-                ['Status', detail.merchant?.status],
-                ['Members', detail.stats?.member_count],
-                ['Redemptions Today', detail.stats?.redemptions_today],
-              ].map(([k, v]) => (
-                <div key={k as string} style={{ background: 'var(--clr-surface-alt)', borderRadius: 8, padding: '0.75rem' }}>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--clr-text-secondary)', marginBottom: 2 }}>{k}</div>
-                  <div style={{ fontWeight: 600 }}>{v ?? '—'}</div>
+
+            {/* Slide-over Body */}
+            <div className="p-lg flex-1 space-y-lg overflow-y-auto custom-scrollbar">
+              {/* Info Cards Grid */}
+              <div className="grid grid-cols-2 gap-sm">
+                {[
+                  { label: 'Category', value: detail.merchant?.category, icon: 'category', color: 'text-primary' },
+                  { label: 'Plan Tier', value: detail.merchant?.plan_tier, icon: 'military_tech', color: 'text-amber-500' },
+                  { label: 'Status', value: detail.merchant?.status, icon: 'check_circle', color: detail.merchant?.status === 'active' ? 'text-green-600' : 'text-error' },
+                  { label: 'Total Members', value: detail.stats?.member_count, icon: 'groups', color: 'text-secondary' },
+                  { label: 'Redemptions Today', value: detail.stats?.redemptions_today, icon: 'done_all', color: 'text-tertiary' },
+                ].map((item, idx) => (
+                  <div
+                    key={idx}
+                    className={`card p-md border border-outline-variant/10 flex flex-col justify-between min-h-[85px]
+                      ${item.label === 'Redemptions Today' ? 'col-span-2 bg-primary-container/10 border-primary/10' : ''}`}
+                  >
+                    <div className="flex items-center justify-between text-on-surface-variant">
+                      <span className="text-label-sm font-medium">{item.label}</span>
+                      <span className={`material-symbols-outlined text-[16px] ${item.color}`}>{item.icon}</span>
+                    </div>
+                    <p className="text-body-lg font-bold mt-2 capitalize">{item.value ?? '—'}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Recent Members Section */}
+              <div className="space-y-md">
+                <h4 className="text-label-md font-bold text-on-surface uppercase tracking-wider">Recent Members</h4>
+                <div className="divide-y divide-outline-variant/10 border border-outline-variant/30 rounded-xl overflow-hidden bg-surface-container-lowest">
+                  {(detail.recent_members || []).length === 0 ? (
+                    <p className="p-4 text-center text-body-sm text-on-surface-variant italic">No members added yet.</p>
+                  ) : (
+                    detail.recent_members.map((m: any) => (
+                      <div key={m.id} className="p-md flex items-center justify-between hover:bg-surface-container-low transition-colors">
+                        <div>
+                          <p className="font-bold text-on-surface text-body-md">{m.name}</p>
+                          <p className="text-label-sm text-on-surface-variant">{m.phone}</p>
+                        </div>
+                        <span className="text-label-sm text-on-surface-variant font-mono">{m.joined_date}</span>
+                      </div>
+                    ))
+                  )}
                 </div>
-              ))}
+              </div>
+
+              {/* Staff / Owner Accounts Section */}
+              <div className="space-y-md">
+                <h4 className="text-label-md font-bold text-on-surface uppercase tracking-wider">Staff & Owners</h4>
+                <div className="divide-y divide-outline-variant/10 border border-outline-variant/30 rounded-xl overflow-hidden bg-surface-container-lowest">
+                  {(detail.users || []).length === 0 ? (
+                    <p className="p-4 text-center text-body-sm text-on-surface-variant italic">No user accounts set up.</p>
+                  ) : (
+                    detail.users.map((u: any) => (
+                      <div key={u.id} className="p-md flex items-center justify-between hover:bg-surface-container-low transition-colors">
+                        <div className="flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[20px] text-on-surface-variant">account_circle</span>
+                          <span className="font-bold text-on-surface text-body-md">{u.name}</span>
+                        </div>
+                        <span className="text-[11px] font-bold px-2.5 py-0.5 bg-primary/10 text-primary rounded-full uppercase tracking-wider">
+                          {u.role}
+                        </span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
             </div>
-            <h3 style={{ fontWeight: 600, marginBottom: '0.5rem', fontSize: '0.9rem' }}>Recent Members</h3>
-            {(detail.recent_members || []).map((m: any) => (
-              <div key={m.id} style={{ padding: '0.5rem 0', borderBottom: '1px solid var(--clr-border)', fontSize: '0.875rem' }}>
-                <strong>{m.name}</strong> · {m.phone}
-                <span style={{ float: 'right', color: 'var(--clr-text-secondary)' }}>{m.joined_date}</span>
-              </div>
-            ))}
-            <h3 style={{ fontWeight: 600, marginTop: '1rem', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Staff / Owners</h3>
-            {(detail.users || []).map((u: any) => (
-              <div key={u.id} style={{ padding: '0.4rem 0', fontSize: '0.875rem', display: 'flex', justifyContent: 'space-between' }}>
-                <span>{u.name}</span>
-                <span style={{ background: 'var(--clr-primary-light)', color: 'var(--clr-primary)', padding: '1px 8px', borderRadius: 99, fontSize: '0.75rem' }}>{u.role}</span>
-              </div>
-            ))}
           </div>
         </div>
       )}

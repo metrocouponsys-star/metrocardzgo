@@ -1,0 +1,21 @@
+User-Agent: *
+Allow: /
+Allow: /gym-membership-cards/
+Allow: /salon-membership-cards/
+Allow: /restaurant-loyalty-cards/
+Allow: /retail-gift-cards/
+Allow: /hospital-health-cards/
+Allow: /supermarket-loyalty-cards/
+Allow: /corporate-id-cards/
+Disallow: /dashboard/
+Disallow: /admin/
+Disallow: /members/
+Disallow: /offers/
+Disallow: /membership-types/
+Disallow: /reports/
+Disallow: /campaigns/
+Disallow: /settings/
+Disallow: /cards/
+Disallow: /api/
+
+Sitemap: https://www.metrocardz.in/sitemap.xml

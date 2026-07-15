@@ -4,7 +4,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useToastStore } from '../../store/toastStore';
 import { ConfirmModal } from '../../components/ui/Modal';
 import type { CardInventoryItem, Member } from '../../types';
-import * as api from '../../api/client';
+import * as api from '../../api';
 import { format } from 'date-fns';
 
 const STATUS_CFG = {

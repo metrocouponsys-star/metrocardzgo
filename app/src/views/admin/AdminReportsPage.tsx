@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { getAdminReportStats, getAdminReportsByMerchant } from '../../api/realClient';
+import * as api from '../../api';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
 export default function AdminReportsPage() {
@@ -14,8 +14,8 @@ export default function AdminReportsPage() {
     setLoading(true);
     try {
       const [s, bm] = await Promise.all([
-        getAdminReportStats({ date_from: dateFrom || undefined, date_to: dateTo || undefined }),
-        getAdminReportsByMerchant(),
+        api.getAdminReportStats({ date_from: dateFrom || undefined, date_to: dateTo || undefined }),
+        api.getAdminReportsByMerchant(),
       ]);
       setStats(s);
       setByMerchant(bm.slice(0, 15));
@@ -26,87 +26,140 @@ export default function AdminReportsPage() {
   useEffect(() => { load(); }, []);
 
   const statCards = stats ? [
-    { label: 'Total Redemptions', value: stats.total_redemptions, color: '#6c63ff' },
-    { label: 'Total Members', value: stats.total_members, color: '#00b894' },
-    { label: 'Active Merchants', value: stats.active_merchants, color: '#00236f' },
-    { label: 'New Members This Month', value: stats.new_members_this_month, color: '#fd79a8' },
-    { label: 'Points Issued', value: Number(stats.total_points_issued).toFixed(0), color: '#fdcb6e' },
-    { label: 'Points Redeemed', value: Number(stats.total_points_redeemed).toFixed(0), color: '#e17055' },
+    { label: 'Total Redemptions', value: stats.total_redemptions, color: 'text-primary', bg: 'bg-primary-container/20', border: 'border-primary/20', icon: 'receipt_long' },
+    { label: 'Total Members', value: stats.total_members, color: 'text-secondary', bg: 'bg-secondary-container', border: 'border-secondary/20', icon: 'groups' },
+    { label: 'Active Merchants', value: stats.active_merchants, color: 'text-tertiary', bg: 'bg-tertiary-container/30', border: 'border-tertiary/20', icon: 'storefront' },
+    { label: 'New Members (Month)', value: stats.new_members_this_month, color: 'text-error', bg: 'bg-error-container', border: 'border-error/20', icon: 'person_add' },
+    { label: 'Points Issued', value: Number(stats.total_points_issued).toLocaleString(undefined, { maximumFractionDigits: 0 }), color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', icon: 'bolt' },
+    { label: 'Points Redeemed', value: Number(stats.total_points_redeemed).toLocaleString(undefined, { maximumFractionDigits: 0 }), color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-200', icon: 'stars' },
   ] : [];
 
   return (
-    <div style={{ padding: '1.5rem' }}>
-      <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1rem', color: 'var(--clr-text-primary)' }}>
-        Platform-Wide Reports
-      </h1>
+    <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-7xl mx-auto space-y-xl animate-fade-in">
+      {/* Page Header */}
+      <div className="page-header flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h2 className="page-title flex items-center gap-2">
+            <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>analytics</span>
+            Platform-Wide Reports
+          </h2>
+          <p className="page-subtitle">Cross-merchant aggregated analytics and metrics dashboard.</p>
+        </div>
 
-      {/* Date filters */}
-      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.25rem', alignItems: 'center', flexWrap: 'wrap' }}>
-        <label style={{ fontSize: '0.875rem', color: 'var(--clr-text-secondary)' }}>From:</label>
-        <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
-          style={{ padding: '0.4rem 0.75rem', borderRadius: 8, border: '1px solid var(--clr-border)' }} />
-        <label style={{ fontSize: '0.875rem', color: 'var(--clr-text-secondary)' }}>To:</label>
-        <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
-          style={{ padding: '0.4rem 0.75rem', borderRadius: 8, border: '1px solid var(--clr-border)' }} />
-        <button onClick={load}
-          style={{ padding: '0.4rem 1rem', borderRadius: 8, background: 'var(--clr-primary)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
-          Apply
-        </button>
+        {/* Date filters */}
+        <div className="flex flex-wrap items-center gap-2 bg-surface-container p-2 rounded-xl border border-outline-variant/30">
+          <div className="flex items-center gap-1.5">
+            <span className="text-label-sm text-on-surface-variant font-medium">From</span>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={e => setDateFrom(e.target.value)}
+              className="px-2 py-1 text-body-sm rounded-lg border border-outline-variant bg-surface focus:outline-none focus:border-primary"
+            />
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-label-sm text-on-surface-variant font-medium">To</span>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={e => setDateTo(e.target.value)}
+              className="px-2 py-1 text-body-sm rounded-lg border border-outline-variant bg-surface focus:outline-none focus:border-primary"
+            />
+          </div>
+          <button
+            onClick={load}
+            disabled={loading}
+            className="btn-primary py-1 px-3 text-label-sm min-h-0 flex items-center gap-1"
+          >
+            {loading ? (
+              <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>
+            ) : (
+              <span className="material-symbols-outlined text-[16px]">filter_alt</span>
+            )}
+            Apply
+          </button>
+        </div>
       </div>
 
-      {/* Stat cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-        {loading ? Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} style={{ background: 'var(--clr-surface)', borderRadius: 12, padding: '1.25rem', height: 90, animation: 'pulse 1.5s infinite' }} />
-        )) : statCards.map(({ label, value, color }) => (
-          <div key={label} style={{ background: 'var(--clr-surface)', borderRadius: 12, padding: '1.25rem', boxShadow: 'var(--shadow-sm)', borderTop: `3px solid ${color}` }}>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800, color }}>{value}</div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--clr-text-secondary)', marginTop: 4 }}>{label}</div>
-          </div>
-        ))}
+      {/* Stat cards grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-md">
+        {loading ? (
+          Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="card p-md animate-pulse h-28 bg-surface-container rounded-2xl" />
+          ))
+        ) : (
+          statCards.map((c, i) => (
+            <div key={i} className={`card p-md flex flex-col justify-between border ${c.border} hover:shadow-elevated transition-shadow duration-200`}>
+              <div className="flex justify-between items-start">
+                <span className="text-label-sm text-on-surface-variant font-medium leading-tight">{c.label}</span>
+                <span className={`material-symbols-outlined text-[20px] ${c.color}`}>{c.icon}</span>
+              </div>
+              <div className="mt-4">
+                <span className={`text-headline-lg font-bold ${c.color}`}>{c.value}</span>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {/* Redemptions by Merchant Chart */}
-      <div style={{ background: 'var(--clr-surface)', borderRadius: 12, padding: '1.5rem', boxShadow: 'var(--shadow-sm)', marginBottom: '2rem' }}>
-        <h2 style={{ fontWeight: 700, fontSize: '1rem', marginBottom: '1rem' }}>Redemptions by Merchant</h2>
-        {byMerchant.length === 0 ? (
-          <p style={{ color: 'var(--clr-text-secondary)', textAlign: 'center', padding: '2rem' }}>No data yet</p>
+      <div className="card p-lg shadow-tonal space-y-md">
+        <h3 className="section-title flex items-center gap-2">
+          <span className="material-symbols-outlined text-primary-fixed-dim">bar_chart</span>
+          Redemptions by Merchant
+        </h3>
+        {loading ? (
+          <div className="h-[280px] bg-surface-container rounded-xl animate-pulse" />
+        ) : byMerchant.length === 0 ? (
+          <div className="text-center py-16 text-on-surface-variant bg-surface-container/20 rounded-xl">
+            <span className="material-symbols-outlined text-[48px] block mb-2 opacity-40">bar_chart</span>
+            <p className="text-body-md">No platform redemption data found for current filters</p>
+          </div>
         ) : (
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={byMerchant} margin={{ top: 5, right: 20, left: 0, bottom: 60 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--clr-border)" />
-              <XAxis dataKey="merchant_name" tick={{ fontSize: 11 }} angle={-35} textAnchor="end" interval={0} />
-              <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip formatter={(v: any) => [`${v} redemptions`]} />
-              <Bar dataKey="redemption_count" fill="#6c63ff" radius={[4, 4, 0, 0]} name="Redemptions" />
-            </BarChart>
-          </ResponsiveContainer>
+          <div className="h-[280px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={byMerchant} margin={{ top: 5, right: 10, left: -20, bottom: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
+                <XAxis dataKey="merchant_name" tick={{ fontSize: 10 }} angle={-25} textAnchor="end" interval={0} />
+                <YAxis tick={{ fontSize: 10 }} />
+                <Tooltip formatter={(v: any) => [`${v} redemptions`]} contentStyle={{ background: '#fff', border: '1px solid rgba(0,0,0,0.1)', borderRadius: '12px' }} />
+                <Bar dataKey="redemption_count" fill="var(--md-sys-color-primary, #00236f)" radius={[6, 6, 0, 0]} name="Redemptions" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         )}
       </div>
 
       {/* Member count by Merchant Table */}
-      <div style={{ background: 'var(--clr-surface)', borderRadius: 12, padding: '1.5rem', boxShadow: 'var(--shadow-sm)' }}>
-        <h2 style={{ fontWeight: 700, fontSize: '1rem', marginBottom: '1rem' }}>Top Merchants by Redemptions</h2>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
-            <thead>
-              <tr style={{ background: 'var(--clr-surface-alt)' }}>
-                {['#', 'Merchant', 'Members', 'Redemptions'].map(h => (
-                  <th key={h} style={{ padding: '0.65rem 1rem', textAlign: 'left', fontWeight: 600, color: 'var(--clr-text-secondary)' }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {byMerchant.map((m, i) => (
-                <tr key={m.merchant_id} style={{ borderTop: '1px solid var(--clr-border)' }}>
-                  <td style={{ padding: '0.6rem 1rem', color: 'var(--clr-text-secondary)' }}>{i + 1}</td>
-                  <td style={{ padding: '0.6rem 1rem', fontWeight: 500 }}>{m.merchant_name}</td>
-                  <td style={{ padding: '0.6rem 1rem' }}>{m.member_count}</td>
-                  <td style={{ padding: '0.6rem 1rem', fontWeight: 700, color: 'var(--clr-primary)' }}>{m.redemption_count}</td>
+      <div className="card p-lg shadow-tonal space-y-md">
+        <h3 className="section-title flex items-center gap-2">
+          <span className="material-symbols-outlined text-secondary">trending_up</span>
+          Top Merchants by Redemptions
+        </h3>
+        <div className="overflow-x-auto rounded-xl border border-outline-variant/30">
+          <table className="w-full border-collapse text-left">
+            <tbody className="divide-y divide-outline-variant/20">
+              {loading ? (
+                Array.from({ length: 4 }).map((_, i) => (
+                  <tr key={i}>
+                    {Array.from({ length: 4 }).map((_, j) => (
+                      <td key={j} className="px-4 py-3"><div className="h-4 bg-surface-container rounded animate-pulse w-3/4" /></td>
+                    ))}
+                  </tr>
+                ))
+              ) : byMerchant.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-4 py-8 text-center text-on-surface-variant italic">No merchant reports compiled.</td>
                 </tr>
-              ))}
-              {byMerchant.length === 0 && (
-                <tr><td colSpan={4} style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--clr-text-secondary)' }}>No data</td></tr>
+              ) : (
+                byMerchant.map((m, i) => (
+                  <tr key={m.merchant_id} className="hover:bg-surface-container-low transition-colors">
+                    <td className="px-4 py-3 text-body-md text-on-surface-variant font-mono">{i + 1}</td>
+                    <td className="px-4 py-3 text-body-md font-bold text-on-surface">{m.merchant_name}</td>
+                    <td className="px-4 py-3 text-body-md text-on-surface-variant">{m.member_count.toLocaleString()}</td>
+                    <td className="px-4 py-3 text-body-md font-bold text-primary">{m.redemption_count.toLocaleString()}</td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>

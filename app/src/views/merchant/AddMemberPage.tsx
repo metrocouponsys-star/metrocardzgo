@@ -4,7 +4,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useToastStore } from '../../store/toastStore';
 import { useForm } from 'react-hook-form';
 import type { MembershipType, CardInventoryItem } from '../../types';
-import * as api from '../../api/client';
+import * as api from '../../api';
 
 interface FormData {
   name: string;

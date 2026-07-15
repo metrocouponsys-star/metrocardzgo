@@ -3,7 +3,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useToastStore } from '../../store/toastStore';
 import { Modal } from '../../components/ui/Modal';
 import type { OfferTemplate, MembershipType } from '../../types';
-import * as api from '../../api/client';
+import * as api from '../../api';
 
 const OFFER_TYPES = [
   { value: 'percent_off', label: '% Off (Discount)' },
