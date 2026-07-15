@@ -35,6 +35,7 @@ from app.routers.rewards import (
     lucky_draw_router,
     feedback_router,
 )
+from app.routers.wallet import wallet_router
 
 log = logging.getLogger(__name__)
 
@@ -139,6 +140,7 @@ app.include_router(points_rules_router, prefix=API_PREFIX)
 app.include_router(scratch_router, prefix=API_PREFIX)
 app.include_router(lucky_draw_router, prefix=API_PREFIX)
 app.include_router(feedback_router, prefix=API_PREFIX)
+app.include_router(wallet_router, prefix=API_PREFIX)
 
 # Health check at root level (no /api/v1 prefix — for UptimeRobot and Render keep-alive)
 app.include_router(health_router)
@@ -162,6 +164,7 @@ async def startup_event():
         PointsRule, ScratchCard, LuckyDraw, LuckyDrawEntry,
     )
     from app.models.feedback import MemberFeedback
+    from app.models.wallet import MerchantWalletClass, MemberWalletPass
 
     try:
         with engine.connect() as conn:

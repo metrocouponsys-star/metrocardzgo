@@ -6,8 +6,18 @@ export const LandingFooter: React.FC = () => {
   const currentYear = new Date().getFullYear();
 
   const scrollTo = (id: string) => {
+    if (typeof window !== 'undefined' && window.location.pathname !== '/') {
+      window.location.href = '/' + id;
+      return;
+    }
     document.querySelector(id)?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  const legalLinks = [
+    { label: 'Privacy Policy', href: '/privacy-policy' },
+    { label: 'Terms of Service', href: '/terms-and-conditions' },
+    { label: 'Refund Policy', href: '/refund-policy' }
+  ];
 
   return (
     <footer style={{ background: '#080808', borderTop: '1px solid rgba(201,162,39,0.15)' }}>
@@ -87,30 +97,26 @@ export const LandingFooter: React.FC = () => {
 
           {/* Quick links */}
           <div>
-            <h4 className="font-poppins font-bold text-warm-white text-sm tracking-widest uppercase mb-4">Quick Links</h4>
+            <h4 className="font-poppins font-bold text-warm-white text-sm tracking-widest uppercase mb-4">Platform</h4>
             <ul className="space-y-2.5">
               {[
-                { label: 'Sample Cards', id: '#cards' },
-                { label: 'Printed Gallery', id: '#gallery' },
-                { label: 'Industries', id: '#industries' },
-                { label: 'Our Process', id: '#process' },
-                { label: 'Pricing', id: '#pricing' },
-                { label: 'Contact Us', id: '#contact' },
+                { label: 'Features', href: '/features' },
+                { label: 'How It Works', href: '/how-it-works' },
+                { label: 'Pricing', href: '/pricing' },
+                { label: 'ROI Calculator', href: '/roi-calculator' },
+                { label: 'Alternatives', href: '/alternatives' },
+                { label: 'Compliance', href: '/compliance' },
+                { label: 'System Status', href: '/status' },
+                { label: 'About Us', href: '/about-us' },
+                { label: 'Company Info', href: '/company-info' },
+                { label: 'Merchant Login', href: '/login' },
               ].map(link => (
-                <li key={link.id}>
-                  <button
-                    onClick={() => scrollTo(link.id)}
-                    className="text-warm-grey hover:text-gold text-sm transition-colors duration-200"
-                  >
+                <li key={link.href}>
+                  <a href={link.href} className="text-warm-grey hover:text-gold text-sm transition-colors duration-200">
                     {link.label}
-                  </button>
+                  </a>
                 </li>
               ))}
-              <li>
-                <a href="/login" className="text-warm-grey hover:text-gold text-sm transition-colors duration-200">
-                  Merchant Login
-                </a>
-              </li>
             </ul>
           </div>
 
@@ -143,8 +149,8 @@ export const LandingFooter: React.FC = () => {
             © {currentYear} MetroCardz. All rights reserved.
           </p>
           <div className="flex gap-5">
-            {['Privacy Policy', 'Terms of Service', 'Refund Policy'].map(link => (
-              <a key={link} href="#" className="text-warm-grey/40 hover:text-warm-grey/70 text-xs transition-colors">{link}</a>
+            {legalLinks.map(link => (
+              <a key={link.href} href={link.href} className="text-warm-grey/40 hover:text-warm-grey/70 text-xs transition-colors">{link.label}</a>
             ))}
           </div>
         </div>

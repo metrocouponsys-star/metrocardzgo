@@ -8,7 +8,7 @@ import * as api from '../../api';
 export default function SettingsPage() {
   const { user } = useAuthStore();
   const { addToast } = useToastStore();
-  const [tab, setTab] = useState<'profile' | 'staff' | 'billing'>('profile');
+  const [tab, setTab] = useState<'profile' | 'staff' | 'billing' | 'integrations'>('profile');
   const [merchant, setMerchant] = useState<Merchant | null>(null);
   const [staffList, setStaffList] = useState<MerchantUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -16,6 +16,9 @@ export default function SettingsPage() {
   const [showAddStaff, setShowAddStaff] = useState(false);
   const [staffForm, setStaffForm] = useState({ name: '', phone: '', role: 'staff' as 'staff' | 'owner' });
   const [addingStaff, setAddingStaff] = useState(false);
+  const [walletClass, setWalletClass] = useState<any | null>(null);
+  const [walletLoading, setWalletLoading] = useState(false);
+  const [walletSyncing, setWalletSyncing] = useState(false);
 
   const [profileForm, setProfileForm] = useState({ business_name: '', category: '', address: '', whatsapp_number: '', referral_bonus_points: 50 });
 
@@ -38,6 +41,8 @@ export default function SettingsPage() {
       setStaffList(staff);
       setLoading(false);
     });
+    // Load wallet class status async
+    api.getMerchantWalletClass().then(setWalletClass).catch(() => setWalletClass(null));
   }, []);
 
 
@@ -87,7 +92,12 @@ export default function SettingsPage() {
   };
 
   const CATEGORIES = ['Salon', 'Kirana', 'Restaurant', 'Jewellery', 'Boutique', 'Optician', 'Other'];
-  const TABS = [{ k: 'profile', l: 'Business Profile', icon: 'store' }, { k: 'staff', l: 'Staff Accounts', icon: 'manage_accounts' }, { k: 'billing', l: 'Plan & Billing', icon: 'payments' }] as const;
+  const TABS = [
+    { k: 'profile', l: 'Business Profile', icon: 'store' },
+    { k: 'staff', l: 'Staff Accounts', icon: 'manage_accounts' },
+    { k: 'billing', l: 'Plan & Billing', icon: 'payments' },
+    { k: 'integrations', l: 'Integrations', icon: 'extension' },
+  ] as const;
 
   return (
     <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-3xl mx-auto space-y-xl animate-fade-in">
@@ -216,6 +226,108 @@ export default function SettingsPage() {
             <span className="material-symbols-outlined text-[18px]">upgrade</span>
             Contact Support to Upgrade
           </a>
+        </div>
+      )}
+
+      {/* Integrations Tab */}
+      {tab === 'integrations' && (
+        <div className="space-y-md">
+          {/* Google Wallet */}
+          <div className="card p-lg space-y-md">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                <span className="material-symbols-outlined text-blue-400 text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>add_to_wallet</span>
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-on-surface">Google Wallet Integration</h3>
+                <p className="text-body-sm text-on-surface-variant">Let Android members save their membership to Google Wallet for offline access.</p>
+              </div>
+              <span className={`text-label-sm px-2.5 py-1 rounded-full font-bold ${
+                walletClass ? 'bg-green-500/10 text-green-400' : 'bg-surface-container text-on-surface-variant'
+              }`}>
+                {walletClass ? 'Configured' : 'Not Set Up'}
+              </span>
+            </div>
+
+            {walletClass ? (
+              <div className="bg-surface-container rounded-xl p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-label-sm text-on-surface-variant">Google Class ID</span>
+                  <span className="font-mono text-body-sm text-on-surface">{walletClass.google_class_id}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-label-sm text-on-surface-variant">Background Color</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded" style={{ background: walletClass.background_color || '#1A1A1A' }} />
+                    <span className="font-mono text-body-sm">{walletClass.background_color || '#1A1A1A'}</span>
+                  </div>
+                </div>
+                <button
+                  disabled={walletSyncing}
+                  onClick={async () => {
+                    setWalletSyncing(true);
+                    try {
+                      const res = await api.syncAllWalletPasses();
+                      addToast('success', res.message || 'Wallet passes queued for sync');
+                    } catch {
+                      addToast('error', 'Failed to sync wallet passes');
+                    } finally {
+                      setWalletSyncing(false);
+                    }
+                  }}
+                  className="btn-outline flex items-center gap-2 mt-3"
+                >
+                  {walletSyncing && <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>}
+                  <span className="material-symbols-outlined text-[16px]">sync</span>
+                  {walletSyncing ? 'Syncing...' : 'Sync All Passes Now'}
+                </button>
+              </div>
+            ) : (
+              <div className="bg-surface-container rounded-xl p-4 space-y-3">
+                <p className="text-body-md text-on-surface-variant">
+                  Google Wallet requires a Google Pay & Wallet Console account and Service Account credentials. Contact Metro Cardz support to complete setup.
+                </p>
+                <div className="flex gap-3 flex-wrap">
+                  <a href="mailto:support@metrocardz.in?subject=Google%20Wallet%20Integration" className="btn-primary flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[16px]">mail</span>
+                    Request Setup
+                  </a>
+                  <a href="https://developers.google.com/wallet" target="_blank" rel="noopener noreferrer" className="btn-outline flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+                    Developer Docs
+                  </a>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* WhatsApp */}
+          <div className="card p-lg">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center">
+                <span className="material-symbols-outlined text-green-400 text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>chat</span>
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-on-surface">WhatsApp Campaigns (AiSensy)</h3>
+                <p className="text-body-sm text-on-surface-variant">Bulk campaigns and auto-reminders via WhatsApp Business API.</p>
+              </div>
+              <span className="text-label-sm px-2.5 py-1 rounded-full font-bold bg-green-500/10 text-green-400">Active</span>
+            </div>
+          </div>
+
+          {/* SMS */}
+          <div className="card p-lg">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                <span className="material-symbols-outlined text-blue-400 text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>sms</span>
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-on-surface">SMS OTP (Msg91)</h3>
+                <p className="text-body-sm text-on-surface-variant">One-time password delivery for merchant login via SMS.</p>
+              </div>
+              <span className="text-label-sm px-2.5 py-1 rounded-full font-bold bg-green-500/10 text-green-400">Active</span>
+            </div>
+          </div>
         </div>
       )}
 

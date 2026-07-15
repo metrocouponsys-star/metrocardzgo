@@ -674,3 +674,33 @@ class MerchantRedemptionStat(BaseModel):
     merchant_name: str
     redemption_count: int
     member_count: int
+
+
+# ── Google Wallet ─────────────────────────────────────────────────────────────
+class WalletSaveUrlOut(BaseModel):
+    """Returned after generating a Google Wallet JWT save URL."""
+    save_url: str
+    google_object_id: str
+    status: str  # not_added | added | update_pending
+
+
+class MerchantWalletClassOut(BaseModel):
+    """Wallet class status for the merchant settings panel."""
+    id: str
+    merchant_id: str
+    google_class_id: str
+    logo_url: Optional[str] = None
+    background_color: Optional[str] = None
+    created_at: datetime
+    model_config = {"from_attributes": True}
+
+
+class MemberWalletPassOut(BaseModel):
+    """Wallet pass status for a member."""
+    id: str
+    member_id: str
+    google_object_id: str
+    status: str
+    last_synced_at: Optional[datetime] = None
+    created_at: datetime
+    model_config = {"from_attributes": True}

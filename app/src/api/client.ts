@@ -948,3 +948,24 @@ export async function submitFeedback(memberId: string, rating: number, comment?:
 export async function getMerchantFeedback(): Promise<any[]> { return feedbackDb; }
 
 
+// ── Mock Google Wallet ────────────────────────────────────────────────────────
+export async function generateWalletPassUrl(memberId: string): Promise<{ save_url: string; google_object_id: string; status: string }> {
+  await delay(FAKE_DELAY);
+  return {
+    save_url: `https://pay.google.com/gp/v/save/DEMO_TOKEN_${memberId}`,
+    google_object_id: `DEMO_ISSUER.${memberId}`,
+    status: 'added',
+  };
+}
+export async function getWalletPassStatus(memberId: string): Promise<any> {
+  await delay(FAKE_DELAY);
+  return { id: `wp-${memberId}`, member_id: memberId, google_object_id: `DEMO_ISSUER.${memberId}`, status: 'added', last_synced_at: new Date().toISOString(), created_at: new Date().toISOString() };
+}
+export async function getMerchantWalletClass(): Promise<any> {
+  await delay(FAKE_DELAY);
+  return { id: 'wc-demo', merchant_id: 'merchant-1', google_class_id: 'DEMO_ISSUER.merchant-1', logo_url: null, background_color: '#1A1A1A', created_at: new Date().toISOString() };
+}
+export async function syncAllWalletPasses(): Promise<any> {
+  await delay(FAKE_DELAY);
+  return { queued: 12, message: '12 wallet passes queued for sync' };
+}

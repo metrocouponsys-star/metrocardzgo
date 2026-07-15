@@ -414,8 +414,21 @@ export async function deleteStaff(merchantId: string, userId: string): Promise<v
   return del(`/admin/merchants/${merchantId}/users/${userId}`);
 }
 
-// ── Feedback ──────────────────────────────────────────────────────────────────
 export async function submitFeedback(memberId: string, rating: number, comment?: string): Promise<any> {
   return post('/public/feedback', { member_id: memberId, rating, comment });
 }
 export async function getMerchantFeedback(): Promise<any[]> { return get('/public/feedback/merchant'); }
+
+// ── Google Wallet ─────────────────────────────────────────────────────────────
+export async function generateWalletPassUrl(memberId: string): Promise<{ save_url: string; google_object_id: string; status: string }> {
+  return post(`/wallet/members/${memberId}/google`, {});
+}
+export async function getWalletPassStatus(memberId: string): Promise<any> {
+  return get(`/wallet/members/${memberId}/google/status`);
+}
+export async function getMerchantWalletClass(): Promise<any> {
+  return get('/wallet/merchant/class');
+}
+export async function syncAllWalletPasses(): Promise<any> {
+  return post('/wallet/merchant/class/sync', {});
+}

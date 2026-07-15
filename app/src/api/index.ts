@@ -104,3 +104,8 @@ export const deleteStaff = api.deleteStaff;
 export const submitFeedback = api.submitFeedback;
 export const getMerchantFeedback = api.getMerchantFeedback;
 
+// ── Google Wallet ────────────────────────────────────────────────────────────
+export const generateWalletPassUrl = api.generateWalletPassUrl;
+export const getWalletPassStatus = api.getWalletPassStatus;
+export const getMerchantWalletClass = api.getMerchantWalletClass;
+export const syncAllWalletPasses = api.syncAllWalletPasses;

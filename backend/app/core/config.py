@@ -78,6 +78,13 @@ class Settings(BaseSettings):
     sentry_dsn: str = ""
     sentry_traces_sample_rate: float = 0.1
 
+    # ── Google Wallet ─────────────────────────────────────────────────────────
+    # Set these in production (Render env vars):
+    #   GOOGLE_WALLET_ISSUER_ID = your numeric issuer ID from Google Pay & Wallet Console
+    #   GOOGLE_WALLET_SA_JSON_PATH = /etc/secrets/google_wallet_sa.json (mounted as file secret)
+    google_wallet_issuer_id: str = ""
+    google_wallet_sa_json_path: str = ""
+
     # ── Super Admin ──────────────────────────────────────────────────────
     super_admin_phone: str = "9000000000"
     super_admin_name: str = "Metro Cardz Admin"

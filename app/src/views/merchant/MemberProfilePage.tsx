@@ -30,6 +30,10 @@ export default function MemberProfilePage() {
   const [autoRenew, setAutoRenew] = useState(false);
   const [purchaseAmount, setPurchaseAmount] = useState('');
 
+  // Google Wallet state
+  const [walletLoading, setWalletLoading] = useState(false);
+  const [walletUrl, setWalletUrl] = useState<string | null>(null);
+
   // Redemption confirm modal
   const [redeemState, setRedeemState] = useState<{ offerStateId: string; offerTitle: string; remainingBefore: number | null; isPointsRedemption?: boolean; pointsCost?: number } | null>(null);
   const [redeeming, setRedeeming] = useState(false);
@@ -311,7 +315,7 @@ export default function MemberProfilePage() {
 
         {/* Owner actions */}
         {isOwner && (
-          <div className="relative z-10 flex gap-2 mt-4">
+          <div className="relative z-10 flex gap-2 mt-4 flex-wrap">
             <button
               onClick={() => navigate(`/members/${member.id}/edit`)}
               className="bg-white/15 hover:bg-white/25 text-white px-4 py-2 rounded-lg text-label-md font-label-md flex items-center gap-1 transition-colors"
@@ -326,6 +330,41 @@ export default function MemberProfilePage() {
               <span className="material-symbols-outlined text-[16px]">download</span>
               Download Card PDF
             </button>
+            {/* Google Wallet Button */}
+            {walletUrl ? (
+              <a
+                href={walletUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-white/15 hover:bg-white/25 text-white px-4 py-2 rounded-lg text-label-md font-label-md flex items-center gap-1.5 transition-colors"
+              >
+                <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>add_to_wallet</span>
+                Add to Google Wallet
+              </a>
+            ) : (
+              <button
+                disabled={walletLoading}
+                onClick={async () => {
+                  if (!member) return;
+                  setWalletLoading(true);
+                  try {
+                    const res = await api.generateWalletPassUrl(member.id);
+                    setWalletUrl(res.save_url);
+                    // Open immediately
+                    window.open(res.save_url, '_blank', 'noopener,noreferrer');
+                    addToast('success', 'Google Wallet pass generated!');
+                  } catch {
+                    addToast('error', 'Failed to generate Wallet pass — try again');
+                  } finally {
+                    setWalletLoading(false);
+                  }
+                }}
+                className="bg-white/15 hover:bg-white/25 text-white px-4 py-2 rounded-lg text-label-md font-label-md flex items-center gap-1.5 transition-colors disabled:opacity-50"
+              >
+                <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>add_to_wallet</span>
+                {walletLoading ? 'Generating…' : 'Google Wallet Pass'}
+              </button>
+            )}
           </div>
         )}
 

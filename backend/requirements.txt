@@ -44,6 +44,12 @@ reportlab==4.2.5
 # ── Error Tracking ────────────────────────────────────────────────────────────
 sentry-sdk[fastapi]==2.19.2
 
+# ── Google Wallet (optional — required for production wallet pass signing) ────
+# Install: pip install google-auth PyJWT
+# Set env vars: GOOGLE_WALLET_ISSUER_ID, GOOGLE_WALLET_SA_JSON_PATH
+google-auth==2.35.0                # Service account auth for Google Wallet API
+PyJWT==2.9.0                       # RS256 JWT signing for Wallet pass tokens
+
 # ── Testing ───────────────────────────────────────────────────────────────────
 pytest==8.3.4
 pytest-asyncio==0.24.0

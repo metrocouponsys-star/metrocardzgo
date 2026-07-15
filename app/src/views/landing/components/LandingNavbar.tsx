@@ -1,3 +1,4 @@
+'use client';
 import React, { useEffect, useRef, useState } from 'react';
 
 export const LandingNavbar: React.FC = () => {
@@ -13,15 +14,23 @@ export const LandingNavbar: React.FC = () => {
 
   const links = [
     { label: 'Cards', href: '#cards' },
-    { label: 'Gallery', href: '#gallery' },
     { label: 'Industries', href: '#industries' },
-    { label: 'Process', href: '#process' },
     { label: 'Pricing', href: '#pricing' },
     { label: 'Contact', href: '#contact' },
   ];
 
+  const pageLinks = [
+    { label: 'Features', href: '/features' },
+    { label: 'How It Works', href: '/how-it-works' },
+    { label: 'About', href: '/about-us' },
+  ];
+
   const handleNav = (href: string) => {
     setMenuOpen(false);
+    if (typeof window !== 'undefined' && window.location.pathname !== '/') {
+      window.location.href = '/' + href;
+      return;
+    }
     const el = document.querySelector(href);
     if (el) el.scrollIntoView({ behavior: 'smooth' });
   };
@@ -54,7 +63,7 @@ export const LandingNavbar: React.FC = () => {
         </a>
 
         {/* Desktop links */}
-        <ul className="hidden md:flex items-center gap-7">
+        <ul className="hidden md:flex items-center gap-6">
           {links.map(link => (
             <li key={link.href}>
               <button
@@ -63,6 +72,16 @@ export const LandingNavbar: React.FC = () => {
               >
                 {link.label}
               </button>
+            </li>
+          ))}
+          {pageLinks.map(link => (
+            <li key={link.href}>
+              <a
+                href={link.href}
+                className="text-warm-white/70 hover:text-gold text-sm font-medium tracking-wide transition-colors duration-200"
+              >
+                {link.label}
+              </a>
             </li>
           ))}
         </ul>
