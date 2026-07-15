@@ -132,7 +132,7 @@ export default function AboutUsPage() {
               { val: '24 Yrs', desc: 'Serving Mumbaikars', sub: 'Promotional Activities' },
               { val: '100s', desc: 'Trusted Brand Ties', sub: 'Merchants & Leading Chains' },
             ].map((stat, i) => (
-              <div key={i} className="card p-md border border-gold/10 text-center flex flex-col justify-center space-y-1 hover:shadow-elevated transition-shadow duration-200">
+              <div key={i} className="card bg-[#141414] p-md border border-gold/15 text-center flex flex-col justify-center space-y-1 hover:shadow-elevated transition-shadow duration-200">
                 <span className="text-3xl font-poppins font-black text-gold">{stat.val}</span>
                 <span className="text-warm-white font-bold text-xs block">{stat.desc}</span>
                 <span className="text-warm-grey/50 text-[10px] block">{stat.sub}</span>

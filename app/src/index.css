@@ -169,6 +169,16 @@
   .btn-outline:hover { background-color: rgba(0, 35, 111, 0.05); }
   .btn-outline:active { transform: scale(0.95); }
 
+  /* Outline button specifically for dark-themed landing pages */
+  .landing-root .btn-outline {
+    border: 1px solid rgba(201, 162, 39, 0.4);
+    color: #C9A227;
+  }
+  .landing-root .btn-outline:hover {
+    background-color: rgba(201, 162, 39, 0.1);
+    border-color: rgba(201, 162, 39, 0.8);
+  }
+
   /* Stat card */
   .stat-card {
     background-color: #ffffff;
