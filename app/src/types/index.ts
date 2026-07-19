@@ -241,6 +241,7 @@ export interface LoginResponse {
 }
 
 export interface PublicMemberView {
+  member_id: string;            // added — backend returns this
   merchant_name: string;
   merchant_logo?: string;
   merchant_phone?: string;

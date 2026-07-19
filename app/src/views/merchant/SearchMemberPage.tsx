@@ -167,26 +167,35 @@ export default function SearchMemberPage() {
             ) : (
               <QrScannerView onScan={async (scannedValue) => {
                 try {
-                  const byCard = await api.searchMemberByCard(user?.merchant_id || '', scannedValue);
-                  if (byCard) {
-                    addRecentSearch(byCard);
-                    navigate(`/members/${byCard.id}`);
-                    return;
-                  }
-                  const byToken = await api.getMemberByToken(scannedValue);
-                  if (byToken) {
-                    const results = await api.searchMembers(user?.merchant_id || '', scannedValue);
-                    if (results.length > 0) {
-                      addRecentSearch(results[0]);
-                      navigate(`/members/${results[0].id}`);
+                  // QR encodes: https://metrocardz.in/m/{public_token}
+                  // Extract the token from the URL; fall back to treating the
+                  // raw value as a card number if it doesn't look like our URL.
+                  const urlMatch = scannedValue.match(/\/m\/([^/?#]+)/);
+                  const publicToken = urlMatch ? urlMatch[1] : null;
+
+                  if (publicToken) {
+                    // Primary path: resolve by public token
+                    const byToken = await api.getMemberByToken(publicToken);
+                    if (byToken) {
+                      navigate(`/members/${byToken.member_id}`);
+                      return;
+                    }
+                  } else {
+                    // Fallback: treat raw value as a card number
+                    const byCard = await api.searchMemberByCard(user?.merchant_id || '', scannedValue);
+                    if (byCard) {
+                      addRecentSearch(byCard);
+                      navigate(`/members/${byCard.id}`);
                       return;
                     }
                   }
+
                   addToast('error', 'No member found for this QR code');
                 } catch {
                   addToast('error', 'QR scan failed — please try manual search');
                 }
               }} />
+
             )}
           </div>
         </div>
