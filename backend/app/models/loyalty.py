@@ -20,13 +20,14 @@ class LoyaltyTransaction(Base):
     member_id = Column(String, ForeignKey("members.id", ondelete="CASCADE"), nullable=False)
     merchant_id = Column(String, ForeignKey("merchants.id", ondelete="CASCADE"), nullable=False)
     type = Column(
-        Enum("earn", "redeem", name="loyalty_tx_type"),
+        Enum("earn", "redeem", "referral_bonus", name="loyalty_tx_type"),
         nullable=False,
     )
     points = Column(Numeric, nullable=False)        # positive for earn, negative for redeem
     source_redemption_id = Column(String, ForeignKey("redemption_log.id"), nullable=True)
     source_offer_id = Column(String, ForeignKey("offer_templates.id"), nullable=True)
     balance_after = Column(Numeric, nullable=False)  # running balance snapshot for audit
+    note = Column(Text, nullable=True)               # optional human-readable description for audit UI
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships

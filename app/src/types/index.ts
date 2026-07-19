@@ -40,6 +40,7 @@ export interface Merchant {
   plan_tier: string;
   whatsapp_number: string;
   logo_url?: string;
+  card_design_url?: string;
   address?: string;
   status: MerchantStatus;
   approval_status?: 'pending' | 'approved' | 'rejected';

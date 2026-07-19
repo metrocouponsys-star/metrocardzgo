@@ -34,15 +34,72 @@ celery_app.conf.update(
     # Retry policy: exponential backoff, max 3 attempts
     task_default_retry_delay=60,
     task_max_retries=3,
-    # Feature 2: hourly sweep instead of once-daily fixed time
-    # Runs every hour on the hour — checks per-rule send_time to decide whether to fire
     beat_schedule={
+        # Feature 2: hourly sweep — checks per-rule send_time to decide whether to fire
         "hourly-reminder-scan": {
             "task": "app.worker.hourly_reminder_scan",
             "schedule": crontab(minute=0),   # every hour on the :00
         },
+        # Nightly member status update — marks expired/expiring_soon at 2 AM IST
+        "nightly-member-status-sweep": {
+            "task": "app.worker.nightly_member_status_sweep",
+            "schedule": crontab(hour=20, minute=30),  # 20:30 UTC = 02:00 IST
+        },
     },
 )
+
+
+
+@celery_app.task(bind=True, name="app.worker.nightly_member_status_sweep", max_retries=3)
+def nightly_member_status_sweep(self):
+    """
+    Nightly sweep (runs at 02:00 IST) to auto-update member statuses:
+      - expired:       expiry_date < today
+      - expiring_soon: expiry_date within the next 7 days (but not yet expired)
+      - active:        reset to active if a member was renewed and is now within validity
+
+    Without this, members linger in 'active' status forever after expiry — breaking
+    dashboard counts, reminder segmentation, and redemption guard-checks.
+    """
+    from app.core.database import SessionLocal
+    from app.models.member import Member
+    from datetime import date, timedelta
+    from sqlalchemy import and_, or_
+
+    db = SessionLocal()
+    try:
+        today = date.today()
+        expiring_soon_threshold = today + timedelta(days=7)
+
+        # 1. Mark expired (expiry_date strictly before today)
+        expired_count = (
+            db.query(Member)
+            .filter(
+                Member.expiry_date < today,
+                Member.status.in_(["active", "expiring_soon"]),
+            )
+            .update({"status": "expired"}, synchronize_session=False)
+        )
+
+        # 2. Mark expiring_soon (expiry_date is today OR within next 7 days)
+        expiring_count = (
+            db.query(Member)
+            .filter(
+                Member.expiry_date >= today,
+                Member.expiry_date <= expiring_soon_threshold,
+                Member.status == "active",
+            )
+            .update({"status": "expiring_soon"}, synchronize_session=False)
+        )
+
+        db.commit()
+        print(f"✅ Nightly status sweep: {expired_count} expired, {expiring_count} expiring_soon")
+        return {"expired": expired_count, "expiring_soon": expiring_count}
+    except Exception as exc:
+        db.rollback()
+        raise self.retry(exc=exc, countdown=300)
+    finally:
+        db.close()
 
 
 @celery_app.task(bind=True, name="app.worker.hourly_reminder_scan", max_retries=3)

@@ -39,7 +39,6 @@ export default function SearchMemberPage() {
     try {
       let found: Member[];
       if (tab === 'card') {
-        // Search by 16-digit physical card number
         const m = await api.searchMemberByCard(user?.merchant_id || '', query);
         found = m ? [m] : [];
       } else {
@@ -167,8 +166,6 @@ export default function SearchMemberPage() {
               </div>
             ) : (
               <QrScannerView onScan={async (scannedValue) => {
-                // QR on physical card encodes the 16-digit card number.
-                // Try card number lookup first, then fall back to public_token lookup.
                 try {
                   const byCard = await api.searchMemberByCard(user?.merchant_id || '', scannedValue);
                   if (byCard) {
@@ -176,11 +173,8 @@ export default function SearchMemberPage() {
                     navigate(`/members/${byCard.id}`);
                     return;
                   }
-                  // Fallback: treat scanned value as a public_token (digital QR cards)
                   const byToken = await api.getMemberByToken(scannedValue);
                   if (byToken) {
-                    // getMemberByToken returns a public view — we need the internal member
-                    // Search by the token itself through the members search endpoint
                     const results = await api.searchMembers(user?.merchant_id || '', scannedValue);
                     if (results.length > 0) {
                       addRecentSearch(results[0]);
@@ -286,168 +280,329 @@ function MemberResultRow({ member, onClick }: { member: Member; onClick: () => v
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Real QR Scanner using html5-qrcode library
-// Handles: camera permission, live scanning, cleanup on unmount/tab-switch
+// QR Scanner — html5-qrcode backed, with image-upload fallback
+//
+// KEY FIX: The #mc-qr-scanner-region div must ALWAYS exist in the DOM before
+// new Html5Qrcode(id) is called. Conditionally rendering the div (only when
+// status==='active') means it doesn't exist when startScanner() runs because
+// React hasn't re-rendered yet → html5-qrcode throws, falls to generic error.
+// Solution: always render the div, toggle visibility via CSS only.
+//
+// CASCADE (most reliable → least):
+//   1. getCameras() device ID — most reliable on desktop/laptop
+//   2. facingMode: { ideal: 'environment' } — rear camera / mobile
+//   3. facingMode: 'user' — front camera / webcam fallback
 // ─────────────────────────────────────────────────────────────────────────────
 type ScannerStatus = 'requesting' | 'active' | 'denied' | 'error';
 
 function QrScannerView({ onScan }: { onScan: (token: string) => void }) {
   const scannerRef = useRef<any>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileTempRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<ScannerStatus>('requesting');
   const [lastScanned, setLastScanned] = useState<string | null>(null);
-  const scannedRef = useRef(false); // prevent double-fire on same QR
+  const [cameras, setCameras] = useState<{ id: string; label: string }[]>([]);
+  const [activeCamIndex, setActiveCamIndex] = useState(0);
+  const [fileScanning, setFileScanning] = useState(false);
+  const scannedRef = useRef(false);
 
-  const startScanner = useCallback(async () => {
+  // Stable callback ref — scanner never re-mounts on parent re-renders
+  const onScanRef = useRef(onScan);
+  useEffect(() => { onScanRef.current = onScan; }, [onScan]);
+
+  // ── Stop & clean up ────────────────────────────────────────────────────────
+  const stopScanner = useCallback(async () => {
+    if (!scannerRef.current) return;
     try {
-      // Dynamic import to avoid SSR issues
+      const state = scannerRef.current.getState?.();
+      if (state === 2) await scannerRef.current.stop(); // 2 = SCANNING
+      scannerRef.current.clear?.();
+    } catch { /* ignore */ }
+    scannerRef.current = null;
+  }, []);
+
+  // ── Start with a specific constraint/deviceId ──────────────────────────────
+  // IMPORTANT: #mc-qr-scanner-region MUST already be in the DOM here.
+  const startWithConstraint = useCallback(async (constraint: any) => {
+    const { Html5Qrcode } = await import('html5-qrcode');
+    await stopScanner();
+    const el = document.getElementById('mc-qr-scanner-region');
+    if (el) el.innerHTML = '';
+    const scanner = new Html5Qrcode('mc-qr-scanner-region');
+    scannerRef.current = scanner;
+    const onDecoded = (text: string) => {
+      if (scannedRef.current) return;
+      scannedRef.current = true;
+      setLastScanned(text);
+      onScanRef.current(text);
+      setTimeout(() => { scannedRef.current = false; }, 3000);
+    };
+    await scanner.start(
+      constraint,
+      { fps: 10, qrbox: { width: 200, height: 200 } },
+      onDecoded,
+      () => { /* silent — no QR in frame */ },
+    );
+  }, [stopScanner]);
+
+  // ── Main cascade start ─────────────────────────────────────────────────────
+  const startScanner = useCallback(async () => {
+    await stopScanner();
+    scannedRef.current = false;
+    setLastScanned(null);
+    setStatus('requesting');
+
+    if (typeof navigator === 'undefined' || !navigator?.mediaDevices?.getUserMedia) {
+      setStatus('error');
+      return;
+    }
+
+    try {
       const { Html5Qrcode } = await import('html5-qrcode');
 
-      // Request camera permission explicitly first
-      await navigator.mediaDevices.getUserMedia({ video: true });
-      setStatus('active');
+      // Enumerate cameras — works on desktop once permission is granted
+      let deviceList: { id: string; label: string }[] = [];
+      try {
+        deviceList = await Html5Qrcode.getCameras();
+        if (deviceList?.length > 0) setCameras(deviceList);
+      } catch { /* may fail before permission */ }
 
-      const scannerId = 'mc-qr-scanner-region';
-      const html5Qrcode = new Html5Qrcode(scannerId);
-      scannerRef.current = html5Qrcode;
+      // Attempt 1: real device ID (most compatible on desktop/laptop)
+      if (deviceList.length > 0) {
+        try {
+          await startWithConstraint(deviceList[deviceList.length - 1].id);
+          setStatus('active');
+          return;
+        } catch (e) {
+          console.warn('[QR] deviceId failed, trying facingMode:', e);
+          await stopScanner();
+        }
+      }
 
-      const config = {
-        fps: 10,
-        qrbox: { width: 220, height: 220 },
-        aspectRatio: 1.0,
-        disableFlip: false,
-      };
+      // Attempt 2: environment (rear / mobile)
+      try {
+        await startWithConstraint({ facingMode: { ideal: 'environment' } });
+        setStatus('active');
+        return;
+      } catch (e) {
+        console.warn('[QR] environment failed, trying user:', e);
+        await stopScanner();
+      }
 
-      await html5Qrcode.start(
-        { facingMode: 'environment' }, // Rear camera preferred
-        config,
-        (decodedText: string) => {
-          // Prevent firing multiple times for the same QR frame
-          if (scannedRef.current) return;
-          scannedRef.current = true;
-          setLastScanned(decodedText);
-          onScan(decodedText);
-          // Re-arm after 3 seconds in case navigation doesn't happen
-          setTimeout(() => { scannedRef.current = false; }, 3000);
-        },
-        () => {
-          // QR not found in frame — silent, expected
-        },
-      );
+      // Attempt 3: user (front / webcam)
+      try {
+        await startWithConstraint({ facingMode: 'user' });
+        setStatus('active');
+        return;
+      } catch (e) {
+        console.warn('[QR] All camera attempts exhausted:', e);
+        await stopScanner();
+      }
+
+      setStatus('error');
     } catch (err: any) {
-      if (
-        err?.name === 'NotAllowedError' ||
-        err?.message?.includes('Permission') ||
-        err?.message?.includes('denied')
-      ) {
+      await stopScanner();
+      const msg = (err?.message ?? '').toLowerCase();
+      const name = err?.name ?? '';
+      if (name === 'NotAllowedError' || msg.includes('denied') || msg.includes('permission') || msg.includes('not allowed')) {
         setStatus('denied');
       } else {
         setStatus('error');
       }
     }
-  }, [onScan]);
+  }, [stopScanner, startWithConstraint]);
 
-  const stopScanner = useCallback(async () => {
-    if (scannerRef.current) {
-      try {
-        const state = scannerRef.current.getState?.();
-        // State 2 = SCANNING
-        if (state === 2) {
-          await scannerRef.current.stop();
-        }
-        scannerRef.current.clear?.();
-      } catch {
-        // ignore stop errors (already stopped)
-      }
-      scannerRef.current = null;
+  // ── Switch camera ──────────────────────────────────────────────────────────
+  const switchCamera = useCallback(async () => {
+    if (cameras.length <= 1) return;
+    const next = (activeCamIndex + 1) % cameras.length;
+    setActiveCamIndex(next);
+    setStatus('requesting');
+    try {
+      await startWithConstraint(cameras[next].id);
+      setStatus('active');
+    } catch {
+      setStatus('error');
+    }
+  }, [cameras, activeCamIndex, startWithConstraint]);
+
+  // ── Upload a QR image and decode it ───────────────────────────────────────
+  const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setFileScanning(true);
+    try {
+      const { Html5Qrcode } = await import('html5-qrcode');
+      const tempEl = fileTempRef.current;
+      if (!tempEl) { alert('Scanner not ready, please try again.'); return; }
+      tempEl.innerHTML = '';
+      const decoder = new Html5Qrcode(tempEl.id);
+      const text = await decoder.scanFile(file, true);
+      try { decoder.clear(); } catch { /* ok */ }
+      setLastScanned(text);
+      onScanRef.current(text);
+    } catch {
+      alert('No QR code detected in the selected image. Please try a clearer photo of the QR code.');
+    } finally {
+      setFileScanning(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   }, []);
 
+  // ── Mount: 50ms delay so React paints the DOM first ───────────────────────
   useEffect(() => {
-    startScanner();
-    return () => {
-      // Cleanup: stop camera when leaving the QR tab or page
-      stopScanner();
-    };
-  }, [startScanner, stopScanner]);
+    const t = setTimeout(() => { startScanner(); }, 50);
+    return () => { clearTimeout(t); stopScanner(); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const isHTTPS = typeof window !== 'undefined' &&
+    (window.location.protocol === 'https:' || window.location.hostname === 'localhost');
+
+  const showVideoPanel = status === 'active' || status === 'requesting';
 
   return (
-    <div className="flex flex-col items-center py-4 w-full">
-      {/* ── Requesting permission ─── */}
-      {status === 'requesting' && (
-        <div className="flex flex-col items-center gap-3 py-8">
-          <div className="w-16 h-16 rounded-full bg-primary-container/30 flex items-center justify-center">
-            <span className="material-symbols-outlined text-primary text-[32px] animate-pulse">camera_alt</span>
-          </div>
-          <p className="text-body-md text-on-surface-variant text-center max-w-xs">
-            Requesting camera access…
-          </p>
+    <div className="flex flex-col items-center py-2 w-full gap-4">
+      {/* Always-present inputs — NEVER conditionally rendered */}
+      <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
+      <div id="mc-qr-temp-decoder" ref={fileTempRef} className="hidden" />
+
+      {/* ── Non-HTTPS warning ─── */}
+      {!isHTTPS && (
+        <div className="w-full px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2 text-amber-800 text-label-sm">
+          <span className="material-symbols-outlined text-[16px] shrink-0 mt-0.5">warning</span>
+          Camera scanning requires HTTPS. This page is on HTTP — live scanning may not work.
         </div>
       )}
 
-      {/* ── Camera active: scanner region ─── */}
-      {status === 'active' && (
-        <div className="w-full flex flex-col items-center gap-4">
-          {/* html5-qrcode mounts the video feed into this div */}
+      {/* ─────────────────────────────────────────────────────────────────────
+          VIDEO PANEL — ALWAYS in DOM so html5-qrcode can always find the div.
+          Hidden via CSS (not conditional JSX) when not in requesting/active.
+      ──────────────────────────────────────────────────────────────────────── */}
+      <div className={`w-full flex flex-col items-center gap-3 ${!showVideoPanel ? 'hidden' : ''}`}>
+        {status === 'requesting' && (
+          <div className="flex flex-col items-center gap-3 py-4 animate-fade-in">
+            <div className="w-14 h-14 rounded-full bg-primary-container/30 flex items-center justify-center relative">
+              <span className="material-symbols-outlined text-primary text-[28px]">camera_alt</span>
+              <span className="absolute inset-0 rounded-full border-2 border-primary/30 animate-ping" />
+            </div>
+            <p className="text-sm text-on-surface-variant text-center max-w-xs">
+              Starting camera… allow access when prompted.
+            </p>
+          </div>
+        )}
+
+        {/* The scanner div — always rendered, invisible during 'requesting' */}
+        <div className={`relative w-full max-w-[320px] ${status === 'requesting' ? 'invisible h-0 overflow-hidden' : ''}`}>
           <div
             id="mc-qr-scanner-region"
-            ref={containerRef}
-            className="w-full max-w-[320px] rounded-2xl overflow-hidden shadow-2xl"
+            className="w-full rounded-2xl overflow-hidden shadow-2xl bg-black min-h-[260px]"
           />
-          {lastScanned && (
-            <div className="flex items-center gap-2 text-label-sm text-on-surface-variant bg-surface-container px-3 py-1 rounded-full">
-              <span className="material-symbols-outlined text-[14px] text-secondary">qr_code</span>
-              Scanned — looking up member…
+          {status === 'active' && (
+            <div className="absolute inset-0 pointer-events-none rounded-2xl">
+              <div className="absolute top-3 left-3 w-7 h-7 border-t-2 border-l-2 border-primary rounded-tl-lg" />
+              <div className="absolute top-3 right-3 w-7 h-7 border-t-2 border-r-2 border-primary rounded-tr-lg" />
+              <div className="absolute bottom-3 left-3 w-7 h-7 border-b-2 border-l-2 border-primary rounded-bl-lg" />
+              <div className="absolute bottom-3 right-3 w-7 h-7 border-b-2 border-r-2 border-primary rounded-br-lg" />
+              <div className="scanner-line" />
             </div>
           )}
-          <p className="text-body-md text-on-surface-variant text-center max-w-xs">
-            Point camera at the QR code on the member's card.
-          </p>
         </div>
-      )}
 
-      {/* ── Camera permission denied ─── */}
+        {/* Camera controls (active only) */}
+        {status === 'active' && (
+          <div className="flex items-center gap-2 flex-wrap justify-center animate-fade-in">
+            {cameras.length > 1 && (
+              <button onClick={switchCamera} className="btn-secondary text-label-sm py-1.5 px-3 flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[18px]">cameraswitch</span>
+                Switch Camera
+              </button>
+            )}
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={fileScanning}
+              className="btn-outline text-label-sm py-1.5 px-3 flex items-center gap-1.5"
+            >
+              <span className="material-symbols-outlined text-[18px]">image</span>
+              {fileScanning ? 'Reading…' : 'Upload QR Image'}
+            </button>
+          </div>
+        )}
+
+        {status === 'active' && (
+          lastScanned ? (
+            <div className="flex items-center gap-2 text-label-sm text-secondary bg-secondary/10 px-3 py-1.5 rounded-full animate-fade-in">
+              <span className="material-symbols-outlined text-[14px]">qr_code</span>
+              QR detected — looking up member…
+            </div>
+          ) : (
+            <p className="text-sm text-on-surface-variant text-center max-w-xs">
+              Point camera at the QR code on the member's card.
+            </p>
+          )
+        )}
+      </div>
+
+      {/* ── Permission denied ─── */}
       {status === 'denied' && (
-        <div className="flex flex-col items-center gap-4 py-6">
-          <div className="w-16 h-16 rounded-full bg-error-container flex items-center justify-center">
-            <span className="material-symbols-outlined text-on-error-container text-[32px]">no_photography</span>
+        <div className="flex flex-col items-center gap-4 py-4 animate-fade-in w-full">
+          <div className="w-14 h-14 rounded-full bg-error-container flex items-center justify-center">
+            <span className="material-symbols-outlined text-on-error-container text-[28px]">no_photography</span>
           </div>
           <div className="text-center">
-            <p className="text-body-lg font-bold text-on-surface mb-1">Camera Access Denied</p>
-            <p className="text-body-md text-on-surface-variant max-w-xs">
-              Please allow camera access in your browser settings, then switch tabs and come back.
+            <p className="font-bold text-on-surface mb-1">Camera Access Denied</p>
+            <p className="text-sm text-on-surface-variant max-w-xs">
+              Your browser blocked the camera. Upload a QR photo, or allow camera access.
             </p>
           </div>
-          <button
-            onClick={() => { scannedRef.current = false; setStatus('requesting'); startScanner(); }}
-            className="btn-outline flex items-center gap-2"
-          >
-            <span className="material-symbols-outlined text-[18px]">refresh</span>
-            Try Again
-          </button>
-          <p className="text-label-sm text-on-surface-variant">Or use the Mobile No. or Membership No. tab instead.</p>
+          <div className="flex gap-2 flex-wrap justify-center">
+            <button onClick={() => fileInputRef.current?.click()} disabled={fileScanning} className="btn-primary flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px]">upload_file</span>
+              {fileScanning ? 'Reading…' : 'Upload QR Photo'}
+            </button>
+            <button onClick={startScanner} className="btn-outline flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px]">refresh</span>
+              Try Camera
+            </button>
+          </div>
+          <div className="w-full max-w-sm bg-surface-container-low rounded-xl p-3 text-xs text-on-surface-variant text-left space-y-1">
+            <p className="font-bold text-on-surface flex items-center gap-1 mb-1">
+              <span className="material-symbols-outlined text-[14px] text-primary">help_outline</span>
+              Allow camera in Chrome:
+            </p>
+            <p>① Click the 🔒 icon in the address bar</p>
+            <p>② Site settings → Camera → Allow</p>
+            <p>③ Refresh and try again</p>
+          </div>
         </div>
       )}
 
-      {/* ── Generic error ─── */}
+      {/* ── Camera error — offer image upload ─── */}
       {status === 'error' && (
-        <div className="flex flex-col items-center gap-4 py-6">
-          <div className="w-16 h-16 rounded-full bg-error-container flex items-center justify-center">
-            <span className="material-symbols-outlined text-on-error-container text-[32px]">camera_off</span>
+        <div className="flex flex-col items-center gap-4 py-4 animate-fade-in w-full">
+          <div className="w-14 h-14 rounded-full bg-surface-container flex items-center justify-center">
+            <span className="material-symbols-outlined text-on-surface-variant text-[28px]">videocam_off</span>
           </div>
           <div className="text-center">
-            <p className="text-body-lg font-bold text-on-surface mb-1">Camera Unavailable</p>
-            <p className="text-body-md text-on-surface-variant max-w-xs">
-              Could not start the camera. This may happen on HTTP (non-HTTPS) connections.
+            <p className="font-bold text-on-surface mb-1">Live Camera Unavailable</p>
+            <p className="text-sm text-on-surface-variant max-w-xs">
+              Could not start the camera stream. Take a photo of the QR code and upload it below — it works the same way!
             </p>
           </div>
-          <button
-            onClick={() => { scannedRef.current = false; setStatus('requesting'); startScanner(); }}
-            className="btn-outline flex items-center gap-2"
-          >
-            <span className="material-symbols-outlined text-[18px]">refresh</span>
-            Try Again
-          </button>
+          <div className="flex flex-col gap-2 w-full max-w-xs">
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={fileScanning}
+              className="btn-primary w-full py-3 flex items-center justify-center gap-2"
+            >
+              <span className="material-symbols-outlined text-[20px]">add_a_photo</span>
+              {fileScanning ? 'Scanning Photo…' : 'Upload / Capture QR Photo'}
+            </button>
+            <button onClick={startScanner} className="btn-outline w-full py-2 flex items-center justify-center gap-2 text-sm">
+              <span className="material-symbols-outlined text-[18px]">refresh</span>
+              Retry Live Camera
+            </button>
+          </div>
         </div>
       )}
     </div>

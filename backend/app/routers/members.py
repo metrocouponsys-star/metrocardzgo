@@ -185,6 +185,100 @@ def create_member(
     return member
 
 
+from pydantic import BaseModel as PyBaseModel
+
+class BulkImportItem(PyBaseModel):
+    name: str
+    phone: str
+    date_of_birth: Optional[date] = None
+    anniversary_date: Optional[date] = None
+    membership_type_id: Optional[str] = None
+
+class BulkImportRequest(PyBaseModel):
+    members: List[BulkImportItem]
+
+@router.post("/bulk-import")
+def bulk_import_members(
+    payload: BulkImportRequest,
+    merchant_id: str = Depends(get_merchant_id),
+    current_user=Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    merchant = db.query(Merchant).filter(Merchant.id == merchant_id).first()
+    default_mtype = db.query(MembershipType).filter(MembershipType.merchant_id == merchant_id).first()
+    default_mtype_id = default_mtype.id if default_mtype else None
+
+    imported = 0
+    skipped = 0
+    errors = []
+
+    for item in payload.members:
+        clean_phone = item.phone.replace(" ", "").strip()
+        if not item.name or not clean_phone:
+            skipped += 1
+            errors.append("Row missing name or phone")
+            continue
+
+        existing = db.query(Member).filter(
+            Member.merchant_id == merchant_id,
+            Member.phone == clean_phone
+        ).first()
+        if existing:
+            skipped += 1
+            errors.append(f"Phone {clean_phone} already registered ({existing.name})")
+            continue
+
+        mtype_id = item.membership_type_id or default_mtype_id
+        if not mtype_id:
+            skipped += 1
+            errors.append(f"No membership type available for {item.name}")
+            continue
+
+        count = db.query(Member).filter(Member.merchant_id == merchant_id).count()
+        member_code = f"MC{str(count + 1).zfill(4)}"
+        member_id_new = str(uuid.uuid4())
+        public_token = generate_public_token(member_id_new, merchant.secret_salt)
+        referral_code = _generate_referral_code(db)
+
+        member = Member(
+            id=member_id_new,
+            merchant_id=merchant_id,
+            member_code=member_code,
+            public_token=public_token,
+            name=item.name,
+            phone=clean_phone,
+            date_of_birth=item.date_of_birth,
+            anniversary_date=item.anniversary_date,
+            membership_type_id=mtype_id,
+            joined_date=date.today(),
+            expiry_date=date.today() + timedelta(days=365),
+            loyalty_points=Decimal("0"),
+            status="active",
+            total_visits=0,
+            referral_code=referral_code,
+        )
+        db.add(member)
+        db.flush()
+
+        offer_links = db.query(MembershipTypeOffer).filter(
+            MembershipTypeOffer.membership_type_id == mtype_id
+        ).all()
+        for link in offer_links:
+            state = MemberOfferState(
+                member_id=member_id_new,
+                offer_template_id=link.offer_template_id,
+                remaining_qty=link.default_qty,
+                initial_qty=link.default_qty,
+                status="active",
+            )
+            db.add(state)
+
+        imported += 1
+
+    db.commit()
+    return {"imported": imported, "skipped": skipped, "errors": errors}
+
+
 @router.patch("/{member_id}", response_model=MemberOut)
 def update_member(
     member_id: str,

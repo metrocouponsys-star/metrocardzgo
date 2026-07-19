@@ -129,7 +129,7 @@ def claim_reward(
         member_id=member_id,
         type="redeem",
         points=-reward.points_cost,
-        description=f"Reward claimed: {reward.name}",
+        note=f"Reward claimed: {reward.name}",
         balance_after=member.loyalty_points,
     )
     db.add(txn)
@@ -345,7 +345,7 @@ def redeem_voucher(
         member_id=member.id,
         type="earn",
         points=voucher.value,
-        description=f"Gift voucher redeemed: {voucher.code}",
+        note=f"Gift voucher redeemed: {voucher.code}",
         balance_after=member.loyalty_points,
     )
     db.add(txn)
@@ -490,7 +490,7 @@ def reveal_scratch_card(
                     member_id=member.id,
                     type="earn",
                     points=pts,
-                    description=f"Scratch card reward: {pts} points",
+                    note=f"Scratch card reward: {pts} points",
                     balance_after=member.loyalty_points,
                 )
                 db.add(txn)

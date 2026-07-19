@@ -281,6 +281,7 @@ class LoyaltyTransactionOut(BaseModel):
     source_redemption_id: Optional[str] = None
     source_offer_id: Optional[str] = None
     source_offer_title: Optional[str] = None
+    note: Optional[str] = None        # human-readable description (reward claims, scratch cards, etc.)
     balance_after: Decimal
     created_at: datetime
 

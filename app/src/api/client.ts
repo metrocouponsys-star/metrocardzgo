@@ -136,6 +136,48 @@ export async function createMember(merchantId: string, data: Partial<Member>): P
   return newMember;
 }
 
+export async function bulkImportMembers(merchantId: string, rows: Partial<Member>[]): Promise<{ imported: number; skipped: number; errors: string[] }> {
+  await delay(FAKE_DELAY);
+  let imported = 0;
+  let skipped = 0;
+  const errors: string[] = [];
+
+  for (const data of rows) {
+    if (!data.name || !data.phone) {
+      skipped++;
+      errors.push(`Row missing name or phone`);
+      continue;
+    }
+    const cleanPhone = data.phone.replace(/\s/g, '');
+    const existing = db.members.find(m => m.merchant_id === merchantId && m.phone.replace(/\s/g, '') === cleanPhone);
+    if (existing) {
+      skipped++;
+      errors.push(`Phone ${data.phone} already exists (${existing.name})`);
+      continue;
+    }
+    const defaultMType = db.membershipTypes.find(mt => mt.merchant_id === merchantId)?.id || 'mtype-001';
+    const newMember: Member = {
+      id: `mem-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      merchant_id: merchantId,
+      member_code: `SAL${String(db.members.filter(m => m.merchant_id === merchantId).length + 1).padStart(3, '0')}`,
+      public_token: `tok-${Math.random().toString(36).substr(2, 12)}`,
+      name: data.name,
+      phone: data.phone,
+      date_of_birth: data.date_of_birth,
+      anniversary_date: data.anniversary_date,
+      membership_type_id: data.membership_type_id || defaultMType,
+      joined_date: new Date().toISOString().split('T')[0],
+      expiry_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      loyalty_points: 0,
+      status: 'active',
+      created_at: new Date().toISOString(),
+    };
+    db.members.push(newMember);
+    imported++;
+  }
+  return { imported, skipped, errors };
+}
+
 export async function updateMember(merchantId: string, memberId: string, data: Partial<Member>): Promise<Member> {
   await delay(FAKE_DELAY);
   const idx = db.members.findIndex(m => m.id === memberId && m.merchant_id === merchantId);
@@ -462,6 +504,24 @@ export async function updateMerchant(merchantId: string, data: Partial<Merchant>
   return db.merchants[idx];
 }
 
+/** Upload / update the merchant's logo — accepts a data URL (base64). */
+export async function uploadMerchantLogo(merchantId: string, logoDataUrl: string): Promise<Merchant> {
+  await delay(FAKE_DELAY);
+  const idx = db.merchants.findIndex(m => m.id === merchantId);
+  if (idx === -1) throw new Error('Merchant not found');
+  db.merchants[idx] = { ...db.merchants[idx], logo_url: logoDataUrl };
+  return db.merchants[idx];
+}
+
+/** Set the card design image for a merchant's card batch. */
+export async function setMerchantCardDesign(merchantId: string, cardDesignDataUrl: string): Promise<Merchant> {
+  await delay(FAKE_DELAY);
+  const idx = db.merchants.findIndex(m => m.id === merchantId);
+  if (idx === -1) throw new Error('Merchant not found');
+  db.merchants[idx] = { ...db.merchants[idx], card_design_url: cardDesignDataUrl };
+  return db.merchants[idx];
+}
+
 export async function createMerchant(data: Partial<Merchant> & { owner_name: string; owner_phone: string }): Promise<Merchant> {
   await delay(FAKE_DELAY);
   const merchant: Merchant = {
@@ -701,6 +761,53 @@ export async function searchMemberByCard(merchantId: string, cardNumber: string)
   return { ...member, membership_type: db.membershipTypes.find(mt => mt.id === member.membership_type_id) };
 }
 
+export async function resolveCardNumber(cardNumber: string): Promise<any> {
+  await delay(FAKE_DELAY);
+  const normalized = cardNumber.replace(/\s/g, '');
+  const card = db.cardInventory.find(c => c.card_number.replace(/\s/g, '') === normalized);
+  if (!card) throw new Error('Card not found');
+  const merchant = db.merchants.find(m => m.id === card.allocated_merchant_id);
+  const member = db.members.find(m => m.id === card.linked_member_id);
+  return {
+    id: card.id,
+    card_number: card.card_number,
+    status: card.status,
+    merchant_id: card.allocated_merchant_id,
+    member_id: card.linked_member_id,
+    public_token: member?.public_token || null,
+    business_name: merchant?.business_name || null,
+  };
+}
+
+export async function exportCardInventoryCsv(merchantId?: string): Promise<void> {
+  await delay(FAKE_DELAY);
+  console.log('Mock CSV export triggered for merchant: ' + merchantId);
+}
+
+/**
+ * Generate and download an Excel/CSV file with card numbers and their QR code data URLs.
+ * In mock mode we generate a simple CSV; in real mode the backend generates an xlsx.
+ */
+export async function downloadCardsQrExcel(cardNumbers: string[]): Promise<void> {
+  await delay(FAKE_DELAY);
+  // Build a simple CSV with card number + QR URL (in production a real QR image is embedded)
+  const rows = ['Card Number,QR Code Data,Status'];
+  for (const num of cardNumbers) {
+    const qrData = `METROCARDZ:${num.replace(/\s/g, '')}`;
+    rows.push(`"${num}","${qrData}",Unassigned`);
+  }
+  const csvContent = rows.join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `metrocardz_cards_${new Date().toISOString().split('T')[0]}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 export async function applyReferral(merchantId: string, memberId: string, referralCode: string): Promise<Member> {
   await delay(FAKE_DELAY);
   const member = db.members.find(m => m.id === memberId);
@@ -784,12 +891,55 @@ export async function sendCampaign(merchantId: string, campaignId: string): Prom
   return campaign;
 }
 
-// ── Mock Referral & Card PDF ──────────────────────────────────────────────────
 export async function getReferralLink(memberId: string): Promise<any> {
-  return { referral_code: 'REF-' + memberId.slice(-4), referral_link: 'http://localhost:3000/m/ref-' + memberId, bonus_points: 50 };
+  const member = db.members.find(m => m.id === memberId);
+  const code = member?.referral_code || 'REF-' + memberId.slice(-4);
+  return { referral_code: code, referral_link: `${window.location.origin}/m/${member?.public_token || memberId}?ref=${code}`, bonus_points: 50 };
 }
+
 export async function downloadCardPdf(memberId: string): Promise<void> {
-  console.log('Generating PDF for ' + memberId);
+  await delay(FAKE_DELAY);
+  const member = db.members.find(m => m.id === memberId);
+  const name = member?.name || 'Valued Member';
+  const code = member?.member_code || 'SAL001';
+  const qrToken = member?.public_token || 'tok-sample';
+
+  // Create printable card HTML window / blob
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Membership Card - ${name}</title>
+      <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f3f4f6; margin: 0; }
+        .card { width: 340px; height: 210px; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius: 16px; padding: 20px; color: white; box-shadow: 0 10px 25px rgba(0,0,0,0.3); position: relative; box-sizing: border-box; }
+        .brand { font-size: 14px; font-weight: bold; letter-spacing: 1px; color: #38bdf8; text-transform: uppercase; }
+        .name { font-size: 18px; font-weight: 700; margin-top: 25px; }
+        .code { font-family: monospace; font-size: 14px; color: #94a3b8; margin-top: 4px; }
+        .qr-placeholder { position: absolute; right: 20px; bottom: 20px; width: 64px; height: 64px; background: white; padding: 4px; border-radius: 8px; }
+        .qr-img { width: 100%; height: 100%; }
+        .expiry { font-size: 10px; color: #64748b; margin-top: 30px; }
+      </style>
+    </head>
+    <body>
+      <div class="card">
+        <div class="brand">Metro Cardz</div>
+        <div class="name">${name}</div>
+        <div class="code">#${code}</div>
+        <div class="expiry">TOKEN: ${qrToken}</div>
+        <div class="qr-placeholder">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent('https://metrocardz.in/m/' + qrToken)}" class="qr-img" />
+        </div>
+      </div>
+      <script>window.onload = () => { window.print(); };</script>
+    </body>
+    </html>
+  `;
+  const printWindow = window.open('', '_blank');
+  if (printWindow) {
+    printWindow.document.write(html);
+    printWindow.document.close();
+  }
 }
 
 // ── Mock Retention ────────────────────────────────────────────────────────────
@@ -968,4 +1118,12 @@ export async function getMerchantWalletClass(): Promise<any> {
 export async function syncAllWalletPasses(): Promise<any> {
   await delay(FAKE_DELAY);
   return { queued: 12, message: '12 wallet passes queued for sync' };
+}
+export async function getPublicWalletPassUrl(token: string): Promise<{ save_url: string; google_object_id: string; status: string }> {
+  await delay(FAKE_DELAY);
+  return {
+    save_url: `https://pay.google.com/gp/v/save/DEMO_TOKEN_${token}`,
+    google_object_id: `DEMO_ISSUER.${token}`,
+    status: 'added',
+  };
 }

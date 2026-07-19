@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useToastStore } from '../../store/toastStore';
-import { Modal, ConfirmModal } from '../../components/ui/Modal';
+import { Modal } from '../../components/ui/Modal';
 import type { Merchant, MerchantUser } from '../../types';
 import * as api from '../../api';
 
@@ -21,6 +21,31 @@ export default function SettingsPage() {
   const [walletSyncing, setWalletSyncing] = useState(false);
 
   const [profileForm, setProfileForm] = useState({ business_name: '', category: '', address: '', whatsapp_number: '', referral_bonus_points: 50 });
+  const [logoUploading, setLogoUploading] = useState(false);
+  const logoFileRef = React.useRef<HTMLInputElement>(null);
+
+  /** Compress an image file to a data URL */
+  async function compressImage(file: File, maxWidth = 400, quality = 0.8): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let w = img.width, h = img.height;
+          if (w > maxWidth) { h = Math.round((h * maxWidth) / w); w = maxWidth; }
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d')!;
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = reject;
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
 
   useEffect(() => {
     Promise.all([
@@ -123,6 +148,78 @@ export default function SettingsPage() {
       {/* Business Profile */}
       {tab === 'profile' && (
         <div className="card p-lg space-y-md">
+
+          {/* Logo Upload */}
+          <div className="pb-md border-b border-outline-variant/30">
+            <label className="form-label mb-3">Business Logo</label>
+            <div className="flex items-center gap-4">
+              {/* Preview */}
+              <div className="w-20 h-20 rounded-2xl bg-surface-container border-2 border-outline-variant flex items-center justify-center overflow-hidden flex-shrink-0">
+                {merchant?.logo_url ? (
+                  <img src={merchant.logo_url} alt="Logo" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="material-symbols-outlined text-on-surface-variant text-[32px]">store</span>
+                )}
+              </div>
+              <div className="space-y-2">
+                <p className="text-body-sm text-on-surface-variant">
+                  {merchant?.logo_url ? 'Logo uploaded. Click to replace.' : 'Upload your business logo. PNG or JPG, auto-compressed.'}
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => logoFileRef.current?.click()}
+                    disabled={logoUploading}
+                    className="btn-outline flex items-center gap-2 !py-1.5 !px-3 text-label-sm"
+                    style={{ minHeight: 'auto' }}
+                  >
+                    {logoUploading
+                      ? <><span className="material-symbols-outlined animate-spin text-[14px]">progress_activity</span> Uploading…</>
+                      : <><span className="material-symbols-outlined text-[14px]">upload</span> {merchant?.logo_url ? 'Replace Logo' : 'Upload Logo'}</>
+                    }
+                  </button>
+                  {merchant?.logo_url && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!merchant) return;
+                        try {
+                          const updated = await api.uploadMerchantLogo(merchant.id, '');
+                          setMerchant(updated);
+                          addToast('success', 'Logo removed');
+                        } catch { addToast('error', 'Failed to remove logo'); }
+                      }}
+                      className="text-error text-label-sm flex items-center gap-1 hover:underline"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">delete</span> Remove
+                    </button>
+                  )}
+                </div>
+                <input
+                  ref={logoFileRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file || !merchant) return;
+                    setLogoUploading(true);
+                    try {
+                      const dataUrl = await compressImage(file, 400, 0.8);
+                      const updated = await api.uploadMerchantLogo(merchant.id, dataUrl);
+                      setMerchant(updated);
+                      addToast('success', 'Logo uploaded successfully!');
+                    } catch { addToast('error', 'Failed to upload logo'); }
+                    finally {
+                      setLogoUploading(false);
+                      if (logoFileRef.current) logoFileRef.current.value = '';
+                    }
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
             <div>
               <label className="form-label">Business Name *</label>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useToastStore } from '../../store/toastStore';
 import { useForm } from 'react-hook-form';
+import { Modal } from '../../components/ui/Modal';
 import type { MembershipType, CardInventoryItem } from '../../types';
 import * as api from '../../api';
 
@@ -63,16 +64,81 @@ export default function AddMemberPage() {
     }
   };
 
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [csvText, setCsvText] = useState('');
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{ imported: number; skipped: number; errors: string[] } | null>(null);
+
+  const handleBulkImport = async () => {
+    if (!csvText.trim()) return;
+    setImporting(true);
+    setImportResult(null);
+    try {
+      const lines = csvText.trim().split('\n');
+      const rows: any[] = [];
+      // Parse CSV header & lines
+      const header = lines[0].toLowerCase();
+      const hasHeader = header.includes('name') || header.includes('phone');
+      const dataLines = hasHeader ? lines.slice(1) : lines;
+
+      for (const line of dataLines) {
+        const parts = line.split(',').map(s => s.trim().replace(/^["']|["']$/g, ''));
+        if (parts.length >= 2 && parts[0] && parts[1]) {
+          rows.push({
+            name: parts[0],
+            phone: parts[1],
+            date_of_birth: parts[2] || undefined,
+            anniversary_date: parts[3] || undefined,
+          });
+        }
+      }
+
+      if (rows.length === 0) {
+        addToast('error', 'No valid rows found in CSV. Expected format: Name, Phone');
+        setImporting(false);
+        return;
+      }
+
+      const res = await api.bulkImportMembers(user?.merchant_id || '', rows);
+      setImportResult(res);
+      addToast('success', `Imported ${res.imported} members successfully!`);
+    } catch {
+      addToast('error', 'Failed to process CSV import');
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const downloadCsvTemplate = () => {
+    const template = 'Name,Phone,DateOfBirth,AnniversaryDate\nRahul Sharma,9876543210,1990-05-15,2018-11-20\nPriya Patel,9876543211,1995-08-22,';
+    const blob = new Blob([template], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'members_import_template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-2xl mx-auto animate-fade-in">
-      <button onClick={() => navigate('/members')} className="flex items-center gap-1 text-on-surface-variant hover:text-on-surface text-body-md transition-colors mb-6">
-        <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-        Back
-      </button>
+      <div className="flex items-center justify-between mb-6">
+        <button onClick={() => navigate('/members')} className="flex items-center gap-1 text-on-surface-variant hover:text-on-surface text-body-md transition-colors">
+          <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+          Back
+        </button>
+        <button
+          onClick={() => setShowBulkModal(true)}
+          className="btn-outline flex items-center gap-2 !py-2 !px-4 text-label-md"
+        >
+          <span className="material-symbols-outlined text-[18px]">upload_file</span>
+          Bulk Import CSV
+        </button>
+      </div>
 
       <div className="page-header">
         <h2 className="page-title">Add New Member</h2>
-        <p className="page-subtitle">Enroll a new customer and generate their membership card.</p>
+        <p className="page-subtitle">Enroll a new customer individually or bulk import from CSV.</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="card p-lg space-y-md">
@@ -197,6 +263,63 @@ export default function AddMemberPage() {
           </button>
         </div>
       </form>
+
+      {/* Bulk Import Modal */}
+      <Modal
+        isOpen={showBulkModal}
+        onClose={() => setShowBulkModal(false)}
+        title="Bulk Import Members (CSV)"
+      >
+        <div className="space-y-4">
+          <div className="flex items-center justify-between bg-surface-container p-3 rounded-xl">
+            <span className="text-body-sm text-on-surface-variant">Download sample CSV format:</span>
+            <button
+              onClick={downloadCsvTemplate}
+              className="text-primary text-label-md font-bold hover:underline flex items-center gap-1"
+            >
+              <span className="material-symbols-outlined text-[16px]">download</span>
+              Template.csv
+            </button>
+          </div>
+
+          <div>
+            <label className="form-label">Paste CSV Content or Drag CSV Text</label>
+            <p className="text-label-xs text-on-surface-variant mb-2">Columns: Name, Phone, DateOfBirth (optional), AnniversaryDate (optional)</p>
+            <textarea
+              rows={8}
+              value={csvText}
+              onChange={e => setCsvText(e.target.value)}
+              placeholder={`Name,Phone,DateOfBirth,AnniversaryDate\nRahul Sharma,9876543210,1990-05-15,2018-11-20\nPriya Patel,9876543211,1995-08-22,`}
+              className="w-full p-3 font-mono text-body-sm bg-surface-container-low border border-outline-variant rounded-xl outline-none focus:border-primary"
+            />
+          </div>
+
+          {importResult && (
+            <div className={`p-4 rounded-xl text-body-sm border ${importResult.skipped === 0 ? 'bg-green-50 border-green-200 text-green-800' : 'bg-amber-50 border-amber-200 text-amber-900'}`}>
+              <p className="font-bold">Import Summary:</p>
+              <p>✅ Successfully imported: {importResult.imported}</p>
+              {importResult.skipped > 0 && <p>⚠️ Skipped (duplicates/errors): {importResult.skipped}</p>}
+              {importResult.errors.length > 0 && (
+                <ul className="mt-2 text-label-xs list-disc pl-4 space-y-0.5">
+                  {importResult.errors.slice(0, 5).map((err, i) => <li key={i}>{err}</li>)}
+                </ul>
+              )}
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button onClick={() => setShowBulkModal(false)} className="btn-secondary">Close</button>
+            <button
+              onClick={handleBulkImport}
+              disabled={importing || !csvText.trim()}
+              className="btn-primary flex items-center gap-2"
+            >
+              {importing && <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>}
+              Import Members
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

@@ -12,6 +12,7 @@ from app.core.deps import get_db, get_current_active_user, get_merchant_id
 from app.models.member import Member, MemberOfferState
 from app.models.redemption import RedemptionLog
 from app.models.loyalty import LoyaltyTransaction
+from app.models.rewards import PointsRule
 from app.schemas import RedeemRequest, RedemptionOut, LoyaltyTransactionOut
 from typing import List
 
@@ -112,6 +113,34 @@ def redeem_offer(
             balance_after=new_balance,
         )
         db.add(loyalty_tx)
+
+    # Step 6b: Apply merchant-level PointsRules (per_visit / per_rupee).
+    # These are separate from offer-template earn points — they run for EVERY redemption.
+    active_rules = db.query(PointsRule).filter(
+        PointsRule.merchant_id == merchant_id,
+        PointsRule.is_active == True,
+    ).all()
+    for rule in active_rules:
+        rule_pts = Decimal("0")
+        rule_note = ""
+        if rule.rule_type == "per_visit":
+            rule_pts = Decimal(str(rule.points_value))
+            rule_note = f"Points rule: {rule_pts} pts per visit"
+        elif rule.rule_type == "per_rupee" and payload.amount and payload.amount > 0:
+            rule_pts = (Decimal(str(rule.points_value)) * Decimal(str(payload.amount))).quantize(Decimal("1"))
+            rule_note = f"Points rule: {rule.points_value} pts/₹ × ₹{payload.amount}"
+
+        if rule_pts > 0:
+            member.loyalty_points = (member.loyalty_points or Decimal("0")) + rule_pts
+            db.add(LoyaltyTransaction(
+                member_id=member.id,
+                merchant_id=merchant_id,
+                type="earn",
+                points=rule_pts,
+                source_redemption_id=redemption.id,
+                balance_after=member.loyalty_points,
+                note=rule_note,
+            ))
 
     # Step 7: Increment visit counter (every redemption = 1 visit)
     member.total_visits = (member.total_visits or 0) + 1
@@ -348,6 +377,7 @@ def get_member_loyalty_history(
             source_redemption_id=tx.source_redemption_id,
             source_offer_id=tx.source_offer_id,
             source_offer_title=offer_title,
+            note=tx.note,
             balance_after=tx.balance_after,
             created_at=tx.created_at,
         ))

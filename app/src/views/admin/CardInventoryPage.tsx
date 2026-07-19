@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { useToastStore } from '../../store/toastStore';
 import { ConfirmModal } from '../../components/ui/Modal';
 import type { CardInventoryItem, Merchant } from '../../types';
@@ -6,6 +6,7 @@ import * as api from '../../api';
 import { format } from 'date-fns';
 
 type FilterStatus = 'all' | 'unassigned' | 'merchant_allocated' | 'member_linked' | 'deactivated';
+type WizardStep = 1 | 2 | 3 | 4;
 
 const STATUS_CONFIG: Record<string, { cls: string; label: string; icon: string }> = {
   unassigned:         { cls: 'bg-surface-container text-on-surface-variant',       label: 'Unassigned',  icon: 'inventory_2' },
@@ -27,6 +28,65 @@ function generateCardNumbers(prefix: string, start: number, count: number): stri
   return result;
 }
 
+/** Compress an image file to a data URL with max size ~100KB */
+async function compressImage(file: File, maxWidth = 600, quality = 0.75): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let w = img.width;
+        let h = img.height;
+        if (w > maxWidth) { h = Math.round((h * maxWidth) / w); w = maxWidth; }
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d')!;
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// ─── Wizard Step Indicator ───────────────────────────────────────────────────
+function StepIndicator({ current, total }: { current: WizardStep; total: number }) {
+  const steps = [
+    { n: 1, label: 'Add Cards', icon: 'add_card' },
+    { n: 2, label: 'Download QR', icon: 'qr_code_2' },
+    { n: 3, label: 'Card Image', icon: 'image' },
+    { n: 4, label: 'Allocate', icon: 'storefront' },
+  ];
+  return (
+    <div className="flex items-center gap-0 mb-6">
+      {steps.map((s, i) => (
+        <React.Fragment key={s.n}>
+          <div className="flex flex-col items-center gap-1 flex-1">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-label-md border-2 transition-all
+              ${current === s.n ? 'bg-primary text-on-primary border-primary shadow-md scale-110' :
+                current > s.n ? 'bg-secondary text-on-secondary border-secondary' :
+                'bg-surface-container text-on-surface-variant border-outline-variant'}`}>
+              {current > s.n
+                ? <span className="material-symbols-outlined text-[18px]">check</span>
+                : <span className="material-symbols-outlined text-[18px]">{s.icon}</span>}
+            </div>
+            <span className={`text-[10px] font-semibold whitespace-nowrap ${current === s.n ? 'text-primary' : current > s.n ? 'text-secondary' : 'text-on-surface-variant'}`}>
+              {s.label}
+            </span>
+          </div>
+          {i < steps.length - 1 && (
+            <div className={`h-0.5 flex-1 mx-1 rounded-full transition-all ${current > s.n + 1 || (current === s.n + 1) ? 'bg-secondary' : current > s.n ? 'bg-primary' : 'bg-outline-variant/40'}`} />
+          )}
+        </React.Fragment>
+      ))}
+    </div>
+  );
+}
+
 export default function CardInventoryPage() {
   const { addToast } = useToastStore();
 
@@ -37,26 +97,32 @@ export default function CardInventoryPage() {
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterMerchant, setFilterMerchant] = useState('');
-
-  // Pagination
   const [page, setPage] = useState(1);
 
-  // Add Cards Panel
-  const [showAddPanel, setShowAddPanel] = useState(false);
-  const [addMode, setAddMode] = useState<'paste' | 'generate'>('paste');
+  // ─── Wizard State ──────────────────────────────────────────────────────────
+  const [showWizard, setShowWizard] = useState(false);
+  const [wizardStep, setWizardStep] = useState<WizardStep>(1);
+
+  // Step 1: Add cards
+  const [addMode, setAddMode] = useState<'paste' | 'generate'>('generate');
   const [bulkInput, setBulkInput] = useState('');
   const [genPrefix, setGenPrefix] = useState('4821 6739 00');
   const [genStart, setGenStart] = useState(1);
   const [genCount, setGenCount] = useState(50);
   const [addLoading, setAddLoading] = useState(false);
+  const [wizardCards, setWizardCards] = useState<string[]>([]); // card numbers from step 1
 
-  // Allocate Panel
-  const [showAllocatePanel, setShowAllocatePanel] = useState(false);
+  // Step 3: Card image upload
+  const [cardImageDataUrl, setCardImageDataUrl] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Step 4: Allocate
   const [allocateMerchant, setAllocateMerchant] = useState('');
-  const [allocateQty, setAllocateQty] = useState(10);
+  const [allocateQty, setAllocateQty] = useState(50);
   const [allocateLoading, setAllocateLoading] = useState(false);
 
-  // Confirm dialogs
+  // ─── Legacy panel state (for non-wizard flows) ─────────────────────────────
   const [deactivateTarget, setDeactivateTarget] = useState<CardInventoryItem | null>(null);
   const [deactivating, setDeactivating] = useState(false);
   const [revokeTarget, setRevokeTarget] = useState<CardInventoryItem | null>(null);
@@ -103,7 +169,6 @@ export default function CardInventoryPage() {
   const safePage = Math.min(page, totalPages);
   const paginated = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
-  // Reset to page 1 when filters change
   useEffect(() => { setPage(1); }, [filterStatus, filterMerchant, searchQuery]);
 
   const generatedPreview = useMemo(
@@ -111,7 +176,24 @@ export default function CardInventoryPage() {
     [genPrefix, genStart, genCount]
   );
 
-  const handleAddCards = async () => {
+  // ─── Wizard Handlers ──────────────────────────────────────────────────────
+  const openWizard = () => {
+    setWizardStep(1);
+    setWizardCards([]);
+    setCardImageDataUrl(null);
+    setAllocateMerchant('');
+    setAllocateQty(50);
+    setBulkInput('');
+    setShowWizard(true);
+  };
+
+  const closeWizard = () => {
+    setShowWizard(false);
+    setWizardStep(1);
+  };
+
+  // Step 1 → 2: Add cards to inventory and advance
+  const handleStep1Submit = async () => {
     let lines: string[];
     if (addMode === 'generate') {
       lines = generateCardNumbers(genPrefix.replace(/\s/g, ''), genStart, genCount);
@@ -123,31 +205,74 @@ export default function CardInventoryPage() {
     setAddLoading(true);
     try {
       const result = await api.addCardsToInventory(lines);
-      addToast('success', `Added ${result.added} cards${result.skipped ? `, ${result.skipped} duplicates skipped` : ''}`);
-      if (result.errors?.length > 0) addToast('error', `${result.errors.length} invalid entries — check format`);
-      setBulkInput('');
-      setShowAddPanel(false);
-      fetchData();
+      addToast('success', `✅ Added ${result.added} cards${result.skipped ? `, ${result.skipped} duplicates skipped` : ''}`);
+      if (result.errors?.length > 0) addToast('error', `${result.errors.length} invalid entries skipped`);
+      setWizardCards(lines.slice(0, result.added + (result.skipped || 0)));
+      await fetchData();
+      setWizardStep(2);
     } catch { addToast('error', 'Failed to add cards'); }
     finally { setAddLoading(false); }
   };
 
+  // Step 2: Download QR Excel
+  const handleDownloadQr = async () => {
+    if (wizardCards.length === 0) return;
+    try {
+      await api.downloadCardsQrExcel(wizardCards);
+      addToast('success', '📊 QR code list downloaded!');
+    } catch { addToast('error', 'Download failed'); }
+  };
+
+  // Step 3: Card image upload with compression
+  const handleCardImageUpload = useCallback(async (file: File) => {
+    setUploadingImage(true);
+    try {
+      const dataUrl = await compressImage(file, 800, 0.8);
+      setCardImageDataUrl(dataUrl);
+      addToast('success', 'Card design image ready');
+    } catch { addToast('error', 'Failed to process image'); }
+    finally { setUploadingImage(false); }
+  }, []);
+
+  const handleCardImageFilePick = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleCardImageUpload(file);
+  };
+
+  // Step 3 → 4: Save card design and advance
+  const handleStep3Submit = async () => {
+    // Card image is optional — skip if not set
+    if (cardImageDataUrl && allocateMerchant) {
+      try {
+        await api.setMerchantCardDesign(allocateMerchant, cardImageDataUrl);
+      } catch { /* non-fatal */ }
+    }
+    setWizardStep(4);
+  };
+
+  // Step 4: Allocate
   const handleAllocate = async () => {
     if (!allocateMerchant || allocateQty <= 0) return;
     setAllocateLoading(true);
     try {
       const unassigned = cards.filter(c => c.status === 'unassigned').slice(0, allocateQty);
       if (unassigned.length === 0) { addToast('error', 'No unassigned cards available'); setAllocateLoading(false); return; }
+
+      // If card design was set in step 3, save it for this merchant
+      if (cardImageDataUrl) {
+        await api.setMerchantCardDesign(allocateMerchant, cardImageDataUrl).catch(() => {});
+      }
+
       await api.allocateCardsToMerchant(allocateMerchant, unassigned.map(c => c.id));
-      addToast('success', `${unassigned.length} cards allocated to merchant`);
-      setShowAllocatePanel(false);
-      setAllocateMerchant('');
-      setAllocateQty(10);
-      fetchData();
+      const merchantName = merchants.find(m => m.id === allocateMerchant)?.business_name;
+      addToast('success', `🎉 ${unassigned.length} cards allocated to ${merchantName}!`);
+      await fetchData();
+      closeWizard();
     } catch (e: any) { addToast('error', e.message || 'Allocation failed'); }
     finally { setAllocateLoading(false); }
   };
 
+  // Legacy handlers
   const handleDeactivate = async () => {
     if (!deactivateTarget) return;
     setDeactivating(true);
@@ -177,6 +302,7 @@ export default function CardInventoryPage() {
     member_linked: 'Linked', deactivated: 'Deactivated',
   };
 
+  // ──────────────────────────────────────────────────────────────────────────
   return (
     <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-7xl mx-auto space-y-xl animate-fade-in">
 
@@ -187,16 +313,26 @@ export default function CardInventoryPage() {
             <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>credit_card</span>
             Card Inventory
           </h2>
-          <p className="page-subtitle">Manage the global pool of pre-printed 16-digit membership cards. Add, generate, allocate to merchants, and track usage.</p>
+          <p className="page-subtitle">Manage pre-printed membership cards. Use the wizard to add, QR-export, set design, and allocate to merchants in one flow.</p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <button onClick={() => setShowAllocatePanel(p => !p)} className="btn-outline flex items-center gap-2">
-            <span className="material-symbols-outlined text-[18px]">storefront</span>
-            Allocate to Merchant
+          <button
+            onClick={async () => {
+              try {
+                await api.exportCardInventoryCsv(filterMerchant || undefined);
+                addToast('success', 'Card inventory CSV download started!');
+              } catch {
+                addToast('error', 'Failed to export card inventory.');
+              }
+            }}
+            className="btn-outline flex items-center gap-2"
+          >
+            <span className="material-symbols-outlined text-[18px]">download</span>
+            Export CSV
           </button>
-          <button onClick={() => setShowAddPanel(p => !p)} className="btn-primary flex items-center gap-2">
-            <span className="material-symbols-outlined text-[18px]">add_card</span>
-            Add / Generate Cards
+          <button onClick={openWizard} className="btn-primary flex items-center gap-2">
+            <span className="material-symbols-outlined text-[18px]">auto_awesome</span>
+            New Card Batch Wizard
           </button>
         </div>
       </div>
@@ -222,177 +358,355 @@ export default function CardInventoryPage() {
         ))}
       </div>
 
-      {/* ── Add Cards Panel ─────────────────────────────────────────────────── */}
-      {showAddPanel && (
-        <div className="card p-lg space-y-md animate-fade-in border-l-4 border-primary">
+      {/* ── 4-Step Wizard ─────────────────────────────────────────────────────── */}
+      {showWizard && (
+        <div className="card p-lg space-y-lg animate-fade-in border-l-4 border-primary relative">
+          {/* Header */}
           <div className="flex items-center justify-between">
-            <h3 className="text-headline-md font-bold flex items-center gap-2">
-              <span className="material-symbols-outlined text-primary">add_card</span>
-              Add Card Numbers to Inventory
-            </h3>
-            <button onClick={() => { setShowAddPanel(false); setBulkInput(''); }} className="text-on-surface-variant hover:text-on-surface">
-              <span className="material-symbols-outlined">close</span>
-            </button>
-          </div>
-
-          {/* Mode Toggle */}
-          <div className="flex bg-surface-container rounded-xl p-1 gap-1 w-fit">
-            {([['paste', 'Paste Numbers', 'content_paste'], ['generate', 'Auto Generate', 'auto_awesome']] as const).map(([mode, label, icon]) => (
-              <button
-                key={mode}
-                onClick={() => setAddMode(mode)}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-label-md transition-all
-                  ${addMode === mode ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-high'}`}
-              >
-                <span className="material-symbols-outlined text-[16px]">{icon}</span>
-                {label}
-              </button>
-            ))}
-          </div>
-
-          {addMode === 'paste' ? (
-            <>
-              <p className="text-body-md text-on-surface-variant">
-                Paste the 16-digit card numbers from the printer's dataset. One per line, or comma-separated.
-                Spaces within numbers are handled automatically.
-              </p>
-              <div className="bg-surface-container rounded-xl p-4 font-mono text-sm text-on-surface-variant leading-7">
-                <strong>Example format:</strong><br />
-                4821 6739 0012 3841<br />
-                4821 6739 0012 3842<br />
-                4821673900123843
-              </div>
-              <textarea
-                value={bulkInput}
-                onChange={e => setBulkInput(e.target.value)}
-                placeholder="Paste card numbers here..."
-                rows={8}
-                className="input-field font-mono text-sm resize-none"
-              />
-              <p className="text-label-sm text-on-surface-variant">
-                {bulkInput.trim() ? `${bulkInput.split(/[\n,]+/).map(l => l.trim()).filter(Boolean).length} card(s) detected` : 'No cards entered'}
-              </p>
-            </>
-          ) : (
-            <>
-              <p className="text-body-md text-on-surface-variant">
-                Auto-generate sequential 16-digit card numbers. Set a prefix (first 12 digits) and the system will fill in the last 4 digits incrementally.
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-md">
-                <div>
-                  <label className="form-label">Card Number Prefix (12 digits) *</label>
-                  <input
-                    className="input-field font-mono"
-                    placeholder="e.g. 4821 6739 00"
-                    value={genPrefix}
-                    onChange={e => setGenPrefix(e.target.value)}
-                    maxLength={14}
-                  />
-                  <p className="text-label-sm text-on-surface-variant mt-1">The last 4 digits will be auto-filled</p>
-                </div>
-                <div>
-                  <label className="form-label">Starting Number *</label>
-                  <input
-                    type="number" min={1} max={9999}
-                    className="input-field"
-                    value={genStart}
-                    onChange={e => setGenStart(Math.max(1, Number(e.target.value)))}
-                  />
-                </div>
-                <div>
-                  <label className="form-label">Quantity to Generate *</label>
-                  <input
-                    type="number" min={1} max={5000}
-                    className="input-field"
-                    value={genCount}
-                    onChange={e => setGenCount(Math.max(1, Number(e.target.value)))}
-                  />
-                </div>
-              </div>
-              {/* Preview */}
-              <div className="bg-surface-container rounded-xl p-4">
-                <p className="text-label-md font-bold text-on-surface-variant mb-2">Preview (first 5 of {genCount}):</p>
-                <div className="space-y-1">
-                  {generatedPreview.map((n, i) => (
-                    <p key={i} className="font-mono text-sm text-on-surface tracking-widest">{n}</p>
-                  ))}
-                  {genCount > 5 && <p className="text-label-sm text-on-surface-variant">… and {genCount - 5} more</p>}
-                </div>
-              </div>
-            </>
-          )}
-
-          <div className="flex justify-end gap-2">
-            <button onClick={() => { setShowAddPanel(false); setBulkInput(''); }} className="btn-secondary">Cancel</button>
-            <button
-              onClick={handleAddCards}
-              disabled={addLoading || (addMode === 'paste' && !bulkInput.trim())}
-              className="btn-primary flex items-center gap-2"
-            >
-              {addLoading && <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>}
-              {addLoading ? 'Adding...' : addMode === 'generate' ? `Generate ${genCount} Cards` : 'Add to Inventory'}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ── Allocate Panel ──────────────────────────────────────────────────── */}
-      {showAllocatePanel && (
-        <div className="card p-lg space-y-md animate-fade-in border-l-4 border-secondary">
-          <div className="flex items-center justify-between">
-            <h3 className="text-headline-md font-bold flex items-center gap-2">
-              <span className="material-symbols-outlined text-secondary">storefront</span>
-              Allocate Cards to Merchant
-            </h3>
-            <button onClick={() => setShowAllocatePanel(false)} className="text-on-surface-variant hover:text-on-surface">
-              <span className="material-symbols-outlined">close</span>
-            </button>
-          </div>
-          <p className="text-body-md text-on-surface-variant">
-            Select a merchant and specify how many unassigned cards to give them. Cards are pulled from the global pool in order.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
             <div>
-              <label className="form-label">Merchant *</label>
-              <select className="input-field" value={allocateMerchant} onChange={e => setAllocateMerchant(e.target.value)}>
-                <option value="">Select merchant...</option>
-                {merchants.filter(m => m.status === 'active').map(m => (
-                  <option key={m.id} value={m.id}>{m.business_name}</option>
+              <h3 className="text-headline-md font-bold flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary">auto_awesome</span>
+                New Card Batch Wizard
+              </h3>
+              <p className="text-body-sm text-on-surface-variant mt-0.5">
+                Follow the 4 steps to add cards, export QR sheet, set card design, and allocate to merchant.
+              </p>
+            </div>
+            <button onClick={closeWizard} className="text-on-surface-variant hover:text-on-surface p-1 rounded-lg hover:bg-surface-container transition-colors">
+              <span className="material-symbols-outlined">close</span>
+            </button>
+          </div>
+
+          {/* Step Indicator */}
+          <StepIndicator current={wizardStep} total={4} />
+
+          {/* ── Step 1: Add / Generate Cards ─────────────────────────────────── */}
+          {wizardStep === 1 && (
+            <div className="space-y-md">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-label-md">1</div>
+                <h4 className="text-title-md font-bold">Add Card Numbers to Inventory</h4>
+              </div>
+
+              {/* Mode Toggle */}
+              <div className="flex bg-surface-container rounded-xl p-1 gap-1 w-fit">
+                {([['paste', 'Paste / Upload Numbers', 'content_paste'], ['generate', 'Auto Generate', 'auto_awesome']] as const).map(([mode, label, icon]) => (
+                  <button
+                    key={mode}
+                    onClick={() => setAddMode(mode)}
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-label-md transition-all
+                      ${addMode === mode ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-high'}`}
+                  >
+                    <span className="material-symbols-outlined text-[16px]">{icon}</span>
+                    {label}
+                  </button>
                 ))}
-              </select>
-            </div>
-            <div>
-              <label className="form-label">Number of Cards *</label>
-              <input
-                type="number" min={1} max={stats.unassigned}
-                value={allocateQty}
-                onChange={e => setAllocateQty(Number(e.target.value))}
-                className="input-field"
-              />
-              <p className="text-label-sm text-on-surface-variant mt-1">{stats.unassigned} unassigned cards available in pool</p>
-            </div>
-          </div>
-          {allocateMerchant && allocateQty > 0 && (
-            <div className="bg-primary-container/20 rounded-xl p-4 flex items-center gap-3">
-              <span className="material-symbols-outlined text-primary">info</span>
-              <p className="text-body-md">
-                Will allocate <strong>{Math.min(allocateQty, stats.unassigned)}</strong> cards to{' '}
-                <strong>{merchants.find(m => m.id === allocateMerchant)?.business_name}</strong>.
-                Their staff can then link each card to a member.
-              </p>
+              </div>
+
+              {addMode === 'paste' ? (
+                <>
+                  <p className="text-body-md text-on-surface-variant">
+                    Paste the 16-digit card numbers (one per line or comma-separated). Spaces within numbers are auto-handled.
+                  </p>
+                  <div className="bg-surface-container rounded-xl p-4 font-mono text-sm text-on-surface-variant leading-7">
+                    <strong>Example:</strong><br />
+                    4821 6739 0012 3841<br />
+                    4821 6739 0012 3842<br />
+                    4821673900123843
+                  </div>
+                  <textarea
+                    value={bulkInput}
+                    onChange={e => setBulkInput(e.target.value)}
+                    placeholder="Paste card numbers here..."
+                    rows={8}
+                    className="input-field font-mono text-sm resize-none"
+                  />
+                  <p className="text-label-sm text-on-surface-variant">
+                    {bulkInput.trim() ? `${bulkInput.split(/[\n,]+/).map(l => l.trim()).filter(Boolean).length} card(s) detected` : 'No cards entered'}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-body-md text-on-surface-variant">
+                    Auto-generate sequential 16-digit card numbers. Set a prefix (first 12 digits) — the last 4 fill incrementally.
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-md">
+                    <div>
+                      <label className="form-label">Card Number Prefix (12 digits) *</label>
+                      <input
+                        className="input-field font-mono"
+                        placeholder="e.g. 4821 6739 00"
+                        value={genPrefix}
+                        onChange={e => setGenPrefix(e.target.value)}
+                        maxLength={14}
+                      />
+                      <p className="text-label-sm text-on-surface-variant mt-1">Last 4 digits auto-filled</p>
+                    </div>
+                    <div>
+                      <label className="form-label">Starting Number *</label>
+                      <input
+                        type="number" min={1} max={9999}
+                        className="input-field"
+                        value={genStart}
+                        onChange={e => setGenStart(Math.max(1, Number(e.target.value)))}
+                      />
+                    </div>
+                    <div>
+                      <label className="form-label">Quantity to Generate *</label>
+                      <input
+                        type="number" min={1} max={5000}
+                        className="input-field"
+                        value={genCount}
+                        onChange={e => setGenCount(Math.max(1, Number(e.target.value)))}
+                      />
+                      <p className="text-label-sm text-on-surface-variant mt-1">e.g. 50 or 100</p>
+                    </div>
+                  </div>
+                  {/* Preview */}
+                  <div className="bg-surface-container rounded-xl p-4">
+                    <p className="text-label-md font-bold text-on-surface-variant mb-2">Preview (first 5 of {genCount}):</p>
+                    <div className="space-y-1">
+                      {generatedPreview.map((n, i) => (
+                        <p key={i} className="font-mono text-sm text-on-surface tracking-widest">{n}</p>
+                      ))}
+                      {genCount > 5 && <p className="text-label-sm text-on-surface-variant">… and {genCount - 5} more</p>}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-outline-variant/20">
+                <button onClick={closeWizard} className="btn-secondary">Cancel</button>
+                <button
+                  onClick={handleStep1Submit}
+                  disabled={addLoading || (addMode === 'paste' && !bulkInput.trim())}
+                  className="btn-primary flex items-center gap-2"
+                >
+                  {addLoading && <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>}
+                  {addLoading ? 'Adding...' : `Add ${addMode === 'generate' ? genCount : ''} Cards & Continue →`}
+                </button>
+              </div>
             </div>
           )}
-          <div className="flex justify-end gap-2">
-            <button onClick={() => setShowAllocatePanel(false)} className="btn-secondary">Cancel</button>
-            <button
-              onClick={handleAllocate}
-              disabled={allocateLoading || !allocateMerchant || allocateQty <= 0 || stats.unassigned === 0}
-              className="btn-primary flex items-center gap-2"
-            >
-              {allocateLoading && <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>}
-              {allocateLoading ? 'Allocating...' : 'Allocate Cards'}
-            </button>
-          </div>
+
+          {/* ── Step 2: Download QR Excel ─────────────────────────────────────── */}
+          {wizardStep === 2 && (
+            <div className="space-y-md">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-label-md">2</div>
+                <h4 className="text-title-md font-bold">Download QR Code List</h4>
+              </div>
+
+              <div className="bg-primary-container/10 border border-primary/20 rounded-xl p-5 flex items-start gap-4">
+                <div className="w-14 h-14 rounded-xl bg-primary-container flex items-center justify-center flex-shrink-0">
+                  <span className="material-symbols-outlined text-primary text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>qr_code_2</span>
+                </div>
+                <div>
+                  <h5 className="font-bold text-on-surface mb-1">{wizardCards.length} Cards Ready</h5>
+                  <p className="text-body-md text-on-surface-variant mb-3">
+                    Download the QR code list for this batch. Each row contains the card number and the encoded QR value 
+                    that gets printed on the physical card. Send this to your card printer.
+                  </p>
+                  <button onClick={handleDownloadQr} className="btn-primary flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[18px]">file_download</span>
+                    Download QR Code List (CSV)
+                  </button>
+                </div>
+              </div>
+
+              <div className="bg-surface-container rounded-xl p-4 space-y-2">
+                <p className="text-label-md font-bold text-on-surface-variant">Batch Preview (first 5):</p>
+                {wizardCards.slice(0, 5).map((num, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <span className="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center text-label-xs text-on-surface-variant font-bold">{i+1}</span>
+                    <span className="font-mono text-sm text-on-surface tracking-widest">{num}</span>
+                    <span className="text-label-xs text-on-surface-variant">→ QR: METROCARDZ:{num.replace(/\s/g, '')}</span>
+                  </div>
+                ))}
+                {wizardCards.length > 5 && <p className="text-label-sm text-on-surface-variant">… and {wizardCards.length - 5} more</p>}
+              </div>
+
+              <div className="flex justify-between gap-2 pt-2 border-t border-outline-variant/20">
+                <button onClick={() => setWizardStep(1)} className="btn-secondary flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[16px]">arrow_back</span> Back
+                </button>
+                <div className="flex gap-2">
+                  <button onClick={() => setWizardStep(3)} className="btn-outline">
+                    Skip Download →
+                  </button>
+                  <button onClick={() => { handleDownloadQr(); setWizardStep(3); }} className="btn-primary flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[18px]">file_download</span>
+                    Download & Continue →
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── Step 3: Upload Card Image ────────────────────────────────────── */}
+          {wizardStep === 3 && (
+            <div className="space-y-md">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-label-md">3</div>
+                <h4 className="text-title-md font-bold">Upload Card Design Image <span className="text-on-surface-variant font-normal text-label-sm">(Optional)</span></h4>
+              </div>
+              <p className="text-body-md text-on-surface-variant">
+                Upload the physical card design artwork. This image will be shown on the member's profile card. 
+                Image is automatically compressed.
+              </p>
+
+              {/* Upload Area */}
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={e => e.preventDefault()}
+                onDrop={e => {
+                  e.preventDefault();
+                  const file = e.dataTransfer.files[0];
+                  if (file && file.type.startsWith('image/')) handleCardImageUpload(file);
+                }}
+                className={`border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all
+                  ${cardImageDataUrl ? 'border-secondary/40 bg-secondary-container/10' : 'border-outline-variant hover:border-primary hover:bg-primary-container/5'}`}
+              >
+                {uploadingImage ? (
+                  <>
+                    <span className="material-symbols-outlined animate-spin text-primary text-[40px]">progress_activity</span>
+                    <p className="text-body-md text-on-surface-variant">Compressing image…</p>
+                  </>
+                ) : cardImageDataUrl ? (
+                  <>
+                    <img src={cardImageDataUrl} alt="Card design preview" className="max-h-48 rounded-xl shadow-elevated object-contain" />
+                    <p className="text-label-sm text-secondary font-medium flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[16px]">check_circle</span>
+                      Card design uploaded — click to change
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-16 h-16 rounded-2xl bg-primary-container/30 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-primary text-[32px]">add_photo_alternate</span>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-body-md font-bold text-on-surface">Click to upload or drag & drop</p>
+                      <p className="text-label-sm text-on-surface-variant">PNG, JPG, WEBP — auto-compressed to ~100KB</p>
+                    </div>
+                    <button
+                      type="button"
+                      className="btn-outline flex items-center gap-2 mt-1"
+                      onClick={e => { e.stopPropagation(); fileInputRef.current?.click(); }}
+                    >
+                      <span className="material-symbols-outlined text-[16px]">upload</span>
+                      Upload Image
+                    </button>
+                  </>
+                )}
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleCardImageFilePick}
+              />
+
+              {cardImageDataUrl && (
+                <button
+                  onClick={() => { setCardImageDataUrl(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}
+                  className="text-error text-label-sm flex items-center gap-1 hover:underline"
+                >
+                  <span className="material-symbols-outlined text-[14px]">delete</span>
+                  Remove image
+                </button>
+              )}
+
+              <div className="flex justify-between gap-2 pt-2 border-t border-outline-variant/20">
+                <button onClick={() => setWizardStep(2)} className="btn-secondary flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[16px]">arrow_back</span> Back
+                </button>
+                <button onClick={handleStep3Submit} className="btn-primary flex items-center gap-2">
+                  {cardImageDataUrl ? 'Save Design & Continue →' : 'Skip & Continue →'}
+                  <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ── Step 4: Allocate to Merchant ─────────────────────────────────── */}
+          {wizardStep === 4 && (
+            <div className="space-y-md">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-label-md">4</div>
+                <h4 className="text-title-md font-bold">Allocate Cards to Merchant</h4>
+              </div>
+              <p className="text-body-md text-on-surface-variant">
+                Select a merchant and how many unassigned cards to give them. Cards are pulled from the global pool in order.
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+                <div>
+                  <label className="form-label">Merchant *</label>
+                  <select className="input-field" value={allocateMerchant} onChange={e => setAllocateMerchant(e.target.value)}>
+                    <option value="">Select merchant...</option>
+                    {merchants.filter(m => m.status === 'active').map(m => (
+                      <option key={m.id} value={m.id}>{m.business_name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="form-label">Number of Cards *</label>
+                  <input
+                    type="number" min={1} max={stats.unassigned}
+                    value={allocateQty}
+                    onChange={e => setAllocateQty(Number(e.target.value))}
+                    className="input-field"
+                  />
+                  <p className="text-label-sm text-on-surface-variant mt-1">{stats.unassigned} unassigned cards available in pool</p>
+                </div>
+              </div>
+
+              {allocateMerchant && allocateQty > 0 && (
+                <div className="rounded-xl p-5 space-y-3 bg-primary-container/10 border border-primary/20">
+                  <h5 className="font-bold text-on-surface text-label-md">Allocation Summary</h5>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-surface rounded-lg p-3 text-center">
+                      <p className="text-headline-md font-bold text-primary">{Math.min(allocateQty, stats.unassigned)}</p>
+                      <p className="text-label-sm text-on-surface-variant">Cards to allocate</p>
+                    </div>
+                    <div className="bg-surface rounded-lg p-3 text-center">
+                      <p className="text-headline-md font-bold text-secondary">{merchants.find(m => m.id === allocateMerchant)?.business_name}</p>
+                      <p className="text-label-sm text-on-surface-variant">Merchant</p>
+                    </div>
+                  </div>
+                  {cardImageDataUrl && (
+                    <div className="flex items-center gap-3 bg-surface rounded-lg p-3">
+                      <img src={cardImageDataUrl} alt="Card design" className="w-16 h-10 object-cover rounded-lg border border-outline-variant" />
+                      <div>
+                        <p className="text-label-md font-bold text-on-surface">Card design included</p>
+                        <p className="text-label-xs text-on-surface-variant">Will be shown on member profiles for this merchant</p>
+                      </div>
+                      <span className="material-symbols-outlined text-secondary ml-auto">check_circle</span>
+                    </div>
+                  )}
+                  <p className="text-body-sm text-on-surface-variant">
+                    The merchant's staff can then link each card to a member when they visit.
+                  </p>
+                </div>
+              )}
+
+              <div className="flex justify-between gap-2 pt-2 border-t border-outline-variant/20">
+                <button onClick={() => setWizardStep(3)} className="btn-secondary flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[16px]">arrow_back</span> Back
+                </button>
+                <button
+                  onClick={handleAllocate}
+                  disabled={allocateLoading || !allocateMerchant || allocateQty <= 0 || stats.unassigned === 0}
+                  className="btn-primary flex items-center gap-2"
+                >
+                  {allocateLoading && <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>}
+                  {allocateLoading ? 'Allocating...' : '🎉 Allocate Cards & Finish'}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -464,13 +778,19 @@ export default function CardInventoryPage() {
                 </td></tr>
               ) : paginated.map(card => {
                 const cfg = STATUS_CONFIG[card.status];
+                // Get merchant card design for allocated merchant
+                const cardMerchant = merchants.find(m => m.id === card.allocated_merchant_id);
                 return (
                   <tr key={card.id} className="hover:bg-surface-container-low transition-colors group">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-primary-container/20 flex items-center justify-center flex-shrink-0">
-                          <span className="material-symbols-outlined text-primary text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>credit_card</span>
-                        </div>
+                        {cardMerchant?.card_design_url ? (
+                          <img src={cardMerchant.card_design_url} alt="Card" className="w-10 h-7 rounded object-cover border border-outline-variant flex-shrink-0" />
+                        ) : (
+                          <div className="w-8 h-8 rounded-lg bg-primary-container/20 flex items-center justify-center flex-shrink-0">
+                            <span className="material-symbols-outlined text-primary text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>credit_card</span>
+                          </div>
+                        )}
                         <span className="font-mono font-bold text-body-md tracking-widest">{card.card_number}</span>
                       </div>
                     </td>
@@ -549,7 +869,6 @@ export default function CardInventoryPage() {
               >
                 <span className="material-symbols-outlined text-[18px]">chevron_left</span>
               </button>
-              {/* Page number pills */}
               {Array.from({ length: totalPages }, (_, i) => i + 1)
                 .filter(p => p === 1 || p === totalPages || Math.abs(p - safePage) <= 1)
                 .reduce<(number | '...')[]>((acc, p, i, arr) => {

@@ -125,6 +125,10 @@ export async function createMember(_merchantId: string, data: Partial<Member>): 
   return post<Member>('/members', data);
 }
 
+export async function bulkImportMembers(_merchantId: string, rows: Partial<Member>[]): Promise<{ imported: number; skipped: number; errors: string[] }> {
+  return post<{ imported: number; skipped: number; errors: string[] }>('/members/bulk-import', { members: rows });
+}
+
 export async function updateMember(_merchantId: string, memberId: string, data: Partial<Member>): Promise<Member> {
   return patch<Member>(`/members/${memberId}`, data);
 }
@@ -272,19 +276,50 @@ export async function deactivateCard(cardId: string): Promise<CardInventoryItem>
 }
 
 export async function getMerchantCards(_merchantId: string): Promise<CardInventoryItem[]> {
-  return get<CardInventoryItem[]>('/admin/cards');
+  return get<CardInventoryItem[]>('/merchant/cards');
 }
 
-export async function linkCardToMember(_merchantId: string, _cardId: string, _memberId: string): Promise<{ card: CardInventoryItem; member: Member }> {
-  throw new Error('Not implemented in real client yet');
+export async function linkCardToMember(_merchantId: string, cardId: string, memberId: string): Promise<{ card: CardInventoryItem; member: Member }> {
+  const card = await post<CardInventoryItem>(`/merchant/cards/${cardId}/link?member_id=${memberId}`, {});
+  const member = await get<Member>(`/members/${memberId}`);
+  return { card, member };
 }
 
-export async function unlinkCard(_merchantId: string, _cardId: string): Promise<{ card: CardInventoryItem; member: Member }> {
-  throw new Error('Not implemented in real client yet');
+export async function unlinkCard(_merchantId: string, cardId: string): Promise<{ card: CardInventoryItem; member: Member }> {
+  const card = await post<CardInventoryItem>(`/merchant/cards/${cardId}/unlink`, {});
+  return { card, member: null as any };
 }
 
-export async function searchMemberByCard(_merchantId: string, _cardNumber: string): Promise<Member | null> {
-  return null; // TODO: add card search endpoint
+export async function searchMemberByCard(_merchantId: string, cardNumber: string): Promise<Member | null> {
+  const card = await get<any>(`/merchant/cards/search?card_number=${encodeURIComponent(cardNumber)}`);
+  if (card && card.linked_member_id) {
+    return get<Member>(`/members/${card.linked_member_id}`);
+  }
+  return null;
+}
+
+export async function resolveCardNumber(cardNumber: string): Promise<any> {
+  return get<any>(`/public/cards/resolve/${encodeURIComponent(cardNumber)}`, true);
+}
+
+export async function exportCardInventoryCsv(merchantId?: string): Promise<void> {
+  const q = merchantId ? `?merchant_id=${merchantId}` : '';
+  const token = getToken();
+  const res = await fetch(`${API}/admin/cards/export${q}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  if (!res.ok) throw new Error('Failed to export cards');
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'cards_export.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(url);
 }
 
 export async function applyReferral(merchantId: string, memberId: string, referralCode: string): Promise<Member> {
@@ -432,3 +467,34 @@ export async function getMerchantWalletClass(): Promise<any> {
 export async function syncAllWalletPasses(): Promise<any> {
   return post('/wallet/merchant/class/sync', {});
 }
+export async function getPublicWalletPassUrl(token: string): Promise<{ save_url: string; google_object_id: string; status: string }> {
+  return get(`/wallet/public/save/${token}`, true);
+}
+
+// ── Media / Uploads ───────────────────────────────────────────────────────────
+export async function uploadMerchantLogo(merchantId: string, logoDataUrl: string): Promise<Merchant> {
+  return post(`/merchants/${merchantId}/logo`, { logo_data_url: logoDataUrl });
+}
+
+export async function setMerchantCardDesign(merchantId: string, cardDesignDataUrl: string): Promise<Merchant> {
+  return post(`/admin/merchants/${merchantId}/card-design`, { card_design_data_url: cardDesignDataUrl });
+}
+
+export async function downloadCardsQrExcel(cardNumbers: string[]): Promise<void> {
+  const rows = ['Card Number,QR Code Data,Status'];
+  for (const num of cardNumbers) {
+    const qrData = `METROCARDZ:${num.replace(/\s/g, '')}`;
+    rows.push(`"${num}","${qrData}",Unassigned`);
+  }
+  const csvContent = rows.join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `metrocardz_cards_${new Date().toISOString().split('T')[0]}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+

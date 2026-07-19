@@ -174,6 +174,58 @@ def generate_wallet_save_url(
 
 
 @wallet_router.get(
+    "/public/save/{token}",
+    response_model=WalletSaveUrlOut,
+    summary="Get Google Wallet save URL for a member via their public token",
+)
+def get_public_wallet_save_url(token: str, db: Session = Depends(get_db)):
+    """
+    Public endpoint: Returns the signed Google Wallet save URL using the HMAC public_token.
+    This lets members add their own card directly from the mobile public page.
+    """
+    member = db.query(Member).filter(Member.public_token == token).first()
+    if not member:
+        raise HTTPException(status_code=404, detail="Member not found")
+
+    merchant = db.query(Merchant).filter(Merchant.id == member.merchant_id).first()
+    if not merchant:
+        raise HTTPException(status_code=404, detail="Merchant not found")
+
+    wallet_class = _get_or_create_wallet_class(merchant, db)
+    save_url = _build_save_url(member, merchant, wallet_class)
+
+    # Upsert the MemberWalletPass record
+    issuer_id = getattr(settings, "google_wallet_issuer_id", "DEMO_ISSUER")
+    google_object_id = f"{issuer_id}.{member.id}"
+
+    wallet_pass = db.query(MemberWalletPass).filter(
+        MemberWalletPass.member_id == member.id
+    ).first()
+
+    if wallet_pass:
+        wallet_pass.status = "added"
+        wallet_pass.last_synced_at = datetime.now(timezone.utc)
+    else:
+        wallet_pass = MemberWalletPass(
+            member_id=member.id,
+            wallet_class_id=wallet_class.id,
+            google_object_id=google_object_id,
+            status="added",
+            last_synced_at=datetime.now(timezone.utc),
+        )
+        db.add(wallet_pass)
+
+    db.commit()
+    db.refresh(wallet_pass)
+
+    return WalletSaveUrlOut(
+        save_url=save_url,
+        google_object_id=wallet_pass.google_object_id,
+        status=wallet_pass.status,
+    )
+
+
+@wallet_router.get(
     "/members/{member_id}/google/status",
     response_model=MemberWalletPassOut,
     summary="Get Google Wallet pass status for a member",

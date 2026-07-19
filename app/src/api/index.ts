@@ -24,6 +24,7 @@ export const searchMembers = api.searchMembers;
 export const getMemberByToken = api.getMemberByToken;
 export const getMember = api.getMember;
 export const createMember = api.createMember;
+export const bulkImportMembers = api.bulkImportMembers;
 export const updateMember = api.updateMember;
 export const redeemOffer = api.redeemOffer;
 export const redeemPoints = api.redeemPoints;
@@ -56,6 +57,8 @@ export const getMerchantCards = api.getMerchantCards;
 export const linkCardToMember = api.linkCardToMember;
 export const unlinkCard = api.unlinkCard;
 export const searchMemberByCard = api.searchMemberByCard;
+export const resolveCardNumber = api.resolveCardNumber;
+export const exportCardInventoryCsv = api.exportCardInventoryCsv;
 export const applyReferral = api.applyReferral;
 export const renewMember = api.renewMember;
 export const getNewMembersReport = api.getNewMembersReport;
@@ -109,3 +112,10 @@ export const generateWalletPassUrl = api.generateWalletPassUrl;
 export const getWalletPassStatus = api.getWalletPassStatus;
 export const getMerchantWalletClass = api.getMerchantWalletClass;
 export const syncAllWalletPasses = api.syncAllWalletPasses;
+export const getPublicWalletPassUrl = api.getPublicWalletPassUrl;
+
+// ── Media / Uploads ───────────────────────────────────────────────────────────
+export const uploadMerchantLogo = api.uploadMerchantLogo;
+export const setMerchantCardDesign = api.setMerchantCardDesign;
+export const downloadCardsQrExcel = api.downloadCardsQrExcel;
+

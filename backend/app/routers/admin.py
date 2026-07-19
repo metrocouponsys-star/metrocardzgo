@@ -63,6 +63,24 @@ def create_merchant(
     admin=Depends(require_super_admin),
     db: Session = Depends(get_db),
 ):
+    # Check for duplicate phone or email to prevent integrity error crashes
+    phone_clean = payload.owner_phone.replace(" ", "")
+    existing_phone = db.query(MerchantUser).filter(MerchantUser.phone == phone_clean).first()
+    if existing_phone:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Phone number is already registered to an existing merchant user."
+        )
+
+    if payload.owner_email:
+        email_clean = payload.owner_email.strip().lower()
+        existing_email = db.query(MerchantUser).filter(MerchantUser.email == email_clean).first()
+        if existing_email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email address is already registered to an existing merchant user."
+            )
+
     merchant = Merchant(
         business_name=payload.business_name,
         category=payload.category,
@@ -351,6 +369,57 @@ def deactivate_card(card_id: str, admin=Depends(require_super_admin), db: Sessio
     db.commit()
     db.refresh(card)
     return card
+
+
+@router.get("/cards/export")
+def export_cards(
+    merchant_id: Optional[str] = Query(default=None),
+    admin=Depends(require_super_admin),
+    db: Session = Depends(get_db),
+):
+    """
+    Export card inventory to a CSV file for printing agencies.
+    Provides raw digits and direct redirect QR links.
+    """
+    import csv
+    from io import StringIO
+    from fastapi.responses import StreamingResponse
+
+    q = db.query(CardInventoryItem)
+    if merchant_id:
+        q = q.filter(CardInventoryItem.allocated_merchant_id == merchant_id)
+
+    cards = q.order_by(CardInventoryItem.created_at.desc()).all()
+
+    output = StringIO()
+    writer = csv.writer(output)
+    writer.writerow([
+        "Card Number",
+        "Raw Number",
+        "Redirect Link",
+        "Status",
+        "Allocated Merchant",
+        "Linked Member Name"
+    ])
+
+    site_url = "https://metrocardz.in"
+
+    for card in cards:
+        raw_number = card.card_number.replace(" ", "")
+        redirect_link = f"{site_url}/c/?n={raw_number}"
+        writer.writerow([
+            card.card_number,
+            raw_number,
+            redirect_link,
+            card.status,
+            card.allocated_merchant_name or "",
+            card.linked_member_name or ""
+        ])
+
+    output.seek(0)
+    response = StreamingResponse(iter([output.getvalue()]), media_type="text/csv")
+    response.headers["Content-Disposition"] = "attachment; filename=cards_export.csv"
+    return response
 
 
 # ── Admin Cross-Merchant Member List ──────────────────────────────────────────

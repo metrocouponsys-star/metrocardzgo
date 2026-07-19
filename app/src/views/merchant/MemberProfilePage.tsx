@@ -10,7 +10,7 @@ import type { Member, MemberOfferState, Redemption, LoyaltyTransaction } from '.
 import * as api from '../../api';
 import { format, differenceInDays } from 'date-fns';
 
-type Tab = 'offers' | 'history' | 'points';
+type Tab = 'offers' | 'history' | 'points' | 'rewards';
 
 export default function MemberProfilePage() {
   const { id } = useParams<{ id: string }>();
@@ -21,6 +21,8 @@ export default function MemberProfilePage() {
   const [member, setMember] = useState<(Member & { offer_states: MemberOfferState[] }) | null>(null);
   const [redemptions, setRedemptions] = useState<Redemption[]>([]);
   const [loyaltyHistory, setLoyaltyHistory] = useState<LoyaltyTransaction[]>([]);
+  const [rewardCatalog, setRewardCatalog] = useState<any[]>([]);
+  const [claimingRewardId, setClaimingRewardId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>('offers');
 
@@ -48,16 +50,18 @@ export default function MemberProfilePage() {
   const fetchMember = async () => {
     if (!id) return;
     try {
-      const [m, reds, loyalty] = await Promise.all([
+      const [m, reds, loyalty, rewards] = await Promise.all([
         api.getMember(user?.merchant_id || '', id),
         api.getMemberRedemptions(user?.merchant_id || '', id),
         api.getLoyaltyHistory(user?.merchant_id || '', id),
+        api.getRewards().catch(() => []),
       ]);
       setMember(m);
       setNotes(m.notes || '');
       setAutoRenew((m as any).auto_renew || false);
       setRedemptions(reds);
       setLoyaltyHistory(loyalty);
+      setRewardCatalog(rewards.filter((r: any) => r.is_active));
 
       // Load referral link and scratch cards asynchronously
       api.getReferralLink(m.id).then(res => setReferralLink(res.referral_link)).catch(() => {});
@@ -67,6 +71,24 @@ export default function MemberProfilePage() {
       navigate('/members');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleClaimReward = async (reward: any) => {
+    if (!member) return;
+    if (member.loyalty_points < reward.points_cost) {
+      addToast('error', `Insufficient points. Requires ${reward.points_cost} pts`);
+      return;
+    }
+    setClaimingRewardId(reward.id);
+    try {
+      await api.claimReward(reward.id, member.id);
+      addToast('success', `Reward "${reward.name}" claimed successfully!`);
+      fetchMember();
+    } catch (e: any) {
+      addToast('error', e.message || 'Failed to claim reward');
+    } finally {
+      setClaimingRewardId(null);
     }
   };
 
@@ -369,33 +391,44 @@ export default function MemberProfilePage() {
         )}
 
         {/* Physical Card Row */}
-        <div className="relative z-10 mt-4 border-t border-white/10 pt-4 flex items-center justify-between flex-wrap gap-2">
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-white/60 text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>credit_card</span>
-            {member.physical_card_number ? (
-              <span className="font-mono text-white font-bold tracking-widest text-body-md">{member.physical_card_number}</span>
-            ) : (
-              <span className="text-white/50 text-label-md italic">No physical card linked</span>
+        <div className="relative z-10 mt-4 border-t border-white/10 pt-4">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-3">
+              {/* Card design image or default icon */}
+              {(member as any).card_design_url ? (
+                <img
+                  src={(member as any).card_design_url}
+                  alt="Physical card"
+                  className="h-10 w-16 object-cover rounded-lg border border-white/20 shadow"
+                />
+              ) : (
+                <span className="material-symbols-outlined text-white/60 text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>credit_card</span>
+              )}
+              {member.physical_card_number ? (
+                <span className="font-mono text-white font-bold tracking-widest text-body-md">{member.physical_card_number}</span>
+              ) : (
+                <span className="text-white/50 text-label-md italic">No physical card linked</span>
+              )}
+            </div>
+            {isOwner && (
+              member.physical_card_number ? (
+                <button
+                  onClick={() => navigate('/cards')}
+                  className="bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-lg text-label-sm transition-colors"
+                >
+                  Manage Card
+                </button>
+              ) : (
+                <button
+                  onClick={() => navigate('/cards')}
+                  className="bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-lg text-label-sm flex items-center gap-1 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[14px]">add_card</span>
+                  Assign Card
+                </button>
+              )
             )}
           </div>
-          {isOwner && (
-            member.physical_card_number ? (
-              <button
-                onClick={() => navigate('/cards')}
-                className="bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-lg text-label-sm transition-colors"
-              >
-                Manage Card
-              </button>
-            ) : (
-              <button
-                onClick={() => navigate('/cards')}
-                className="bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-lg text-label-sm flex items-center gap-1 transition-colors"
-              >
-                <span className="material-symbols-outlined text-[14px]">add_card</span>
-                Assign Card
-              </button>
-            )
-          )}
         </div>
       </section>
 
@@ -403,19 +436,20 @@ export default function MemberProfilePage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-lg items-start">
         {/* Left Column: Tabs and content */}
         <div className="lg:col-span-8 space-y-md">
-          {/* Tabs — Feature 1: added 'points' tab */}
-          <div className="flex border-b border-outline-variant/30">
-            {(['offers', 'history', 'points'] as Tab[]).map(t => (
+          {/* Tabs */}
+          <div className="flex border-b border-outline-variant/30 flex-wrap">
+            {(['offers', 'history', 'points', 'rewards'] as Tab[]).map(t => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
-                className={`px-6 py-3 text-label-md font-label-md border-b-2 transition-all capitalize flex items-center gap-1
+                className={`px-5 py-3 text-label-md font-label-md border-b-2 transition-all capitalize flex items-center gap-1.5
                   ${tab === t ? 'text-primary border-primary' : 'text-on-surface-variant border-transparent hover:bg-surface-container'}`}
               >
                 {t === 'offers' && <span className="material-symbols-outlined text-[16px]">local_offer</span>}
                 {t === 'history' && <span className="material-symbols-outlined text-[16px]">history</span>}
                 {t === 'points' && <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>}
-                {t === 'offers' ? 'Active Offers' : t === 'history' ? 'Redemption History' : 'Points History'}
+                {t === 'rewards' && <span className="material-symbols-outlined text-[16px]">card_giftcard</span>}
+                {t === 'offers' ? 'Active Offers' : t === 'history' ? 'Redemption History' : t === 'points' ? 'Points History' : 'Reward Catalog'}
               </button>
             ))}
           </div>
@@ -550,6 +584,53 @@ export default function MemberProfilePage() {
               )}
             </div>
           )}
+
+          {/* Tab: Reward Catalog */}
+          {tab === 'rewards' && (
+            <div className="space-y-3">
+              {rewardCatalog.length === 0 ? (
+                <div className="text-center py-12 text-on-surface-variant">
+                  <span className="material-symbols-outlined text-[48px] mb-2">card_giftcard</span>
+                  <p>No rewards available in the catalog yet.</p>
+                  <p className="text-label-sm mt-1">Configure reward catalog items from Settings / Rewards page.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+                  {rewardCatalog.map((rew: any) => {
+                    const canAfford = member.loyalty_points >= rew.points_cost;
+                    return (
+                      <div key={rew.id} className="card p-md flex flex-col justify-between space-y-3 border border-outline-variant">
+                        <div>
+                          <div className="flex justify-between items-start">
+                            <h4 className="font-bold text-body-lg text-on-surface">{rew.name}</h4>
+                            <span className="bg-amber-100 text-amber-800 text-label-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                              <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
+                              {rew.points_cost} pts
+                            </span>
+                          </div>
+                          {rew.description && (
+                            <p className="text-body-sm text-on-surface-variant mt-1">{rew.description}</p>
+                          )}
+                        </div>
+                        <div className="pt-2 border-t border-outline-variant/30 flex items-center justify-between">
+                          <span className="text-label-xs text-on-surface-variant">
+                            {rew.quantity_available !== null ? `${rew.quantity_available} left` : 'Unlimited'}
+                          </span>
+                          <button
+                            disabled={!canAfford || claimingRewardId === rew.id || member.status === 'expired'}
+                            onClick={() => handleClaimReward(rew)}
+                            className="btn-primary !py-1.5 !px-3 text-label-sm disabled:opacity-50"
+                          >
+                            {claimingRewardId === rew.id ? 'Claiming...' : canAfford ? 'Claim Reward' : 'Needs More Points'}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Right Column: Actions / Notes / Referrals */}
@@ -638,9 +719,18 @@ export default function MemberProfilePage() {
               <div className="flex items-center gap-1.5 bg-surface-container-low p-2 rounded-lg border border-outline-variant/50">
                 <input readOnly value={referralLink || 'Generating link...'} className="flex-1 bg-transparent text-body-sm font-mono outline-none" />
                 <button type="button" onClick={() => { navigator.clipboard.writeText(referralLink); addToast('success', 'Referral link copied!'); }}
-                  className="p-1 hover:bg-surface-container rounded">
+                  className="p-1 hover:bg-surface-container rounded" title="Copy Link">
                   <span className="material-symbols-outlined text-[16px]">content_copy</span>
                 </button>
+                <a
+                  href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Join ${user?.merchant_name || 'our store'} membership using my code ${member.referral_code || ''}: ${referralLink}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-1 hover:bg-surface-container rounded text-green-600 font-bold"
+                  title="Share on WhatsApp"
+                >
+                  <span className="material-symbols-outlined text-[16px]">share</span>
+                </a>
               </div>
             </div>
           </div>

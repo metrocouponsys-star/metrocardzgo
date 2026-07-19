@@ -1,6 +1,43 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, Component } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+
+// ─── Error Boundary ────────────────────────────────────────────────────────
+// Catches rendering errors inside any page and shows a recovery UI.
+// This prevents a single broken page from crashing the entire app.
+interface EBState { hasError: boolean; message: string }
+class PageErrorBoundary extends Component<{ children: React.ReactNode }, EBState> {
+  state: EBState = { hasError: false, message: '' };
+  static getDerivedStateFromError(err: Error): EBState {
+    return { hasError: true, message: err.message };
+  }
+  componentDidCatch(err: Error, info: React.ErrorInfo) {
+    console.error('[PageErrorBoundary]', err, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center gap-4 animate-fade-in">
+          <div className="w-16 h-16 rounded-2xl bg-error-container flex items-center justify-center">
+            <span className="material-symbols-outlined text-on-error-container text-[32px]">error_outline</span>
+          </div>
+          <div>
+            <p className="text-body-lg font-bold text-on-surface mb-1">Something went wrong</p>
+            <p className="text-body-md text-on-surface-variant max-w-xs">{this.state.message}</p>
+          </div>
+          <button
+            onClick={() => { this.setState({ hasError: false, message: '' }); window.location.reload(); }}
+            className="btn-outline flex items-center gap-2"
+          >
+            <span className="material-symbols-outlined text-[18px]">refresh</span>
+            Reload Page
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const MERCHANT_NAV = [
   { to: '/dashboard',        icon: 'dashboard',       label: 'Dashboard',   roles: ['owner', 'staff'] },
@@ -26,6 +63,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, logout, originalAdminUser, stopImpersonating } = useAuthStore();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // ── Global keyboard shortcut: Ctrl+K / ⌘K → go to Members (search) ──
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        navigate('/members');
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [navigate]);
 
   const navItems = user?.role === 'super_admin' ? ADMIN_NAV :
     MERCHANT_NAV.filter(n => n.roles.includes(user?.role || ''));
@@ -55,24 +104,45 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Nav Links */}
-        <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto custom-scrollbar">
+        <nav className="flex-1 py-4 px-3 space-y-0.5 overflow-y-auto custom-scrollbar">
           {navItems.map(item => (
             <NavLink
               key={item.to}
               to={item.to}
               end={item.to === '/dashboard' || item.to === '/admin'}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-3 rounded-xl transition-all font-label-md text-label-md
+                `flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all font-label-md text-label-md
                 ${isActive
-                  ? 'bg-primary-container/10 text-primary font-bold border-r-4 border-primary'
-                  : 'text-on-surface-variant hover:bg-surface-container-low'
+                  ? 'bg-primary/10 text-primary font-bold'
+                  : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface'
                 }`
               }
             >
-              <span className="material-symbols-outlined">{item.icon}</span>
-              {item.label}
+              {({ isActive }) => (
+                <>
+                  <span
+                    className="material-symbols-outlined text-[22px]"
+                    style={isActive ? { fontVariationSettings: "'FILL' 1" } : undefined}
+                  >
+                    {item.icon}
+                  </span>
+                  <span className="flex-1">{item.label}</span>
+                  {isActive && <span className="w-1.5 h-1.5 rounded-full bg-primary" />}
+                </>
+              )}
             </NavLink>
           ))}
+          {/* Quick search hint */}
+          <button
+            onClick={() => navigate('/members')}
+            className="w-full mt-3 flex items-center gap-2 px-3 py-2 rounded-xl text-on-surface-variant hover:bg-surface-container-low transition-colors text-label-sm border border-dashed border-outline-variant/50 group"
+          >
+            <span className="material-symbols-outlined text-[16px]">search</span>
+            <span className="flex-1 text-left">Search members</span>
+            <kbd className="text-[10px] bg-surface-container px-1.5 py-0.5 rounded font-mono text-on-surface-variant/60 group-hover:text-on-surface-variant transition-colors">
+              Ctrl K
+            </kbd>
+          </button>
         </nav>
 
         {/* User Footer */}
@@ -125,7 +195,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         )}
         <div className="flex-1">
-          {children}
+          <PageErrorBoundary>
+            {children}
+          </PageErrorBoundary>
         </div>
       </main>
 
