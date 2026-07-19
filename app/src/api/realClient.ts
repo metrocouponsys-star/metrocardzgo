@@ -113,9 +113,9 @@ export async function getMember(_merchantId: string, memberId: string): Promise<
   return get<Member & { offer_states: MemberOfferState[] }>(`/members/${memberId}`);
 }
 
-export async function getMemberByToken(token: string): Promise<Member | null> {
+export async function getMemberByToken(token: string): Promise<PublicMemberView | null> {
   try {
-    return await get<Member>(`/public/m/${token}`, true);
+    return await get<PublicMemberView>(`/public/m/${token}`, true);
   } catch {
     return null;
   }

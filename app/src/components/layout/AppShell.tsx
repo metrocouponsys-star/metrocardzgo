@@ -96,8 +96,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>credit_card</span>
           </div>
           <div>
-            <p className="text-headline-md font-headline-md font-bold text-primary">Metro Cardz</p>
-            <p className="text-label-sm font-label-sm text-on-surface-variant">
+            <p className="text-headline-md font-headline-md font-bold text-primary leading-tight">
+              {user?.role !== 'super_admin' && user?.merchant_name ? `${user.merchant_name} Metro Cardz` : 'Metro Cardz'}
+            </p>
+            <p className="text-label-sm font-label-sm text-on-surface-variant mt-0.5">
               {user?.role === 'super_admin' ? 'Super Admin' : user?.merchant_name || 'Loyalty Manager'}
             </p>
           </div>
@@ -168,13 +170,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Mobile Header */}
       <header className="md:hidden fixed top-0 w-full z-50 flex justify-between items-center px-4 h-14 bg-surface shadow-sm border-b border-outline-variant">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+        <div className="flex items-center gap-2 flex-1 min-w-0 mr-2">
+          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
             <span className="material-symbols-outlined text-on-primary text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>credit_card</span>
           </div>
-          <span className="text-headline-md font-headline-md font-bold text-primary">Metro Cardz</span>
+          <span className="text-headline-md font-headline-md font-bold text-primary truncate">
+            {user?.role !== 'super_admin' && user?.merchant_name ? `${user.merchant_name} Metro Cardz` : 'Metro Cardz'}
+          </span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <div className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold text-sm">
             {user?.name?.charAt(0) || 'U'}
           </div>

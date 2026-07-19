@@ -194,6 +194,7 @@ export const adminStats: AdminDashboardStats = {
 // ===== PUBLIC TOKEN LOOKUP =====
 export const publicMemberViews: Record<string, PublicMemberView> = {
   'tok-a1b2c3d4e5f6': {
+    member_id: 'mem-001',
     merchant_name: 'Glamour Salon & Spa',
     merchant_phone: '+91 98765 43210',
     member_name: 'Arjun Sharma',
@@ -209,6 +210,7 @@ export const publicMemberViews: Record<string, PublicMemberView> = {
     ],
   },
   'tok-expired': {
+    member_id: 'mem-003',
     merchant_name: 'Glamour Salon & Spa',
     merchant_phone: '+91 98765 43210',
     member_name: 'Vikram Singh',
