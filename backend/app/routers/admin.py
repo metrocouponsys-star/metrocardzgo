@@ -15,6 +15,7 @@ from app.schemas import (
     MerchantCreate, MerchantUpdate, MerchantOut,
     MerchantUserCreate, MerchantUserOut,
     AdminDashboardStats, CardInventoryOut, AddCardsRequest, AllocateCardsRequest,
+    CardDesignUploadRequest,
 )
 from datetime import datetime, timezone
 
@@ -277,6 +278,66 @@ async def upload_merchant_logo(
     _log_action(db, user.id, merchant_id, "upload_logo", f"size={len(compressed_webp)} bytes")
     db.commit()
     return merchant
+
+
+# ── Card Design Upload ────────────────────────────────────────────────────────────
+@router.post("/merchants/{merchant_id}/card-design", response_model=MerchantOut)
+def upload_card_design(
+    merchant_id: str,
+    payload: CardDesignUploadRequest,
+    user=Depends(require_super_admin_or_merchant_owner),
+    db: Session = Depends(get_db),
+):
+    """
+    Save a custom card background design for the merchant.
+    Accepts a base64 Data URL (PNG/JPG/WebP). The URL is stored in
+    card_design_url on the Merchant row.
+    """
+    merchant = db.query(Merchant).filter(Merchant.id == merchant_id).first()
+    if not merchant:
+        raise HTTPException(status_code=404, detail="Merchant not found")
+
+    if not payload.card_design_data_url.strip():
+        merchant.card_design_url = None
+        db.commit()
+        db.refresh(merchant)
+        merchant.member_count = db.query(Member).filter(Member.merchant_id == merchant.id).count()
+        return merchant
+
+    import base64
+    data_url = payload.card_design_data_url
+    if "base64," in data_url:
+        try:
+            _, base64_data = data_url.split("base64,", 1)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid data URL format")
+    else:
+        base64_data = data_url
+
+    try:
+        raw_bytes = base64.b64decode(base64_data)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"Invalid base64 data: {exc}")
+
+    if len(raw_bytes) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Card design image must be under 5 MB")
+
+    from app.utils.image_utils import upload_logo_to_storage
+    try:
+        design_url = upload_logo_to_storage(f"{merchant_id}_card_design", raw_bytes)
+    except RuntimeError:
+        # Dev/test: store as data URL directly (storage not configured)
+        design_url = payload.card_design_data_url[:2000]  # truncate for safety
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Storage upload failed: {exc}")
+
+    merchant.card_design_url = design_url
+    _log_action(db, user.id, merchant_id, "upload_card_design")
+    db.commit()
+    db.refresh(merchant)
+    merchant.member_count = db.query(Member).filter(Member.merchant_id == merchant.id).count()
+    return merchant
+
 
 
 # ── Merchant Users ────────────────────────────────────────────────────────────
@@ -562,7 +623,7 @@ def admin_reports_by_merchant(
 
 
 # ── Admin Merchant Staff Role Update ─────────────────────────────────────────
-@router.patch("/merchants/{merchant_id}/users/{user_id}/role")
+@router.patch("/merchants/{merchant_id}/users/{user_id}/role", response_model=MerchantUserOut)
 def update_staff_role(
     merchant_id: str,
     user_id: str,
@@ -578,7 +639,9 @@ def update_staff_role(
         raise HTTPException(404, "User not found")
     target_user.role = role
     db.commit()
-    return {"id": target_user.id, "role": target_user.role}
+    db.refresh(target_user)
+    return target_user
+
 
 
 @router.delete("/merchants/{merchant_id}/users/{user_id}", status_code=204)

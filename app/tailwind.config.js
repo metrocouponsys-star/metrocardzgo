@@ -73,6 +73,12 @@ export default {
         'maroon': '#5C1A2E',
         'warm-white': '#FAF7EF',
         'warm-grey': '#8A8A8A',
+        // Semantic status tokens
+        'expiring': '#d97706',       // amber-600 — "expiring soon" foreground
+        'expiring-bg': '#fef3c7',    // amber-100 — "expiring soon" badge background
+        'success': '#006c49',        // = secondary — active/success foreground
+        'success-bg': '#6ffbbe33',   // success with low opacity — active badge background
+
       },
       borderRadius: {
         DEFAULT: '0.25rem',

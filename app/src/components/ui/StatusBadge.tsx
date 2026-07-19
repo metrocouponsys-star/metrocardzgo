@@ -8,10 +8,11 @@ interface StatusBadgeProps {
 
 const CONFIG: Record<MemberStatus, { label: string; className: string; icon: string }> = {
   active: { label: 'Active', className: 'bg-secondary-container text-secondary', icon: 'check_circle' },
-  expiring_soon: { label: 'Expiring Soon', className: 'bg-amber-100 text-amber-600', icon: 'schedule' },
+  expiring_soon: { label: 'Expiring Soon', className: 'bg-expiring-bg text-expiring', icon: 'schedule' },
   expired: { label: 'Expired', className: 'bg-error-container text-on-error-container', icon: 'cancel' },
   deactivated: { label: 'Inactive', className: 'bg-surface-container text-on-surface-variant', icon: 'block' },
 };
+
 
 export function StatusBadge({ status, className = '' }: StatusBadgeProps) {
   const { label, className: cls, icon } = CONFIG[status];

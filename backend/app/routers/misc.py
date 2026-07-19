@@ -22,7 +22,7 @@ from app.schemas import (
     CampaignCreate, CampaignOut,
     ReminderRuleUpdate, ReminderRuleOut,
     DashboardStats, RedemptionOut, PublicMemberView,
-    NewMembersDataPoint, TopCustomer, PointsDataPoint,
+    NewMembersDataPoint, TopCustomer, PointsDataPoint, RetentionDataPoint,
 )
 from app.core.rate_limit import public_rate_limit
 from fastapi import Request
@@ -84,6 +84,23 @@ def update_offer(
     return offer
 
 
+@offers_router.delete("/{offer_id}", status_code=204)
+def delete_offer(
+    offer_id: str,
+    merchant_id: str = Depends(get_merchant_id),
+    db: Session = Depends(get_db),
+):
+    """Delete an offer template by deactivating it (soft delete)."""
+    offer = db.query(OfferTemplate).filter(
+        OfferTemplate.id == offer_id, OfferTemplate.merchant_id == merchant_id
+    ).first()
+    if not offer:
+        raise HTTPException(status_code=404, detail="Offer not found")
+    offer.active = False
+    db.commit()
+
+
+
 # ── MembershipTypes Router ────────────────────────────────────────────────────
 membership_types_router = APIRouter(prefix="/membership-types", tags=["membership-types"])
 
@@ -110,6 +127,32 @@ def create_membership_type(
     db.refresh(mt)
     mt.member_count = 0
     return mt
+
+
+@membership_types_router.delete("/{type_id}", status_code=204)
+def delete_membership_type(
+    type_id: str,
+    merchant_id: str = Depends(get_merchant_id),
+    db: Session = Depends(get_db),
+):
+    """Delete a membership type if no active members are using it."""
+    mt = db.query(MembershipType).filter(
+        MembershipType.id == type_id, MembershipType.merchant_id == merchant_id
+    ).first()
+    if not mt:
+        raise HTTPException(status_code=404, detail="Membership type not found")
+    active_member_count = db.query(Member).filter(
+        Member.membership_type_id == type_id,
+        Member.status.in_(["active", "expiring_soon"]),
+    ).count()
+    if active_member_count > 0:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot delete membership type with {active_member_count} active member(s).",
+        )
+    db.delete(mt)
+    db.commit()
+
 
 
 # ── Campaigns Router ──────────────────────────────────────────────────────────
@@ -441,7 +484,7 @@ def export_members_csv(
     )
 
 
-@reports_router.get("/retention")
+@reports_router.get("/retention", response_model=List[RetentionDataPoint])
 def report_retention(
     cohort_months: int = 6,
     merchant_id: str = Depends(get_merchant_id),

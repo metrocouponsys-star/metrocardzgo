@@ -1127,3 +1127,32 @@ export async function getPublicWalletPassUrl(token: string): Promise<{ save_url:
     status: 'added',
   };
 }
+
+// ── Mock Media / Uploads ──────────────────────────────────────────────────────
+export async function uploadMerchantLogo(merchantId: string, _logoDataUrl: string): Promise<Merchant> {
+  await delay(FAKE_DELAY);
+  const merchant = db.merchants.find((m) => m.id === merchantId);
+  if (!merchant) throw new Error('Merchant not found');
+  return { ...merchant, logo_url: 'https://placehold.co/200x80/1C4ED8/white?text=Logo' };
+}
+
+export async function setMerchantCardDesign(merchantId: string, _cardDesignDataUrl: string): Promise<Merchant> {
+  await delay(FAKE_DELAY);
+  const merchant = db.merchants.find((m) => m.id === merchantId);
+  if (!merchant) throw new Error('Merchant not found');
+  return { ...merchant, card_design_url: 'https://placehold.co/400x240/1A1A1A/gold?text=Card+Design' };
+}
+
+export async function downloadCardsQrExcel(_cardNumbers: string[]): Promise<void> {
+  await delay(FAKE_DELAY);
+  // Mock: nothing to download
+}
+
+export async function deleteOfferTemplate(_merchantId: string, _offerId: string): Promise<void> {
+  await delay(FAKE_DELAY);
+}
+
+export async function deleteMembershipType(_merchantId: string, _typeId: string): Promise<void> {
+  await delay(FAKE_DELAY);
+}
+

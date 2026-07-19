@@ -4,7 +4,7 @@ import string
 import random
 from datetime import date, timedelta
 from decimal import Decimal
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Header
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, func
 
@@ -13,7 +13,9 @@ from app.core.security import generate_public_token
 from app.models.member import Member, MembershipType, MemberOfferState, MembershipTypeOffer
 from app.models.merchant import Merchant
 from app.models.loyalty import LoyaltyTransaction
+from app.models.idempotency import IdempotencyRecord
 from app.schemas import MemberCreate, MemberUpdate, MemberOut, ApplyReferralRequest
+from app.services.event_service import emit, MEMBER_ENROLLED, POINTS_EARNED, REFERRAL_APPLIED
 from typing import List, Optional
 
 router = APIRouter(prefix="/members", tags=["members"])
@@ -93,96 +95,177 @@ def get_member(
     return member
 
 
+def _save_idempotency_response_in_members(
+    db: Session,
+    key: str,
+    merchant_id: str,
+    endpoint: str,
+    status_code: int,
+    response_body: dict,
+) -> None:
+    record = db.query(IdempotencyRecord).filter(
+        IdempotencyRecord.idempotency_key == key,
+        IdempotencyRecord.merchant_id == merchant_id,
+        IdempotencyRecord.endpoint == endpoint,
+    ).first()
+    if record:
+        import json
+        record.status = "completed"
+        record.status_code = status_code
+        record.response_body = json.dumps(response_body, default=str)
+
+
 @router.post("", response_model=MemberOut, status_code=status.HTTP_201_CREATED)
 def create_member(
     payload: MemberCreate,
     merchant_id: str = Depends(get_merchant_id),
     current_user=Depends(get_current_active_user),
     db: Session = Depends(get_db),
+    x_idempotency_key: Optional[str] = Header(None, alias="X-Idempotency-Key"),
 ):
-    # Duplicate phone check (scoped to merchant)
-    existing = db.query(Member).filter(
-        Member.merchant_id == merchant_id,
-        Member.phone == payload.phone.replace(" ", ""),
-    ).first()
-    if existing:
-        raise HTTPException(status_code=409, detail="DUPLICATE_PHONE")
-
-    merchant = db.query(Merchant).filter(Merchant.id == merchant_id).first()
-
-    # Generate sequential member code scoped to this merchant
-    count = db.query(Member).filter(Member.merchant_id == merchant_id).count()
-    member_code = f"MC{str(count + 1).zfill(4)}"
-
-    member_id_new = str(uuid.uuid4())
-    public_token = generate_public_token(member_id_new, merchant.secret_salt)
-    referral_code = _generate_referral_code(db)
-
-    # Resolve referral — look up referrer by referral_code if provided
-    referred_by_id = None
-    if payload.referral_code:
-        referrer = db.query(Member).filter(
-            Member.referral_code == payload.referral_code.strip().upper()
+    endpoint = "POST /members"
+    if x_idempotency_key:
+        record = db.query(IdempotencyRecord).filter(
+            IdempotencyRecord.idempotency_key == x_idempotency_key,
+            IdempotencyRecord.merchant_id == merchant_id,
+            IdempotencyRecord.endpoint == endpoint,
         ).first()
-        if referrer and referrer.merchant_id == merchant_id:
-            referred_by_id = referrer.id
-        # If code not found, silently ignore — don't fail registration
+        if record:
+            if record.status == "completed" and record.response_body:
+                import json
+                return MemberOut(**json.loads(record.response_body))
+            if record.status == "processing":
+                raise HTTPException(409, "A request with this idempotency key is already being processed.")
 
-    member = Member(
-        id=member_id_new,
-        merchant_id=merchant_id,
-        member_code=member_code,
-        public_token=public_token,
-        name=payload.name,
-        phone=payload.phone.replace(" ", ""),
-        email=payload.email,
-        date_of_birth=payload.date_of_birth,
-        anniversary_date=payload.anniversary_date,
-        membership_type_id=payload.membership_type_id,
-        joined_date=date.today(),
-        expiry_date=date.today() + timedelta(days=365),
-        loyalty_points=Decimal("0"),
-        status="active",
-        total_visits=0,
-        referral_code=referral_code,
-        referred_by_member_id=referred_by_id,
-    )
-    db.add(member)
-    db.flush()  # flush to get member.id before inserting offer states
-
-    # Auto-create MemberOfferState for each offer linked to the membership type
-    offer_links = db.query(MembershipTypeOffer).filter(
-        MembershipTypeOffer.membership_type_id == payload.membership_type_id
-    ).all()
-    for link in offer_links:
-        state = MemberOfferState(
-            member_id=member_id_new,
-            offer_template_id=link.offer_template_id,
-            remaining_qty=link.default_qty,
-            initial_qty=link.default_qty,
-            status="active",
-        )
-        db.add(state)
-
-    # Award referral bonus to referrer (if valid referral code was supplied)
-    if referred_by_id:
-        referrer = db.query(Member).filter(Member.id == referred_by_id).with_for_update().first()
-        bonus = Decimal(str(merchant.referral_bonus_points or 50))
-        new_balance = (referrer.loyalty_points or Decimal("0")) + bonus
-        referrer.loyalty_points = new_balance
-
-        referral_tx = LoyaltyTransaction(
-            member_id=referred_by_id,
+        # Insert a processing record
+        from datetime import datetime, timezone, timedelta
+        expires = datetime.now(timezone.utc) + timedelta(hours=24)
+        new_record = IdempotencyRecord(
+            idempotency_key=x_idempotency_key,
             merchant_id=merchant_id,
-            type="referral_bonus",
-            points=bonus,
-            balance_after=new_balance,
+            endpoint=endpoint,
+            status="processing",
+            expires_at=expires,
         )
-        db.add(referral_tx)
+        db.add(new_record)
+        db.flush()
 
-    db.commit()
-    db.refresh(member)
-    return member
+    try:
+        # Duplicate phone check (scoped to merchant)
+        existing = db.query(Member).filter(
+            Member.merchant_id == merchant_id,
+            Member.phone == payload.phone.replace(" ", ""),
+        ).first()
+        if existing:
+            raise HTTPException(status_code=409, detail="DUPLICATE_PHONE")
+
+        merchant = db.query(Merchant).filter(Merchant.id == merchant_id).first()
+
+        # Generate sequential member code scoped to this merchant
+        count = db.query(Member).filter(Member.merchant_id == merchant_id).count()
+        member_code = f"MC{str(count + 1).zfill(4)}"
+
+        member_id_new = str(uuid.uuid4())
+        public_token = generate_public_token(member_id_new, merchant.secret_salt)
+        referral_code = _generate_referral_code(db)
+
+        # Resolve referral — look up referrer by referral_code if provided
+        referred_by_id = None
+        if payload.referral_code:
+            referrer = db.query(Member).filter(
+                Member.referral_code == payload.referral_code.strip().upper()
+            ).first()
+            if referrer and referrer.merchant_id == merchant_id:
+                referred_by_id = referrer.id
+
+        member = Member(
+            id=member_id_new,
+            merchant_id=merchant_id,
+            member_code=member_code,
+            public_token=public_token,
+            name=payload.name,
+            phone=payload.phone.replace(" ", ""),
+            email=payload.email,
+            date_of_birth=payload.date_of_birth,
+            anniversary_date=payload.anniversary_date,
+            membership_type_id=payload.membership_type_id,
+            joined_date=date.today(),
+            expiry_date=date.today() + timedelta(days=365),
+            loyalty_points=Decimal("0"),
+            status="active",
+            total_visits=0,
+            referral_code=referral_code,
+            referred_by_member_id=referred_by_id,
+        )
+        db.add(member)
+        db.flush()
+
+        # Auto-create MemberOfferState for each offer linked to the membership type
+        offer_links = db.query(MembershipTypeOffer).filter(
+            MembershipTypeOffer.membership_type_id == payload.membership_type_id
+        ).all()
+        for link in offer_links:
+            state = MemberOfferState(
+                member_id=member_id_new,
+                offer_template_id=link.offer_template_id,
+                remaining_qty=link.default_qty,
+                initial_qty=link.default_qty,
+                status="active",
+            )
+            db.add(state)
+
+        # Award referral bonus to referrer (if valid referral code was supplied)
+        if referred_by_id:
+            referrer = db.query(Member).filter(Member.id == referred_by_id).with_for_update().first()
+            bonus = Decimal(str(merchant.referral_bonus_points or 50))
+            new_balance = (referrer.loyalty_points or Decimal("0")) + bonus
+            referrer.loyalty_points = new_balance
+
+            referral_tx = LoyaltyTransaction(
+                member_id=referred_by_id,
+                merchant_id=merchant_id,
+                type="referral_bonus",
+                points=bonus,
+                balance_after=new_balance,
+            )
+            db.add(referral_tx)
+
+            # Event for referral bonus
+            emit(db, merchant_id, POINTS_EARNED, {
+                "points": float(bonus),
+                "source": "referral_bonus",
+                "referred_member_id": member.id,
+            }, member_id=referred_by_id, actor_id=current_user.id)
+
+            emit(db, merchant_id, REFERRAL_APPLIED, {
+                "referrer_member_id": referred_by_id,
+                "bonus_points": float(bonus),
+            }, member_id=member.id, actor_id=current_user.id)
+
+        # Emit member enrolled event
+        emit(db, merchant_id, MEMBER_ENROLLED, {
+            "member_id": member.id,
+            "member_code": member.member_code,
+            "name": member.name,
+            "phone": member.phone,
+            "email": member.email,
+        }, member_id=member.id, actor_id=current_user.id)
+
+        # Save idempotency response before commit
+        if x_idempotency_key:
+            member_out = MemberOut.model_validate(member)
+            _save_idempotency_response_in_members(
+                db, x_idempotency_key, merchant_id, endpoint, 201, member_out.model_dump()
+            )
+
+        db.commit()
+        db.refresh(member)
+        return member
+
+    except Exception:
+        db.rollback()
+        raise
+
 
 
 from pydantic import BaseModel as PyBaseModel

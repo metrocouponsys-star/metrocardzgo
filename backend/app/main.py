@@ -168,6 +168,9 @@ async def startup_event():
     )
     from app.models.feedback import MemberFeedback
     from app.models.wallet import MerchantWalletClass, MemberWalletPass
+    from app.models.event_log import EventLog
+    from app.models.idempotency import IdempotencyRecord
+
 
     try:
         with engine.connect() as conn:

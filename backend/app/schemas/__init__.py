@@ -61,6 +61,7 @@ class MerchantOut(BaseModel):
     plan_tier: str
     whatsapp_number: str
     logo_url: Optional[str] = None
+    card_design_url: Optional[str] = None
     address: Optional[str] = None
     status: str
     approval_status: str = "approved"
@@ -703,5 +704,40 @@ class MemberWalletPassOut(BaseModel):
     google_object_id: str
     status: str
     last_synced_at: Optional[datetime] = None
+    created_at: datetime
+    model_config = {"from_attributes": True}
+
+
+# ── Card Design Upload ────────────────────────────────────────────────────────────
+class CardDesignUploadRequest(BaseModel):
+    """Base64-encoded card background image sent from the Settings page."""
+    card_design_data_url: str   # data:image/png;base64,...
+
+
+# ── Retention Report ─────────────────────────────────────────────────────────────
+class RetentionDataPoint(BaseModel):
+    """One cohort month in the retention report."""
+    cohort: str             # e.g. "Jul 2025"
+    joined: int             # total members who joined in that month
+    retained: int           # how many redeemed in the last 30 days
+    retention_rate: float   # percentage
+
+
+# ── Bulk Card Operation Result ─────────────────────────────────────────────────────
+class BulkCardsResult(BaseModel):
+    """Returned by POST /admin/cards (bulk add to inventory)."""
+    added: int
+    skipped: int
+    errors: List[str] = []
+
+
+# ── Event Log (read-only) ────────────────────────────────────────────────────────
+class EventLogOut(BaseModel):
+    id: str
+    merchant_id: str
+    member_id: Optional[str] = None
+    event_type: str
+    payload: dict
+    actor_id: Optional[str] = None
     created_at: datetime
     model_config = {"from_attributes": True}
