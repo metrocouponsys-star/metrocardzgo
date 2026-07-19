@@ -14,7 +14,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showAddStaff, setShowAddStaff] = useState(false);
-  const [staffForm, setStaffForm] = useState({ name: '', phone: '', role: 'staff' as 'staff' | 'owner' });
+  const [staffForm, setStaffForm] = useState({ name: '', phone: '', email: '', role: 'staff' as 'staff' | 'owner' });
   const [addingStaff, setAddingStaff] = useState(false);
   const [walletClass, setWalletClass] = useState<any | null>(null);
   const [walletLoading, setWalletLoading] = useState(false);
@@ -88,7 +88,7 @@ export default function SettingsPage() {
       const newUser = await api.createMerchantUser(user?.merchant_id || '', staffForm);
       setStaffList(s => [...s, newUser]);
       setShowAddStaff(false);
-      setStaffForm({ name: '', phone: '', role: 'staff' });
+      setStaffForm({ name: '', phone: '', email: '', role: 'staff' });
       addToast('success', `Staff member ${staffForm.name} added`);
     } catch { addToast('error', 'Failed to add staff'); }
     finally { setAddingStaff(false); }
@@ -273,7 +273,9 @@ export default function SettingsPage() {
                   </div>
                   <div>
                     <p className="text-body-lg font-bold">{u.name} {u.id === user?.id && <span className="text-label-sm text-on-surface-variant">(You)</span>}</p>
-                    <p className="text-body-md text-on-surface-variant">{u.phone}</p>
+                    <p className="text-body-md text-on-surface-variant">
+                      {u.phone}{u.email ? ` · ${u.email}` : ''}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -438,6 +440,11 @@ export default function SettingsPage() {
           <div>
             <label className="form-label">Mobile Number *</label>
             <input type="tel" className="input-field" placeholder="+91 98765 11111" value={staffForm.phone} onChange={e => setStaffForm(f => ({ ...f, phone: e.target.value }))} />
+          </div>
+          <div>
+            <label className="form-label">Email Address (Optional)</label>
+            <input type="email" className="input-field" placeholder="e.g. priya@metrocardz.in" value={staffForm.email} onChange={e => setStaffForm(f => ({ ...f, email: e.target.value }))} />
+            <p className="text-label-sm text-on-surface-variant mt-1">Allows the staff member to log in using their email address.</p>
           </div>
           <div>
             <label className="form-label">Role</label>

@@ -199,39 +199,60 @@ def reject_merchant(
 
 
 # ── Merchant Logo Upload ──────────────────────────────────────────────────────
+from pydantic import BaseModel
+
+class LogoUploadRequest(BaseModel):
+    logo_data_url: str
+
 @router.post("/merchants/{merchant_id}/logo", response_model=MerchantOut)
 async def upload_merchant_logo(
     merchant_id: str,
-    file: UploadFile = File(..., description="PNG, JPEG, or WebP logo image. Max 10 MB."),
+    payload: LogoUploadRequest,
     user=Depends(require_super_admin_or_merchant_owner),
     db: Session = Depends(get_db),
 ):
     """
-    Upload and replace a merchant's logo.
-
-    Processing pipeline:
-      1. Hard-reject files > 10 MB before reading into memory.
-      2. Server-side Pillow compression → WebP, max 512 px, ≤ 100 KB.
-      3. Upload to Supabase Storage bucket 'merchant-logos' (upsert, overwrites old logo).
-      4. Save public URL to merchants.logo_url column.
-
-    Client-side browser-image-compression is a nice-to-have that reduces upload
-    bandwidth — but this endpoint enforces the 100 KB ceiling regardless.
+    Upload and replace a merchant's logo using a base64 Data URL.
+    If logo_data_url is empty, deletes the logo.
     """
+    # 1. Fetch Merchant
+    merchant = db.query(Merchant).filter(Merchant.id == merchant_id).first()
+    if not merchant:
+        raise HTTPException(status_code=404, detail="Merchant not found")
+
+    # 2. Check for Deletion
+    if not payload.logo_data_url.strip():
+        merchant.logo_url = None
+        db.commit()
+        db.refresh(merchant)
+        merchant.member_count = db.query(Member).filter(Member.merchant_id == merchant.id).count()
+        _log_action(db, user.id, merchant_id, "delete_logo")
+        db.commit()
+        return merchant
+
+    # 3. Decode base64 image
+    import base64
+    logo_data_url = payload.logo_data_url
+    if "base64," in logo_data_url:
+        try:
+            _, base64_data = logo_data_url.split("base64,", 1)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid data URL format")
+    else:
+        base64_data = logo_data_url
+
+    try:
+        raw_bytes = base64.b64decode(base64_data)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"Invalid base64 data: {exc}")
+
+    # Enforce a 10 MB limit on raw bytes
+    if len(raw_bytes) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Image size exceeds 10 MB limit")
+
     from app.utils.image_utils import compress_logo, upload_logo_to_storage
 
-    # Validate content type
-    allowed_types = {"image/jpeg", "image/png", "image/webp", "image/gif"}
-    if file.content_type not in allowed_types:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Unsupported file type '{file.content_type}'. Allowed: JPEG, PNG, WebP, GIF.",
-        )
-
-    # Read raw bytes (Pillow will handle the decompression)
-    raw_bytes = await file.read()
-
-    # Server-side compression — always runs, regardless of client behaviour
+    # Server-side compression
     try:
         compressed_webp = compress_logo(raw_bytes)
     except ValueError as exc:
@@ -249,9 +270,6 @@ async def upload_merchant_logo(
         raise HTTPException(status_code=502, detail=f"Storage upload failed: {exc}")
 
     # Persist URL to DB
-    merchant = db.query(Merchant).filter(Merchant.id == merchant_id).first()
-    if not merchant:
-        raise HTTPException(status_code=404, detail="Merchant not found")
     merchant.logo_url = logo_url
     db.commit()
     db.refresh(merchant)
@@ -278,6 +296,7 @@ def create_merchant_user(
         merchant_id=merchant_id,
         name=payload.name,
         phone=payload.phone.replace(" ", ""),
+        email=payload.email.strip().lower() if payload.email else None,
         role=payload.role,
         password_hash=hash_password(payload.phone.replace(" ", "")),  # default to full phone number
     )

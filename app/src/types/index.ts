@@ -55,6 +55,7 @@ export interface MerchantUser {
   merchant_id: string;
   name: string;
   phone: string;
+  email?: string;
   role: UserRole;
   created_at: string;
 }

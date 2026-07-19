@@ -473,7 +473,7 @@ export async function getPublicWalletPassUrl(token: string): Promise<{ save_url:
 
 // ── Media / Uploads ───────────────────────────────────────────────────────────
 export async function uploadMerchantLogo(merchantId: string, logoDataUrl: string): Promise<Merchant> {
-  return post(`/merchants/${merchantId}/logo`, { logo_data_url: logoDataUrl });
+  return post(`/admin/merchants/${merchantId}/logo`, { logo_data_url: logoDataUrl });
 }
 
 export async function setMerchantCardDesign(merchantId: string, cardDesignDataUrl: string): Promise<Merchant> {
