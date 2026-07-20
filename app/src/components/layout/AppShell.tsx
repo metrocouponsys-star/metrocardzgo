@@ -98,7 +98,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
           <div>
             <p className="text-headline-md font-headline-md font-bold text-primary leading-tight">
-              {user?.role !== 'super_admin' && user?.merchant_name ? `${user.merchant_name} Metro Cardz` : 'Metro Cardz'}
+              {user?.role !== 'super_admin' && user?.merchant_name ? `${user.merchant_name} x Metro Cardz` : 'Metro Cardz'}
             </p>
             <p className="text-label-sm font-label-sm text-on-surface-variant mt-0.5">
               {user?.role === 'super_admin' ? 'Super Admin' : user?.merchant_name || 'Loyalty Manager'}
@@ -176,7 +176,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span className="material-symbols-outlined text-on-primary text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>credit_card</span>
           </div>
           <span className="text-headline-md font-headline-md font-bold text-primary truncate">
-            {user?.role !== 'super_admin' && user?.merchant_name ? `${user.merchant_name} Metro Cardz` : 'Metro Cardz'}
+            {user?.role !== 'super_admin' && user?.merchant_name ? `${user.merchant_name} x Metro Cardz` : 'Metro Cardz'}
           </span>
         </div>
         <div className="flex items-center gap-2 shrink-0">
