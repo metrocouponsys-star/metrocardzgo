@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useToastStore } from '../../store/toastStore';
 import { supabase } from '../../lib/supabaseClient';
+import * as api from '../../api';
 
 const BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '');
 
@@ -80,28 +81,34 @@ export default function LoginPage() {
     setEmailLoading(true);
     setEmailError('');
     const isEmail = val.includes('@');
-    const endpoint = isEmail ? '/api/v1/auth/login-email' : '/api/v1/auth/login';
-    const body = isEmail ? { email: val.toLowerCase(), password } : { phone: val, password };
 
     try {
-      const res = await fetch(`${BASE_URL}${endpoint}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
+      let authResult: { user: any; token: string };
+      if (isEmail) {
+        const res = await fetch(`${BASE_URL}/api/v1/auth/login-email`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: val.toLowerCase(), password }),
+        });
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ detail: 'Login failed' }));
-        throw new Error(err.detail || 'Invalid credentials');
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ detail: 'Login failed' }));
+          throw new Error(err.detail || 'Invalid email or password');
+        }
+
+        const data = await res.json();
+        if (data.refresh_token) {
+          localStorage.setItem('metro-cardz-refresh', data.refresh_token);
+        }
+        authResult = { user: data.user, token: data.access_token };
+      } else {
+        // Use unified api.login — handles both mock and real backend transparently
+        authResult = await api.login(val, password);
       }
 
-      const data = await res.json();
-      if (data.refresh_token) {
-        localStorage.setItem('metro-cardz-refresh', data.refresh_token);
-      }
-      setAuth(data.user, data.access_token);
-      addToast('success', `Welcome, ${data.user.name}! 👋`);
-      navigate(data.user.role === 'super_admin' ? '/admin' : '/dashboard');
+      setAuth(authResult.user, authResult.token);
+      addToast('success', `Welcome, ${authResult.user.name}! 👋`);
+      navigate(authResult.user.role === 'super_admin' ? '/admin' : '/dashboard');
     } catch (e: unknown) {
       setEmailError(e instanceof Error ? e.message : 'Login failed');
     } finally {

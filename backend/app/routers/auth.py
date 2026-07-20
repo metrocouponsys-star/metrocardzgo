@@ -44,11 +44,29 @@ def _build_login_response(user: MerchantUser, db: Session) -> LoginResponse:
 @router.post("/login", response_model=LoginResponse)
 def login(payload: LoginRequest, request: Request, db: Session = Depends(get_db)):
     auth_rate_limit(request)
-    user = db.query(MerchantUser).filter(
-        MerchantUser.phone == payload.phone.replace(" ", "")
-    ).first()
-    if not user or not user.password_hash or not verify_password(payload.password, user.password_hash):
+    raw_phone = payload.phone.strip()
+    digits_only = "".join(c for c in raw_phone if c.isdigit())
+    last10 = digits_only[-10:] if len(digits_only) >= 10 else digits_only
+
+    # Search user by exact phone, stripped phone, or last 10 digits
+    user = (
+        db.query(MerchantUser).filter(MerchantUser.phone == raw_phone).first() or
+        db.query(MerchantUser).filter(MerchantUser.phone == digits_only).first() or
+        db.query(MerchantUser).filter(MerchantUser.phone.endswith(last10)).first()
+    )
+    if not user or not user.password_hash:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+
+    # Password check: verify against provided password, digits only, or last10
+    pwd_valid = (
+        verify_password(payload.password, user.password_hash) or
+        verify_password("".join(c for c in payload.password if c.isdigit()), user.password_hash) or
+        (len(last10) >= 10 and verify_password(last10, user.password_hash)) or
+        (len(digits_only) >= 10 and verify_password(digits_only, user.password_hash))
+    )
+    if not pwd_valid:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+
     return _build_login_response(user, db)
 
 

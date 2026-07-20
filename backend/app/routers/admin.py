@@ -353,13 +353,17 @@ def create_merchant_user(
     user=Depends(require_super_admin_or_merchant_owner),
     db: Session = Depends(get_db),
 ):
+    clean_phone = payload.phone.strip()
+    digits_only = "".join(c for c in clean_phone if c.isdigit())
+    default_pwd = digits_only[-10:] if len(digits_only) >= 10 else (digits_only or clean_phone)
+
     new_user = MerchantUser(
         merchant_id=merchant_id,
         name=payload.name,
-        phone=payload.phone.replace(" ", ""),
+        phone=clean_phone,
         email=payload.email.strip().lower() if payload.email else None,
         role=payload.role,
-        password_hash=hash_password(payload.phone.replace(" ", "")),  # default to full phone number
+        password_hash=hash_password(default_pwd),  # default password = 10-digit mobile number
     )
     db.add(new_user)
     db.commit()
