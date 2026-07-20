@@ -3,6 +3,7 @@ Metro Cardz — FastAPI Application Entrypoint
 Industry-grade: security headers, global error handling, request validation errors.
 """
 import logging
+import uuid
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -56,7 +57,9 @@ app = FastAPI(
 # ── Security Headers Middleware ───────────────────────────────────────────────
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
+        request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
         response = await call_next(request)
+        response.headers["X-Request-ID"] = request_id
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
@@ -74,7 +77,8 @@ app.add_middleware(
     allow_origins=settings.allowed_origins_list,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type", "Accept", "X-Internal-Key"],
+    allow_headers=["Authorization", "Content-Type", "Accept", "X-Internal-Key", "X-Request-ID", "X-Idempotency-Key"],
+    expose_headers=["X-Request-ID"],
 )
 
 

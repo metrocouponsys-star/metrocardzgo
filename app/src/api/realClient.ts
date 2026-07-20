@@ -309,8 +309,9 @@ export async function allocateCardsToMerchant(merchantId: string, cardIds: strin
 }
 
 export async function revokeCardsFromMerchant(cardIds: string[]): Promise<void> {
-  // Revoke each card by deactivating it — backend endpoint: POST /admin/cards/{id}/deactivate
-  await Promise.all(cardIds.map((id) => deactivateCard(id)));
+  // Return each card to the unassigned pool — backend: POST /admin/cards/{id}/revoke
+  // This differs from deactivate: revoked cards can be reallocated, deactivated cards cannot.
+  await Promise.all(cardIds.map((id) => post<CardInventoryItem>(`/admin/cards/${id}/revoke`)));
 }
 
 export async function deactivateCard(cardId: string): Promise<CardInventoryItem> {
@@ -402,9 +403,8 @@ export async function getReferralLink(memberId: string): Promise<{ referral_code
 }
 
 export async function downloadCardPdf(memberId: string): Promise<void> {
-  const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://metrocardz-api.onrender.com/api/v1';
   const token = getToken();
-  const res = await fetch(`${BASE}/members/${memberId}/card-pdf`, {
+  const res = await fetch(`${API}/members/${memberId}/card-pdf`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error('PDF generation failed');

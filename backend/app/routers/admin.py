@@ -451,6 +451,42 @@ def deactivate_card(card_id: str, admin=Depends(require_super_admin), db: Sessio
     return card
 
 
+@router.post("/cards/{card_id}/revoke", response_model=CardInventoryOut)
+def revoke_card(card_id: str, admin=Depends(require_super_admin), db: Session = Depends(get_db)):
+    """
+    Return an allocated card back to the unassigned pool.
+    Use this to revoke a merchant's card allocation without permanently destroying the card.
+    If the card is currently linked to a member, that link is also cleared.
+    To permanently disable a card, use /deactivate instead.
+    """
+    card = db.query(CardInventoryItem).filter(CardInventoryItem.id == card_id).first()
+    if not card:
+        raise HTTPException(status_code=404, detail="Card not found")
+    if card.status == "deactivated":
+        raise HTTPException(status_code=400, detail="Deactivated cards cannot be revoked. Create a new card.")
+    if card.status == "unassigned":
+        raise HTTPException(status_code=400, detail="Card is already unassigned")
+
+    # If linked to a member, clear the member's physical_card_number too
+    if card.linked_member_id:
+        from app.models.member import Member
+        member = db.query(Member).filter(Member.id == card.linked_member_id).first()
+        if member:
+            member.physical_card_number = None
+
+    card.status = "unassigned"
+    card.allocated_merchant_id = None
+    card.allocated_at = None
+    card.linked_member_id = None
+    card.linked_at = None
+
+    _log_action(db, admin.id, None, "revoke_card", f"card_id={card_id}")
+    db.commit()
+    db.refresh(card)
+    return card
+
+
+
 @router.get("/cards/export")
 def export_cards(
     merchant_id: Optional[str] = Query(default=None),

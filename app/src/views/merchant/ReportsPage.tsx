@@ -202,11 +202,11 @@ export default function ReportsPage() {
               ) : (
                 <ResponsiveContainer width="100%" height={220}>
                   <BarChart data={data?.redemptions_by_offer.map(d => ({ ...d, name: OFFER_LABELS[d.offer_type] || d.offer_type }))}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#c5c5d3" opacity={0.5} />
                     <XAxis dataKey="name" tick={{ fontSize: 10 }} />
                     <YAxis tick={{ fontSize: 10 }} />
                     <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }} />
-                    <Bar dataKey="count" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="count" fill="#00236f" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               )}
@@ -220,11 +220,11 @@ export default function ReportsPage() {
               ) : (
                 <ResponsiveContainer width="100%" height={220}>
                   <LineChart data={data?.redemptions_over_time.map(d => ({ ...d, date: format(new Date(d.date), 'dd MMM') }))}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#c5c5d3" opacity={0.5} />
                     <XAxis dataKey="date" tick={{ fontSize: 10 }} />
                     <YAxis tick={{ fontSize: 10 }} />
                     <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }} />
-                    <Line type="monotone" dataKey="count" stroke="#4f46e5" strokeWidth={2.5} dot={{ fill: '#4f46e5', r: 4 }} name="Redemptions" />
+                    <Line type="monotone" dataKey="count" stroke="#00236f" strokeWidth={2.5} dot={{ fill: '#00236f', r: 4 }} name="Redemptions" />
                   </LineChart>
                 </ResponsiveContainer>
               )}
@@ -292,15 +292,15 @@ export default function ReportsPage() {
               <AreaChart data={newMembers.map(d => ({ ...d, date: format(new Date(d.date), 'dd MMM') }))}>
                 <defs>
                   <linearGradient id="colorMembers" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#059669" stopOpacity={0.25}/>
+                    <stop offset="95%" stopColor="#059669" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#c5c5d3" opacity={0.5} />
                 <XAxis dataKey="date" tick={{ fontSize: 10 }} />
                 <YAxis tick={{ fontSize: 10 }} />
                 <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }} />
-                <Area type="monotone" dataKey="count" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#colorMembers)" name="New Enrolments" />
+                <Area type="monotone" dataKey="count" stroke="#059669" strokeWidth={2} fillOpacity={1} fill="url(#colorMembers)" name="New Enrolments" />
               </AreaChart>
             </ResponsiveContainer>
           )}
@@ -319,13 +319,13 @@ export default function ReportsPage() {
           ) : (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={pointsData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#c5c5d3" opacity={0.5} />
                 <XAxis dataKey="week" tick={{ fontSize: 10 }} />
                 <YAxis tick={{ fontSize: 10 }} />
                 <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }} />
                 <Legend />
-                <Bar dataKey="points_earned" fill="#10b981" name="Points Earned" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="points_redeemed" fill="#ef4444" name="Points Spent" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="points_earned" fill="#059669" name="Points Earned" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="points_redeemed" fill="#dc2626" name="Points Spent" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}
