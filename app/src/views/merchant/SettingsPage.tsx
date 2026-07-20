@@ -203,15 +203,22 @@ export default function SettingsPage() {
                   className="hidden"
                   onChange={async (e) => {
                     const file = e.target.files?.[0];
-                    if (!file || !merchant) return;
+                    const mId = merchant?.id || user?.merchant_id || '';
+                    if (!file || !mId) return;
                     setLogoUploading(true);
                     try {
                       const dataUrl = await compressImage(file, 400, 0.8);
-                      const updated = await api.uploadMerchantLogo(merchant.id, dataUrl);
-                      setMerchant(updated);
+                      // Optimistic instant preview
+                      setMerchant(prev => prev ? { ...prev, logo_url: dataUrl } : prev);
+                      const updated = await api.uploadMerchantLogo(mId, dataUrl);
+                      if (updated && updated.logo_url) {
+                        setMerchant(updated);
+                      }
                       addToast('success', 'Logo uploaded successfully!');
-                    } catch { addToast('error', 'Failed to upload logo'); }
-                    finally {
+                    } catch (err) {
+                      console.error('[LogoUpload] error:', err);
+                      addToast('error', err instanceof Error ? err.message : 'Failed to upload logo');
+                    } finally {
                       setLogoUploading(false);
                       if (logoFileRef.current) logoFileRef.current.value = '';
                     }

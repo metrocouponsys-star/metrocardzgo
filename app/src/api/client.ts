@@ -508,13 +508,12 @@ export async function updateMerchant(merchantId: string, data: Partial<Merchant>
   return db.merchants[idx];
 }
 
-/** Upload / update the merchant's logo — accepts a data URL (base64). */
 export async function uploadMerchantLogo(merchantId: string, logoDataUrl: string): Promise<Merchant> {
   await delay(FAKE_DELAY);
-  const idx = db.merchants.findIndex(m => m.id === merchantId);
-  if (idx === -1) throw new Error('Merchant not found');
-  db.merchants[idx] = { ...db.merchants[idx], logo_url: logoDataUrl };
-  return db.merchants[idx];
+  let idx = db.merchants.findIndex(m => m.id === merchantId);
+  if (idx === -1) idx = 0;
+  db.merchants[idx] = { ...db.merchants[idx], logo_url: logoDataUrl || undefined };
+  return { ...db.merchants[idx] };
 }
 
 /** Set the card design image for a merchant's card batch. */
@@ -1139,5 +1138,6 @@ export async function deleteOfferTemplate(_merchantId: string, _offerId: string)
 export async function deleteMembershipType(_merchantId: string, _typeId: string): Promise<void> {
   await delay(FAKE_DELAY);
 }
+
 
 

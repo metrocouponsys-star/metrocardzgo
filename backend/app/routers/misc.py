@@ -701,7 +701,15 @@ async def upload_my_merchant_logo(
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
-    logo_url = upload_logo_to_storage(compressed_webp, merchant_id)
+    # Upload to Supabase Storage and get public URL
+    try:
+        logo_url = upload_logo_to_storage(merchant_id, compressed_webp)
+    except Exception as exc:
+        # Fallback to data URL if Supabase storage is unconfigured or fails
+        logo_url = logo_data_url
+        import logging
+        logging.getLogger(__name__).warning("Logo storage upload failed, using data URL fallback: %s", exc)
+
     merchant.logo_url = logo_url
     db.commit()
     db.refresh(merchant)
