@@ -47,19 +47,20 @@ export default function SettingsPage() {
     });
   }
 
+  const [createdStaffCreds, setCreatedStaffCreds] = useState<{ phone: string; name: string } | null>(null);
+
   useEffect(() => {
     Promise.all([
-      api.getAllMerchants(),
-      api.getMerchantUsers(user?.merchant_id || ''),
-    ]).then(([merchants, staff]) => {
-      const m = merchants.find(x => x.id === user?.merchant_id);
+      api.getMerchantProfile().catch(() => null),
+      api.getMerchantUsers(user?.merchant_id || '').catch(() => []),
+    ]).then(([m, staff]) => {
       if (m) {
         setMerchant(m);
         setProfileForm({
-          business_name: m.business_name,
-          category: m.category,
+          business_name: m.business_name || '',
+          category: m.category || '',
           address: m.address || '',
-          whatsapp_number: m.whatsapp_number,
+          whatsapp_number: m.whatsapp_number || '',
           referral_bonus_points: m.referral_bonus_points || 50
         });
       }
@@ -87,7 +88,7 @@ export default function SettingsPage() {
     try {
       const newUser = await api.createMerchantUser(user?.merchant_id || '', staffForm);
       setStaffList(s => [...s, newUser]);
-      setShowAddStaff(false);
+      setCreatedStaffCreds({ phone: staffForm.phone, name: staffForm.name });
       setStaffForm({ name: '', phone: '', email: '', role: 'staff' });
       addToast('success', `Staff member ${staffForm.name} added`);
     } catch { addToast('error', 'Failed to add staff'); }
@@ -431,36 +432,65 @@ export default function SettingsPage() {
       )}
 
       {/* Add Staff Modal */}
-      <Modal isOpen={showAddStaff} onClose={() => setShowAddStaff(false)} title="Add Staff Member">
-        <div className="space-y-4">
-          <div>
-            <label className="form-label">Full Name *</label>
-            <input className="input-field" placeholder="e.g. Priya Nair" value={staffForm.name} onChange={e => setStaffForm(f => ({ ...f, name: e.target.value }))} />
-          </div>
-          <div>
-            <label className="form-label">Mobile Number *</label>
-            <input type="tel" className="input-field" placeholder="+91 98765 11111" value={staffForm.phone} onChange={e => setStaffForm(f => ({ ...f, phone: e.target.value }))} />
-          </div>
-          <div>
-            <label className="form-label">Email Address (Optional)</label>
-            <input type="email" className="input-field" placeholder="e.g. priya@metrocardz.in" value={staffForm.email} onChange={e => setStaffForm(f => ({ ...f, email: e.target.value }))} />
-            <p className="text-label-sm text-on-surface-variant mt-1">Allows the staff member to log in using their email address.</p>
-          </div>
-          <div>
-            <label className="form-label">Role</label>
-            <select className="input-field" value={staffForm.role} onChange={e => setStaffForm(f => ({ ...f, role: e.target.value as any }))}>
-              <option value="staff">Staff (lookup & redeem only)</option>
-              <option value="owner">Owner (full access)</option>
-            </select>
-          </div>
-          <div className="flex gap-3">
-            <button onClick={() => setShowAddStaff(false)} className="btn-secondary flex-1">Cancel</button>
-            <button onClick={addStaff} disabled={addingStaff || !staffForm.name || !staffForm.phone} className="btn-primary flex-1 flex items-center justify-center gap-2">
-              {addingStaff && <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>}
-              Add Staff
+      <Modal isOpen={showAddStaff} onClose={() => { setShowAddStaff(false); setCreatedStaffCreds(null); }} title={createdStaffCreds ? 'Staff Account Created' : 'Add Staff Member'}>
+        {createdStaffCreds ? (
+          <div className="space-y-4">
+            <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-xl text-center">
+              <span className="material-symbols-outlined text-green-600 text-[36px] mb-1">check_circle</span>
+              <h4 className="font-bold text-on-surface text-headline-md">Staff Added Successfully!</h4>
+              <p className="text-body-sm text-on-surface-variant mt-1">
+                Share these login details with <strong>{createdStaffCreds.name}</strong>:
+              </p>
+              <div className="bg-surface-container rounded-lg p-3 mt-3 text-left font-mono text-body-sm space-y-1 border border-outline-variant/40">
+                <p><span className="text-on-surface-variant">Login URL:</span> <strong className="text-primary">metrocardz.in/login</strong></p>
+                <p><span className="text-on-surface-variant">Mobile Number:</span> <strong className="text-on-surface">{createdStaffCreds.phone}</strong></p>
+                <p><span className="text-on-surface-variant">Default Password:</span> <strong className="text-on-surface">{createdStaffCreds.phone.replace(/\s/g, '')}</strong></p>
+              </div>
+              <p className="text-label-sm text-on-surface-variant mt-2">
+                Staff can sign in on the login page using Mobile Number + Default Password.
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setCreatedStaffCreds(null);
+                setShowAddStaff(false);
+              }}
+              className="btn-primary w-full"
+            >
+              Done
             </button>
           </div>
-        </div>
+        ) : (
+          <div className="space-y-4">
+            <div>
+              <label className="form-label">Full Name *</label>
+              <input className="input-field" placeholder="e.g. Priya Nair" value={staffForm.name} onChange={e => setStaffForm(f => ({ ...f, name: e.target.value }))} />
+            </div>
+            <div>
+              <label className="form-label">Mobile Number *</label>
+              <input type="tel" className="input-field" placeholder="+91 98765 11111" value={staffForm.phone} onChange={e => setStaffForm(f => ({ ...f, phone: e.target.value }))} />
+            </div>
+            <div>
+              <label className="form-label">Email Address (Optional)</label>
+              <input type="email" className="input-field" placeholder="e.g. priya@metrocardz.in" value={staffForm.email} onChange={e => setStaffForm(f => ({ ...f, email: e.target.value }))} />
+              <p className="text-label-sm text-on-surface-variant mt-1">Allows the staff member to log in using their email address.</p>
+            </div>
+            <div>
+              <label className="form-label">Role</label>
+              <select className="input-field" value={staffForm.role} onChange={e => setStaffForm(f => ({ ...f, role: e.target.value as any }))}>
+                <option value="staff">Staff (lookup & redeem only)</option>
+                <option value="owner">Owner (full access)</option>
+              </select>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setShowAddStaff(false)} className="btn-secondary flex-1">Cancel</button>
+              <button onClick={addStaff} disabled={addingStaff || !staffForm.name || !staffForm.phone} className="btn-primary flex-1 flex items-center justify-center gap-2">
+                {addingStaff && <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>}
+                Add Staff
+              </button>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );

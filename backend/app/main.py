@@ -26,6 +26,7 @@ from app.routers.misc import (
     health_router,
     reports_router,
     internal_router,
+    merchant_profile_router,
 )
 from app.routers.rewards import (
     rewards_router,
@@ -135,6 +136,7 @@ app.include_router(dashboard_router, prefix=API_PREFIX)
 app.include_router(admin_router, prefix=API_PREFIX)
 app.include_router(public_router, prefix=API_PREFIX)
 app.include_router(reports_router, prefix=API_PREFIX)
+app.include_router(merchant_profile_router, prefix=API_PREFIX)
 app.include_router(internal_router)   # no API_PREFIX — /internal/* directly
 
 # New feature routers

@@ -41,7 +41,8 @@ class PageErrorBoundary extends Component<{ children: React.ReactNode }, EBState
 
 const MERCHANT_NAV = [
   { to: '/dashboard',        icon: 'dashboard',       label: 'Dashboard',   roles: ['owner', 'staff'] },
-  { to: '/members',          icon: 'person_search',   label: 'Members',     roles: ['owner', 'staff'] },
+  { to: '/members',          icon: 'groups',          label: 'Members List', roles: ['owner', 'staff'] },
+  { to: '/members/search',   icon: 'qr_code_scanner', label: 'Scan & Lookup', roles: ['owner', 'staff'] },
   { to: '/cards',            icon: 'credit_card',     label: 'Cards',       roles: ['owner'] },
   { to: '/offers',           icon: 'local_offer',     label: 'Offers',      roles: ['owner'] },
   { to: '/membership-types', icon: 'card_membership', label: 'Memberships', roles: ['owner'] },

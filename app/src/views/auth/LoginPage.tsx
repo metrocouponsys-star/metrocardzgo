@@ -71,23 +71,28 @@ export default function LoginPage() {
     return () => subscription.unsubscribe();
   }, [setAuth, addToast, navigate]);
 
-  // ── Email + Password login ────────────────────────────────────────────────
+  // ── Email / Phone + Password login ─────────────────────────────────────────
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !password) return;
+    const val = email.trim();
+    if (!val || !password) return;
 
     setEmailLoading(true);
     setEmailError('');
+    const isEmail = val.includes('@');
+    const endpoint = isEmail ? '/api/v1/auth/login-email' : '/api/v1/auth/login';
+    const body = isEmail ? { email: val.toLowerCase(), password } : { phone: val, password };
+
     try {
-      const res = await fetch(`${BASE_URL}/api/v1/auth/login-email`, {
+      const res = await fetch(`${BASE_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+        body: JSON.stringify(body),
       });
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({ detail: 'Login failed' }));
-        throw new Error(err.detail || 'Invalid email or password');
+        throw new Error(err.detail || 'Invalid credentials');
       }
 
       const data = await res.json();
@@ -148,29 +153,29 @@ export default function LoginPage() {
               Welcome Back
             </h2>
             <p className="text-body-md text-on-surface-variant">
-              Sign in to your merchant account.
+              Sign in to your merchant or staff account.
             </p>
           </div>
 
-          {/* ── Email/Password Form ── */}
+          {/* ── Email/Phone + Password Form ── */}
           <form onSubmit={handleEmailLogin} noValidate>
-            {/* Email field */}
+            {/* Email / Phone field */}
             <div className="mb-3">
               <label htmlFor="login-email" className="block text-label-sm text-on-surface-variant mb-1.5 font-medium">
-                Email address
+                Email or Mobile Number
               </label>
               <div className="relative">
                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px] pointer-events-none">
-                  mail
+                  person
                 </span>
                 <input
                   id="login-email"
-                  type="email"
-                  autoComplete="email"
+                  type="text"
+                  autoComplete="username"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   disabled={isAnyLoading}
-                  placeholder="you@example.com"
+                  placeholder="e.g. 9876543210 or email@domain.com"
                   className="w-full h-12 pl-10 pr-4 rounded-xl border border-outline-variant bg-surface-container text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 disabled:opacity-60"
                 />
               </div>

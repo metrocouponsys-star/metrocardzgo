@@ -39,6 +39,11 @@ export async function login(phone: string, _password: string): Promise<{ user: A
   };
 }
 
+export async function getMerchantProfile(): Promise<Merchant> {
+  await delay(FAKE_DELAY);
+  return db.merchants[0];
+}
+
 export async function verifyOtp(_phone: string, otp: string): Promise<{ user: AuthUser; token: string }> {
   await delay(FAKE_DELAY);
   if (otp === '000000') throw new Error('Invalid OTP');

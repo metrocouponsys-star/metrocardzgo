@@ -274,8 +274,12 @@ export async function createMerchantUser(merchantId: string, data: Partial<Merch
   return post<MerchantUser>(`/admin/merchants/${merchantId}/users`, data);
 }
 
-export async function updateMerchant(merchantId: string, data: Partial<Merchant>): Promise<Merchant> {
-  return patch<Merchant>(`/admin/merchants/${merchantId}`, data);
+export async function getMerchantProfile(): Promise<Merchant> {
+  return get<Merchant>('/merchant/profile');
+}
+
+export async function updateMerchant(_merchantId: string, data: Partial<Merchant>): Promise<Merchant> {
+  return patch<Merchant>('/merchant/profile', data);
 }
 
 export async function createMerchant(data: Partial<Merchant> & { owner_name: string; owner_phone: string; owner_email?: string }): Promise<Merchant> {
@@ -514,8 +518,8 @@ export async function getPublicWalletPassUrl(token: string): Promise<{ save_url:
 }
 
 // ── Media / Uploads ───────────────────────────────────────────────────────────
-export async function uploadMerchantLogo(merchantId: string, logoDataUrl: string): Promise<Merchant> {
-  return post(`/admin/merchants/${merchantId}/logo`, { logo_data_url: logoDataUrl });
+export async function uploadMerchantLogo(_merchantId: string, logoDataUrl: string): Promise<Merchant> {
+  return post('/merchant/profile/logo', { logo_data_url: logoDataUrl });
 }
 
 export async function setMerchantCardDesign(merchantId: string, cardDesignDataUrl: string): Promise<Merchant> {

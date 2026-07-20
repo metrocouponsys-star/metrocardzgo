@@ -307,6 +307,7 @@ type ScannerStatus = 'requesting' | 'active' | 'denied' | 'error';
 function QrScannerView({ onScan }: { onScan: (token: string) => void }) {
   const scannerRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const fileTempRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<ScannerStatus>('requesting');
   const [lastScanned, setLastScanned] = useState<string | null>(null);
@@ -474,6 +475,7 @@ function QrScannerView({ onScan }: { onScan: (token: string) => void }) {
     <div className="flex flex-col items-center py-2 w-full gap-4">
       {/* Always-present inputs — NEVER conditionally rendered */}
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
+      <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileUpload} className="hidden" />
       <div id="mc-qr-temp-decoder" ref={fileTempRef} className="hidden" />
 
       {/* ── Non-HTTPS warning ─── */}
@@ -600,16 +602,24 @@ function QrScannerView({ onScan }: { onScan: (token: string) => void }) {
           </div>
           <div className="flex flex-col gap-2 w-full max-w-xs">
             <button
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => cameraInputRef.current?.click()}
               disabled={fileScanning}
               className="btn-primary w-full py-3 flex items-center justify-center gap-2"
             >
-              <span className="material-symbols-outlined text-[20px]">add_a_photo</span>
-              {fileScanning ? 'Scanning Photo…' : 'Upload / Capture QR Photo'}
+              <span className="material-symbols-outlined text-[20px]">photo_camera</span>
+              {fileScanning ? 'Scanning Photo…' : '📷 Take Photo of QR Code'}
+            </button>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={fileScanning}
+              className="btn-outline w-full py-2 flex items-center justify-center gap-2 text-sm"
+            >
+              <span className="material-symbols-outlined text-[18px]">image</span>
+              Upload QR Image from Gallery
             </button>
             <button onClick={startScanner} className="btn-outline w-full py-2 flex items-center justify-center gap-2 text-sm">
               <span className="material-symbols-outlined text-[18px]">refresh</span>
-              Retry Live Camera
+              Retry Live Stream
             </button>
           </div>
         </div>

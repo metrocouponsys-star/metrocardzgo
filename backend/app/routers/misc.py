@@ -16,6 +16,7 @@ from app.models.campaign import Campaign, ReminderRule, MessageLog
 from app.models.redemption import RedemptionLog
 from app.models.merchant import Merchant
 from app.models.loyalty import LoyaltyTransaction
+from pydantic import BaseModel
 from app.schemas import (
     OfferTemplateCreate, OfferTemplateUpdate, OfferTemplateOut,
     MembershipTypeCreate, MembershipTypeOut,
@@ -23,6 +24,7 @@ from app.schemas import (
     ReminderRuleUpdate, ReminderRuleOut,
     DashboardStats, RedemptionOut, PublicMemberView,
     NewMembersDataPoint, TopCustomer, PointsDataPoint, RetentionDataPoint,
+    MerchantUpdate, MerchantOut,
 )
 from app.core.rate_limit import public_rate_limit
 from fastapi import Request
@@ -618,4 +620,92 @@ def run_reminders_now(request: Request, db: Session = Depends(get_db)):
         return {"triggered": True, "dispatched": result.result.get("dispatched", 0) if result.result else 0, "message": "OK"}
     except Exception as e:
         return {"triggered": False, "dispatched": 0, "message": str(e)}
+
+
+# ── Merchant Self-Service Profile Router ────────────────────────────────────
+merchant_profile_router = APIRouter(prefix="/merchant/profile", tags=["merchant-profile"])
+
+
+@merchant_profile_router.get("", response_model=MerchantOut)
+def get_my_merchant_profile(
+    merchant_id: str = Depends(get_merchant_id),
+    db: Session = Depends(get_db),
+):
+    merchant = db.query(Merchant).filter(Merchant.id == merchant_id).first()
+    if not merchant:
+        raise HTTPException(status_code=404, detail="Merchant not found")
+    merchant.member_count = db.query(Member).filter(Member.merchant_id == merchant.id).count()
+    return merchant
+
+
+@merchant_profile_router.patch("", response_model=MerchantOut)
+def update_my_merchant_profile(
+    payload: MerchantUpdate,
+    merchant_id: str = Depends(get_merchant_id),
+    db: Session = Depends(get_db),
+):
+    merchant = db.query(Merchant).filter(Merchant.id == merchant_id).first()
+    if not merchant:
+        raise HTTPException(status_code=404, detail="Merchant not found")
+    for k, v in payload.model_dump(exclude_none=True).items():
+        setattr(merchant, k, v)
+    db.commit()
+    db.refresh(merchant)
+    merchant.member_count = db.query(Member).filter(Member.merchant_id == merchant.id).count()
+    return merchant
+
+
+class LogoUploadRequest(BaseModel):
+    logo_data_url: str
+
+
+@merchant_profile_router.post("/logo", response_model=MerchantOut)
+async def upload_my_merchant_logo(
+    payload: LogoUploadRequest,
+    merchant_id: str = Depends(get_merchant_id),
+    db: Session = Depends(get_db),
+):
+    merchant = db.query(Merchant).filter(Merchant.id == merchant_id).first()
+    if not merchant:
+        raise HTTPException(status_code=404, detail="Merchant not found")
+
+    if not payload.logo_data_url.strip():
+        merchant.logo_url = None
+        db.commit()
+        db.refresh(merchant)
+        merchant.member_count = db.query(Member).filter(Member.merchant_id == merchant.id).count()
+        return merchant
+
+    import base64
+    logo_data_url = payload.logo_data_url
+    if "base64," in logo_data_url:
+        try:
+            _, base64_data = logo_data_url.split("base64,", 1)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid data URL format")
+    else:
+        base64_data = logo_data_url
+
+    try:
+        raw_bytes = base64.b64decode(base64_data)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"Invalid base64 data: {exc}")
+
+    if len(raw_bytes) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Image size exceeds 10 MB limit")
+
+    from app.utils.image_utils import compress_logo, upload_logo_to_storage
+
+    try:
+        compressed_webp = compress_logo(raw_bytes)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    logo_url = upload_logo_to_storage(compressed_webp, merchant_id)
+    merchant.logo_url = logo_url
+    db.commit()
+    db.refresh(merchant)
+    merchant.member_count = db.query(Member).filter(Member.merchant_id == merchant.id).count()
+    return merchant
+
 
