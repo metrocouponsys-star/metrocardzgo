@@ -1155,5 +1155,10 @@ export async function deleteMembershipType(_merchantId: string, _typeId: string)
   await delay(FAKE_DELAY);
 }
 
+export async function publicEnterLuckyDraw(_drawId: string, _token: string): Promise<any> {
+  await delay(FAKE_DELAY);
+  return { message: 'Entered draw successfully!' };
+}
+
 
 

@@ -101,6 +101,7 @@ export const getLuckyDraws = api.getLuckyDraws;
 export const createLuckyDraw = api.createLuckyDraw;
 export const updateLuckyDraw = api.updateLuckyDraw;
 export const enterLuckyDraw = api.enterLuckyDraw;
+export const publicEnterLuckyDraw = api.publicEnterLuckyDraw;
 export const runLuckyDraw = api.runLuckyDraw;
 export const deleteLuckyDraw = api.deleteLuckyDraw;
 export const getAdminAllMembers = api.getAdminAllMembers;
