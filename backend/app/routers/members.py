@@ -2,7 +2,7 @@
 import uuid
 import string
 import random
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime, timezone
 from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException, Query, status, Header
 from sqlalchemy.orm import Session
@@ -138,7 +138,6 @@ def create_member(
                 raise HTTPException(409, "A request with this idempotency key is already being processed.")
 
         # Insert a processing record
-        from datetime import datetime, timezone, timedelta
         expires = datetime.now(timezone.utc) + timedelta(hours=24)
         new_record = IdempotencyRecord(
             idempotency_key=x_idempotency_key,

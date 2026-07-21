@@ -4,9 +4,9 @@ import { useAuthStore } from '../../store/authStore';
 import { useToastStore } from '../../store/toastStore';
 import { StatusBadge, MembershipBadge } from '../../components/ui/StatusBadge';
 import { OfferCard } from '../../components/ui/OfferCard';
-import { ConfirmModal } from '../../components/ui/Modal';
+import { Modal, ConfirmModal } from '../../components/ui/Modal';
 import { CardSkeleton, Skeleton } from '../../components/ui/Skeleton';
-import type { Member, MemberOfferState, Redemption, LoyaltyTransaction } from '../../types';
+import type { Member, MemberOfferState, Redemption, LoyaltyTransaction, MembershipType, MemberStatus } from '../../types';
 import * as api from '../../api';
 import { format, differenceInDays } from 'date-fns';
 
@@ -45,6 +45,28 @@ export default function MemberProfilePage() {
   const [referralInput, setReferralInput] = useState('');
   const [applyingReferral, setApplyingReferral] = useState(false);
   const [renewing, setRenewing] = useState(false);
+
+  // Edit Member Modal state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [membershipTypes, setMembershipTypes] = useState<MembershipType[]>([]);
+  const [editForm, setEditForm] = useState<{
+    name: string;
+    phone: string;
+    email: string;
+    date_of_birth: string;
+    anniversary_date: string;
+    membership_type_id: string;
+    status: MemberStatus;
+  }>({
+    name: '',
+    phone: '',
+    email: '',
+    date_of_birth: '',
+    anniversary_date: '',
+    membership_type_id: '',
+    status: 'active',
+  });
+  const [updatingMember, setUpdatingMember] = useState(false);
 
 
   const fetchMember = async () => {
@@ -173,6 +195,37 @@ export default function MemberProfilePage() {
       addToast('success', `Auto-renewal turned ${!autoRenew ? 'ON' : 'OFF'}`);
     } catch {
       addToast('error', 'Failed to toggle auto-renewal');
+    }
+  };
+
+  const handleOpenEditModal = () => {
+    if (!member) return;
+    setEditForm({
+      name: member.name || '',
+      phone: member.phone || '',
+      email: member.email || '',
+      date_of_birth: member.date_of_birth || '',
+      anniversary_date: member.anniversary_date || '',
+      membership_type_id: member.membership_type_id || '',
+      status: member.status || 'active',
+    });
+    api.getMembershipTypes(user?.merchant_id || '').then(setMembershipTypes).catch(() => {});
+    setShowEditModal(true);
+  };
+
+  const handleSaveEditMember = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!member || !user) return;
+    setUpdatingMember(true);
+    try {
+      await api.updateMember(user.merchant_id || '', member.id, editForm);
+      addToast('success', 'Member details updated successfully');
+      setShowEditModal(false);
+      fetchMember();
+    } catch (err: any) {
+      addToast('error', err.message || 'Failed to update member details');
+    } finally {
+      setUpdatingMember(false);
     }
   };
 
@@ -339,7 +392,7 @@ export default function MemberProfilePage() {
         {isOwner && (
           <div className="relative z-10 flex gap-2 mt-4 flex-wrap">
             <button
-              onClick={() => navigate(`/members/${member.id}/edit`)}
+              onClick={handleOpenEditModal}
               className="bg-white/15 hover:bg-white/25 text-white px-4 py-2 rounded-lg text-label-md font-label-md flex items-center gap-1 transition-colors"
             >
               <span className="material-symbols-outlined text-[16px]">edit</span>
@@ -843,6 +896,95 @@ export default function MemberProfilePage() {
           </div>
         </div>
       )}
+
+      {/* Edit Member Modal */}
+      <Modal isOpen={showEditModal} onClose={() => !updatingMember && setShowEditModal(false)} title="Edit Member Profile">
+        <form onSubmit={handleSaveEditMember} className="space-y-4">
+          <div>
+            <label className="form-label">Full Name *</label>
+            <input
+              type="text"
+              required
+              value={editForm.name}
+              onChange={e => setEditForm({ ...editForm, name: e.target.value })}
+              className="input-field"
+            />
+          </div>
+          <div>
+            <label className="form-label">Phone Number *</label>
+            <input
+              type="tel"
+              required
+              value={editForm.phone}
+              onChange={e => setEditForm({ ...editForm, phone: e.target.value })}
+              className="input-field"
+            />
+          </div>
+          <div>
+            <label className="form-label">Email Address</label>
+            <input
+              type="email"
+              value={editForm.email}
+              onChange={e => setEditForm({ ...editForm, email: e.target.value })}
+              className="input-field"
+            />
+          </div>
+          <div>
+            <label className="form-label">Membership Type</label>
+            <select
+              value={editForm.membership_type_id}
+              onChange={e => setEditForm({ ...editForm, membership_type_id: e.target.value })}
+              className="input-field"
+            >
+              {membershipTypes.map(t => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="form-label">Membership Status</label>
+            <select
+              value={editForm.status}
+              onChange={e => setEditForm({ ...editForm, status: e.target.value as MemberStatus })}
+              className="input-field"
+            >
+              <option value="active">Active</option>
+              <option value="expiring_soon">Expiring Soon</option>
+              <option value="expired">Expired</option>
+              <option value="deactivated">Deactivated</option>
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="form-label">Date of Birth</label>
+              <input
+                type="date"
+                value={editForm.date_of_birth}
+                onChange={e => setEditForm({ ...editForm, date_of_birth: e.target.value })}
+                className="input-field"
+              />
+            </div>
+            <div>
+              <label className="form-label">Anniversary Date</label>
+              <input
+                type="date"
+                value={editForm.anniversary_date}
+                onChange={e => setEditForm({ ...editForm, anniversary_date: e.target.value })}
+                className="input-field"
+              />
+            </div>
+          </div>
+          <div className="flex gap-3 justify-end pt-4 border-t border-outline-variant/30">
+            <button type="button" onClick={() => setShowEditModal(false)} className="btn-secondary" disabled={updatingMember}>
+              Cancel
+            </button>
+            <button type="submit" className="btn-primary flex items-center gap-2" disabled={updatingMember}>
+              {updatingMember && <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>}
+              Save Changes
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

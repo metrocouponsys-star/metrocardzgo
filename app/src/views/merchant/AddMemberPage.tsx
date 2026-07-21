@@ -76,19 +76,36 @@ export default function AddMemberPage() {
     try {
       const lines = csvText.trim().split('\n');
       const rows: any[] = [];
-      // Parse CSV header & lines
-      const header = lines[0].toLowerCase();
-      const hasHeader = header.includes('name') || header.includes('phone');
-      const dataLines = hasHeader ? lines.slice(1) : lines;
+      // Parse CSV header & lines with flexible column mapping
+      const headerParts = lines[0].toLowerCase().split(',').map(s => s.trim().replace(/^["']|["']$/g, ''));
+      let nameIdx = headerParts.findIndex(h => h.includes('name'));
+      let phoneIdx = headerParts.findIndex(h => h.includes('phone') || h.includes('mobile') || h.includes('contact'));
+      let dobIdx = headerParts.findIndex(h => h.includes('birth') || h.includes('dob'));
+      let annivIdx = headerParts.findIndex(h => h.includes('anniversary'));
 
+      const hasHeader = nameIdx !== -1 || phoneIdx !== -1;
+      if (!hasHeader) {
+        nameIdx = 0;
+        phoneIdx = 1;
+        dobIdx = 2;
+        annivIdx = 3;
+      } else {
+        if (nameIdx === -1) nameIdx = 0;
+        if (phoneIdx === -1) phoneIdx = 1;
+      }
+
+      const dataLines = hasHeader ? lines.slice(1) : lines;
       for (const line of dataLines) {
+        if (!line.trim()) continue;
         const parts = line.split(',').map(s => s.trim().replace(/^["']|["']$/g, ''));
-        if (parts.length >= 2 && parts[0] && parts[1]) {
+        const name = parts[nameIdx];
+        const phone = parts[phoneIdx];
+        if (name && phone) {
           rows.push({
-            name: parts[0],
-            phone: parts[1],
-            date_of_birth: parts[2] || undefined,
-            anniversary_date: parts[3] || undefined,
+            name,
+            phone,
+            date_of_birth: (dobIdx !== -1 && parts[dobIdx]) ? parts[dobIdx] : undefined,
+            anniversary_date: (annivIdx !== -1 && parts[annivIdx]) ? parts[annivIdx] : undefined,
           });
         }
       }
