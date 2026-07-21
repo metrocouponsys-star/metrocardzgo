@@ -180,3 +180,27 @@ def unlock_visit_milestones(
                 initial_qty=1,
                 status="active",
             ))
+
+    # ── Auto-issue Scratch Card on visits ──────────────────────────────────────
+    # Issue a scratch card automatically every 3rd visit (visit 3, 6, 9...)
+    if member.total_visits > 0 and member.total_visits % 3 == 0:
+        import random
+        from app.models.rewards import ScratchCard
+        _SCRATCH_REWARDS = [
+            ("points", "50"),
+            ("points", "100"),
+            ("points", "25"),
+            ("points", "200"),
+            ("gift", "Free hair wash"),
+            ("gift", "10% discount on next visit"),
+            ("points", "75"),
+        ]
+        reward_type, reward_value = random.choice(_SCRATCH_REWARDS)
+        card = ScratchCard(
+            merchant_id=merchant_id,
+            member_id=member.id,
+            reward_type=reward_type,
+            reward_value=reward_value,
+            trigger_visit=member.total_visits,
+        )
+        db.add(card)

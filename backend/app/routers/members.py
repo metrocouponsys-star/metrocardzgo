@@ -376,6 +376,31 @@ def update_member(
         raise HTTPException(status_code=404, detail="Member not found")
 
     update_data = payload.model_dump(exclude_none=True)
+
+    # ── Offer-state migration when membership type changes ────────────────────
+    new_type_id = update_data.get("membership_type_id")
+    if new_type_id and new_type_id != member.membership_type_id:
+        # Deactivate all current offer states for this member
+        db.query(MemberOfferState).filter(
+            MemberOfferState.member_id == member_id
+        ).update({"status": "exhausted"}, synchronize_session=False)
+        db.flush()
+
+        # Create fresh offer states for the new membership type
+        offer_links = db.query(MembershipTypeOffer).filter(
+            MembershipTypeOffer.membership_type_id == new_type_id
+        ).all()
+        for link in offer_links:
+            state = MemberOfferState(
+                member_id=member_id,
+                offer_template_id=link.offer_template_id,
+                remaining_qty=link.default_qty,
+                initial_qty=link.default_qty,
+                status="active",
+            )
+            db.add(state)
+    # ─────────────────────────────────────────────────────────────────────────
+
     for field, value in update_data.items():
         setattr(member, field, value)
     db.commit()

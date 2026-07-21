@@ -83,6 +83,9 @@ def update_offer(
             db.add(MembershipTypeOffer(membership_type_id=mt_id, offer_template_id=offer_id))
     db.commit()
     db.refresh(offer)
+    # Re-populate applicable_membership_type_ids so the response matches what list_offers returns
+    links = db.query(MembershipTypeOffer).filter(MembershipTypeOffer.offer_template_id == offer_id).all()
+    offer.applicable_membership_type_ids = [link.membership_type_id for link in links]
     return offer
 
 
@@ -638,6 +641,28 @@ def get_public_member_view(token: str, request: Request, db: Session = Depends(g
                 "offer_type": ot.offer_type, "value": str(ot.value),
             })
 
+    from app.models.rewards import LuckyDraw, LuckyDrawEntry
+    open_draws = db.query(LuckyDraw).filter(
+        LuckyDraw.merchant_id == member.merchant_id,
+        LuckyDraw.status == "open",
+    ).all()
+    draws_out = []
+    for draw in open_draws:
+        already_entered = db.query(LuckyDrawEntry).filter(
+            LuckyDrawEntry.draw_id == draw.id,
+            LuckyDrawEntry.member_id == member.id,
+        ).first() is not None
+        draws_out.append({
+            "id": draw.id,
+            "name": draw.name,
+            "prize": draw.prize,
+            "draw_date": str(draw.draw_date) if draw.draw_date else None,
+            "min_points": float(draw.min_points or 0),
+            "min_visits": draw.min_visits or 0,
+            "already_entered": already_entered,
+            "eligible": float(member.loyalty_points or 0) >= float(draw.min_points or 0) and (member.total_visits or 0) >= (draw.min_visits or 0),
+        })
+
     return PublicMemberView(
         member_id=member.id,
         merchant_name=merchant.business_name,
@@ -652,7 +677,38 @@ def get_public_member_view(token: str, request: Request, db: Session = Depends(g
         total_visits=member.total_visits or 0,
         referral_code=member.referral_code,
         offers=offers,
+        open_lucky_draws=draws_out,
     )
+
+
+@public_router.post("/lucky-draws/{draw_id}/enter")
+def public_enter_lucky_draw(draw_id: str, token: str = Query(...), request: Request = None, db: Session = Depends(get_db)):
+    """Public self-entry endpoint allowing members to enter lucky draws using their public token."""
+    if request:
+        public_rate_limit(request)
+    member = db.query(Member).filter(Member.public_token == token).first()
+    if not member:
+        raise HTTPException(status_code=404, detail="Member not found")
+
+    draw = db.query(LuckyDraw).filter(LuckyDraw.id == draw_id, LuckyDraw.merchant_id == member.merchant_id).first()
+    if not draw or draw.status != "open":
+        raise HTTPException(400, detail="Draw is not open for entries")
+
+    if float(member.loyalty_points or 0) < float(draw.min_points):
+        raise HTTPException(400, detail=f"Member needs at least {draw.min_points} points to enter")
+    if (member.total_visits or 0) < draw.min_visits:
+        raise HTTPException(400, detail=f"Member needs at least {draw.min_visits} visits to enter")
+
+    existing = db.query(LuckyDrawEntry).filter(
+        LuckyDrawEntry.draw_id == draw_id, LuckyDrawEntry.member_id == member.id
+    ).first()
+    if existing:
+        raise HTTPException(409, detail="Already entered this draw")
+
+    entry = LuckyDrawEntry(draw_id=draw_id, member_id=member.id)
+    db.add(entry)
+    db.commit()
+    return {"message": "Entered draw successfully!"}
 
 
 # ── Health Router ─────────────────────────────────────────────────────────────
@@ -773,10 +829,15 @@ async def upload_my_merchant_logo(
     try:
         logo_url = upload_logo_to_storage(merchant_id, compressed_webp)
     except Exception as exc:
-        # Fallback to data URL if Supabase storage is unconfigured or fails
-        logo_url = logo_data_url
+        # Fallback: store compressed WebP as a base64 data URL.
+        # This keeps the image small (WebP) and prevents DB column overflow.
+        import base64
         import logging
-        logging.getLogger(__name__).warning("Logo storage upload failed, using data URL fallback: %s", exc)
+        logging.getLogger(__name__).warning(
+            "Logo storage upload failed — falling back to inline data URL (merchant=%s): %s",
+            merchant_id, exc,
+        )
+        logo_url = "data:image/webp;base64," + base64.b64encode(compressed_webp).decode("ascii")
 
     merchant.logo_url = logo_url
     db.commit()

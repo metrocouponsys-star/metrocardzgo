@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import type { PublicMemberView } from '../../types';
 import * as api from '../../api';
@@ -300,6 +300,56 @@ export default function PublicMemberPage() {
               <span className="material-symbols-outlined text-[16px]">share</span>
               Share on WhatsApp
             </a>
+          </div>
+        )}
+
+        {/* ── Open Lucky Draws Section ─── */}
+        {(data as any).open_lucky_draws && (data as any).open_lucky_draws.length > 0 && (
+          <div className="bg-surface rounded-2xl border border-amber-200/60 shadow-sm overflow-hidden animate-slide-up bg-gradient-to-br from-amber-50/50 to-orange-50/30">
+            <div className="px-5 py-4 border-b border-amber-200/40 flex items-center justify-between">
+              <h3 className="font-bold text-on-surface flex items-center gap-2">
+                <span className="material-symbols-outlined text-[20px] text-amber-600" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
+                Active Lucky Draws
+              </h3>
+              <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-semibold">Enter to Win</span>
+            </div>
+            <div className="p-4 space-y-3">
+              {(data as any).open_lucky_draws.map((draw: any) => (
+                <div key={draw.id} className="bg-white p-4 rounded-xl border border-amber-200/40 flex items-center justify-between gap-3">
+                  <div>
+                    <h4 className="font-bold text-on-surface">{draw.name}</h4>
+                    <p className="text-sm text-amber-800 font-medium">Prize: {draw.prize}</p>
+                    {draw.draw_date && <p className="text-xs text-on-surface-variant mt-0.5">Draw Date: {draw.draw_date}</p>}
+                  </div>
+                  <div>
+                    {draw.already_entered ? (
+                      <span className="inline-flex items-center gap-1 text-xs font-bold text-green-700 bg-green-100 px-3 py-1.5 rounded-full">
+                        <span className="material-symbols-outlined text-[16px]">check_circle</span> Entered
+                      </span>
+                    ) : draw.eligible ? (
+                      <button
+                        onClick={async () => {
+                          try {
+                            await api.publicEnterLuckyDraw(draw.id, token || '');
+                            alert('🎉 Successfully entered the Lucky Draw!');
+                            window.location.reload();
+                          } catch (e: any) {
+                            alert(e.message || 'Failed to enter draw');
+                          }
+                        }}
+                        className="btn-primary text-xs px-3.5 py-1.5 font-bold shadow-sm"
+                      >
+                        Enter Draw
+                      </button>
+                    ) : (
+                      <span className="text-xs text-on-surface-variant bg-surface-container px-2.5 py-1.5 rounded-lg">
+                        {draw.min_points > 0 ? `${draw.min_points} pts needed` : `${draw.min_visits} visits needed`}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

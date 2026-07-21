@@ -190,7 +190,7 @@ export default function MemberProfilePage() {
   const handleToggleAutoRenew = async () => {
     if (!member || !user) return;
     try {
-      await api.updateMember(user.merchant_id || '', member.id, { auto_renew: !autoRenew } as any);
+      await api.updateMember(user.merchant_id || '', member.id, { auto_renew: !autoRenew } as Partial<Member>);
       setAutoRenew(!autoRenew);
       addToast('success', `Auto-renewal turned ${!autoRenew ? 'ON' : 'OFF'}`);
     } catch {

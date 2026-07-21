@@ -1,6 +1,6 @@
 """Member, MembershipType, MemberOfferState, and MembershipTypeOffer ORM models."""
 import uuid
-from sqlalchemy import Column, String, Text, Numeric, Integer, Date, DateTime, ForeignKey, func, Enum
+from sqlalchemy import Column, String, Text, Numeric, Integer, Date, DateTime, Boolean, ForeignKey, func, Enum
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 
@@ -65,6 +65,7 @@ class Member(Base):
     referred_by_member_id = Column(
         String, ForeignKey("members.id", ondelete="SET NULL"), nullable=True
     )
+    auto_renew = Column(Boolean, default=False, server_default="false", nullable=False)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

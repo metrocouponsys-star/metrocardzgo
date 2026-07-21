@@ -263,10 +263,11 @@ async def upload_merchant_logo(
     try:
         logo_url = upload_logo_to_storage(merchant_id, compressed_webp)
     except RuntimeError as exc:
-        # Storage not configured (dev/test environment) — skip upload, store placeholder
-        logo_url = None
+        # Storage not configured (dev/test) — fall back to inline compressed WebP data URL
+        import base64 as _b64
         import logging
-        logging.getLogger(__name__).warning("Logo storage not configured: %s", exc)
+        logging.getLogger(__name__).warning("Logo storage not configured, using data URL fallback (merchant=%s): %s", merchant_id, exc)
+        logo_url = "data:image/webp;base64," + _b64.b64encode(compressed_webp).decode("ascii")
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"Storage upload failed: {exc}")
 

@@ -112,7 +112,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <NavLink
               key={item.to}
               to={item.to}
-              end={item.to === '/dashboard' || item.to === '/admin'}
+              end={item.to === '/members' || item.to === '/dashboard' || item.to === '/admin' || item.to === '/members/search'}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all font-label-md text-label-md
                 ${isActive
@@ -212,7 +212,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <NavLink
             key={item.to}
             to={item.to}
-            end={item.to === '/dashboard' || item.to === '/admin'}
+            end={item.to === '/members' || item.to === '/dashboard' || item.to === '/admin' || item.to === '/members/search'}
             className={({ isActive }) =>
               `flex flex-col items-center justify-center px-3 py-1.5 rounded-2xl transition-all active-scale min-w-[56px]
               ${isActive ? 'bg-primary-container text-on-primary-container' : 'text-on-surface-variant'}`

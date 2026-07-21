@@ -217,31 +217,30 @@ export async function updateReminderRule(_merchantId: string, ruleId: string, da
 // ── Reports ───────────────────────────────────────────────────────────────────
 // Composes from real /reports/* endpoints instead of calling the dashboard stats endpoint.
 export async function getReportData(_merchantId: string, _from?: string, _to?: string): Promise<ReportData> {
-  const [newMembersData, topCustomers, pointsData, allRedemptions] = await Promise.all([
+  const [newMembersData, topCustomers, pointsData] = await Promise.all([
     get<{ date: string; count: number }[]>('/reports/new-members?days=30').catch(() => []),
     get<any[]>('/reports/top-customers?limit=10').catch(() => []),
     get<any[]>('/reports/points?weeks=12').catch(() => []),
-    get<any[]>('/reports/all-redemptions').catch(() => []),
   ]);
 
-  // Aggregate offer-type breakdown from top-customers redemption data
-  const offerTypeCounts: Record<string, number> = {};
-  for (const r of allRedemptions) {
-    const t = r.offer_type || r.offer?.offer_type || 'unknown';
-    offerTypeCounts[t] = (offerTypeCounts[t] || 0) + 1;
-  }
-  const redemptions_by_offer = Object.entries(offerTypeCounts).map(([offer_type, count]) => ({ offer_type, count }));
+  // Derive total redemptions from the sum of per-member redemption_count
+  const total_redemptions: number = topCustomers.reduce((sum: number, c: any) => sum + (c.redemption_count || 0), 0);
 
-  // New-members data already has { date, count } shape — use as redemptions over time proxy
+  // Build offer-type breakdown: top-customers doesn't have per-offer breakdown,
+  // so we show a single "redemptions" entry with the total count
+  const redemptions_by_offer = total_redemptions > 0
+    ? [{ offer_type: 'all_types', count: total_redemptions }]
+    : [];
+
+  // New-members data already has { date, count } — use as "activity over time"
   const redemptions_over_time = newMembersData.map((d) => ({ date: d.date, count: d.count }));
 
-  const total_redemptions = allRedemptions.length;
   const most_used_offer = redemptions_by_offer.sort((a, b) => b.count - a.count)[0]?.offer_type || '';
 
   return {
     redemptions_by_offer,
     redemptions_over_time,
-    all_redemptions: allRedemptions,
+    all_redemptions: [],
     summary: {
       total_redemptions,
       active_members: 0,  // filled by dashboard stats separately
@@ -471,6 +470,7 @@ export async function getLuckyDraws(): Promise<LuckyDraw[]> { return get<LuckyDr
 export async function createLuckyDraw(data: Partial<LuckyDraw>): Promise<LuckyDraw> { return post<LuckyDraw>('/lucky-draws', data); }
 export async function updateLuckyDraw(id: string, data: Partial<LuckyDraw>): Promise<LuckyDraw> { return patch<LuckyDraw>(`/lucky-draws/${id}`, data); }
 export async function enterLuckyDraw(drawId: string, memberId: string): Promise<any> { return post(`/lucky-draws/${drawId}/enter?member_id=${memberId}`); }
+export async function publicEnterLuckyDraw(drawId: string, token: string): Promise<any> { return post(`/public/lucky-draws/${drawId}/enter?token=${token}`, {}, true); }
 export async function runLuckyDraw(drawId: string): Promise<any> { return post(`/lucky-draws/${drawId}/run`); }
 export async function deleteLuckyDraw(id: string): Promise<void> { return del(`/lucky-draws/${id}`); }
 

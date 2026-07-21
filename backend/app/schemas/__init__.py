@@ -242,6 +242,7 @@ class MemberOut(BaseModel):
     referred_by_member_id: Optional[str] = None
     created_at: datetime
     offer_states: Optional[List[MemberOfferStateOut]] = None
+    auto_renew: bool = False
 
     model_config = {"from_attributes": True}
 
@@ -265,6 +266,7 @@ class MemberUpdate(BaseModel):
     membership_type_id: Optional[str] = None
     status: Optional[str] = None
     notes: Optional[str] = None           # merchant can save notes about the customer
+    auto_renew: Optional[bool] = None     # merchant can enable auto-renewal for a member
 
 
 class ApplyReferralRequest(BaseModel):
@@ -386,6 +388,7 @@ class PublicMemberView(BaseModel):
     total_visits: int = 0
     referral_code: Optional[str] = None
     offers: List[dict]
+    open_lucky_draws: Optional[List[dict]] = []
 
 
 # ── Dashboard Stats ───────────────────────────────────────────────────────────
