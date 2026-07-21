@@ -125,21 +125,27 @@ def upload_logo_to_storage(merchant_id: str, webp_bytes: bytes) -> str:
         Public URL string to the uploaded logo file.
 
     Raises:
-        RuntimeError: If Supabase URL / service key are not configured.
+        RuntimeError: If Supabase URL / service key are not configured or storage fails.
         Exception: On Supabase API errors.
     """
     from app.core.config import settings
 
-    if not settings.supabase_url or not settings.supabase_service_key:
+    if (
+        not settings.supabase_url
+        or not settings.supabase_service_key
+        or "xxxxxxxxxxxx" in settings.supabase_url
+        or "your-supabase" in settings.supabase_service_key
+        or "example.com" in settings.supabase_url
+    ):
         raise RuntimeError(
-            "SUPABASE_URL and SUPABASE_SERVICE_KEY must be set to use logo uploads."
+            "SUPABASE_URL and SUPABASE_SERVICE_KEY must be set to real credentials to use remote logo uploads."
         )
 
     client = get_supabase_client()
     bucket  = "merchant-logos"
     path    = f"{merchant_id}/logo.webp"
 
-    client.storage.from_(bucket).upload(
+    res = client.storage.from_(bucket).upload(
         path,
         webp_bytes,
         file_options={
@@ -148,6 +154,9 @@ def upload_logo_to_storage(merchant_id: str, webp_bytes: bytes) -> str:
             "cache-control": "3600",   # Browser cache 1 hour
         },
     )
+
+    if isinstance(res, dict) and ("error" in res or str(res.get("statusCode", "")).startswith(("4", "5"))):
+        raise RuntimeError(f"Supabase storage error response: {res}")
 
     # Build the public URL (bucket must have public read policy in Supabase dashboard)
     public_url = f"{settings.supabase_url}/storage/v1/object/public/{bucket}/{path}"
