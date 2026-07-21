@@ -57,17 +57,17 @@ class RefreshRequest(BaseModel):
 class MerchantOut(BaseModel):
     id: str
     business_name: str
-    category: str
-    plan_tier: str
-    whatsapp_number: str
+    category: Optional[str] = "General"
+    plan_tier: Optional[str] = "Starter"
+    whatsapp_number: Optional[str] = ""
     logo_url: Optional[str] = None
     card_design_url: Optional[str] = None
     address: Optional[str] = None
-    status: str
-    approval_status: str = "approved"
+    status: Optional[str] = "active"
+    approval_status: Optional[str] = "approved"
     referral_bonus_points: Optional[Decimal] = Decimal("50")
-    created_at: datetime
-    member_count: Optional[int] = None
+    created_at: Optional[datetime] = None
+    member_count: Optional[int] = 0
 
     model_config = {"from_attributes": True}
 

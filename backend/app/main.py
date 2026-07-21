@@ -186,6 +186,13 @@ async def startup_event():
         # Automatically create base tables (idempotent, safe to run repeatedly)
         Base.metadata.create_all(bind=engine)
         print("✅ Database tables verified/created successfully")
+
+        # Automatically seed initial Super Admin & Demo Merchant if empty
+        try:
+            from seed_db import seed
+            seed()
+        except Exception as seed_err:
+            print(f"⚠️ Seeding skipped or encountered non-fatal notice: {seed_err}")
     except Exception as e:
         print(f"❌ Database connection or schema creation FAILED: {e}")
         # Don't crash on startup — let the app start and fail per-request
