@@ -380,9 +380,18 @@ export async function createMembershipType(merchantId: string, data: Partial<Mem
     name: data.name!,
     description: data.description || '',
     member_count: 0,
+    bundled_offers: data.bundled_offers || [],
   };
   db.membershipTypes.push(newType);
   return newType;
+}
+
+export async function updateMembershipType(merchantId: string, typeId: string, data: Partial<MembershipType>): Promise<MembershipType> {
+  await delay(FAKE_DELAY);
+  const idx = db.membershipTypes.findIndex(mt => mt.id === typeId && mt.merchant_id === merchantId);
+  if (idx === -1) throw new Error('Membership type not found');
+  db.membershipTypes[idx] = { ...db.membershipTypes[idx], ...data };
+  return db.membershipTypes[idx];
 }
 
 // ---- Campaigns ----

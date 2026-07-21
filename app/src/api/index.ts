@@ -37,6 +37,7 @@ export const updateOfferTemplate = api.updateOfferTemplate;
 export const deleteOfferTemplate = api.deleteOfferTemplate;
 export const getMembershipTypes = api.getMembershipTypes;
 export const createMembershipType = api.createMembershipType;
+export const updateMembershipType = api.updateMembershipType;
 export const deleteMembershipType = api.deleteMembershipType;
 export const getCampaigns = api.getCampaigns;
 export const createCampaign = api.createCampaign;

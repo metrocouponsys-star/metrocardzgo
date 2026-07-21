@@ -192,6 +192,10 @@ export async function createMembershipType(_merchantId: string, data: Partial<Me
   return post<MembershipType>('/membership-types', data);
 }
 
+export async function updateMembershipType(_merchantId: string, typeId: string, data: Partial<MembershipType>): Promise<MembershipType> {
+  return patch<MembershipType>(`/membership-types/${typeId}`, data);
+}
+
 // ── Campaigns ─────────────────────────────────────────────────────────────────
 export async function getCampaigns(_merchantId: string): Promise<Campaign[]> {
   return get<Campaign[]>('/campaigns');

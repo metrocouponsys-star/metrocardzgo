@@ -60,6 +60,12 @@ export interface MerchantUser {
   created_at: string;
 }
 
+export interface BundledOfferConfig {
+  offer_template_id: string;
+  title?: string;
+  default_qty: number;
+}
+
 export interface MembershipType {
   id: string;
   merchant_id: string;
@@ -67,6 +73,7 @@ export interface MembershipType {
   description: string;
   member_count?: number;
   offers?: OfferTemplate[];
+  bundled_offers?: BundledOfferConfig[];
 }
 
 export interface Member {

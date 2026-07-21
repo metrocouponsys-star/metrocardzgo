@@ -115,12 +115,26 @@ class MerchantUserCreate(BaseModel):
 
 
 # ── MembershipType ────────────────────────────────────────────────────────────
+class BundledOfferInput(BaseModel):
+    offer_template_id: str
+    default_qty: int = 1
+
+
+class BundledOfferOut(BaseModel):
+    offer_template_id: str
+    title: Optional[str] = None
+    default_qty: int = 1
+
+    model_config = {"from_attributes": True}
+
+
 class MembershipTypeOut(BaseModel):
     id: str
     merchant_id: str
     name: str
     description: str
     member_count: Optional[int] = None
+    offers: Optional[List[BundledOfferOut]] = []
 
     model_config = {"from_attributes": True}
 
@@ -128,6 +142,13 @@ class MembershipTypeOut(BaseModel):
 class MembershipTypeCreate(BaseModel):
     name: str
     description: str = ""
+    bundled_offers: Optional[List[BundledOfferInput]] = []
+
+
+class MembershipTypeUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    bundled_offers: Optional[List[BundledOfferInput]] = None
 
 
 # ── OfferTemplate ─────────────────────────────────────────────────────────────

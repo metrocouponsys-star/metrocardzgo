@@ -19,7 +19,7 @@ from app.models.loyalty import LoyaltyTransaction
 from pydantic import BaseModel
 from app.schemas import (
     OfferTemplateCreate, OfferTemplateUpdate, OfferTemplateOut,
-    MembershipTypeCreate, MembershipTypeOut,
+    MembershipTypeCreate, MembershipTypeUpdate, MembershipTypeOut,
     CampaignCreate, CampaignOut,
     ReminderRuleUpdate, ReminderRuleOut,
     DashboardStats, RedemptionOut, PublicMemberView,
@@ -107,13 +107,32 @@ def delete_offer(
 membership_types_router = APIRouter(prefix="/membership-types", tags=["membership-types"])
 
 
+def _populate_membership_type_details(mt: MembershipType, db: Session):
+    mt.member_count = db.query(Member).filter(
+        Member.membership_type_id == mt.id, Member.status == "active"
+    ).count()
+
+    links = db.query(MembershipTypeOffer).filter(
+        MembershipTypeOffer.membership_type_id == mt.id
+    ).all()
+    bundled = []
+    for link in links:
+        offer_tmpl = db.query(OfferTemplate).filter(OfferTemplate.id == link.offer_template_id).first()
+        title = offer_tmpl.title if offer_tmpl else None
+        bundled.append({
+            "offer_template_id": link.offer_template_id,
+            "title": title,
+            "default_qty": link.default_qty or 1,
+        })
+    mt.offers = bundled
+    return mt
+
+
 @membership_types_router.get("", response_model=List[MembershipTypeOut])
 def list_membership_types(merchant_id: str = Depends(get_merchant_id), db: Session = Depends(get_db)):
     types = db.query(MembershipType).filter(MembershipType.merchant_id == merchant_id).all()
     for mt in types:
-        mt.member_count = db.query(Member).filter(
-            Member.membership_type_id == mt.id, Member.status == "active"
-        ).count()
+        _populate_membership_type_details(mt, db)
     return types
 
 
@@ -123,11 +142,60 @@ def create_membership_type(
     merchant_id: str = Depends(get_merchant_id),
     db: Session = Depends(get_db),
 ):
-    mt = MembershipType(merchant_id=merchant_id, **payload.model_dump())
+    mt = MembershipType(merchant_id=merchant_id, name=payload.name, description=payload.description)
     db.add(mt)
+    db.flush()
+
+    if payload.bundled_offers:
+        for bo in payload.bundled_offers:
+            link = MembershipTypeOffer(
+                membership_type_id=mt.id,
+                offer_template_id=bo.offer_template_id,
+                default_qty=bo.default_qty or 1,
+            )
+            db.add(link)
+
     db.commit()
     db.refresh(mt)
-    mt.member_count = 0
+    _populate_membership_type_details(mt, db)
+    return mt
+
+
+@membership_types_router.patch("/{type_id}", response_model=MembershipTypeOut)
+def update_membership_type(
+    type_id: str,
+    payload: MembershipTypeUpdate,
+    merchant_id: str = Depends(get_merchant_id),
+    db: Session = Depends(get_db),
+):
+    mt = db.query(MembershipType).filter(
+        MembershipType.id == type_id, MembershipType.merchant_id == merchant_id
+    ).first()
+    if not mt:
+        raise HTTPException(status_code=404, detail="Membership type not found")
+
+    if payload.name is not None:
+        mt.name = payload.name
+    if payload.description is not None:
+        mt.description = payload.description
+
+    if payload.bundled_offers is not None:
+        # Clear existing links
+        db.query(MembershipTypeOffer).filter(
+            MembershipTypeOffer.membership_type_id == type_id
+        ).delete()
+        # Add new links
+        for bo in payload.bundled_offers:
+            link = MembershipTypeOffer(
+                membership_type_id=type_id,
+                offer_template_id=bo.offer_template_id,
+                default_qty=bo.default_qty or 1,
+            )
+            db.add(link)
+
+    db.commit()
+    db.refresh(mt)
+    _populate_membership_type_details(mt, db)
     return mt
 
 

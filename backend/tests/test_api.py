@@ -445,3 +445,56 @@ def test_reminder_rule_timing_fields(client, db_session, seeded_merchant):
     assert db_rule.timezone == "Asia/Kolkata"
 
 
+def test_membership_type_bundling_and_update(client, seeded_merchant):
+    # Step 1: Login to get token
+    login_resp = client.post(
+        "/api/v1/auth/login",
+        json={"phone": "9999999999", "password": "password123"},
+    )
+    token = login_resp.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # Step 2: Create an offer template
+    offer_resp = client.post(
+        "/api/v1/offers",
+        json={"title": "Free Haircut", "description": "Complimentary service", "offer_type": "free_service", "value": 0},
+        headers=headers,
+    )
+    assert offer_resp.status_code == 201
+    offer_id = offer_resp.json()["id"]
+
+    # Step 3: Create a new membership type with bundled offers
+    create_payload = {
+        "name": "VIP Platinum",
+        "description": "Exclusive VIP Tier",
+        "bundled_offers": [
+            {"offer_template_id": offer_id, "default_qty": 3}
+        ]
+    }
+    create_resp = client.post("/api/v1/membership-types", json=create_payload, headers=headers)
+    assert create_resp.status_code == 201
+    created_type = create_resp.json()
+    assert created_type["name"] == "VIP Platinum"
+    assert len(created_type["offers"]) == 1
+    assert created_type["offers"][0]["default_qty"] == 3
+
+    # Step 4: Update membership type name and bundled offers
+    update_payload = {
+        "name": "VIP Platinum Ultra",
+        "description": "Updated VIP Tier",
+        "bundled_offers": [
+            {"offer_template_id": offer_id, "default_qty": 5}
+        ]
+    }
+    patch_resp = client.patch(
+        f"/api/v1/membership-types/{created_type['id']}",
+        json=update_payload,
+        headers=headers,
+    )
+    assert patch_resp.status_code == 200
+    updated_type = patch_resp.json()
+    assert updated_type["name"] == "VIP Platinum Ultra"
+    assert len(updated_type["offers"]) == 1
+    assert updated_type["offers"][0]["default_qty"] == 5
+
+
