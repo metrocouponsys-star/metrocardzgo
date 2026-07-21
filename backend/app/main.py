@@ -187,6 +187,14 @@ async def startup_event():
         Base.metadata.create_all(bind=engine)
         print("✅ Database tables verified/created successfully")
 
+        # Guarantee auto_renew column exists in production PostgreSQL DB
+        try:
+            with engine.begin() as conn:
+                conn.execute(text("ALTER TABLE members ADD COLUMN IF NOT EXISTS auto_renew BOOLEAN NOT NULL DEFAULT FALSE;"))
+            print("✅ Database schema migration (auto_renew) verified OK")
+        except Exception as col_err:
+            print(f"⚠️ Schema migration notice: {col_err}")
+
         # Automatically seed initial Super Admin & Demo Merchant if empty
         try:
             from seed_db import seed

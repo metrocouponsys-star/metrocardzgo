@@ -107,7 +107,9 @@ def get_supabase_client():
     from supabase import create_client, Client
     from app.core.config import settings
 
-    return create_client(settings.supabase_url, settings.supabase_service_key)
+    url = (settings.supabase_url or "").strip()
+    key = (settings.supabase_service_key or "").strip()
+    return create_client(url, key)
 
 
 def upload_logo_to_storage(merchant_id: str, webp_bytes: bytes) -> str:
@@ -159,7 +161,8 @@ def upload_logo_to_storage(merchant_id: str, webp_bytes: bytes) -> str:
         raise RuntimeError(f"Supabase storage error response: {res}")
 
     # Build the public URL (bucket must have public read policy in Supabase dashboard)
-    public_url = f"{settings.supabase_url}/storage/v1/object/public/{bucket}/{path}"
+    url = (settings.supabase_url or "").strip().rstrip("/")
+    public_url = f"{url}/storage/v1/object/public/{bucket}/{path}"
     return public_url
 
 
