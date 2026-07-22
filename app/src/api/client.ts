@@ -150,8 +150,8 @@ export async function createMember(merchantId: string, data: Partial<Member>): P
       id: `state-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       member_id: newMember.id,
       offer_template_id: o.id,
-      remaining_qty: o.total_qty || 1,
-      initial_qty: o.total_qty || 1,
+      remaining_qty: 1,
+      initial_qty: 1,
       status: 'active',
     });
   });
@@ -1168,17 +1168,6 @@ export async function deleteOfferTemplate(_merchantId: string, _offerId: string)
 
 export async function deleteMembershipType(_merchantId: string, _typeId: string): Promise<void> {
   await delay(FAKE_DELAY);
-}
-
-export async function downloadCardPdf(memberId: string): Promise<void> {
-  await delay(FAKE_DELAY);
-  const blob = new Blob([`Metro Cardz - Digital Membership Card PDF\nMember ID: ${memberId}\nGenerated: ${new Date().toISOString()}`], { type: 'text/plain' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `member_${memberId}_card.txt`;
-  a.click();
-  URL.revokeObjectURL(url);
 }
 
 export async function publicEnterLuckyDraw(_drawId: string, _token: string): Promise<any> {
