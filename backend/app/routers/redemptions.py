@@ -9,6 +9,7 @@ Route handlers ONLY:
 No business logic lives here — it's all in app/services/redemption_service.py.
 """
 import json
+import logging
 from datetime import datetime, timezone, timedelta
 from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException, Request, Header, status
@@ -23,6 +24,8 @@ from app.models.idempotency import IdempotencyRecord
 from app.schemas import RedeemRequest, RedemptionOut, LoyaltyTransactionOut
 from app.services.redemption_service import redeem_offer_atomic, redeem_points_atomic
 from app.services.exceptions import ServiceError
+
+log = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/redemptions", tags=["redemptions"])
 
@@ -223,36 +226,48 @@ def get_member_redemptions(
     merchant_id: str = Depends(get_merchant_id),
     db: Session = Depends(get_db),
 ):
-    member = db.query(Member).filter(
-        Member.id == member_id, Member.merchant_id == merchant_id
-    ).first()
-    if not member:
-        raise HTTPException(status_code=404, detail="Member not found")
+    try:
+        member = db.query(Member).filter(
+            Member.id == member_id, Member.merchant_id == merchant_id
+        ).first()
+        if not member:
+            raise HTTPException(status_code=404, detail="Member not found")
 
-    redemptions = (
-        db.query(RedemptionLog)
-        .filter(RedemptionLog.member_id == member_id)
-        .order_by(RedemptionLog.created_at.desc())
-        .limit(50)
-        .all()
-    )
-    results = []
-    for r in redemptions:
-        results.append(RedemptionOut(
-            id=r.id,
-            member_id=r.member_id,
-            offer_template_id=r.offer_template_id,
-            merchant_user_id=r.merchant_user_id,
-            staff_name=r.staff_user.name if r.staff_user else None,
-            amount=r.amount,
-            created_at=r.created_at,
-            member={"name": member.name, "member_code": member.member_code},
-            offer={
-                "title": r.offer_template.title,
-                "offer_type": r.offer_template.offer_type,
-            } if r.offer_template else None,
-        ))
-    return results
+        redemptions = (
+            db.query(RedemptionLog)
+            .filter(RedemptionLog.member_id == member_id)
+            .order_by(RedemptionLog.created_at.desc())
+            .limit(50)
+            .all()
+        )
+        results = []
+        for r in redemptions:
+            try:
+                staff_name = r.staff_user.name if r.staff_user else None
+                offer_info = {
+                    "title": r.offer_template.title,
+                    "offer_type": r.offer_template.offer_type,
+                } if r.offer_template else None
+            except Exception:
+                staff_name = None
+                offer_info = None
+            results.append(RedemptionOut(
+                id=r.id,
+                member_id=r.member_id,
+                offer_template_id=r.offer_template_id,
+                merchant_user_id=r.merchant_user_id,
+                staff_name=staff_name,
+                amount=r.amount,
+                created_at=r.created_at,
+                member={"name": member.name, "member_code": member.member_code},
+                offer=offer_info,
+            ))
+        return results
+    except HTTPException:
+        raise
+    except Exception as e:
+        log.warning("get_member_redemptions failed for member %s: %s", member_id, e)
+        return []
 
 
 @router.get("/member/{member_id}/loyalty-history", response_model=List[LoyaltyTransactionOut])
@@ -262,36 +277,47 @@ def get_member_loyalty_history(
     db: Session = Depends(get_db),
 ):
     """Return the full loyalty points history for a member."""
-    member = db.query(Member).filter(
-        Member.id == member_id, Member.merchant_id == merchant_id
-    ).first()
-    if not member:
-        raise HTTPException(status_code=404, detail="Member not found")
+    try:
+        member = db.query(Member).filter(
+            Member.id == member_id, Member.merchant_id == merchant_id
+        ).first()
+        if not member:
+            raise HTTPException(status_code=404, detail="Member not found")
 
-    txs = (
-        db.query(LoyaltyTransaction)
-        .filter(
-            LoyaltyTransaction.member_id == member_id,
-            LoyaltyTransaction.merchant_id == merchant_id,
+        txs = (
+            db.query(LoyaltyTransaction)
+            .filter(
+                LoyaltyTransaction.member_id == member_id,
+                LoyaltyTransaction.merchant_id == merchant_id,
+            )
+            .order_by(LoyaltyTransaction.created_at.desc())
+            .limit(100)
+            .all()
         )
-        .order_by(LoyaltyTransaction.created_at.desc())
-        .limit(100)
-        .all()
-    )
-    results = []
-    for tx in txs:
-        offer_title = tx.source_offer.title if tx.source_offer else None
-        results.append(LoyaltyTransactionOut(
-            id=tx.id,
-            member_id=tx.member_id,
-            merchant_id=tx.merchant_id,
-            type=tx.type,
-            points=tx.points,
-            source_redemption_id=tx.source_redemption_id,
-            source_offer_id=tx.source_offer_id,
-            source_offer_title=offer_title,
-            note=tx.note,
-            balance_after=tx.balance_after,
-            created_at=tx.created_at,
-        ))
-    return results
+        results = []
+        for tx in txs:
+            try:
+                offer_title = tx.source_offer.title if tx.source_offer else (tx.note or None)
+            except Exception:
+                offer_title = tx.note or None
+            results.append(LoyaltyTransactionOut(
+                id=tx.id,
+                member_id=tx.member_id,
+                merchant_id=tx.merchant_id,
+                type=tx.type,
+                points=tx.points,
+                source_redemption_id=tx.source_redemption_id,
+                source_offer_id=tx.source_offer_id,
+                source_offer_title=offer_title,
+                note=tx.note,
+                balance_after=tx.balance_after,
+                created_at=tx.created_at,
+            ))
+        return results
+    except HTTPException:
+        raise
+    except Exception as e:
+        log.warning("loyalty-history failed for member %s: %s", member_id, e)
+        # Return empty list rather than 500 — frontend handles empty gracefully
+        return []
+
