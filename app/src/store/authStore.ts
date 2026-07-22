@@ -8,6 +8,7 @@ interface AuthState {
   originalAdminUser: AuthUser | null;
   isAuthenticated: boolean;
   setAuth: (user: AuthUser, token: string) => void;
+  updateUser: (partial: Partial<AuthUser>) => void;
   impersonate: (merchantId: string, merchantName: string) => void;
   stopImpersonating: () => void;
   logout: () => void;
@@ -21,6 +22,7 @@ export const useAuthStore = create<AuthState>()(
       originalAdminUser: null,
       isAuthenticated: false,
       setAuth: (user, token) => set({ user, token, isAuthenticated: true, originalAdminUser: null }),
+      updateUser: (partial) => set((state) => ({ user: state.user ? { ...state.user, ...partial } : null })),
       impersonate: (merchantId, merchantName) => set((state) => {
         if (state.user?.role !== 'super_admin' && !state.originalAdminUser) return {};
         const adminBackup = state.originalAdminUser || state.user;

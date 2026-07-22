@@ -240,6 +240,7 @@ export interface AuthUser {
   role: UserRole;
   merchant_id?: string;
   merchant_name?: string;
+  logo_url?: string;
 }
 
 export interface LoginResponse {

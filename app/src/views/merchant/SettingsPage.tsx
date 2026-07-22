@@ -6,7 +6,7 @@ import type { Merchant, MerchantUser } from '../../types';
 import * as api from '../../api';
 
 export default function SettingsPage() {
-  const { user } = useAuthStore();
+  const { user, updateUser } = useAuthStore();
   const { addToast } = useToastStore();
   const [tab, setTab] = useState<'profile' | 'staff' | 'billing' | 'integrations'>('profile');
   const [merchant, setMerchant] = useState<Merchant | null>(null);
@@ -56,6 +56,7 @@ export default function SettingsPage() {
     ]).then(([m, staff]) => {
       if (m) {
         setMerchant(m);
+        if (m.logo_url) updateUser({ logo_url: m.logo_url });
         setProfileForm({
           business_name: m.business_name || '',
           category: m.category || '',
@@ -78,6 +79,9 @@ export default function SettingsPage() {
     try {
       const updated = await api.updateMerchant(merchant.id, profileForm);
       setMerchant(updated);
+      if (updated?.business_name) {
+        updateUser({ merchant_name: updated.business_name });
+      }
       addToast('success', 'Business profile updated');
     } catch { addToast('error', 'Failed to save'); }
     finally { setSaving(false); }
@@ -187,6 +191,7 @@ export default function SettingsPage() {
                         try {
                           const updated = await api.uploadMerchantLogo(merchant.id, '');
                           setMerchant(updated);
+                          updateUser({ logo_url: '' });
                           addToast('success', 'Logo removed');
                         } catch { addToast('error', 'Failed to remove logo'); }
                       }}
@@ -208,11 +213,13 @@ export default function SettingsPage() {
                     setLogoUploading(true);
                     try {
                       const dataUrl = await compressImage(file, 400, 0.8);
-                      // Optimistic instant preview
+                      // Optimistic instant preview & sync to global header/sidebar
                       setMerchant(prev => prev ? { ...prev, logo_url: dataUrl } : prev);
+                      updateUser({ logo_url: dataUrl });
                       const updated = await api.uploadMerchantLogo(mId, dataUrl);
                       if (updated && updated.logo_url) {
                         setMerchant(updated);
+                        updateUser({ logo_url: updated.logo_url });
                       }
                       addToast('success', 'Logo uploaded successfully!');
                     } catch (err) {

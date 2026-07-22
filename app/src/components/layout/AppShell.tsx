@@ -1,6 +1,7 @@
 import React, { useState, useEffect, Component } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+import * as api from '../../api';
 
 // ─── Error Boundary ────────────────────────────────────────────────────────
 // Catches rendering errors inside any page and shows a recovery UI.
@@ -61,9 +62,18 @@ const ADMIN_NAV = [
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { user, logout, originalAdminUser, stopImpersonating } = useAuthStore();
+  const { user, updateUser, logout, originalAdminUser, stopImpersonating } = useAuthStore();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Auto-sync merchant profile logo to sidebar on mount if not already cached in user state
+  useEffect(() => {
+    if (user?.merchant_id && !user?.logo_url && user?.role !== 'super_admin') {
+      api.getMerchantProfile().then(m => {
+        if (m?.logo_url) updateUser({ logo_url: m.logo_url });
+      }).catch(() => {});
+    }
+  }, [user?.merchant_id]);
 
   // ── Global keyboard shortcut: Ctrl+K / ⌘K → go to Members (search) ──
   useEffect(() => {
@@ -93,8 +103,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <aside className="hidden md:flex flex-col h-screen fixed left-0 top-0 z-40 w-64 border-r border-outline-variant bg-surface">
         {/* Brand */}
         <div className="p-6 flex items-center gap-3 border-b border-outline-variant">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-on-primary shadow-lg">
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>credit_card</span>
+          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-on-primary shadow-lg overflow-hidden shrink-0">
+            {user?.logo_url ? (
+              <img src={user.logo_url} alt="Logo" className="w-full h-full object-cover" />
+            ) : (
+              <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>credit_card</span>
+            )}
           </div>
           <div>
             <p className="text-headline-md font-headline-md font-bold text-primary leading-tight">
@@ -151,8 +165,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {/* User Footer */}
         <div className="p-4 border-t border-outline-variant">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-9 h-9 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold">
-              {user?.name?.charAt(0) || 'U'}
+            <div className="w-9 h-9 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold overflow-hidden shrink-0">
+              {user?.logo_url ? (
+                <img src={user.logo_url} alt="Logo" className="w-full h-full object-cover" />
+              ) : (
+                user?.name?.charAt(0) || 'U'
+              )}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-label-md font-bold text-on-surface truncate">{user?.name}</p>
@@ -172,8 +190,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Mobile Header */}
       <header className="md:hidden fixed top-0 w-full z-50 flex justify-between items-center px-4 h-14 bg-surface shadow-sm border-b border-outline-variant">
         <div className="flex items-center gap-2 flex-1 min-w-0 mr-2">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-on-primary text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>credit_card</span>
+          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shrink-0 overflow-hidden text-on-primary">
+            {user?.logo_url ? (
+              <img src={user.logo_url} alt="Logo" className="w-full h-full object-cover" />
+            ) : (
+              <span className="material-symbols-outlined text-on-primary text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>credit_card</span>
+            )}
           </div>
           <span className="text-headline-md font-headline-md font-bold text-primary truncate">
             {user?.role !== 'super_admin' && user?.merchant_name ? `${user.merchant_name} x Metro Cardz` : 'Metro Cardz'}
