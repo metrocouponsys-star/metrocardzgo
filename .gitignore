@@ -31,3 +31,6 @@ app/.next/
 # OS Files
 .DS_Store
 Thumbs.db
+
+# Documentation & Local Notes
+run.md

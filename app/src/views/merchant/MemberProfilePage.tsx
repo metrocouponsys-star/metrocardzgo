@@ -45,6 +45,8 @@ export default function MemberProfilePage() {
   const [referralInput, setReferralInput] = useState('');
   const [applyingReferral, setApplyingReferral] = useState(false);
   const [renewing, setRenewing] = useState(false);
+  const [voucherCodeInput, setVoucherCodeInput] = useState('');
+  const [redeemingVoucher, setRedeemingVoucher] = useState(false);
 
   // Edit Member Modal state
   const [showEditModal, setShowEditModal] = useState(false);
@@ -71,16 +73,21 @@ export default function MemberProfilePage() {
 
   const fetchMember = async () => {
     if (!id) return;
+    const mId = user?.merchant_id || '';
     try {
-      const [m, reds, loyalty, rewards] = await Promise.all([
-        api.getMember(user?.merchant_id || '', id),
-        api.getMemberRedemptions(user?.merchant_id || '', id),
-        api.getLoyaltyHistory(user?.merchant_id || '', id),
-        api.getRewards().catch(() => []),
-      ]);
+      // First fetch the member record itself
+      const m = await api.getMember(mId, id);
       setMember(m);
       setNotes(m.notes || '');
       setAutoRenew((m as any).auto_renew || false);
+
+      // Fetch supplementary history/rewards with safe fallbacks so sub-request failures never trigger "Member not found"
+      const [reds, loyalty, rewards] = await Promise.all([
+        api.getMemberRedemptions(mId, id).catch(() => []),
+        api.getLoyaltyHistory(mId, id).catch(() => []),
+        api.getRewards().catch(() => []),
+      ]);
+
       setRedemptions(reds);
       setLoyaltyHistory(loyalty);
       setRewardCatalog(rewards.filter((r: any) => r.is_active));
@@ -88,13 +95,17 @@ export default function MemberProfilePage() {
       // Load referral link and scratch cards asynchronously
       api.getReferralLink(m.id).then(res => setReferralLink(res.referral_link)).catch(() => {});
       api.getScratchCards(m.id).then(setScratchCards).catch(() => {});
-    } catch {
-      addToast('error', 'Member not found');
+    } catch (e: any) {
+      addToast('error', e.message || 'Member not found');
       navigate('/members');
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchMember();
+  }, [id, user?.merchant_id]);
 
   const handleClaimReward = async (reward: any) => {
     if (!member) return;
@@ -184,6 +195,22 @@ export default function MemberProfilePage() {
       addToast('error', e.message || 'Renewal failed');
     } finally {
       setRenewing(false);
+    }
+  };
+
+  const handleRedeemVoucher = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!voucherCodeInput.trim() || !member) return;
+    setRedeemingVoucher(true);
+    try {
+      const v = await api.redeemVoucher(voucherCodeInput.trim().toUpperCase(), member.id);
+      addToast('success', `Voucher ${v.code} (₹${v.value}) redeemed & credited to ${member.name}!`);
+      setVoucherCodeInput('');
+      fetchMember();
+    } catch (e: any) {
+      addToast('error', e.message || 'Invalid or expired gift voucher code');
+    } finally {
+      setRedeemingVoucher(false);
     }
   };
 
@@ -708,6 +735,35 @@ export default function MemberProfilePage() {
               </button>
             </div>
           )}
+
+          {/* Redeem Gift Voucher Card */}
+          <div className="card p-md space-y-md">
+            <h4 className="text-label-md font-bold text-on-surface flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px]">confirmation_number</span>
+              Redeem Gift Voucher / Card
+            </h4>
+            <form onSubmit={handleRedeemVoucher} className="space-y-3">
+              <p className="text-body-sm text-on-surface-variant">
+                Enter gift voucher or card code to link & credit value to member:
+              </p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={voucherCodeInput}
+                  onChange={e => setVoucherCodeInput(e.target.value.toUpperCase())}
+                  placeholder="VOUCHER CODE"
+                  className="flex-1 px-3 py-2 bg-surface-container-low border border-outline-variant rounded-lg font-mono text-body-md text-center outline-none focus:border-primary transition-all uppercase"
+                />
+                <button
+                  type="submit"
+                  disabled={redeemingVoucher || !voucherCodeInput.trim()}
+                  className="btn-primary py-2 px-4 flex items-center gap-1"
+                >
+                  {redeemingVoucher ? '...' : 'Redeem'}
+                </button>
+              </div>
+            </form>
+          </div>
 
           {/* Customer Notes */}
           <div className="card p-md space-y-md">

@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import * as api from '../../api';
 import { Modal } from '../../components/ui/Modal';
 import { useToastStore } from '../../store/toastStore';
+import { useAuthStore } from '../../store/authStore';
+import type { Member } from '../../types';
 
 type Tab = 'catalog' | 'coupons' | 'vouchers' | 'points_rules';
 
@@ -361,11 +363,20 @@ function CouponsTab() {
 // ─────────────────────────────────────────────────────────────────────────────
 function VouchersTab() {
   const { addToast } = useToastStore();
+  const { user } = useAuthStore();
+  const merchantId = user?.merchant_id || '';
   const [vouchers, setVouchers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [form, setForm] = useState({ value: '', quantity: '1', expires_at: '' });
+
+  // Link/Redeem to member modal
+  const [redeemTarget, setRedeemTarget] = useState<any | null>(null);
+  const [memberSearch, setMemberSearch] = useState('');
+  const [memberResults, setMemberResults] = useState<Member[]>([]);
+  const [memberSearching, setMemberSearching] = useState(false);
+  const [linking, setLinking] = useState(false);
 
   const load = () => api.getVouchers().then(setVouchers).catch(() => {}).finally(() => setLoading(false));
   useEffect(() => { load(); }, []);
@@ -386,6 +397,33 @@ function VouchersTab() {
 
   const copyCode = (code: string) => {
     navigator.clipboard.writeText(code).then(() => addToast('success', `Code "${code}" copied`)).catch(() => {});
+  };
+
+  const handleMemberSearch = async (q: string) => {
+    setMemberSearch(q);
+    if (q.length < 2) { setMemberResults([]); return; }
+    setMemberSearching(true);
+    try {
+      const results = await api.searchMembers(merchantId, q);
+      setMemberResults(results);
+    } finally { setMemberSearching(false); }
+  };
+
+  const handleLinkVoucher = async (member: Member) => {
+    if (!redeemTarget) return;
+    setLinking(true);
+    try {
+      await api.redeemVoucher(redeemTarget.code, member.id);
+      addToast('success', `Voucher ₹${redeemTarget.value} redeemed & credited to ${member.name}`);
+      setRedeemTarget(null);
+      setMemberSearch('');
+      setMemberResults([]);
+      load();
+    } catch (e: any) {
+      addToast('error', e.message || 'Failed to redeem voucher');
+    } finally {
+      setLinking(false);
+    }
   };
 
   return (
@@ -435,12 +473,23 @@ function VouchersTab() {
                 <span className={`text-headline-lg font-bold ${v.is_redeemed ? 'text-on-surface-variant' : 'text-secondary'}`}>₹{v.value}</span>
                 <span className="text-label-sm text-on-surface-variant">gift voucher</span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className={`text-label-sm px-2.5 py-1 rounded-full font-medium ${v.is_redeemed ? 'bg-surface-container text-on-surface-variant' : 'bg-green-100 text-green-700'}`}>
-                  {v.is_redeemed ? 'Redeemed' : 'Available'}
-                </span>
-                {v.expires_at && !v.is_redeemed && (
-                  <span className="text-label-sm text-on-surface-variant">Expires {v.expires_at}</span>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className={`text-label-sm px-2.5 py-1 rounded-full font-medium ${v.is_redeemed ? 'bg-surface-container text-on-surface-variant' : 'bg-green-100 text-green-700'}`}>
+                    {v.is_redeemed ? 'Redeemed' : 'Available'}
+                  </span>
+                  {v.expires_at && !v.is_redeemed && (
+                    <span className="text-label-sm text-on-surface-variant">Expires {v.expires_at}</span>
+                  )}
+                </div>
+                {!v.is_redeemed && (
+                  <button
+                    onClick={() => { setRedeemTarget(v); setMemberSearch(''); setMemberResults([]); }}
+                    className="btn-primary text-label-sm py-1 px-3.5 flex items-center gap-1"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">person_add</span>
+                    Link User
+                  </button>
                 )}
               </div>
             </div>
@@ -448,6 +497,7 @@ function VouchersTab() {
         </div>
       )}
 
+      {/* Generate Vouchers Modal */}
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Generate Gift Vouchers">
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-md">
@@ -482,6 +532,80 @@ function VouchersTab() {
           </div>
         </div>
       </Modal>
+
+      {/* Link Gift Voucher to Member Modal */}
+      {redeemTarget && (
+        <div className="fixed inset-0 z-[900] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => !linking && setRedeemTarget(null)} />
+          <div className="relative bg-surface rounded-2xl shadow-2xl p-lg w-full max-w-lg mx-4 animate-scale-in space-y-md">
+            <div className="flex items-center justify-between">
+              <h3 className="text-headline-md font-bold">Link Gift Voucher to Member</h3>
+              <button onClick={() => !linking && setRedeemTarget(null)} className="text-on-surface-variant hover:text-on-surface">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <div className="bg-secondary-container/30 rounded-xl p-4 flex items-center gap-3 text-on-surface">
+              <span className="material-symbols-outlined text-secondary text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>card_giftcard</span>
+              <div>
+                <p className="text-label-sm text-on-surface-variant">Redeeming & linking voucher code</p>
+                <p className="font-mono font-bold text-headline-md tracking-widest text-primary">{redeemTarget.code}</p>
+                <p className="text-label-md font-bold text-secondary">Value: ₹{redeemTarget.value}</p>
+              </div>
+            </div>
+
+            <div>
+              <label className="form-label">Search Member to Link</label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant">search</span>
+                <input
+                  autoFocus
+                  className="input-field pl-10"
+                  placeholder="Member name or phone number..."
+                  value={memberSearch}
+                  onChange={e => handleMemberSearch(e.target.value)}
+                />
+                {memberSearching && (
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined animate-spin text-on-surface-variant">progress_activity</span>
+                )}
+              </div>
+            </div>
+
+            {memberResults.length > 0 && (
+              <div className="space-y-1 max-h-64 overflow-y-auto">
+                {memberResults.map(m => (
+                  <button
+                    key={m.id}
+                    onClick={() => handleLinkVoucher(m)}
+                    disabled={linking}
+                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-surface-container-low transition-all text-left border border-outline-variant/30"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center font-bold text-on-primary-container">
+                      {m.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-on-surface">{m.name}</p>
+                      <p className="text-label-sm text-on-surface-variant">{m.phone} · #{m.member_code}</p>
+                    </div>
+                    {linking ? (
+                      <span className="material-symbols-outlined animate-spin text-on-surface-variant">progress_activity</span>
+                    ) : (
+                      <span className="material-symbols-outlined text-primary">check_circle</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {memberSearch.length >= 2 && !memberSearching && memberResults.length === 0 && (
+              <div className="text-center py-6 text-on-surface-variant">
+                <span className="material-symbols-outlined text-[32px] block mb-1">person_off</span>
+                <p className="text-body-md">No members found</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

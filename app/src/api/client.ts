@@ -107,7 +107,8 @@ export async function getMemberByToken(token: string): Promise<PublicMemberView 
 
 export async function getMember(merchantId: string, memberId: string): Promise<Member & { offer_states: MemberOfferState[] }> {
   await delay(FAKE_DELAY);
-  const m = db.members.find(mem => mem.id === memberId && mem.merchant_id === merchantId);
+  let m = db.members.find(mem => mem.id === memberId && (mem.merchant_id === merchantId || !merchantId));
+  if (!m) m = db.members.find(mem => mem.id === memberId);
   if (!m) throw new Error('Member not found');
   const offer_states = db.memberOfferStates.filter(s => s.member_id === memberId).map(s => ({
     ...s,
@@ -126,7 +127,7 @@ export async function createMember(merchantId: string, data: Partial<Member>): P
   if (existing) throw new Error('DUPLICATE_PHONE');
   const newMember: Member = {
     id: `mem-${Date.now()}`,
-    merchant_id: merchantId,
+    merchant_id: merchantId || 'merch-1',
     member_code: `SAL${String(db.members.filter(m => m.merchant_id === merchantId).length + 1).padStart(3, '0')}`,
     public_token: `tok-${Math.random().toString(36).substr(2, 12)}`,
     name: data.name!,
@@ -141,6 +142,20 @@ export async function createMember(merchantId: string, data: Partial<Member>): P
     created_at: new Date().toISOString(),
   };
   db.members.push(newMember);
+
+  // Auto-create initial offer states for the new member
+  const offers = db.offerTemplates.filter(o => !merchantId || o.merchant_id === merchantId);
+  offers.forEach(o => {
+    db.memberOfferStates.push({
+      id: `state-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      member_id: newMember.id,
+      offer_template_id: o.id,
+      remaining_qty: o.total_qty || 1,
+      initial_qty: o.total_qty || 1,
+      status: 'active',
+    });
+  });
+
   return newMember;
 }
 
@@ -1153,6 +1168,17 @@ export async function deleteOfferTemplate(_merchantId: string, _offerId: string)
 
 export async function deleteMembershipType(_merchantId: string, _typeId: string): Promise<void> {
   await delay(FAKE_DELAY);
+}
+
+export async function downloadCardPdf(memberId: string): Promise<void> {
+  await delay(FAKE_DELAY);
+  const blob = new Blob([`Metro Cardz - Digital Membership Card PDF\nMember ID: ${memberId}\nGenerated: ${new Date().toISOString()}`], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `member_${memberId}_card.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 export async function publicEnterLuckyDraw(_drawId: string, _token: string): Promise<any> {
