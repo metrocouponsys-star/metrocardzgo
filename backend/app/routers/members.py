@@ -92,7 +92,121 @@ def get_member(
     ).first()
     if not member:
         raise HTTPException(status_code=404, detail="Member not found")
-    return member
+
+    # Build the response manually so offer_states include the nested offer template
+    from app.schemas import MemberOut as MemberOutSchema, MemberOfferStateOut
+    member_data = MemberOut.model_validate(member)
+
+    # Populate offer_states with the full offer template nested as `offer`
+    try:
+        member_data.offer_states = [
+            MemberOfferStateOut.from_orm_state(s)
+            for s in member.offer_states
+        ]
+    except Exception:
+        member_data.offer_states = []
+
+    # If no offer_states exist in DB, auto-generate from membership type's bundled offers
+    if not member_data.offer_states and member.membership_type:
+        from app.models.member import MemberOfferState, MembershipTypeOffer
+        from app.models.offer import OfferTemplate as OfferTemplateModel
+        from app.schemas import OfferTemplateOut, MemberOfferStateOut
+
+        offer_links = (
+            db.query(MembershipTypeOffer)
+            .filter(MembershipTypeOffer.membership_type_id == member.membership_type_id)
+            .all()
+        )
+        if not offer_links:
+            # Fallback: get all offers for this merchant
+            offer_links_raw = (
+                db.query(OfferTemplateModel)
+                .filter(OfferTemplateModel.merchant_id == merchant_id, OfferTemplateModel.active == True)
+                .all()
+            )
+        else:
+            offer_links_raw = []
+
+        auto_states = []
+        for link in offer_links:
+            tmpl = db.query(OfferTemplateModel).filter(OfferTemplateModel.id == link.offer_template_id).first()
+            if not tmpl:
+                continue
+            # Create state row
+            existing = db.query(MemberOfferState).filter(
+                MemberOfferState.member_id == member.id,
+                MemberOfferState.offer_template_id == link.offer_template_id,
+            ).first()
+            if not existing:
+                from decimal import Decimal as Dec
+                qty = link.default_qty if link.default_qty else (None if tmpl.offer_type in ('percent_off', 'birthday', 'referral') else Dec(5))
+                new_state = MemberOfferState(
+                    id=str(uuid.uuid4()),
+                    member_id=member.id,
+                    offer_template_id=link.offer_template_id,
+                    remaining_qty=qty,
+                    initial_qty=qty,
+                    status="active",
+                )
+                db.add(new_state)
+                db.flush()
+                existing = new_state
+            try:
+                offer_out = OfferTemplateOut.model_validate(tmpl)
+            except Exception:
+                offer_out = None
+            auto_states.append(MemberOfferStateOut(
+                id=existing.id,
+                member_id=existing.member_id,
+                offer_template_id=existing.offer_template_id,
+                remaining_qty=existing.remaining_qty,
+                initial_qty=existing.initial_qty,
+                status=existing.status,
+                offer=offer_out,
+            ))
+
+        for tmpl in offer_links_raw:
+            existing = db.query(MemberOfferState).filter(
+                MemberOfferState.member_id == member.id,
+                MemberOfferState.offer_template_id == tmpl.id,
+            ).first()
+            if not existing:
+                from decimal import Decimal as Dec
+                qty = None if tmpl.offer_type in ('percent_off', 'birthday', 'referral') else Dec(5)
+                new_state = MemberOfferState(
+                    id=str(uuid.uuid4()),
+                    member_id=member.id,
+                    offer_template_id=tmpl.id,
+                    remaining_qty=qty,
+                    initial_qty=qty,
+                    status="active",
+                )
+                db.add(new_state)
+                db.flush()
+                existing = new_state
+            try:
+                offer_out = OfferTemplateOut.model_validate(tmpl)
+            except Exception:
+                offer_out = None
+            auto_states.append(MemberOfferStateOut(
+                id=existing.id,
+                member_id=existing.member_id,
+                offer_template_id=existing.offer_template_id,
+                remaining_qty=existing.remaining_qty,
+                initial_qty=existing.initial_qty,
+                status=existing.status,
+                offer=offer_out,
+            ))
+
+        if auto_states:
+            try:
+                db.commit()
+            except Exception:
+                db.rollback()
+        member_data.offer_states = auto_states
+
+    return member_data
+
 
 
 def _save_idempotency_response_in_members(

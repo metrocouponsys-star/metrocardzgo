@@ -217,6 +217,25 @@ class MemberOfferStateOut(BaseModel):
 
     model_config = {"from_attributes": True}
 
+    @classmethod
+    def from_orm_state(cls, state) -> "MemberOfferStateOut":
+        """Build from ORM MemberOfferState — maps offer_template → offer."""
+        offer_data = None
+        if state.offer_template:
+            try:
+                offer_data = OfferTemplateOut.model_validate(state.offer_template)
+            except Exception:
+                pass
+        return cls(
+            id=state.id,
+            member_id=state.member_id,
+            offer_template_id=state.offer_template_id,
+            remaining_qty=state.remaining_qty,
+            initial_qty=state.initial_qty,
+            status=state.status,
+            offer=offer_data,
+        )
+
 
 class MemberOut(BaseModel):
     id: str
