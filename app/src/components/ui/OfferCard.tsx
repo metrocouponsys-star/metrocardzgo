@@ -7,6 +7,8 @@ const OFFER_ICONS: Record<string, string> = {
   wallet_points: 'account_balance_wallet',
   referral: 'people',
   birthday: 'cake',
+  points_redemption: 'stars',
+  visit_milestone: 'workspace_premium',
 };
 
 const OFFER_COLORS: Record<string, string> = {
@@ -15,6 +17,8 @@ const OFFER_COLORS: Record<string, string> = {
   wallet_points: 'bg-tertiary-fixed/30 text-tertiary-container',
   referral: 'bg-surface-container text-on-surface-variant',
   birthday: 'bg-tertiary-fixed/40 text-on-tertiary-fixed-variant',
+  points_redemption: 'bg-amber-500/20 text-amber-600',
+  visit_milestone: 'bg-emerald-500/20 text-emerald-600',
 };
 
 const OFFER_BADGE: Record<string, { label: string; cls: string }> = {
@@ -23,6 +27,8 @@ const OFFER_BADGE: Record<string, { label: string; cls: string }> = {
   wallet_points: { label: 'POINTS', cls: 'bg-primary-fixed text-on-primary-fixed' },
   referral: { label: 'REFERRAL', cls: 'bg-surface-container-high text-on-surface-variant' },
   birthday: { label: 'BIRTHDAY', cls: 'bg-tertiary-fixed text-on-tertiary-fixed' },
+  points_redemption: { label: 'POINTS REDEEM', cls: 'bg-amber-100 text-amber-800' },
+  visit_milestone: { label: 'MILESTONE', cls: 'bg-emerald-100 text-emerald-800' },
 };
 
 interface OfferCardProps {
@@ -34,8 +40,8 @@ interface OfferCardProps {
 
 export function OfferCard({ offer, offerState, onRedeem, readOnly }: OfferCardProps) {
   const icon = OFFER_ICONS[offer.offer_type] || 'star';
-  const iconColor = OFFER_COLORS[offer.offer_type] || '';
-  const badge = OFFER_BADGE[offer.offer_type];
+  const iconColor = OFFER_COLORS[offer.offer_type] || 'bg-primary-container/10 text-primary';
+  const badge = OFFER_BADGE[offer.offer_type] || { label: 'OFFER', cls: 'bg-primary-fixed text-on-primary-fixed' };
 
   const isExhausted = offerState?.status === 'exhausted' || (offerState?.remaining_qty !== undefined && offerState.remaining_qty !== null && offerState.remaining_qty <= 0);
   const hasQty = offerState?.remaining_qty !== null && offerState?.remaining_qty !== undefined;

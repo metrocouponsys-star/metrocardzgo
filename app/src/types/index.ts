@@ -201,9 +201,20 @@ export interface MessageLog {
 export interface DashboardStats {
   total_active_members: number;
   redemptions_today: number;
-  expiring_this_week: number;
+  expiring_this_month: number;
+  expiring_this_week?: number;
   wallet_points_issued_month: number;
   recent_redemptions: Redemption[];
+}
+
+export interface PointsRule {
+  id: string;
+  merchant_id: string;
+  rule_type: 'per_visit' | 'per_rupee';
+  points_value: number;
+  spend_unit?: number;
+  is_active: boolean;
+  created_at: string;
 }
 
 export interface ReportData {

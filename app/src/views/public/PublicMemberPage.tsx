@@ -7,8 +7,13 @@ import { Button } from '../../components/ui/Button';
 import { format } from 'date-fns';
 
 const OFFER_ICONS: Record<string, string> = {
-  percent_off: 'percent', free_service: 'spa', wallet_points: 'account_balance_wallet',
-  referral: 'people', birthday: 'cake',
+  percent_off: 'percent',
+  free_service: 'spa',
+  wallet_points: 'account_balance_wallet',
+  referral: 'people',
+  birthday: 'cake',
+  points_redemption: 'stars',
+  visit_milestone: 'workspace_premium',
 };
 
 // ── Animated number counter ────────────────────────────────────────────────

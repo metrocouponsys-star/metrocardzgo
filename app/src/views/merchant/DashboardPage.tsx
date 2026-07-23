@@ -165,8 +165,8 @@ export default function DashboardPage() {
                 className="stagger-item"
               />
               <StatCard
-                label="Expiring This Week"
-                value={stats.expiring_this_week}
+                label="Expiring This Month"
+                value={stats.expiring_this_month ?? stats.expiring_this_week}
                 trendUp={false}
                 trend="Action needed"
                 icon="notification_important"

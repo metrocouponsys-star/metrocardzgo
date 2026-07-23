@@ -4,6 +4,7 @@ import { buildFAQSchema, buildBreadcrumbSchema, buildProductSchema, SITE_URL } f
 import { JsonLd } from '@/components/seo/JsonLd';
 import { FAQSection } from '@/components/seo/FAQSection';
 import { Breadcrumb } from '@/components/seo/Breadcrumb';
+import { IndustryDemoButton } from '@/components/seo/IndustryDemoButton';
 
 interface IndustryPageTemplateProps {
   data: IndustryPage;
@@ -111,6 +112,9 @@ export function IndustryPageTemplate({ data }: IndustryPageTemplateProps) {
                   WhatsApp Us →
                 </a>
               </div>
+
+              {/* ⚡ Live Interactive Demo Launcher for this specific merchant category */}
+              <IndustryDemoButton slug={data.slug} industryTitle={data.title} />
 
               {/* Trust stats */}
               <div className="mt-10 flex gap-8 flex-wrap">

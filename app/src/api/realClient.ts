@@ -17,9 +17,13 @@ import type {
 const BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '');
 const API = `${BASE_URL}/api/v1`;
 
+import { useAuthStore } from '../store/authStore';
+
 function getToken(): string | null {
   try {
-    const stored = localStorage.getItem('metro-cardz-auth');
+    const stored = typeof window !== 'undefined' 
+      ? (sessionStorage.getItem('metro-cardz-auth') || localStorage.getItem('metro-cardz-auth')) 
+      : null;
     if (!stored) return null;
     return JSON.parse(stored)?.state?.token || null;
   } catch {
@@ -32,6 +36,7 @@ async function request<T>(
   path: string,
   body?: unknown,
   publicEndpoint = false,
+  isRetry = false,
 ): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -48,6 +53,25 @@ async function request<T>(
     headers,
     body: body ? JSON.stringify(body) : undefined,
   });
+
+  if (res.status === 401 && !publicEndpoint && !isRetry) {
+    try {
+      const refreshed = await refreshAccessToken();
+      if (refreshed?.token) {
+        const current = useAuthStore.getState();
+        if (current.user) {
+          current.setAuth(current.user, refreshed.token);
+        }
+        return request<T>(method, path, body, publicEndpoint, true);
+      }
+    } catch {
+      useAuthStore.getState().logout();
+      if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
+        window.location.href = '/login?expired=1';
+      }
+      throw new Error('Session expired. Please log in again.');
+    }
+  }
 
   if (!res.ok) {
     const errBody = await res.json().catch(() => ({ detail: res.statusText }));
@@ -68,8 +92,10 @@ export async function login(phone: string, password: string): Promise<{ user: Au
   const res = await post<{ user: AuthUser; access_token: string; refresh_token: string }>(
     '/auth/login', { phone, password }, true,
   );
-  // Store refresh token for silent refresh
-  localStorage.setItem('metro-cardz-refresh', res.refresh_token);
+  if (typeof window !== 'undefined') {
+    sessionStorage.setItem('metro-cardz-refresh', res.refresh_token);
+    localStorage.setItem('metro-cardz-refresh', res.refresh_token);
+  }
   return { user: res.user, token: res.access_token };
 }
 
@@ -81,17 +107,25 @@ export async function verifyOtp(phone: string, otp: string): Promise<{ user: Aut
   const res = await post<{ user: AuthUser; access_token: string; refresh_token: string }>(
     '/auth/otp/verify', { phone, otp }, true,
   );
-  localStorage.setItem('metro-cardz-refresh', res.refresh_token);
+  if (typeof window !== 'undefined') {
+    sessionStorage.setItem('metro-cardz-refresh', res.refresh_token);
+    localStorage.setItem('metro-cardz-refresh', res.refresh_token);
+  }
   return { user: res.user, token: res.access_token };
 }
 
 export async function refreshAccessToken(): Promise<{ user: AuthUser; token: string }> {
-  const refreshToken = localStorage.getItem('metro-cardz-refresh');
+  const refreshToken = typeof window !== 'undefined'
+    ? (sessionStorage.getItem('metro-cardz-refresh') || localStorage.getItem('metro-cardz-refresh'))
+    : null;
   if (!refreshToken) throw new Error('No refresh token');
   const res = await post<{ user: AuthUser; access_token: string; refresh_token: string }>(
     '/auth/refresh', { refresh_token: refreshToken }, true,
   );
-  localStorage.setItem('metro-cardz-refresh', res.refresh_token);
+  if (typeof window !== 'undefined') {
+    sessionStorage.setItem('metro-cardz-refresh', res.refresh_token);
+    localStorage.setItem('metro-cardz-refresh', res.refresh_token);
+  }
   return { user: res.user, token: res.access_token };
 }
 
@@ -110,7 +144,55 @@ export async function searchMembers(_merchantId: string, query: string): Promise
 }
 
 export async function getMember(_merchantId: string, memberId: string): Promise<Member & { offer_states: MemberOfferState[] }> {
-  return get<Member & { offer_states: MemberOfferState[] }>(`/members/${memberId}`);
+  const res = await get<Member & { offer_states: MemberOfferState[] }>(`/members/${memberId}`);
+  if (!res.offer_states || res.offer_states.length === 0) {
+    try {
+      const templates = await get<OfferTemplate[]>('/offers');
+      let applicableTemplates = (templates || []).filter(tmpl => {
+        if (res.membership_type?.bundled_offers?.some(b => b.offer_template_id === tmpl.id)) return true;
+        return !tmpl.applicable_membership_type_ids || 
+          tmpl.applicable_membership_type_ids.length === 0 || 
+          tmpl.applicable_membership_type_ids.includes(res.membership_type_id);
+      });
+      if (applicableTemplates.length === 0 && (!res.membership_type?.bundled_offers || res.membership_type.bundled_offers.length === 0)) {
+        applicableTemplates = templates || [];
+      }
+      res.offer_states = applicableTemplates.map((tmpl, idx) => {
+        const bundledQty = res.membership_type?.bundled_offers?.find(b => b.offer_template_id === tmpl.id)?.default_qty;
+        return {
+          id: `mos-real-${res.id}-${idx}`,
+          member_id: res.id,
+          offer_template_id: tmpl.id,
+          remaining_qty: tmpl.offer_type === 'percent_off' ? null : (bundledQty ?? 3),
+          initial_qty: tmpl.offer_type === 'percent_off' ? null : (bundledQty ?? 5),
+          status: 'active' as const,
+          offer: tmpl,
+        };
+      });
+    } catch {
+      res.offer_states = [];
+    }
+  } else {
+    try {
+      const templates = await get<OfferTemplate[]>('/offers');
+      res.offer_states = res.offer_states.map(s => ({
+        ...s,
+        offer: s.offer || (templates || []).find(t => t.id === s.offer_template_id) || {
+          // Fallback placeholder so the card always renders
+          id: s.offer_template_id,
+          merchant_id: '',
+          title: 'Member Offer',
+          description: 'Contact staff to redeem this offer.',
+          offer_type: 'free_service' as const,
+          value: 1,
+          active: true,
+        },
+      }));
+    } catch {
+      // keep existing
+    }
+  }
+  return res;
 }
 
 export async function getMemberByToken(token: string): Promise<PublicMemberView | null> {
@@ -452,7 +534,7 @@ export async function generateVouchers(value: number, quantity: number, expiresA
 export async function redeemVoucher(code: string, memberId: string): Promise<GiftVoucher> { return post<GiftVoucher>('/vouchers/redeem', { code, member_id: memberId }); }
 
 // ── Points Rules ──────────────────────────────────────────────────────────────
-export interface PointsRule { id: string; merchant_id: string; rule_type: 'per_visit' | 'per_rupee'; points_value: number; is_active: boolean; created_at: string; }
+export interface PointsRule { id: string; merchant_id: string; rule_type: 'per_visit' | 'per_rupee'; points_value: number; spend_unit?: number; is_active: boolean; created_at: string; }
 export async function getPointsRules(): Promise<PointsRule[]> { return get<PointsRule[]>('/points-rules'); }
 export async function createPointsRule(data: Partial<PointsRule>): Promise<PointsRule> { return post<PointsRule>('/points-rules', data); }
 export async function updatePointsRule(id: string, data: Partial<PointsRule>): Promise<PointsRule> { return patch<PointsRule>(`/points-rules/${id}`, data); }

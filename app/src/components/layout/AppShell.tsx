@@ -229,14 +229,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 w-full z-50 flex justify-around items-center px-2 py-2 pb-safe bg-surface shadow-[0_-2px_12px_0_rgba(0,0,0,0.08)] border-t border-outline-variant">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[990] flex justify-around items-center px-2 py-2 bg-surface shadow-[0_-2px_12px_0_rgba(0,0,0,0.08)] border-t border-outline-variant select-none" style={{ paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom, 0px))', WebkitTapHighlightColor: 'transparent' }}>
         {mobileNavItems.map(item => (
           <NavLink
             key={item.to}
             to={item.to}
             end={item.to === '/members' || item.to === '/dashboard' || item.to === '/admin' || item.to === '/members/search'}
             className={({ isActive }) =>
-              `flex flex-col items-center justify-center px-3 py-1.5 rounded-2xl transition-all active-scale min-w-[56px]
+              `flex flex-col items-center justify-center px-3 py-1.5 rounded-2xl transition-all active:scale-95 cursor-pointer touch-manipulation min-w-[56px]
               ${isActive ? 'bg-primary-container text-on-primary-container' : 'text-on-surface-variant'}`
             }
           >
@@ -248,19 +248,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             )}
           </NavLink>
         ))}
-        {/* Bug fix: Super Admin has exactly 4 items so More never shows → add explicit logout for super_admin */}
+        {/* Super Admin explicit logout or More drawer toggle for owners */}
         {user?.role === 'super_admin' ? (
           <button
+            type="button"
             onClick={handleLogout}
-            className="flex flex-col items-center justify-center px-3 py-1.5 text-on-surface-variant min-w-[56px]"
+            className="flex flex-col items-center justify-center px-3 py-1.5 text-on-surface-variant min-w-[56px] cursor-pointer touch-manipulation active:scale-95"
           >
             <span className="material-symbols-outlined text-[22px]">logout</span>
             <span className="text-label-sm font-label-sm mt-0.5">Sign Out</span>
           </button>
         ) : navItems.length > 3 && (
           <button
-            onClick={() => setMobileMenuOpen(true)}
-            className="flex flex-col items-center justify-center px-3 py-1.5 text-on-surface-variant min-w-[56px]"
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setMobileMenuOpen(true);
+            }}
+            className="flex flex-col items-center justify-center px-3 py-1.5 text-on-surface-variant min-w-[56px] cursor-pointer touch-manipulation active:scale-95"
           >
             <span className="material-symbols-outlined text-[22px]">more_horiz</span>
             <span className="text-label-sm font-label-sm mt-0.5">More</span>
@@ -270,10 +275,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Mobile Drawer for More items */}
       {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-[800]">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setMobileMenuOpen(false)} />
-          <div className="absolute bottom-0 left-0 right-0 bg-surface rounded-t-2xl p-4 pb-8 animate-slide-up">
-            <div className="w-10 h-1 bg-outline-variant rounded-full mx-auto mb-4" />
+        <div className="md:hidden fixed inset-0 z-[9999] touch-manipulation" style={{ WebkitTapHighlightColor: 'transparent' }}>
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+            onClick={() => setMobileMenuOpen(false)} 
+            onTouchEnd={(e) => { e.preventDefault(); setMobileMenuOpen(false); }}
+          />
+          <div className="absolute bottom-0 left-0 right-0 bg-surface rounded-t-3xl p-5 shadow-2xl animate-slide-up max-h-[85vh] overflow-y-auto" style={{ paddingBottom: 'calc(2rem + env(safe-area-inset-bottom, 0px))' }}>
+            <div className="w-12 h-1.5 bg-outline-variant rounded-full mx-auto mb-4" />
             <div className="space-y-1">
               {navItems.slice(4).map(item => (
                 <NavLink
@@ -281,19 +290,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   to={item.to}
                   onClick={() => setMobileMenuOpen(false)}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-label-md text-label-md
+                    `flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all font-label-md text-label-md cursor-pointer touch-manipulation active:scale-[0.98]
                     ${isActive ? 'bg-primary-container/10 text-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container'}`
                   }
                 >
-                  <span className="material-symbols-outlined">{item.icon}</span>
+                  <span className="material-symbols-outlined text-[24px]">{item.icon}</span>
                   {item.label}
                 </NavLink>
               ))}
               <button
+                type="button"
                 onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-on-surface-variant hover:bg-surface-container font-label-md text-label-md"
+                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-on-surface-variant hover:bg-surface-container font-label-md text-label-md cursor-pointer touch-manipulation active:scale-[0.98]"
               >
-                <span className="material-symbols-outlined">logout</span>
+                <span className="material-symbols-outlined text-[24px]">logout</span>
                 Sign Out
               </button>
             </div>

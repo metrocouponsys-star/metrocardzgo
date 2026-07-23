@@ -81,7 +81,8 @@ class PointsRule(Base):
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     merchant_id = Column(String, ForeignKey("merchants.id", ondelete="CASCADE"), nullable=False)
     rule_type = Column(Enum("per_visit", "per_rupee", name="points_rule_type"), nullable=False)
-    points_value = Column(Numeric, nullable=False)    # points earned per visit OR per ₹ spent
+    points_value = Column(Numeric, nullable=False)    # points earned per visit OR per ₹ spend_unit
+    spend_unit = Column(Numeric, nullable=True, default=1) # ₹ amount for rule (default ₹1, or ₹100, etc)
     is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

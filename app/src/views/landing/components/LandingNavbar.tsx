@@ -105,36 +105,43 @@ export const LandingNavbar: React.FC = () => {
 
         {/* Mobile hamburger */}
         <button
-          className="md:hidden flex flex-col gap-1.5 p-2"
-          onClick={() => setMenuOpen(o => !o)}
+          type="button"
+          className="md:hidden flex flex-col justify-center items-center gap-1.5 p-3 rounded-lg cursor-pointer touch-manipulation select-none active:bg-warm-white/10"
+          style={{ WebkitTapHighlightColor: 'transparent', minWidth: '44px', minHeight: '44px' }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setMenuOpen(o => !o);
+          }}
           aria-label="Toggle menu"
         >
-          <span className={`block w-5 h-0.5 bg-warm-white transition-all duration-300 ${menuOpen ? 'rotate-45 translate-y-2' : ''}`} />
-          <span className={`block w-5 h-0.5 bg-warm-white transition-all duration-300 ${menuOpen ? 'opacity-0' : ''}`} />
-          <span className={`block w-5 h-0.5 bg-warm-white transition-all duration-300 ${menuOpen ? '-rotate-45 -translate-y-2' : ''}`} />
+          <span className={`block w-6 h-0.5 bg-warm-white transition-all duration-300 pointer-events-none ${menuOpen ? 'rotate-45 translate-y-2' : ''}`} />
+          <span className={`block w-6 h-0.5 bg-warm-white transition-all duration-300 pointer-events-none ${menuOpen ? 'opacity-0' : ''}`} />
+          <span className={`block w-6 h-0.5 bg-warm-white transition-all duration-300 pointer-events-none ${menuOpen ? '-rotate-45 -translate-y-2' : ''}`} />
         </button>
       </div>
 
       {/* Mobile menu */}
       <div
-        className={`md:hidden overflow-hidden transition-all duration-300 ${menuOpen ? 'max-h-80' : 'max-h-0'}`}
-        style={{ background: 'rgba(13,13,13,0.98)', borderTop: menuOpen ? '1px solid rgba(201,162,39,0.15)' : 'none' }}
+        className={`md:hidden overflow-hidden transition-all duration-300 ${menuOpen ? 'max-h-96 opacity-100 py-2' : 'max-h-0 opacity-0 py-0'}`}
+        style={{ background: 'rgba(13,13,13,0.98)', borderTop: menuOpen ? '1px solid rgba(201,162,39,0.15)' : 'none', WebkitTapHighlightColor: 'transparent' }}
       >
         <div className="px-6 py-4 flex flex-col gap-4">
           {links.map(link => (
             <button
               key={link.href}
+              type="button"
               onClick={() => handleNav(link.href)}
-              className="text-warm-white/80 hover:text-gold text-base font-medium text-left transition-colors"
+              className="text-warm-white/80 hover:text-gold text-base font-medium text-left transition-colors cursor-pointer touch-manipulation active:opacity-70 py-1"
             >
               {link.label}
             </button>
           ))}
           <hr className="border-warm-white/10" />
-          <a href="/login" className="text-warm-white/60 text-sm">Merchant Login</a>
+          <a href="/login" className="text-warm-white/80 hover:text-gold text-base font-medium py-1">Merchant Login</a>
           <button
+            type="button"
             onClick={() => handleNav('#contact')}
-            className="px-5 py-3 rounded-full text-sm font-semibold font-poppins text-rich-black text-center"
+            className="px-5 py-3 rounded-full text-sm font-semibold font-poppins text-rich-black text-center cursor-pointer touch-manipulation active:scale-95"
             style={{ background: 'linear-gradient(135deg, #D4AF37, #C9A227)' }}
           >
             Get Free Mockup

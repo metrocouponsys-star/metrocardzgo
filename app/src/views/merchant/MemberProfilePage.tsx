@@ -545,40 +545,49 @@ export default function MemberProfilePage() {
               )}
               {member.offer_states && member.offer_states.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
-                  {member.offer_states.map(state => (
-                    state.offer && (
+                  {member.offer_states.map(state => {
+                    const offer = state.offer || {
+                      id: state.offer_template_id,
+                      merchant_id: '',
+                      title: 'Member Offer',
+                      description: 'Contact staff to redeem.',
+                      offer_type: 'free_service' as const,
+                      value: 1,
+                      active: true,
+                    };
+                    return (
                       <div key={state.id} className="relative">
                         {/* Feature 1: points redemption badge */}
-                        {state.offer.is_points_redemption && (
+                        {offer.is_points_redemption && (
                           <div className="absolute top-2 right-2 z-10 bg-amber-100 text-amber-700 border border-amber-200 rounded-full px-2 py-0.5 text-label-sm flex items-center gap-1">
                             <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
-                            {state.offer.loyalty_points_cost} pts
+                            {offer.loyalty_points_cost} pts
                           </div>
                         )}
                         {/* Feature 1: earn badge */}
-                        {state.offer.loyalty_points_earn && !state.offer.is_points_redemption && (
+                        {offer.loyalty_points_earn && !offer.is_points_redemption && (
                           <div className="absolute top-2 right-2 z-10 bg-green-100 text-green-700 border border-green-200 rounded-full px-2 py-0.5 text-label-sm flex items-center gap-1">
                             <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>add_circle</span>
-                            +{state.offer.loyalty_points_earn} pts
+                            +{offer.loyalty_points_earn} pts
                           </div>
                         )}
                         <OfferCard
-                          offer={state.offer}
+                          offer={offer}
                           offerState={state}
                           readOnly={member.status === 'expired'}
                           onRedeem={(offerStateId) => {
                             setRedeemState({
                               offerStateId,
-                              offerTitle: state.offer?.title || '',
+                              offerTitle: offer?.title || '',
                               remainingBefore: state.remaining_qty,
-                              isPointsRedemption: state.offer?.is_points_redemption,
-                              pointsCost: state.offer?.loyalty_points_cost ?? undefined,
+                              isPointsRedemption: offer?.is_points_redemption,
+                              pointsCost: offer?.loyalty_points_cost ?? undefined,
                             });
                           }}
                         />
                       </div>
-                    )
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-12 text-on-surface-variant">

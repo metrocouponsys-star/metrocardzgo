@@ -377,7 +377,7 @@ def get_dashboard_stats(
 ):
     today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
     month_start = datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    week_end = date.today() + timedelta(days=7)
+    month_end = date.today() + timedelta(days=30)
 
     active_members = db.query(Member).filter(
         Member.merchant_id == merchant_id, Member.status == "active"
@@ -386,9 +386,15 @@ def get_dashboard_stats(
         Member.merchant_id == merchant_id,
         RedemptionLog.created_at >= today_start,
     ).count()
+    expiring_this_month = db.query(Member).filter(
+        Member.merchant_id == merchant_id,
+        Member.expiry_date <= month_end,
+        Member.expiry_date >= date.today(),
+        Member.status == "active",
+    ).count()
     expiring_this_week = db.query(Member).filter(
         Member.merchant_id == merchant_id,
-        Member.expiry_date <= week_end,
+        Member.expiry_date <= date.today() + timedelta(days=7),
         Member.expiry_date >= date.today(),
         Member.status == "active",
     ).count()
@@ -413,6 +419,7 @@ def get_dashboard_stats(
     return DashboardStats(
         total_active_members=active_members,
         redemptions_today=redemptions_today,
+        expiring_this_month=expiring_this_month,
         expiring_this_week=expiring_this_week,
         wallet_points_issued_month=wallet_points_issued_month,
         recent_redemptions=[

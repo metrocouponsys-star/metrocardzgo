@@ -414,9 +414,34 @@ class PublicMemberView(BaseModel):
 class DashboardStats(BaseModel):
     total_active_members: int
     redemptions_today: int
-    expiring_this_week: int
+    expiring_this_month: int
+    expiring_this_week: Optional[int] = 0
     wallet_points_issued_month: Decimal
     recent_redemptions: List[RedemptionOut]
+
+# ── Points Rules ──────────────────────────────────────────────────────────────
+class PointsRuleCreate(BaseModel):
+    rule_type: Literal["per_visit", "per_rupee"]
+    points_value: Decimal
+    spend_unit: Optional[Decimal] = Decimal("1")
+
+
+class PointsRuleUpdate(BaseModel):
+    rule_type: Optional[Literal["per_visit", "per_rupee"]] = None
+    points_value: Optional[Decimal] = None
+    spend_unit: Optional[Decimal] = None
+    is_active: Optional[bool] = None
+
+
+class PointsRuleOut(BaseModel):
+    id: str
+    merchant_id: str
+    rule_type: str
+    points_value: Decimal
+    spend_unit: Optional[Decimal] = Decimal("1")
+    is_active: bool
+    created_at: datetime
+    model_config = {"from_attributes": True}
 
 
 # ── Report Data ───────────────────────────────────────────────────────────────

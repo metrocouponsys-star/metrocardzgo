@@ -43,7 +43,7 @@ class Settings(BaseSettings):
     # ── JWT / Security ───────────────────────────────────────────────────
     secret_key: str
     jwt_algorithm: str = "HS256"
-    access_token_expire_minutes: int = 15
+    access_token_expire_minutes: int = 1440  # 24 Hours
     refresh_token_expire_days: int = 30
 
     # ── CORS ─────────────────────────────────────────────────────────────

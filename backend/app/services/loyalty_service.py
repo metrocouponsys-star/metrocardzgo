@@ -77,8 +77,9 @@ def calculate_rule_points(
             note = f"Points rule: {pts} pts per visit"
             results.append((rule, pts, note))
         elif rule.rule_type == "per_rupee" and amount and amount > 0:
-            pts = (Decimal(str(rule.points_value)) * Decimal(str(amount))).quantize(Decimal("1"))
-            note = f"Points rule: {rule.points_value} pts/₹ × ₹{amount}"
+            unit = Decimal(str(rule.spend_unit or 1))
+            pts = (Decimal(str(rule.points_value)) * (Decimal(str(amount)) / unit)).quantize(Decimal("1"))
+            note = f"Points rule: {rule.points_value} pts/₹{unit} × ₹{amount}"
             if pts > 0:
                 results.append((rule, pts, note))
     return results

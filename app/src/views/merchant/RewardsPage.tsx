@@ -211,6 +211,7 @@ function CouponsTab() {
   const [coupons, setCoupons] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [editTarget, setEditTarget] = useState<any | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ code: '', discount_type: 'flat', value: '', min_purchase: '0', max_uses: '', expires_at: '' });
 
@@ -219,23 +220,49 @@ function CouponsTab() {
 
   const genCode = () => Array.from({ length: 8 }, () => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[Math.floor(Math.random() * 36)]).join('');
 
+  const openCreate = () => {
+    setEditTarget(null);
+    setForm({ code: '', discount_type: 'flat', value: '', min_purchase: '0', max_uses: '', expires_at: '' });
+    setShowModal(true);
+  };
+
+  const openEdit = (c: any) => {
+    setEditTarget(c);
+    setForm({
+      code: c.code || '',
+      discount_type: c.discount_type || 'flat',
+      value: c.value != null ? String(c.value) : '',
+      min_purchase: c.min_purchase != null ? String(c.min_purchase) : '0',
+      max_uses: c.max_uses != null ? String(c.max_uses) : '',
+      expires_at: c.expires_at || '',
+    });
+    setShowModal(true);
+  };
+
   const save = async () => {
     if (!form.value) { addToast('error', 'Discount value is required'); return; }
     setSaving(true);
     try {
-      await api.createCoupon({
+      const payload = {
         code: form.code.toUpperCase() || genCode(),
         discount_type: form.discount_type as 'flat' | 'percent',
         value: Number(form.value),
         min_purchase: Number(form.min_purchase),
         max_uses: form.max_uses ? Number(form.max_uses) : undefined,
         expires_at: form.expires_at || undefined,
-      });
-      addToast('success', 'Coupon created');
+      };
+      if (editTarget) {
+        await api.updateCoupon(editTarget.id, payload);
+        addToast('success', 'Coupon updated');
+      } else {
+        await api.createCoupon(payload);
+        addToast('success', 'Coupon created');
+      }
       setShowModal(false);
+      setEditTarget(null);
       setForm({ code: '', discount_type: 'flat', value: '', min_purchase: '0', max_uses: '', expires_at: '' });
       load();
-    } catch { addToast('error', 'Failed to create coupon'); }
+    } catch { addToast('error', editTarget ? 'Failed to update coupon' : 'Failed to create coupon'); }
     finally { setSaving(false); }
   };
 
@@ -247,7 +274,7 @@ function CouponsTab() {
     <div className="space-y-md">
       <div className="flex items-center justify-between">
         <p className="text-body-md text-on-surface-variant">Create discount codes for members to use at checkout.</p>
-        <button onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2">
+        <button onClick={openCreate} className="btn-primary flex items-center gap-2">
           <span className="material-symbols-outlined text-[18px]">add</span>
           Create Coupon
         </button>
@@ -297,11 +324,14 @@ function CouponsTab() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => openEdit(c)} className="text-label-sm px-2 py-1 rounded-lg border border-outline-variant hover:bg-surface-container text-on-surface-variant transition-colors flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[14px]">edit</span> Edit
+                      </button>
                       <button onClick={async () => { await api.updateCoupon(c.id, { is_active: !c.is_active }); load(); }}
                         className="text-label-sm px-2 py-1 rounded-lg border border-outline-variant hover:bg-surface-container text-on-surface-variant transition-colors">
                         {c.is_active ? 'Disable' : 'Enable'}
                       </button>
-                      <button onClick={async () => { await api.deleteCoupon(c.id); load(); }}
+                      <button onClick={async () => { await api.deleteCoupon(c.id); load(); addToast('success', 'Coupon deleted'); }}
                         className="p-1 rounded-lg text-error hover:bg-error-container transition-colors">
                         <span className="material-symbols-outlined text-[16px]">delete</span>
                       </button>
@@ -314,7 +344,7 @@ function CouponsTab() {
         </div>
       </div>
 
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Create Coupon Code">
+      <Modal isOpen={showModal} onClose={() => { setShowModal(false); setEditTarget(null); }} title={editTarget ? 'Edit Coupon Code' : 'Create Coupon Code'}>
         <div className="space-y-4">
           <div>
             <label className="form-label">Coupon Code <span className="text-on-surface-variant font-normal">(leave blank to auto-generate)</span></label>
@@ -346,10 +376,10 @@ function CouponsTab() {
             <input type="date" className="input-field" value={form.expires_at} onChange={e => setForm(f => ({ ...f, expires_at: e.target.value }))} />
           </div>
           <div className="flex gap-3 pt-1">
-            <button onClick={() => setShowModal(false)} className="btn-secondary flex-1">Cancel</button>
+            <button onClick={() => { setShowModal(false); setEditTarget(null); }} className="btn-secondary flex-1">Cancel</button>
             <button onClick={save} disabled={saving || !form.value} className="btn-primary flex-1 flex items-center justify-center gap-2">
               {saving && <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>}
-              Create Coupon
+              {editTarget ? 'Save Changes' : 'Create Coupon'}
             </button>
           </div>
         </div>
@@ -618,35 +648,63 @@ function PointsRulesTab() {
   const [rules, setRules] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [editTarget, setEditTarget] = useState<any | null>(null);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ rule_type: 'per_visit', points_value: '' });
+  const [form, setForm] = useState({ rule_type: 'per_rupee', points_value: '', spend_unit: '1' });
 
   const load = () => api.getPointsRules().then(setRules).catch(() => {}).finally(() => setLoading(false));
   useEffect(() => { load(); }, []);
+
+  const openCreate = () => {
+    setEditTarget(null);
+    setForm({ rule_type: 'per_rupee', points_value: '1', spend_unit: '1' });
+    setShowModal(true);
+  };
+
+  const openEdit = (r: any) => {
+    setEditTarget(r);
+    setForm({
+      rule_type: r.rule_type || 'per_rupee',
+      points_value: r.points_value != null ? String(r.points_value) : '',
+      spend_unit: r.spend_unit != null ? String(r.spend_unit) : '1',
+    });
+    setShowModal(true);
+  };
 
   const save = async () => {
     if (!form.points_value) { addToast('error', 'Points value is required'); return; }
     setSaving(true);
     try {
-      await api.createPointsRule({ rule_type: form.rule_type as 'per_visit' | 'per_rupee', points_value: Number(form.points_value) });
-      addToast('success', 'Points rule created');
+      const payload = {
+        rule_type: form.rule_type as 'per_visit' | 'per_rupee',
+        points_value: Number(form.points_value),
+        spend_unit: form.rule_type === 'per_rupee' ? Number(form.spend_unit || 1) : 1,
+      };
+      if (editTarget) {
+        await api.updatePointsRule(editTarget.id, payload);
+        addToast('success', 'Points rule updated');
+      } else {
+        await api.createPointsRule(payload);
+        addToast('success', 'Points rule created');
+      }
       setShowModal(false);
-      setForm({ rule_type: 'per_visit', points_value: '' });
+      setEditTarget(null);
+      setForm({ rule_type: 'per_rupee', points_value: '1', spend_unit: '1' });
       load();
-    } catch { addToast('error', 'Failed to create rule'); }
+    } catch { addToast('error', editTarget ? 'Failed to update rule' : 'Failed to create rule'); }
     finally { setSaving(false); }
   };
 
   const RULE_META: Record<string, { icon: string; desc: string; color: string }> = {
     per_visit: { icon: 'store', desc: 'Points earned on every visit', color: 'bg-primary-container/30 text-primary' },
-    per_rupee: { icon: 'currency_rupee', desc: 'Points earned per ₹ spent', color: 'bg-secondary-container text-secondary' },
+    per_rupee: { icon: 'currency_rupee', desc: 'Points earned per amount spent', color: 'bg-secondary-container text-secondary' },
   };
 
   return (
     <div className="space-y-md">
       <div className="flex items-center justify-between">
         <p className="text-body-md text-on-surface-variant">Define global rules for how members earn loyalty points.</p>
-        <button onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2">
+        <button onClick={openCreate} className="btn-primary flex items-center gap-2">
           <span className="material-symbols-outlined text-[18px]">add</span>
           Add Rule
         </button>
@@ -655,7 +713,7 @@ function PointsRulesTab() {
       <div className="bg-primary-container/10 border border-primary/20 rounded-xl p-4 flex gap-3">
         <span className="material-symbols-outlined text-primary flex-shrink-0">info</span>
         <div className="text-body-sm text-on-surface">
-          <strong>How points work:</strong> Rules here define how many points members earn. Members can then redeem points via reward catalog or the <em>points_redemption</em> offer type in your Offers page.
+          <strong>How points work:</strong> Merchants can define point earning rules (e.g. Members earn X points for every ₹1 or ₹100 spent, or flat points per visit). Members can then redeem earned points via the reward catalog or points redemption offers.
         </div>
       </div>
 
@@ -670,7 +728,7 @@ function PointsRulesTab() {
           </div>
           <h3 className="text-headline-md font-bold mb-2">No points rules yet</h3>
           <p className="text-body-md text-on-surface-variant max-w-sm mb-6">Set up rules to automatically award loyalty points to members on every visit or purchase.</p>
-          <button onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2">
+          <button onClick={openCreate} className="btn-primary flex items-center gap-2">
             <span className="material-symbols-outlined text-[18px]">add</span>
             Create First Rule
           </button>
@@ -679,6 +737,9 @@ function PointsRulesTab() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
           {rules.map(r => {
             const meta = RULE_META[r.rule_type] || { icon: 'stars', desc: r.rule_type, color: 'bg-surface-container text-on-surface-variant' };
+            const descText = r.rule_type === 'per_visit'
+              ? `Members earn ${Number(r.points_value).toFixed(0)} points on each visit`
+              : `Members earn ${Number(r.points_value).toFixed(0)} points for every ₹${r.spend_unit || 1} spent`;
             return (
               <div key={r.id} className={`card p-md flex flex-col gap-4 transition-all hover:shadow-elevated ${!r.is_active ? 'opacity-60' : ''}`}>
                 <div className="flex items-start gap-3">
@@ -686,17 +747,21 @@ function PointsRulesTab() {
                     <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>{meta.icon}</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline gap-2">
+                    <div className="flex items-baseline gap-1 flex-wrap">
                       <span className="text-headline-lg font-bold text-primary">⚡ {Number(r.points_value).toFixed(0)}</span>
-                      <span className="text-body-md text-on-surface-variant">points</span>
+                      <span className="text-body-md text-on-surface-variant">pts / {r.rule_type === 'per_visit' ? 'visit' : `₹${r.spend_unit || 1}`}</span>
                     </div>
-                    <p className="text-body-sm text-on-surface-variant">{meta.desc}</p>
+                    <p className="text-body-sm text-on-surface-variant mt-0.5">{descText}</p>
                   </div>
                   <span className={`text-label-sm px-2.5 py-1 rounded-full font-medium flex-shrink-0 ${r.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                     {r.is_active ? 'Active' : 'Inactive'}
                   </span>
                 </div>
                 <div className="flex gap-2 border-t border-outline-variant/20 pt-3">
+                  <button onClick={() => openEdit(r)} className="flex-1 py-1.5 rounded-xl border border-outline-variant text-on-surface-variant text-label-sm hover:bg-surface-container transition-colors flex items-center justify-center gap-1">
+                    <span className="material-symbols-outlined text-[14px]">edit</span>
+                    Edit
+                  </button>
                   <button onClick={async () => { await api.updatePointsRule(r.id, { is_active: !r.is_active }); load(); }}
                     className="flex-1 py-1.5 rounded-xl border border-outline-variant text-on-surface-variant text-label-sm hover:bg-surface-container transition-colors flex items-center justify-center gap-1">
                     <span className="material-symbols-outlined text-[14px]">{r.is_active ? 'pause_circle' : 'play_circle'}</span>
@@ -713,29 +778,80 @@ function PointsRulesTab() {
         </div>
       )}
 
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="New Points Rule">
+      <Modal isOpen={showModal} onClose={() => { setShowModal(false); setEditTarget(null); }} title={editTarget ? 'Edit Points Rule' : 'New Points Rule'}>
         <div className="space-y-4">
           <div>
             <label className="form-label">Rule Type *</label>
             <select className="input-field" value={form.rule_type} onChange={e => setForm(f => ({ ...f, rule_type: e.target.value }))}>
-              <option value="per_visit">Per Visit — earn X points on every visit</option>
-              <option value="per_rupee">Per ₹ Spent — earn X points per rupee spent</option>
+              <option value="per_rupee">Per Spending Amount (₹) — earn points per ₹ spent</option>
+              <option value="per_visit">Per Visit — earn flat points on every visit</option>
             </select>
           </div>
+
+          {form.rule_type === 'per_rupee' && (
+            <div>
+              <label className="form-label">Spend Amount Unit (₹) *</label>
+              <div className="flex gap-2 mb-2">
+                <button
+                  type="button"
+                  onClick={() => setForm(f => ({ ...f, spend_unit: '1' }))}
+                  className={`flex-1 py-1.5 px-3 rounded-xl text-label-sm font-semibold border transition-all ${form.spend_unit === '1' ? 'bg-primary text-on-primary border-primary' : 'bg-surface border-outline-variant text-on-surface hover:bg-surface-container'}`}
+                >
+                  Every ₹1 Spent
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setForm(f => ({ ...f, spend_unit: '100' }))}
+                  className={`flex-1 py-1.5 px-3 rounded-xl text-label-sm font-semibold border transition-all ${form.spend_unit === '100' ? 'bg-primary text-on-primary border-primary' : 'bg-surface border-outline-variant text-on-surface hover:bg-surface-container'}`}
+                >
+                  Every ₹100 Spent
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setForm(f => ({ ...f, spend_unit: form.spend_unit !== '1' && form.spend_unit !== '100' ? form.spend_unit : '50' }))}
+                  className={`flex-1 py-1.5 px-3 rounded-xl text-label-sm font-semibold border transition-all ${form.spend_unit !== '1' && form.spend_unit !== '100' ? 'bg-primary text-on-primary border-primary' : 'bg-surface border-outline-variant text-on-surface hover:bg-surface-container'}`}
+                >
+                  Custom Amount
+                </button>
+              </div>
+              <input
+                type="number"
+                min={1}
+                className="input-field"
+                placeholder="e.g. 1 or 100"
+                value={form.spend_unit}
+                onChange={e => setForm(f => ({ ...f, spend_unit: e.target.value }))}
+              />
+            </div>
+          )}
+
           <div>
-            <label className="form-label">Points Value *</label>
-            <input type="number" min={1} className="input-field" placeholder="e.g. 10" value={form.points_value} onChange={e => setForm(f => ({ ...f, points_value: e.target.value }))} autoFocus />
-            <p className="text-label-sm text-on-surface-variant mt-1">
+            <label className="form-label">Points Earned *</label>
+            <input
+              type="number"
+              min={1}
+              className="input-field"
+              placeholder="e.g. 10 or 100"
+              value={form.points_value}
+              onChange={e => setForm(f => ({ ...f, points_value: e.target.value }))}
+              autoFocus
+            />
+          </div>
+
+          <div className="bg-primary-container/20 border border-primary/20 rounded-xl p-3 text-body-sm text-primary font-medium flex items-center gap-2">
+            <span className="material-symbols-outlined text-[20px]">bolt</span>
+            <span>
               {form.rule_type === 'per_visit'
                 ? `Members earn ${form.points_value || 'X'} points on each visit`
-                : `Members earn ${form.points_value || 'X'} points for every ₹1 spent`}
-            </p>
+                : `Members earn ${form.points_value || 'X'} points for every ₹${form.spend_unit || '1'} spent`}
+            </span>
           </div>
+
           <div className="flex gap-3 pt-1">
-            <button onClick={() => setShowModal(false)} className="btn-secondary flex-1">Cancel</button>
+            <button onClick={() => { setShowModal(false); setEditTarget(null); }} className="btn-secondary flex-1">Cancel</button>
             <button onClick={save} disabled={saving || !form.points_value} className="btn-primary flex-1 flex items-center justify-center gap-2">
               {saving && <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>}
-              Create Rule
+              {editTarget ? 'Save Changes' : 'Create Rule'}
             </button>
           </div>
         </div>

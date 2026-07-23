@@ -67,14 +67,21 @@ export async function getDashboardStats(merchantId: string): Promise<DashboardSt
   const today = new Date().toDateString();
   const merchantMembers = db.members.filter(m => m.merchant_id === merchantId);
   const now = new Date();
+  const monthFromNow = new Date(now.getTime() + 30 * 86400_000);
   const weekFromNow = new Date(now.getTime() + 7 * 86400_000);
+  const expiringMonthCount = merchantMembers.filter(m => {
+    const exp = new Date(m.expiry_date);
+    return exp >= now && exp <= monthFromNow;
+  }).length;
+  const expiringWeekCount = merchantMembers.filter(m => {
+    const exp = new Date(m.expiry_date);
+    return exp >= now && exp <= weekFromNow;
+  }).length;
   return {
     total_active_members: merchantMembers.filter(m => m.status === 'active').length,
     redemptions_today: db.redemptions.filter(r => new Date(r.created_at).toDateString() === today).length,
-    expiring_this_week: merchantMembers.filter(m => {
-      const exp = new Date(m.expiry_date);
-      return exp >= now && exp <= weekFromNow;
-    }).length,
+    expiring_this_month: expiringMonthCount,
+    expiring_this_week: expiringWeekCount,
     wallet_points_issued_month: merchantMembers.reduce((sum, m) => sum + (m.loyalty_points || 0), 0),
     recent_redemptions: db.redemptions
       .filter(r => merchantMembers.some(m => m.id === r.member_id))
@@ -110,13 +117,55 @@ export async function getMember(merchantId: string, memberId: string): Promise<M
   let m = db.members.find(mem => mem.id === memberId && (mem.merchant_id === merchantId || !merchantId));
   if (!m) m = db.members.find(mem => mem.id === memberId);
   if (!m) throw new Error('Member not found');
-  const offer_states = db.memberOfferStates.filter(s => s.member_id === memberId).map(s => ({
-    ...s,
-    offer: db.offerTemplates.find(o => o.id === s.offer_template_id),
-  }));
+
+  const targetMerchantId = m.merchant_id || merchantId || 'mer-001';
+
+  // Find active offer templates for this merchant (or fallback to all active templates if needed)
+  let templates = db.offerTemplates.filter(o => (o.merchant_id === targetMerchantId || o.merchant_id === merchantId || !o.merchant_id) && o.active);
+  if (templates.length === 0) {
+    templates = db.offerTemplates.filter(o => o.active);
+  }
+
+  const memberType = db.membershipTypes.find(mt => mt.id === m!.membership_type_id);
+
+  // Filter templates that apply to this member's membership_type_id
+  let applicableTemplates = templates.filter(o => {
+    if (memberType?.bundled_offers?.some(b => b.offer_template_id === o.id)) return true;
+    return !o.applicable_membership_type_ids || 
+      o.applicable_membership_type_ids.length === 0 || 
+      o.applicable_membership_type_ids.includes(m!.membership_type_id);
+  });
+
+  // Fallback: If no offers are configured for this specific membership type yet, show all active offers
+  if (applicableTemplates.length === 0 && (!memberType?.bundled_offers || memberType.bundled_offers.length === 0)) {
+    applicableTemplates = templates;
+  }
+
+  const existingStates = db.memberOfferStates.filter(s => s.member_id === m!.id);
+
+  const offer_states: MemberOfferState[] = applicableTemplates.map((tmpl) => {
+    let state = existingStates.find(s => s.offer_template_id === tmpl.id);
+    if (!state) {
+      const bundledQty = memberType?.bundled_offers?.find(b => b.offer_template_id === tmpl.id)?.default_qty;
+      state = {
+        id: `mos-auto-${m!.id}-${tmpl.id}`,
+        member_id: m!.id,
+        offer_template_id: tmpl.id,
+        remaining_qty: tmpl.offer_type === 'percent_off' ? null : (bundledQty ?? 3),
+        initial_qty: tmpl.offer_type === 'percent_off' ? null : (bundledQty ?? 5),
+        status: 'active' as const,
+      };
+      db.memberOfferStates.push(state);
+    }
+    return {
+      ...state,
+      offer: tmpl,
+    };
+  });
+
   return {
     ...m,
-    membership_type: db.membershipTypes.find(mt => mt.id === m.membership_type_id),
+    membership_type: db.membershipTypes.find(mt => mt.id === m!.membership_type_id),
     offer_states,
   };
 }
@@ -281,16 +330,21 @@ export async function redeemOffer(
   return redemption;
 }
 
-export async function getMemberRedemptions(merchantId: string, memberId: string): Promise<Redemption[]> {
+export async function getMemberRedemptions(_merchantId: string, memberId: string): Promise<Redemption[]> {
   await delay(FAKE_DELAY);
-  return db.redemptions.filter(r => r.member_id === memberId && db.members.find(m => m.id === memberId && m.merchant_id === merchantId));
+  return db.redemptions
+    .filter(r => r.member_id === memberId)
+    .map(r => ({
+      ...r,
+      offer: r.offer || db.offerTemplates.find(o => o.id === r.offer_template_id),
+    }));
 }
 
 // ---- Loyalty Points (Feature 1) ----
-export async function getLoyaltyHistory(merchantId: string, memberId: string): Promise<LoyaltyTransaction[]> {
+export async function getLoyaltyHistory(_merchantId: string, memberId: string): Promise<LoyaltyTransaction[]> {
   await delay(FAKE_DELAY);
   return db.loyaltyTransactions
-    .filter(tx => tx.member_id === memberId && tx.merchant_id === merchantId)
+    .filter(tx => tx.member_id === memberId)
     .sort((a, b) => b.created_at.localeCompare(a.created_at));
 }
 
@@ -987,8 +1041,14 @@ export async function getRetentionReport(merchantId: string, limit = 6): Promise
 
 // ── Mock Rewards ──────────────────────────────────────────────────────────────
 const rewardsDb: any[] = [
-  { id: 'rew-1', name: 'Free Coffee', description: 'One hot cappuccino or latte', points_cost: 100, quantity_available: 50, is_active: true },
-  { id: 'rew-2', name: 'Hair wash', description: 'Premium salon hair wash service', points_cost: 250, quantity_available: null, is_active: true },
+  { id: 'rew-1', name: 'Free Gourmet Cappuccino & Muffin', description: 'One fresh artisanal cappuccino with a blueberry muffin', points_cost: 150, quantity_available: 50, is_active: true },
+  { id: 'rew-2', name: 'Complimentary Hair Wash & Styling Pass', description: 'Deep hair wash, scalp massage & conditioning styling', points_cost: 250, quantity_available: null, is_active: true },
+  { id: 'rew-3', name: '₹500 Store Cash Credit Discount', description: 'Flat ₹500 discount on your billing total', points_cost: 500, quantity_available: 100, is_active: true },
+  { id: 'rew-4', name: 'Complimentary Dental Scaling & Polishing', description: 'Full ultrasonic teeth cleaning & polishing voucher', points_cost: 400, quantity_available: 30, is_active: true },
+  { id: 'rew-5', name: 'Free 16-Point Computerized Eye Checkup', description: 'Comprehensive vision test & prescription consultation', points_cost: 200, quantity_available: 50, is_active: true },
+  { id: 'rew-6', name: 'Leather Shoe Shine & Care Kit', description: 'Premium horsehair brush, neutral polish & buffing cloth', points_cost: 300, quantity_available: 25, is_active: true },
+  { id: 'rew-7', name: 'Fast 65W GaN Mobile Charger', description: 'Dual port Type-C ultra-fast charger', points_cost: 600, quantity_available: 15, is_active: true },
+  { id: 'rew-8', name: 'Silver Coin (10g 999 Fine Silver)', description: 'Hallmarked pure silver coin with festive gift packaging', points_cost: 1500, quantity_available: 10, is_active: true },
 ];
 export async function getRewards(): Promise<any[]> { return rewardsDb; }
 export async function createReward(data: any): Promise<any> {
@@ -1010,7 +1070,11 @@ export async function getRewardClaims(memberId: string): Promise<any[]> { return
 
 // ── Mock Coupons ──────────────────────────────────────────────────────────────
 const couponsDb: any[] = [
-  { id: 'cop-1', code: 'WELCOME10', discount_type: 'percent', value: 10, min_purchase: 0, max_uses: null, used_count: 5, expires_at: '', is_active: true },
+  { id: 'cop-1', code: 'WELCOME10', discount_type: 'percent', value: 10, min_purchase: 0, max_uses: null, used_count: 14, expires_at: '2026-12-31', is_active: true },
+  { id: 'cop-2', code: 'SMILE500', discount_type: 'flat', value: 500, min_purchase: 1000, max_uses: 50, used_count: 12, expires_at: '2026-12-31', is_active: true },
+  { id: 'cop-3', code: 'FESTIVE20', discount_type: 'percent', value: 20, min_purchase: 2000, max_uses: 100, used_count: 38, expires_at: '2026-12-31', is_active: true },
+  { id: 'cop-4', code: 'CLEARVISION', discount_type: 'percent', value: 25, min_purchase: 1500, max_uses: 40, used_count: 9, expires_at: '2026-12-31', is_active: true },
+  { id: 'cop-5', code: 'STYLE1000', discount_type: 'flat', value: 1000, min_purchase: 5000, max_uses: 30, used_count: 7, expires_at: '2026-12-31', is_active: true },
 ];
 export async function getCoupons(): Promise<any[]> { return couponsDb; }
 export async function createCoupon(data: any): Promise<any> {
@@ -1031,7 +1095,11 @@ export async function validateCoupon(code: string, amount: number): Promise<any>
 
 // ── Mock Vouchers ─────────────────────────────────────────────────────────────
 const vouchersDb: any[] = [
-  { id: 'voc-1', code: 'GIFT500', value: 500, expires_at: '', is_redeemed: false },
+  { id: 'voc-1', code: 'GIFT500', value: 500, expires_at: '2026-12-31', is_redeemed: false },
+  { id: 'voc-2', code: 'GIFT-DNT-1000', value: 1000, expires_at: '2026-12-31', is_redeemed: false },
+  { id: 'voc-3', code: 'GIFT-OPT-500', value: 500, expires_at: '2026-12-31', is_redeemed: true },
+  { id: 'voc-4', code: 'GIFT-GRM-1000', value: 1000, expires_at: '2026-12-31', is_redeemed: false },
+  { id: 'voc-5', code: 'GIFT-BTQ-2500', value: 2500, expires_at: '2026-12-31', is_redeemed: false },
 ];
 export async function getVouchers(): Promise<any[]> { return vouchersDb; }
 export async function generateVouchers(value: number, quantity: number, expiresAt?: string): Promise<any[]> {
@@ -1051,7 +1119,9 @@ export async function redeemVoucher(code: string): Promise<any> {
 
 // ── Mock Points Rules ─────────────────────────────────────────────────────────
 const rulesDb: any[] = [
-  { id: 'rule-1', rule_type: 'per_visit', points_value: 10, is_active: true },
+  { id: 'rule-1', rule_type: 'per_visit', points_value: 20, spend_unit: 1, is_active: true },
+  { id: 'rule-2', rule_type: 'per_rupee', points_value: 1, spend_unit: 1, is_active: true },
+  { id: 'rule-3', rule_type: 'per_rupee', points_value: 10, spend_unit: 100, is_active: true },
 ];
 export async function getPointsRules(): Promise<any[]> { return rulesDb; }
 export async function createPointsRule(data: any): Promise<any> {
@@ -1070,7 +1140,11 @@ export async function deletePointsRule(id: string): Promise<void> {
 }
 
 // ── Mock Scratch Cards ────────────────────────────────────────────────────────
-const scratchDb: any[] = [];
+const scratchDb: any[] = [
+  { id: 'sc-1', member_id: 'mem-dnt-1', trigger_visit: 5, is_revealed: false, reward_type: 'points', reward_value: '200 bonus points' },
+  { id: 'sc-2', member_id: 'mem-001', trigger_visit: 10, is_revealed: true, reward_type: 'voucher', reward_value: 'Free Manicure Pass' },
+  { id: 'sc-3', member_id: 'mem-opt-1', trigger_visit: 3, is_revealed: false, reward_type: 'points', reward_value: '100 bonus points' },
+];
 export async function getScratchCards(memberId: string): Promise<any[]> { return scratchDb; }
 export async function issueScratchCard(memberId: string, triggerVisit: number): Promise<any> {
   const sc = { id: `sc-${Date.now()}`, member_id: memberId, trigger_visit: triggerVisit, is_revealed: false, reward_type: 'points', reward_value: '50 points' };
@@ -1084,7 +1158,10 @@ export async function revealScratchCard(id: string): Promise<any> {
 }
 
 // ── Mock Lucky Draws ──────────────────────────────────────────────────────────
-const drawsDb: any[] = [];
+const drawsDb: any[] = [
+  { id: 'draw-1', title: 'Grand Festive Gold Coin Raffle', description: 'Enter with 300 loyalty points for a chance to win a 10g Gold Coin!', points_required: 300, min_visits_required: 3, entry_count: 24, status: 'open', winner_member_id: null, winner_name: null },
+  { id: 'draw-2', title: 'Quarterly Spa & Pamper Pass Draw', description: 'Win a full year of complimentary salon & spa treatments.', points_required: 150, min_visits_required: 2, entry_count: 48, status: 'drawn', winner_member_id: 'mem-001', winner_name: 'Arjun Sharma' },
+];
 export async function getLuckyDraws(): Promise<any[]> { return drawsDb; }
 export async function createLuckyDraw(data: any): Promise<any> {
   const d = { id: `draw-${Date.now()}`, ...data, entry_count: 5, status: 'open', winner_member_id: null, winner_name: null };
