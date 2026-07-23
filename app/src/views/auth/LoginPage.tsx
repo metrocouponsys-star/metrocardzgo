@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useToastStore } from '../../store/toastStore';
-import { supabase } from '../../lib/supabaseClient';
+import { supabase, isSupabaseConfigured } from '../../lib/supabaseClient';
 import * as api from '../../api';
 
 const BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '');
@@ -24,52 +24,57 @@ export default function LoginPage() {
 
   // ── Handle Google OAuth callback ──────────────────────────────────────────
   useEffect(() => {
-    // Clear any stale Supabase sessions on mount to prevent ghost redirects
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        // There's a stale session — sign out silently so it doesn't interfere
-        supabase.auth.signOut();
-      }
-    });
+    if (!isSupabaseConfigured) return;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.access_token) {
-        setGoogleLoading(true);
-        setGoogleError('');
-        try {
-          const res = await fetch(`${BASE_URL}/api/v1/auth/google`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ supabase_token: session.access_token }),
-          });
-
-          if (!res.ok) {
-            const err = await res.json().catch(() => ({ detail: 'Authentication failed' }));
-            throw new Error(err.detail || 'Authentication failed');
-          }
-
-          const data = await res.json();
-          if (data.refresh_token) {
-            localStorage.setItem('metro-cardz-refresh', data.refresh_token);
-          }
-          setAuth(data.user, data.access_token);
-          addToast('success', `Welcome, ${data.user.name}! 👋`);
-          navigate(data.user.role === 'super_admin' ? '/admin' : '/dashboard');
-        } catch (e: unknown) {
-          const msg = e instanceof Error ? e.message : 'Login failed';
-          setGoogleError(
-            msg.toLowerCase().includes('not found')
-              ? 'Your Google account is not registered on Metro Cardz. Contact support to get onboarded.'
-              : msg
-          );
-          await supabase.auth.signOut();
-        } finally {
-          setGoogleLoading(false);
+    try {
+      supabase.auth.getSession().then(({ data }) => {
+        if (data?.session) {
+          supabase.auth.signOut().catch(() => {});
         }
-      }
-    });
+      }).catch(() => {});
 
-    return () => subscription.unsubscribe();
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (event === 'SIGNED_IN' && session?.access_token) {
+          setGoogleLoading(true);
+          setGoogleError('');
+          try {
+            const res = await fetch(`${BASE_URL}/api/v1/auth/google`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ supabase_token: session.access_token }),
+            });
+
+            if (!res.ok) {
+              const err = await res.json().catch(() => ({ detail: 'Authentication failed' }));
+              throw new Error(err.detail || 'Authentication failed');
+            }
+
+            const data = await res.json();
+            if (data.refresh_token && typeof window !== 'undefined') {
+              sessionStorage.setItem('metro-cardz-refresh', data.refresh_token);
+              localStorage.setItem('metro-cardz-refresh', data.refresh_token);
+            }
+            setAuth(data.user, data.access_token);
+            addToast('success', `Welcome, ${data.user.name}! 👋`);
+            navigate(data.user.role === 'super_admin' ? '/admin' : '/dashboard');
+          } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : 'Login failed';
+            setGoogleError(
+              msg.toLowerCase().includes('not found')
+                ? 'Your Google account is not registered on Metro Cardz. Contact support to get onboarded.'
+                : msg
+            );
+            await supabase.auth.signOut().catch(() => {});
+          } finally {
+            setGoogleLoading(false);
+          }
+        }
+      });
+
+      return () => subscription.unsubscribe();
+    } catch (err) {
+      console.warn('Supabase auth listener not active:', err);
+    }
   }, [setAuth, addToast, navigate]);
 
   // ── Email / Phone + Password login ─────────────────────────────────────────
