@@ -38,13 +38,16 @@ export const LandingNavbar: React.FC = () => {
   return (
     <nav
       ref={navRef}
-      className="fixed top-0 left-0 right-0 z-50 transition-all duration-500"
+      className="fixed top-0 left-0 right-0 z-50"
       style={{
+        transition: 'background-color 0.5s ease, border-color 0.5s ease',
         background: scrolled
           ? 'rgba(13,13,13,0.95)'
           : 'transparent',
         backdropFilter: scrolled ? 'blur(20px)' : 'none',
+        WebkitBackdropFilter: scrolled ? 'blur(20px)' : 'none',
         borderBottom: scrolled ? '1px solid rgba(201,162,39,0.15)' : 'none',
+        paddingTop: 'env(safe-area-inset-top, 0px)',
       }}
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-10 flex items-center justify-between h-16">
@@ -103,27 +106,33 @@ export const LandingNavbar: React.FC = () => {
           </button>
         </div>
 
-        {/* Mobile hamburger */}
+        {/* Mobile hamburger — min 48×48px touch target (WCAG 2.5.5) */}
         <button
           type="button"
           className="md:hidden flex flex-col justify-center items-center gap-1.5 p-3 rounded-lg cursor-pointer touch-manipulation select-none active:bg-warm-white/10"
-          style={{ WebkitTapHighlightColor: 'transparent', minWidth: '44px', minHeight: '44px' }}
+          style={{ WebkitTapHighlightColor: 'transparent', minWidth: '48px', minHeight: '48px' }}
           onClick={(e) => {
             e.stopPropagation();
             setMenuOpen(o => !o);
           }}
           aria-label="Toggle menu"
+          aria-expanded={menuOpen}
         >
-          <span className={`block w-6 h-0.5 bg-warm-white transition-all duration-300 pointer-events-none ${menuOpen ? 'rotate-45 translate-y-2' : ''}`} />
-          <span className={`block w-6 h-0.5 bg-warm-white transition-all duration-300 pointer-events-none ${menuOpen ? 'opacity-0' : ''}`} />
-          <span className={`block w-6 h-0.5 bg-warm-white transition-all duration-300 pointer-events-none ${menuOpen ? '-rotate-45 -translate-y-2' : ''}`} />
+          <span className={`block w-6 h-0.5 bg-warm-white transition-transform duration-300 pointer-events-none ${menuOpen ? 'rotate-45 translate-y-2' : ''}`} />
+          <span className={`block w-6 h-0.5 bg-warm-white transition-opacity duration-300 pointer-events-none ${menuOpen ? 'opacity-0' : ''}`} />
+          <span className={`block w-6 h-0.5 bg-warm-white transition-transform duration-300 pointer-events-none ${menuOpen ? '-rotate-45 -translate-y-2' : ''}`} />
         </button>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile menu — use explicit transition properties, not transition-all */}
       <div
-        className={`md:hidden overflow-hidden transition-all duration-300 ${menuOpen ? 'max-h-96 opacity-100 py-2' : 'max-h-0 opacity-0 py-0'}`}
-        style={{ background: 'rgba(13,13,13,0.98)', borderTop: menuOpen ? '1px solid rgba(201,162,39,0.15)' : 'none', WebkitTapHighlightColor: 'transparent' }}
+        className={`md:hidden overflow-hidden ${menuOpen ? 'max-h-96 opacity-100 py-2' : 'max-h-0 opacity-0 py-0'}`}
+        style={{
+          transition: 'max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease',
+          background: 'rgba(13,13,13,0.98)',
+          borderTop: menuOpen ? '1px solid rgba(201,162,39,0.15)' : 'none',
+          WebkitTapHighlightColor: 'transparent',
+        }}
       >
         <div className="px-6 py-4 flex flex-col gap-4">
           {links.map(link => (

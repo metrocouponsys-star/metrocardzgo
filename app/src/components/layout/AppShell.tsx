@@ -276,10 +276,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Mobile Drawer for More items */}
       {mobileMenuOpen && (
         <div className="md:hidden fixed inset-0 z-[9999] touch-manipulation" style={{ WebkitTapHighlightColor: 'transparent' }}>
-          <div 
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
-            onClick={() => setMobileMenuOpen(false)} 
-            onTouchEnd={(e) => { e.preventDefault(); setMobileMenuOpen(false); }}
+          {/* FIX C: Use onClick only. e.preventDefault() on touchend was suppressing
+              the synthetic click event system-wide on iOS Safari for subsequent interactions. */}
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+            onClick={() => setMobileMenuOpen(false)}
           />
           <div className="absolute bottom-0 left-0 right-0 bg-surface rounded-t-3xl p-5 shadow-2xl animate-slide-up max-h-[85vh] overflow-y-auto" style={{ paddingBottom: 'calc(2rem + env(safe-area-inset-bottom, 0px))' }}>
             <div className="w-12 h-1.5 bg-outline-variant rounded-full mx-auto mb-4" />

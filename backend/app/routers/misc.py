@@ -1,8 +1,8 @@
 """Offers, MembershipTypes, Campaigns, Reminders, Reports, Public, and Health routers."""
 # ── Offers ──────────────────────────────────────────────────────────────────────────────
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Query, Request
-from sqlalchemy.orm import Session
-from sqlalchemy import func as sqlfunc, desc
+from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import func as sqlfunc, desc, cast, Date
 from typing import List, Optional
 from datetime import date, datetime, timezone, timedelta
 from decimal import Decimal
@@ -22,11 +22,11 @@ from app.schemas import (
     MembershipTypeCreate, MembershipTypeUpdate, MembershipTypeOut,
     CampaignCreate, CampaignOut,
     ReminderRuleUpdate, ReminderRuleOut,
-    DashboardStats, RedemptionOut, PublicMemberView,
+    DashboardStats, RedemptionOut, PublicMemberView, MembershipLookupRequest,
     NewMembersDataPoint, TopCustomer, PointsDataPoint, RetentionDataPoint,
     MerchantUpdate, MerchantOut,
 )
-from app.core.rate_limit import public_rate_limit
+from app.core.rate_limit import public_rate_limit, membership_lookup_rate_limit
 from fastapi import Request
 
 # ── Offers Router ─────────────────────────────────────────────────────────────
@@ -407,10 +407,17 @@ def get_dashboard_stats(
     ).scalar()
     wallet_points_issued_month = points_issued_row or 0
 
+    # FIX 6: Eager-load all 3 relations in a single JOIN query.
+    # Previously: 3 lazy loads × 10 rows = 30 extra DB round trips on every dashboard load.
     recent = (
         db.query(RedemptionLog)
         .join(Member)
         .filter(Member.merchant_id == merchant_id)
+        .options(
+            joinedload(RedemptionLog.staff_user),
+            joinedload(RedemptionLog.member),
+            joinedload(RedemptionLog.offer_template),
+        )
         .order_by(RedemptionLog.created_at.desc())
         .limit(10)
         .all()
@@ -447,16 +454,36 @@ def report_new_members(
     merchant_id: str = Depends(get_merchant_id),
     db: Session = Depends(get_db),
 ):
-    """Return daily new member counts for the last N days."""
-    result = []
+    """Return daily new member counts for the last N days.
+
+    FIX 7: Previously fired one COUNT query per day (up to 30 round trips).
+    Now uses a single GROUP BY DATE aggregation — one query regardless of N.
+    """
     today = date.today()
+    since = today - timedelta(days=days - 1)
+
+    # Single aggregation query: one DB round trip for all N days
+    rows = (
+        db.query(
+            cast(Member.created_at, Date).label("day"),
+            sqlfunc.count(Member.id).label("count"),
+        )
+        .filter(
+            Member.merchant_id == merchant_id,
+            Member.created_at >= datetime.combine(since, datetime.min.time()).replace(tzinfo=timezone.utc),
+        )
+        .group_by(cast(Member.created_at, Date))
+        .all()
+    )
+
+    # Build a lookup dict from the query results
+    count_by_day = {row.day: row.count for row in rows}
+
+    # Fill in zeros for days with no new members
+    result = []
     for i in range(days - 1, -1, -1):
         d = today - timedelta(days=i)
-        count = db.query(Member).filter(
-            Member.merchant_id == merchant_id,
-            sqlfunc.date(Member.created_at) == d,
-        ).count()
-        result.append(NewMembersDataPoint(date=d.isoformat(), count=count))
+        result.append(NewMembersDataPoint(date=d.isoformat(), count=count_by_day.get(d, 0)))
     return result
 
 
@@ -626,16 +653,10 @@ def report_retention(
 public_router = APIRouter(prefix="/public", tags=["public"])
 
 
-@public_router.get("/m/{token}", response_model=PublicMemberView)
-def get_public_member_view(token: str, request: Request, db: Session = Depends(get_db)):
-    """No auth required. Token is opaque HMAC — cannot be guessed or enumerated."""
-    public_rate_limit(request)
-    member = db.query(Member).filter(Member.public_token == token).first()
-    if not member:
-        raise HTTPException(status_code=404, detail="Member not found")
-    merchant = db.query(Merchant).filter(Merchant.id == member.merchant_id).first()
-    if not merchant or merchant.status != "active":
-        raise HTTPException(status_code=404, detail="Not available")
+def _build_public_member_view(member: Member, merchant: Merchant, db: Session) -> PublicMemberView:
+    """Shared read-only view builder used by both the QR-token page and the
+    membership-number self-lookup page. Keeping logic in one place ensures
+    both entry points always return identical data with zero drift."""
     mt = member.membership_type
 
     offers = []
@@ -686,6 +707,75 @@ def get_public_member_view(token: str, request: Request, db: Session = Depends(g
         offers=offers,
         open_lucky_draws=draws_out,
     )
+
+
+@public_router.get("/m/{token}", response_model=PublicMemberView)
+def get_public_member_view(token: str, request: Request, db: Session = Depends(get_db)):
+    """No auth required. Token is opaque HMAC — cannot be guessed or enumerated."""
+    public_rate_limit(request)
+    member = db.query(Member).filter(Member.public_token == token).first()
+    if not member:
+        raise HTTPException(status_code=404, detail="Member not found")
+    merchant = db.query(Merchant).filter(Merchant.id == member.merchant_id).first()
+    if not merchant or merchant.status != "active":
+        raise HTTPException(status_code=404, detail="Not available")
+    return _build_public_member_view(member, merchant, db)
+
+
+@public_router.post("/lookup-membership", response_model=PublicMemberView)
+def lookup_membership(payload: MembershipLookupRequest, request: Request, db: Session = Depends(get_db)):
+    """
+    Customer self-lookup by membership number (e.g. SAL001) or mobile number —
+    no login required.
+
+    Security: membership numbers are sequential and guessable (unlike the opaque
+    QR public_token), so this endpoint:
+      1. Requires the last 4 digits of the registered mobile to also match
+         (second-factor verification — prevents enumeration of SAL001, SAL002...).
+      2. Uses a stricter rate limiter (10/hour/IP) vs the QR endpoint (30/min).
+    """
+    membership_lookup_rate_limit(request)
+
+    identifier = (payload.identifier or "").strip()
+    last4 = (payload.last4 or "").strip()
+
+    if not identifier or not last4.isdigit() or len(last4) != 4:
+        raise HTTPException(
+            status_code=400,
+            detail="Enter your membership/mobile number and the last 4 digits of your registered mobile number",
+        )
+
+    # Match on membership number (case-insensitive) OR full mobile number.
+    # Normalise phone for comparison — strip non-digits.
+    clean_identifier = identifier.replace(" ", "").replace("-", "")
+    candidates = db.query(Member).filter(
+        (Member.member_code.ilike(identifier)) | (Member.phone == clean_identifier)
+    ).all()
+
+    # Require the last-4-digits of the registered phone to match — this is the
+    # verification gate that closes the sequential-ID enumeration risk.
+    verified = [
+        m for m in candidates
+        if (m.phone or "").replace(" ", "").replace("-", "")[-4:] == last4
+    ]
+
+    # If more than one member matches (rare edge case: same member_code across
+    # merchants), fail closed rather than leaking which merchant matched.
+    if len(verified) != 1:
+        raise HTTPException(
+            status_code=404,
+            detail="No matching membership found. Please check your details and try again.",
+        )
+
+    member = verified[0]
+    merchant = db.query(Merchant).filter(Merchant.id == member.merchant_id).first()
+    if not merchant or merchant.status != "active":
+        raise HTTPException(
+            status_code=404,
+            detail="No matching membership found. Please check your details and try again.",
+        )
+
+    return _build_public_member_view(member, merchant, db)
 
 
 @public_router.post("/lucky-draws/{draw_id}/enter")

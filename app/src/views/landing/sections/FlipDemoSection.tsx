@@ -92,7 +92,8 @@ const CardBack: React.FC = () => (
     {/* Terms strip */}
     <div className="absolute bottom-0 left-0 right-0 px-4 py-2" style={{ background: 'rgba(201,162,39,0.05)', borderTop: '1px solid rgba(201,162,39,0.1)' }}>
       <p className="text-warm-white/20 text-[8px] leading-tight">
-        Terms & Conditions apply. Card is non-transferable. metrocardz.in
+        Terms &amp; Conditions apply. Card is non-transferable.{' '}
+        <span className="text-gold/40">Check balance: metrocardz.in/check-membership</span>
       </p>
     </div>
 

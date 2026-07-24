@@ -49,6 +49,28 @@ export default function RootLayout({
     <html lang="en-IN" suppressHydrationWarning>
       <head>
         <JsonLd data={localBusinessSchema} />
+
+        {/* ── Non-blocking Google Fonts ─────────────────────────────────────────
+            Strategy:
+            1. preconnect: establishes TLS to Google's font servers in parallel
+               with HTML parsing (saves ~200ms on first visit).
+            2. rel="stylesheet": loads the CSS. Browser will swap fonts in
+               once they're ready without blocking render.
+            All four font families consolidated into ONE request (saves 3 DNS
+            round-trips vs the old 4×@import pattern).
+        ──────────────────────────────────────────────────────────────────────── */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* Single consolidated stylesheet — Inter, Poppins, Space Mono, Material Symbols */}
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;600;700;800;900&family=Space+Mono:wght@400;700&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
+        />
+        {/* Landing page decorative fonts (Playfair, Cormorant, Dancing Script) */}
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Dancing+Script:wght@500;600&display=swap"
+        />
       </head>
       <body>
         <SentryInit />

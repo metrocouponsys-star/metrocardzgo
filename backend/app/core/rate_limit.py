@@ -74,3 +74,8 @@ class RateLimiter:
 auth_rate_limit = RateLimiter(max_requests=10, window_seconds=60, key_prefix="rl:auth")
 otp_rate_limit = RateLimiter(max_requests=3, window_seconds=60, key_prefix="rl:otp")
 public_rate_limit = RateLimiter(max_requests=30, window_seconds=60, key_prefix="rl:pub")
+# Stricter limiter for the membership-number + last-4-digits lookup.
+# Membership numbers are sequential/guessable (SAL001, SAL002...) — unlike the
+# opaque QR public_token. 10 attempts per hour per IP prevents brute-forcing
+# the last-4-digit check while still being generous for legitimate customers.
+membership_lookup_rate_limit = RateLimiter(max_requests=10, window_seconds=3600, key_prefix="rl:memlookup")

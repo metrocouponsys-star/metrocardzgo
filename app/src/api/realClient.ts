@@ -380,6 +380,16 @@ export async function getPublicMemberView(token: string): Promise<PublicMemberVi
   }
 }
 
+/**
+ * Customer self-lookup by membership number or mobile number, verified with
+ * the last 4 digits of the registered mobile number. No login required.
+ * Throws on failure (not-found / rate-limited / invalid input) so the UI can
+ * show a specific error message rather than a silent null.
+ */
+export async function lookupMembership(identifier: string, last4: string): Promise<PublicMemberView> {
+  return post<PublicMemberView>('/public/lookup-membership', { identifier, last4 }, true);
+}
+
 // ── Card Inventory ────────────────────────────────────────────────────────────
 export async function getCardInventory(filters?: { status?: string; merchant_id?: string; search?: string }): Promise<CardInventoryItem[]> {
   const params = new URLSearchParams();

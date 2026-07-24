@@ -37,6 +37,7 @@ import AdminReportsPage from './admin/AdminReportsPage';
 
 // Public views
 import PublicMemberPage from './public/PublicMemberPage';
+import CheckMembershipPage from './public/CheckMembershipPage';
 
 // Route guards
 function ProtectedRoute({ children, roles }: { children: React.ReactNode; roles?: string[] }) {
@@ -62,6 +63,7 @@ export default function MerchantApp() {
       <Routes>
         {/* Public routes */}
         <Route path="/m/:token" element={<PublicMemberPage />} />
+        <Route path="/check-membership" element={<CheckMembershipPage />} />
 
         {/* Auth */}
         <Route path="/login" element={<AuthRoute><LoginPage /></AuthRoute>} />

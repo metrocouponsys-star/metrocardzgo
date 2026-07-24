@@ -109,6 +109,7 @@ export const LandingFooter: React.FC = () => {
                 { label: 'System Status', href: '/status' },
                 { label: 'About Us', href: '/about-us' },
                 { label: 'Company Info', href: '/company-info' },
+                { label: '✦ Check My Balance', href: '/check-membership' },
                 { label: 'Merchant Login', href: '/login' },
               ].map(link => (
                 <li key={link.href}>

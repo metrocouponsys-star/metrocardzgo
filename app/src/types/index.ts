@@ -265,10 +265,23 @@ export interface PublicMemberView {
   merchant_logo?: string;
   merchant_phone?: string;
   member_name: string;
+  member_code: string;          // e.g. "SAL001" — used for display and lookup
   membership_type_name: string;
   status: MemberStatus;
   expiry_date: string;
   /** Feature 1: renamed from wallet_balance */
   loyalty_points: number;
+  total_visits?: number;
+  referral_code?: string;
   offers: Pick<OfferTemplate, 'id' | 'title' | 'description' | 'offer_type' | 'value'>[];
+  open_lucky_draws?: Array<{
+    id: string;
+    name: string;
+    prize: string;
+    draw_date: string | null;
+    min_points: number;
+    min_visits: number;
+    already_entered: boolean;
+    eligible: boolean;
+  }>;
 }

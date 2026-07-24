@@ -633,6 +633,37 @@ export async function getPublicMemberView(token: string): Promise<PublicMemberVi
   return db.publicMemberViews[token] || null;
 }
 
+// ---- Membership-number / mobile-number self-lookup ----
+export async function lookupMembership(identifier: string, last4: string): Promise<PublicMemberView> {
+  await delay(FAKE_DELAY);
+  const id = (identifier || '').trim();
+  const last4Digits = (last4 || '').trim();
+
+  if (!id || !/^\d{4}$/.test(last4Digits)) {
+    throw new Error('Enter your membership/mobile number and the last 4 digits of your registered mobile number');
+  }
+
+  const normalise = (s: string) => s.replace(/\D/g, '');
+  const candidates = db.members.filter(
+    m =>
+      m.member_code?.toLowerCase() === id.toLowerCase() ||
+      normalise(m.phone || '') === normalise(id),
+  );
+  const verified = candidates.filter(
+    m => normalise(m.phone || '').slice(-4) === last4Digits,
+  );
+
+  if (verified.length !== 1) {
+    throw new Error('No matching membership found. Please check your details and try again.');
+  }
+
+  const view = db.publicMemberViews[verified[0].public_token];
+  if (!view) {
+    throw new Error('No matching membership found. Please check your details and try again.');
+  }
+  return view;
+}
+
 // ---- Card Inventory (Admin) ----
 
 /** Get all cards in the global inventory, with optional filters */

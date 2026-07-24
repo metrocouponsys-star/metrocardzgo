@@ -12,9 +12,49 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Ping Backend Health
+        id: health_check
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://metrocardz-api.onrender.com/health)
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 https://metrocardz-api.onrender.com/health)
+          echo "status=$STATUS" >> $GITHUB_OUTPUT
           echo "Backend responded with HTTP $STATUS"
           if [ "$STATUS" != "200" ]; then
-            echo "WARNING: Backend returned $STATUS — may be sleeping or crashed"
+            echo "::warning::Backend returned $STATUS — may be sleeping, crashed, or cold-starting"
+            exit 1
           fi
+
+      - name: Notify on failure (create GitHub issue)
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const status = '${{ steps.health_check.outputs.status }}';
+            const title = `🚨 Backend health check failed — HTTP ${status || 'timeout'}`;
+            const body = [
+              `**Time:** ${new Date().toISOString()}`,
+              `**Status:** \`${status || 'no response (timeout)'}\``,
+              `**Endpoint:** https://metrocardz-api.onrender.com/health`,
+              '',
+              'The Render free-tier backend may be sleeping, crashed, or in a cold-start loop.',
+              '',
+              '**Check:** [Render Dashboard](https://dashboard.render.com) → Logs tab.',
+              '',
+              '*This issue was created automatically by the keep-alive workflow.*',
+            ].join('\n');
+
+            // Search for an existing open issue to avoid duplicates
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'backend-alert',
+            });
+
+            if (existing.data.length === 0) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['backend-alert'],
+              });
+            }

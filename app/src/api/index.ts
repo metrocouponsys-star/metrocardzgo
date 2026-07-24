@@ -53,6 +53,7 @@ export const updateMerchant = api.updateMerchant;
 export const getMerchantProfile = api.getMerchantProfile;
 export const createMerchant = api.createMerchant;
 export const getPublicMemberView = api.getPublicMemberView;
+export const lookupMembership = api.lookupMembership;
 export const getCardInventory = api.getCardInventory;
 export const addCardsToInventory = api.addCardsToInventory;
 export const allocateCardsToMerchant = api.allocateCardsToMerchant;

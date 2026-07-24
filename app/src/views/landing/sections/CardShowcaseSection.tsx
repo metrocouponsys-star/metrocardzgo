@@ -136,6 +136,8 @@ const SampleCard: React.FC<SampleCardProps> = ({ card, active }) => {
         src={card.image}
         alt={card.name}
         draggable={false}
+        loading="lazy"
+        decoding="async"
         style={{
           width: '100%',
           height: '100%',

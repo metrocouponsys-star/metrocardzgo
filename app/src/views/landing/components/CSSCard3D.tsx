@@ -31,7 +31,10 @@ export const CSSCard3D: React.FC<CSSCard3DProps> = ({
     const card = cardRef.current;
     if (!card) return;
 
+    let isVisible = false;
+
     const onMouseMove = (e: MouseEvent) => {
+      if (!isVisible) return;
       const rect = card.getBoundingClientRect();
       const cx = rect.left + rect.width / 2;
       const cy = rect.top + rect.height / 2;
@@ -51,17 +54,37 @@ export const CSSCard3D: React.FC<CSSCard3DProps> = ({
       if (card) {
         card.style.transform = `perspective(1000px) rotateX(${currentRef.current.rx}deg) rotateY(${currentRef.current.ry + (flipped ? 180 : 0)}deg)`;
       }
-      rafRef.current = requestAnimationFrame(animate);
+      // Only reschedule if still visible — saves GPU on scroll
+      if (isVisible) {
+        rafRef.current = requestAnimationFrame(animate);
+      }
     };
+
+    // FIX 9: Pause the RAF loop when the card is off-screen.
+    // Previously ran at 60fps permanently, burning mobile CPU/GPU even when scrolled away.
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        isVisible = entry.isIntersecting;
+        if (isVisible) {
+          // Restart the loop when scrolled back into view
+          rafRef.current = requestAnimationFrame(animate);
+        } else {
+          // Cancel the loop when scrolled away
+          cancelAnimationFrame(rafRef.current);
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(card);
 
     window.addEventListener('mousemove', onMouseMove);
     card.addEventListener('mouseleave', onMouseLeave);
-    rafRef.current = requestAnimationFrame(animate);
 
     return () => {
       window.removeEventListener('mousemove', onMouseMove);
       card.removeEventListener('mouseleave', onMouseLeave);
       cancelAnimationFrame(rafRef.current);
+      observer.disconnect();
     };
   }, [interactive, maxTilt, flipped]);
 

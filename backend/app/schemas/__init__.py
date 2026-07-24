@@ -393,6 +393,15 @@ class ReminderRuleUpdate(BaseModel):
 
 
 # ── Public Member View ────────────────────────────────────────────────────────
+class MembershipLookupRequest(BaseModel):
+    """Customer self-lookup by membership number or mobile number.
+    Requires the last 4 digits of the registered mobile number as a
+    second-factor verification step — membership numbers are sequential
+    and guessable, so we need this check before returning any data."""
+    identifier: str   # membership number (e.g. SAL001) or full mobile number
+    last4: str        # last 4 digits of the registered mobile number
+
+
 class PublicMemberView(BaseModel):
     member_id: str
     merchant_name: str
