@@ -8,6 +8,7 @@ import { Modal, ConfirmModal } from '../../components/ui/Modal';
 import { CardSkeleton, Skeleton } from '../../components/ui/Skeleton';
 import type { Member, MemberOfferState, Redemption, LoyaltyTransaction, MembershipType, MemberStatus } from '../../types';
 import * as api from '../../api';
+import { invalidateContaining } from '../../api/cache';
 import { format, differenceInDays } from 'date-fns';
 
 type Tab = 'offers' | 'history' | 'points' | 'rewards';
@@ -75,24 +76,23 @@ export default function MemberProfilePage() {
     if (!id) return;
     const mId = user?.merchant_id || '';
     try {
-      // First fetch the member record itself
-      const m = await api.getMember(mId, id);
-      setMember(m);
-      setNotes(m.notes || '');
-      setAutoRenew((m as any).auto_renew || false);
-
-      // Fetch supplementary history/rewards with safe fallbacks so sub-request failures never trigger "Member not found"
-      const [reds, loyalty, rewards] = await Promise.all([
+      // FIX: Run ALL primary calls in parallel — eliminates the 2-RTT waterfall
+      // (previously: getMember waited alone, then Promise.all ran = 2× latency)
+      const [m, reds, loyalty, rewards] = await Promise.all([
+        api.getMember(mId, id),
         api.getMemberRedemptions(mId, id).catch(() => []),
         api.getLoyaltyHistory(mId, id).catch(() => []),
         api.getRewards().catch(() => []),
       ]);
 
+      setMember(m);
+      setNotes(m.notes || '');
+      setAutoRenew((m as any).auto_renew || false);
       setRedemptions(reds);
       setLoyaltyHistory(loyalty);
       setRewardCatalog(rewards.filter((r: any) => r.is_active));
 
-      // Load referral link and scratch cards asynchronously
+      // Non-critical — fire after primary data renders, no spinner needed
       api.getReferralLink(m.id).then(res => setReferralLink(res.referral_link)).catch(() => {});
       api.getScratchCards(m.id).then(setScratchCards).catch(() => {});
     } catch (e: any) {

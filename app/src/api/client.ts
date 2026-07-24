@@ -82,7 +82,7 @@ export async function getDashboardStats(merchantId: string): Promise<DashboardSt
     redemptions_today: db.redemptions.filter(r => new Date(r.created_at).toDateString() === today).length,
     expiring_this_month: expiringMonthCount,
     expiring_this_week: expiringWeekCount,
-    wallet_points_issued_month: merchantMembers.reduce((sum, m) => sum + (m.loyalty_points || 0), 0),
+    wallet_points_issued_month: merchantMembers.reduce((sum, m) => sum + Number(m.loyalty_points || 0), 0),
     recent_redemptions: db.redemptions
       .filter(r => merchantMembers.some(m => m.id === r.member_id))
       .slice(-10)

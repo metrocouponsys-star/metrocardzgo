@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import { Modal } from '../../components/ui/Modal';
 import type { MembershipType, CardInventoryItem } from '../../types';
 import * as api from '../../api';
+import { invalidateContaining } from '../../api/cache';
 
 interface FormData {
   name: string;
@@ -39,6 +40,8 @@ export default function AddMemberPage() {
     setDuplicateId(null);
     try {
       const newMember = await api.createMember(user?.merchant_id || '', data);
+      invalidateContaining('members');
+      invalidateContaining('dashboard');
       // If a card was selected, link it immediately
       if (data.card_id) {
         try {

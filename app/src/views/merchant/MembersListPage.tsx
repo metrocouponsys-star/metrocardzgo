@@ -4,6 +4,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useToastStore } from '../../store/toastStore';
 import type { Member } from '../../types';
 import * as api from '../../api';
+import { cached, invalidateContaining } from '../../api/cache';
 import { StatusBadge, MembershipBadge } from '../../components/ui/StatusBadge';
 
 export default function MembersListPage() {
@@ -22,8 +23,14 @@ export default function MembersListPage() {
 
   const fetchMembers = async () => {
     setLoading(true);
+    const cacheKey = `members/${user?.merchant_id}`;
     try {
-      const data = await api.getMembers(user?.merchant_id || '');
+      const data = await cached(
+        cacheKey,
+        () => api.getMembers(user?.merchant_id || ''),
+        // onUpdate: silently replace list when background refresh completes
+        (fresh) => setMembers(fresh),
+      );
       setMembers(data);
     } catch {
       addToast('error', 'Failed to load customer list');
@@ -56,7 +63,7 @@ export default function MembersListPage() {
     const active = members.filter(m => m.status === 'active').length;
     const expired = members.filter(m => m.status === 'expired').length;
     const deactivated = members.filter(m => m.status === 'deactivated').length;
-    const totalPoints = members.reduce((sum, m) => sum + (m.loyalty_points || 0), 0);
+    const totalPoints = members.reduce((sum, m) => sum + Number(m.loyalty_points || 0), 0);
     return { total, active, expired, deactivated, totalPoints };
   }, [members]);
 
@@ -270,7 +277,7 @@ export default function MembersListPage() {
                         )}
                       </td>
                       <td className="p-4 text-right font-bold text-primary font-mono">
-                        {m.loyalty_points || 0} pts
+                        {Number(m.loyalty_points || 0).toLocaleString()} pts
                       </td>
                       <td className="p-4 text-right text-body-md text-on-surface">
                         {m.total_visits || 0}
@@ -309,7 +316,7 @@ export default function MembersListPage() {
                       <p className="text-label-sm text-on-surface-variant">{m.phone} · #{m.member_code}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <StatusBadge status={m.status} />
-                        <span className="text-label-sm font-bold text-primary">{m.loyalty_points || 0} pts</span>
+                        <span className="text-label-sm font-bold text-primary">{Number(m.loyalty_points || 0).toLocaleString()} pts</span>
                       </div>
                     </div>
                   </div>

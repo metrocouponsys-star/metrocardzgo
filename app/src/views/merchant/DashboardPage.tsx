@@ -6,6 +6,7 @@ import { StatCardSkeleton } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
 import type { DashboardStats } from '../../types';
 import * as api from '../../api';
+import { cached } from '../../api/cache';
 import { formatDistanceToNow } from 'date-fns';
 
 const OFFER_ICONS: Record<string, string> = {
@@ -30,8 +31,18 @@ export default function DashboardPage() {
   const fetchStats = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
     setError(false);
+    const cacheKey = `dashboard/${user?.merchant_id}`;
     try {
-      const s = await api.getDashboardStats(user?.merchant_id || '');
+      const s = await cached(
+        cacheKey,
+        () => api.getDashboardStats(user?.merchant_id || ''),
+        // onUpdate: called when background refresh brings fresh data
+        (fresh) => {
+          setStats(fresh);
+          setLastUpdated(new Date());
+          setSecondsSince(0);
+        },
+      );
       setStats(s);
       setLastUpdated(new Date());
       setSecondsSince(0);
