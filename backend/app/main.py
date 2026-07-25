@@ -77,14 +77,7 @@ class BulletproofCORSMiddleware(BaseHTTPMiddleware):
         if request.method == "OPTIONS":
             response = JSONResponse(status_code=200, content={"status": "ok"})
         else:
-            try:
-                response = await call_next(request)
-            except Exception as exc:
-                log.exception("Unhandled error on %s %s: %s", request.method, request.url.path, exc)
-                response = JSONResponse(
-                    status_code=500,
-                    content={"detail": "Internal server error. Please try again."}
-                )
+            response = await call_next(request)
         
         response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Access-Control-Allow-Credentials"] = "true"
