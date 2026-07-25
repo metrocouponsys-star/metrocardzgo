@@ -101,6 +101,15 @@ app.add_middleware(
 
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+def add_cors_headers(response: JSONResponse, request: Request) -> JSONResponse:
+    origin = request.headers.get("origin") or "*"
+    response.headers["Access-Control-Allow-Origin"] = origin
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type, Accept, X-Internal-Key, X-Request-ID, X-Idempotency-Key"
+    return response
+
+
 # ── Global Exception Handlers ─────────────────────────────────────────────────
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
@@ -112,30 +121,30 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
             "message": err["msg"],
             "type": err["type"],
         })
-    return JSONResponse(
+    return add_cors_headers(JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={"detail": "Validation error", "errors": errors},
-    )
+    ), request)
 
 
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     """Preserve status codes for deliberate HTTPExceptions."""
-    return JSONResponse(
+    return add_cors_headers(JSONResponse(
         status_code=exc.status_code,
         content={"detail": exc.detail},
         headers=getattr(exc, "headers", None)
-    )
+    ), request)
 
 
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception):
     """Catch-all for unhandled exceptions — log and return generic 500."""
     log.exception("Unhandled exception on %s %s", request.method, request.url.path)
-    return JSONResponse(
+    return add_cors_headers(JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"detail": "Internal server error. Please try again."},
-    )
+        content={"detail": f"Internal server error: {str(exc)}"},
+    ), request)
 
 
 # ── API v1 Routes ─────────────────────────────────────────────────────────────

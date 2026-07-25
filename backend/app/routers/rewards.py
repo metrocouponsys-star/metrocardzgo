@@ -182,28 +182,32 @@ def create_coupon(
     merchant_id: str = Depends(get_merchant_id),
     db: Session = Depends(get_db),
 ):
-    code_str = (payload.code or "").upper().strip()
-    if not code_str:
-        code_str = "".join(random.choices(string.ascii_uppercase + string.digits, k=8))
-    existing = db.query(CouponCode).filter(
-        CouponCode.merchant_id == merchant_id,
-        CouponCode.code == code_str
-    ).first()
-    data = payload.model_dump(exclude_none=True)
-    data["code"] = code_str
-    data["is_active"] = True
-    if existing:
-        for k, v in data.items():
-            setattr(existing, k, v)
-        db.commit()
-        db.refresh(existing)
-        return existing
+    try:
+        code_str = (payload.code or "").upper().strip()
+        if not code_str:
+            code_str = "".join(random.choices(string.ascii_uppercase + string.digits, k=8))
+        existing = db.query(CouponCode).filter(
+            CouponCode.merchant_id == merchant_id,
+            CouponCode.code == code_str
+        ).first()
+        data = payload.model_dump(exclude_none=True)
+        data["code"] = code_str
+        data["is_active"] = True
+        if existing:
+            for k, v in data.items():
+                setattr(existing, k, v)
+            db.commit()
+            db.refresh(existing)
+            return existing
 
-    coupon = CouponCode(merchant_id=merchant_id, **data)
-    db.add(coupon)
-    db.commit()
-    db.refresh(coupon)
-    return coupon
+        coupon = CouponCode(merchant_id=merchant_id, **data)
+        db.add(coupon)
+        db.commit()
+        db.refresh(coupon)
+        return coupon
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(400, f"Failed to create coupon: {str(e)}")
 
 
 @coupons_router.patch("/{coupon_id}", response_model=CouponCodeOut)
