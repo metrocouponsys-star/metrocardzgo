@@ -1223,13 +1223,30 @@ export default function MemberProfilePage() {
 
           <div>
             <label className="form-label" htmlFor="purchase-coupon">
-              Coupon Code <span className="text-on-surface-variant font-normal">(Optional)</span>
+              Apply Coupon Code <span className="text-on-surface-variant font-normal">(Optional)</span>
             </label>
+            {coupons.length > 0 && (
+              <select
+                className="input-field mb-2"
+                value={purchaseForm.coupon_code}
+                onChange={e => setPurchaseForm({ ...purchaseForm, coupon_code: e.target.value })}
+              >
+                <option value="">-- Auto-select / Select Available Coupon --</option>
+                {coupons.map((c: any) => {
+                  const label = `${c.code} (${c.discount_type === 'percent' ? `${c.value}% OFF` : `₹${c.value} OFF`}${c.min_purchase > 0 ? ` · Min ₹${c.min_purchase}` : ''})`;
+                  return (
+                    <option key={c.id} value={c.code}>
+                      {label}
+                    </option>
+                  );
+                })}
+              </select>
+            )}
             <input
               id="purchase-coupon"
               type="text"
               className="input-field uppercase tracking-wider font-mono"
-              placeholder="e.g. SUMMER50"
+              placeholder={coupons.length > 0 ? "Or type custom promo code..." : "e.g. SAVE20"}
               value={purchaseForm.coupon_code}
               onChange={e => setPurchaseForm({ ...purchaseForm, coupon_code: e.target.value.toUpperCase() })}
             />

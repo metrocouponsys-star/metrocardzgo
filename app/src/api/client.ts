@@ -1188,7 +1188,14 @@ const couponsDb: any[] = [
 ];
 export async function getCoupons(): Promise<any[]> { return couponsDb; }
 export async function createCoupon(data: any): Promise<any> {
-  const c = { id: `cop-${Date.now()}`, ...data, used_count: 0, is_active: true };
+  await delay(FAKE_DELAY);
+  const codeStr = (data.code || '').toUpperCase().trim();
+  const existingIdx = couponsDb.findIndex(x => (x.code || '').toUpperCase() === codeStr);
+  if (existingIdx !== -1) {
+    couponsDb[existingIdx] = { ...couponsDb[existingIdx], ...data, code: codeStr, is_active: true };
+    return couponsDb[existingIdx];
+  }
+  const c = { id: `cop-${Date.now()}`, ...data, code: codeStr, used_count: 0, is_active: true };
   couponsDb.push(c);
   return c;
 }
