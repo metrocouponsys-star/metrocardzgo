@@ -51,7 +51,9 @@ def create_reward(
     merchant_id: str = Depends(get_merchant_id),
     db: Session = Depends(get_db),
 ):
-    reward = RewardCatalog(merchant_id=merchant_id, **payload.model_dump())
+    data = payload.model_dump()
+    data["is_active"] = True
+    reward = RewardCatalog(merchant_id=merchant_id, **data)
     db.add(reward)
     db.commit()
     db.refresh(reward)

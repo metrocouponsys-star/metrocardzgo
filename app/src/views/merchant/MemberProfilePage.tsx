@@ -102,7 +102,7 @@ export default function MemberProfilePage() {
       setAutoRenew((m as any).auto_renew || false);
       setRedemptions(reds);
       setLoyaltyHistory(loyalty);
-      setRewardCatalog(rewards.filter((r: any) => r.is_active));
+      setRewardCatalog(rewards.filter((r: any) => r.is_active !== false));
       setPointsRules(pRules || []);
 
       // Non-critical — fire after primary data renders, no spinner needed

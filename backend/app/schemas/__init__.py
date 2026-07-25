@@ -565,6 +565,7 @@ class RewardCatalogCreate(BaseModel):
     description: str = ""
     points_cost: Decimal
     quantity_available: Optional[int] = None
+    is_active: bool = True
 
 
 class RewardCatalogUpdate(BaseModel):

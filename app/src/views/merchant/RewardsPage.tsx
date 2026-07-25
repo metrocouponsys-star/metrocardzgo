@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import * as api from '../../api';
+import { invalidateContaining } from '../../api/cache';
 import { Modal } from '../../components/ui/Modal';
 import { useToastStore } from '../../store/toastStore';
 import { useAuthStore } from '../../store/authStore';
@@ -76,11 +77,20 @@ function RewardCatalogTab() {
     if (!form.name || !form.points_cost) { addToast('error', 'Name and points cost are required'); return; }
     setSaving(true);
     try {
-      const data: any = { name: form.name, description: form.description, points_cost: Number(form.points_cost) };
+      const data: any = { name: form.name, description: form.description, points_cost: Number(form.points_cost), is_active: true };
       if (form.quantity_available) data.quantity_available = Number(form.quantity_available);
-      if (editTarget) await api.updateReward(editTarget.id, data);
-      else await api.createReward(data);
-      addToast('success', editTarget ? 'Reward updated' : 'Reward created');
+      let res: any;
+      if (editTarget) {
+        res = await api.updateReward(editTarget.id, data);
+        if (res && res.id) setRewards(prev => prev.map(r => r.id === res.id ? res : r));
+      } else {
+        res = await api.createReward(data);
+        if (res && res.id) setRewards(prev => [res, ...prev]);
+      }
+      invalidateContaining('reward');
+      invalidateContaining('member');
+      invalidateContaining('public');
+      addToast('success', editTarget ? 'Reward updated' : 'Reward created successfully');
       setShowModal(false); setEditTarget(null);
       setForm({ name: '', description: '', points_cost: '', quantity_available: '' });
       load();

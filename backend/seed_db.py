@@ -130,7 +130,7 @@ def seed():
             _seed_merchant_defaults(db, merchant)
 
         else:
-            print("ℹ️ Demo Merchant already exists.")
+            print("[INFO] Demo Merchant already exists.")
             _seed_merchant_defaults(db, merchant)
 
         db.commit()
