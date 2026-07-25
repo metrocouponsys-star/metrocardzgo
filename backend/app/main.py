@@ -70,12 +70,34 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         return response
 
 
-app.add_middleware(SecurityHeadersMiddleware)
+# ── Bulletproof CORS Middleware ───────────────────────────────────────────────
+class BulletproofCORSMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        origin = request.headers.get("origin") or "*"
+        if request.method == "OPTIONS":
+            response = JSONResponse(status_code=200, content={"status": "ok"})
+        else:
+            try:
+                response = await call_next(request)
+            except Exception as exc:
+                log.exception("Unhandled error on %s %s: %s", request.method, request.url.path, exc)
+                response = JSONResponse(
+                    status_code=500,
+                    content={"detail": "Internal server error. Please try again."}
+                )
+        
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type, Accept, X-Internal-Key, X-Request-ID, X-Idempotency-Key"
+        return response
 
-# ── CORS Middleware ───────────────────────────────────────────────────────────
+
+app.add_middleware(BulletproofCORSMiddleware)
+app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.allowed_origins_list,
+    allow_origins=["*"],
     allow_origin_regex=r"https?://.*",
     allow_credentials=True,
     allow_methods=["*"],
