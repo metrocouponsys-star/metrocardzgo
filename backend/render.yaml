@@ -30,7 +30,7 @@ services:
       - key: SECRET_KEY
         sync: false
       - key: ALLOWED_ORIGINS
-        value: https://metrocardz.in
+        value: https://metrocardz.in,https://www.metrocardz.in,http://localhost:3000,http://localhost:5173
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_SERVICE_KEY

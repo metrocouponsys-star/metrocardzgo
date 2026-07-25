@@ -57,7 +57,7 @@ class Settings(BaseSettings):
     refresh_token_expire_days: int = 30
 
     # ── CORS ─────────────────────────────────────────────────────────────
-    allowed_origins: str = "http://localhost:3000,http://localhost:5173"
+    allowed_origins: str = "https://metrocardz.in,https://www.metrocardz.in,http://localhost:3000,http://localhost:5173"
 
     @property
     def allowed_origins_list(self) -> List[str]:
