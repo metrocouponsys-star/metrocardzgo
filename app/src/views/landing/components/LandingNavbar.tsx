@@ -42,10 +42,11 @@ export const LandingNavbar: React.FC = () => {
       style={{
         transition: 'background-color 0.5s ease, border-color 0.5s ease',
         background: scrolled
-          ? 'rgba(13,13,13,0.95)'
+          ? 'rgba(13,13,13,0.97)'
           : 'transparent',
-        backdropFilter: scrolled ? 'blur(20px)' : 'none',
-        WebkitBackdropFilter: scrolled ? 'blur(20px)' : 'none',
+        // backdrop-filter intentionally omitted: causes compositing/hit-test bugs on
+        // MIUI/Android WebView (click targets register on wrong layer). The 0.97
+        // opacity background is sufficient for readability without blur.
         borderBottom: scrolled ? '1px solid rgba(201,162,39,0.15)' : 'none',
         paddingTop: 'env(safe-area-inset-top, 0px)',
       }}

@@ -47,7 +47,10 @@ export function IndustryPageTemplate({ data }: IndustryPageTemplateProps) {
       <JsonLd data={[faqSchema, breadcrumbSchema, ...productSchema]} />
 
       {/* Page root — inherits the dark landing design */}
-      <div className="landing-root" style={{ overflowX: 'hidden' }}>
+      {/* NOTE: Do NOT add overflow-x: hidden here — it creates a containing block
+           for position:fixed children (IndustryNav), breaking click hit-tests
+           on iOS Safari and Android. */}
+      <div className="landing-root">
 
         {/* ─── Nav (same as landing page) ─── */}
         <IndustryNav />

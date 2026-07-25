@@ -52,7 +52,10 @@ export const LandingPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="landing-root" style={{ overflowX: 'hidden' }}>
+    <div className="landing-root">
+      {/* NOTE: Do NOT add overflow-x: hidden here — it creates a containing block
+           for position:fixed children (LandingNavbar), breaking click hit-tests
+           on iOS Safari and Android. Horizontal scroll is prevented via body in index.css. */}
       <LandingNavbar />
 
       <main>

@@ -25,6 +25,10 @@
     min-height: 100dvh;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* overflow-x: clip (NOT hidden) — prevents horizontal scroll on landing page
+       without creating a containing block for position:fixed elements.
+       'hidden' would break the fixed navbar hit-testing on iOS/Android. */
+    overflow-x: clip;
   }
 
   input, button, select, textarea {
