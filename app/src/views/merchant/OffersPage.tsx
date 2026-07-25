@@ -4,6 +4,7 @@ import { useToastStore } from '../../store/toastStore';
 import { Modal } from '../../components/ui/Modal';
 import type { OfferTemplate, MembershipType } from '../../types';
 import * as api from '../../api';
+import { invalidateContaining } from '../../api/cache';
 
 const OFFER_TYPES = [
   { value: 'percent_off', label: '% Off (Discount)' },
@@ -72,6 +73,8 @@ export default function OffersPage() {
         setOffers(o => [...o, newOffer]);
         addToast('success', 'Offer created');
       }
+      invalidateContaining('member');
+      invalidateContaining('offer');
       setShowModal(false);
     } catch { addToast('error', 'Failed to save offer'); }
     finally { setSaving(false); }
@@ -80,6 +83,8 @@ export default function OffersPage() {
   const toggleActive = async (offer: OfferTemplate) => {
     const updated = await api.updateOfferTemplate(user?.merchant_id || '', offer.id, { active: !offer.active });
     setOffers(o => o.map(x => x.id === updated.id ? updated : x));
+    invalidateContaining('member');
+    invalidateContaining('offer');
     addToast('success', `"${offer.title}" ${updated.active ? 'activated' : 'deactivated'}`);
   };
 

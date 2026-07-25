@@ -46,6 +46,50 @@ def list_offers(merchant_id: str = Depends(get_merchant_id), db: Session = Depen
     return offers
 
 
+def _sync_offer_to_all_members(db: Session, merchant_id: str, offer_id: str, applicable_membership_type_ids: list = None):
+    """Auto-populate MemberOfferState for existing members when a new offer is created or updated."""
+    import uuid
+    from decimal import Decimal as Dec
+    from app.models.member import Member, MemberOfferState
+    from app.models.offer import OfferTemplate
+
+    tmpl = db.query(OfferTemplate).filter(OfferTemplate.id == offer_id, OfferTemplate.active == True).first()
+    if not tmpl:
+        return
+
+    query = db.query(Member).filter(Member.merchant_id == merchant_id)
+    if applicable_membership_type_ids and len(applicable_membership_type_ids) > 0:
+        query = query.filter(Member.membership_type_id.in_(applicable_membership_type_ids))
+
+    members = query.all()
+    if not members:
+        return
+
+    existing_member_ids = {
+        s.member_id for s in db.query(MemberOfferState.member_id).filter(MemberOfferState.offer_template_id == offer_id).all()
+    }
+
+    created = False
+    for m in members:
+        if m.id not in existing_member_ids:
+            qty = None if tmpl.offer_type in ('percent_off', 'birthday', 'referral') else Dec("5")
+            db.add(MemberOfferState(
+                id=str(uuid.uuid4()),
+                member_id=m.id,
+                offer_template_id=offer_id,
+                remaining_qty=qty,
+                initial_qty=qty,
+                status="active",
+            ))
+            created = True
+
+    if created:
+        try:
+            db.commit()
+        except Exception:
+            db.rollback()
+
+
 @offers_router.post("", response_model=OfferTemplateOut, status_code=201)
 def create_offer(
     payload: OfferTemplateCreate,
@@ -60,6 +104,10 @@ def create_offer(
     db.commit()
     db.refresh(offer)
     offer.applicable_membership_type_ids = payload.applicable_membership_type_ids or []
+
+    # Immediately sync this new offer to all existing applicable members
+    _sync_offer_to_all_members(db, merchant_id, offer.id, payload.applicable_membership_type_ids)
+
     return offer
 
 
@@ -86,6 +134,10 @@ def update_offer(
     # Re-populate applicable_membership_type_ids so the response matches what list_offers returns
     links = db.query(MembershipTypeOffer).filter(MembershipTypeOffer.offer_template_id == offer_id).all()
     offer.applicable_membership_type_ids = [link.membership_type_id for link in links]
+
+    # Re-sync offer to any applicable members who don't have offer state yet
+    _sync_offer_to_all_members(db, merchant_id, offer.id, offer.applicable_membership_type_ids)
+
     return offer
 
 
@@ -657,6 +709,10 @@ def _build_public_member_view(member: Member, merchant: Merchant, db: Session) -
     """Shared read-only view builder used by both the QR-token page and the
     membership-number self-lookup page. Keeping logic in one place ensures
     both entry points always return identical data with zero drift."""
+    from app.routers.members import ensure_member_offer_states
+    ensure_member_offer_states(db, member)
+    db.refresh(member)
+
     mt = member.membership_type
 
     offers = []

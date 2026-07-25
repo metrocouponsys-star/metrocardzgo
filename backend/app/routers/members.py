@@ -80,6 +80,110 @@ def search_members(
     return members
 
 
+def ensure_member_offer_states(db: Session, member: Member) -> list:
+    """
+    Ensure every active OfferTemplate for the merchant that applies to this member
+    has an active MemberOfferState record in the DB, then return all active offer states.
+    """
+    import uuid
+    from decimal import Decimal as Dec
+    from app.models.member import MemberOfferState, MembershipTypeOffer
+    from app.models.offer import OfferTemplate as OfferTemplateModel
+    from app.schemas import MemberOfferStateOut
+
+    merchant_id = member.merchant_id
+
+    # 1. Fetch all active offer templates for this merchant
+    active_templates = (
+        db.query(OfferTemplateModel)
+        .filter(
+            OfferTemplateModel.merchant_id == merchant_id,
+            OfferTemplateModel.active == True,
+        )
+        .all()
+    )
+
+    if not active_templates:
+        return []
+
+    # 2. Get map of offer_template_id -> default_qty for member's membership type (if any)
+    membership_type_offers = {}
+    if member.membership_type_id:
+        type_links = (
+            db.query(MembershipTypeOffer)
+            .filter(MembershipTypeOffer.membership_type_id == member.membership_type_id)
+            .all()
+        )
+        for link in type_links:
+            membership_type_offers[link.offer_template_id] = link.default_qty
+
+    # 3. Find existing states for this member
+    existing_states = (
+        db.query(MemberOfferState)
+        .filter(MemberOfferState.member_id == member.id)
+        .all()
+    )
+    existing_tmpl_ids = {s.offer_template_id for s in existing_states}
+
+    # 4. For any active offer template that applies to this member but doesn't have a state, create one!
+    new_created = False
+    for tmpl in active_templates:
+        all_links = (
+            db.query(MembershipTypeOffer)
+            .filter(MembershipTypeOffer.offer_template_id == tmpl.id)
+            .all()
+        )
+        if all_links:
+            linked_type_ids = {l.membership_type_id for l in all_links}
+            if member.membership_type_id not in linked_type_ids:
+                continue  # Skip offer template not applicable to member's tier
+
+        if tmpl.id not in existing_tmpl_ids:
+            default_qty = membership_type_offers.get(tmpl.id)
+            if default_qty is None:
+                qty = (
+                    None
+                    if tmpl.offer_type in ('percent_off', 'birthday', 'referral')
+                    else Dec("5")
+                )
+            else:
+                qty = default_qty
+
+            new_state = MemberOfferState(
+                id=str(uuid.uuid4()),
+                member_id=member.id,
+                offer_template_id=tmpl.id,
+                remaining_qty=qty,
+                initial_qty=qty,
+                status="active",
+            )
+            db.add(new_state)
+            new_created = True
+
+    if new_created:
+        try:
+            db.commit()
+        except Exception:
+            db.rollback()
+
+    # Re-query all states with relationships loaded
+    all_states = (
+        db.query(MemberOfferState)
+        .filter(MemberOfferState.member_id == member.id)
+        .all()
+    )
+
+    result = []
+    for s in all_states:
+        if s.offer_template and s.offer_template.active:
+            try:
+                result.append(MemberOfferStateOut.from_orm_state(s))
+            except Exception:
+                pass
+
+    return result
+
+
 @router.get("/{member_id}", response_model=MemberOut)
 def get_member(
     member_id: str,
@@ -93,118 +197,8 @@ def get_member(
     if not member:
         raise HTTPException(status_code=404, detail="Member not found")
 
-    # Build the response manually so offer_states include the nested offer template
-    from app.schemas import MemberOut as MemberOutSchema, MemberOfferStateOut
     member_data = MemberOut.model_validate(member)
-
-    # Populate offer_states with the full offer template nested as `offer`
-    try:
-        member_data.offer_states = [
-            MemberOfferStateOut.from_orm_state(s)
-            for s in member.offer_states
-        ]
-    except Exception:
-        member_data.offer_states = []
-
-    # If no offer_states exist in DB, auto-generate from membership type's bundled offers
-    if not member_data.offer_states and member.membership_type:
-        from app.models.member import MemberOfferState, MembershipTypeOffer
-        from app.models.offer import OfferTemplate as OfferTemplateModel
-        from app.schemas import OfferTemplateOut, MemberOfferStateOut
-
-        offer_links = (
-            db.query(MembershipTypeOffer)
-            .filter(MembershipTypeOffer.membership_type_id == member.membership_type_id)
-            .all()
-        )
-        if not offer_links:
-            # Fallback: get all offers for this merchant
-            offer_links_raw = (
-                db.query(OfferTemplateModel)
-                .filter(OfferTemplateModel.merchant_id == merchant_id, OfferTemplateModel.active == True)
-                .all()
-            )
-        else:
-            offer_links_raw = []
-
-        auto_states = []
-        for link in offer_links:
-            tmpl = db.query(OfferTemplateModel).filter(OfferTemplateModel.id == link.offer_template_id).first()
-            if not tmpl:
-                continue
-            # Create state row
-            existing = db.query(MemberOfferState).filter(
-                MemberOfferState.member_id == member.id,
-                MemberOfferState.offer_template_id == link.offer_template_id,
-            ).first()
-            if not existing:
-                from decimal import Decimal as Dec
-                qty = link.default_qty if link.default_qty else (None if tmpl.offer_type in ('percent_off', 'birthday', 'referral') else Dec(5))
-                new_state = MemberOfferState(
-                    id=str(uuid.uuid4()),
-                    member_id=member.id,
-                    offer_template_id=link.offer_template_id,
-                    remaining_qty=qty,
-                    initial_qty=qty,
-                    status="active",
-                )
-                db.add(new_state)
-                db.flush()
-                existing = new_state
-            try:
-                offer_out = OfferTemplateOut.model_validate(tmpl)
-            except Exception:
-                offer_out = None
-            auto_states.append(MemberOfferStateOut(
-                id=existing.id,
-                member_id=existing.member_id,
-                offer_template_id=existing.offer_template_id,
-                remaining_qty=existing.remaining_qty,
-                initial_qty=existing.initial_qty,
-                status=existing.status,
-                offer=offer_out,
-            ))
-
-        for tmpl in offer_links_raw:
-            existing = db.query(MemberOfferState).filter(
-                MemberOfferState.member_id == member.id,
-                MemberOfferState.offer_template_id == tmpl.id,
-            ).first()
-            if not existing:
-                from decimal import Decimal as Dec
-                qty = None if tmpl.offer_type in ('percent_off', 'birthday', 'referral') else Dec(5)
-                new_state = MemberOfferState(
-                    id=str(uuid.uuid4()),
-                    member_id=member.id,
-                    offer_template_id=tmpl.id,
-                    remaining_qty=qty,
-                    initial_qty=qty,
-                    status="active",
-                )
-                db.add(new_state)
-                db.flush()
-                existing = new_state
-            try:
-                offer_out = OfferTemplateOut.model_validate(tmpl)
-            except Exception:
-                offer_out = None
-            auto_states.append(MemberOfferStateOut(
-                id=existing.id,
-                member_id=existing.member_id,
-                offer_template_id=existing.offer_template_id,
-                remaining_qty=existing.remaining_qty,
-                initial_qty=existing.initial_qty,
-                status=existing.status,
-                offer=offer_out,
-            ))
-
-        if auto_states:
-            try:
-                db.commit()
-            except Exception:
-                db.rollback()
-        member_data.offer_states = auto_states
-
+    member_data.offer_states = ensure_member_offer_states(db, member)
     return member_data
 
 
