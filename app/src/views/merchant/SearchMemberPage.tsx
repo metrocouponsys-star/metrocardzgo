@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useToastStore } from '../../store/toastStore';
 import type { Member } from '../../types';
@@ -21,13 +21,23 @@ export default function SearchMemberPage() {
   const { user } = useAuthStore();
   const { addToast } = useToastStore();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<'mobile' | 'membership' | 'qr' | 'card'>('mobile');
+  const [searchParams] = useSearchParams();
+  const urlTab = searchParams.get('tab') as 'mobile' | 'membership' | 'qr' | 'card' | null;
+  const [tab, setTab] = useState<'mobile' | 'membership' | 'qr' | 'card'>(
+    urlTab && ['mobile', 'membership', 'qr', 'card'].includes(urlTab) ? urlTab : 'qr'
+  );
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Member[]>([]);
   const [searching, setSearching] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [recent, setRecent] = useState<Member[]>(getRecentSearches);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (urlTab && ['mobile', 'membership', 'qr', 'card'].includes(urlTab)) {
+      setTab(urlTab);
+    }
+  }, [urlTab]);
 
   useEffect(() => { inputRef.current?.focus(); }, [tab]);
 

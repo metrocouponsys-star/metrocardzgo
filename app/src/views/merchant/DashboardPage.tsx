@@ -97,7 +97,7 @@ export default function DashboardPage() {
       {/* ── Hero CTA ─── */}
       <section
         className="relative overflow-hidden rounded-2xl hero-shimmer shadow-elevated p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 cursor-pointer active-scale group"
-        onClick={() => navigate('/members/search')}
+        onClick={() => navigate('/members/search?tab=qr')}
       >
         {/* Animated blobs */}
         <div className="absolute -right-12 -top-12 w-48 h-48 bg-white/5 rounded-full blur-3xl pointer-events-none" />

@@ -43,7 +43,7 @@ class PageErrorBoundary extends Component<{ children: React.ReactNode }, EBState
 const MERCHANT_NAV = [
   { to: '/dashboard',        icon: 'dashboard',       label: 'Dashboard',   roles: ['owner', 'staff'] },
   { to: '/members',          icon: 'groups',          label: 'Members List', roles: ['owner', 'staff'] },
-  { to: '/members/search',   icon: 'qr_code_scanner', label: 'Scan & Lookup', roles: ['owner', 'staff'] },
+  { to: '/members/search?tab=qr', icon: 'qr_code_scanner', label: 'Scan & Lookup', roles: ['owner', 'staff'] },
   { to: '/cards',            icon: 'credit_card',     label: 'Cards',       roles: ['owner'] },
   { to: '/offers',           icon: 'local_offer',     label: 'Offers',      roles: ['owner'] },
   { to: '/membership-types', icon: 'card_membership', label: 'Memberships', roles: ['owner'] },
@@ -75,12 +75,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
   }, [user?.merchant_id]);
 
-  // ── Global keyboard shortcut: Ctrl+K / ⌘K → go to Members (search) ──
+  // ── Global keyboard shortcut: Ctrl+K / ⌘K → go to Members (search/scan) ──
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
-        navigate('/members');
+        navigate('/members/search?tab=qr');
       }
     };
     window.addEventListener('keydown', handler);
@@ -126,7 +126,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <NavLink
               key={item.to}
               to={item.to}
-              end={item.to === '/members' || item.to === '/dashboard' || item.to === '/admin' || item.to === '/members/search'}
+              end={item.to === '/members' || item.to === '/dashboard' || item.to === '/admin' || item.to.startsWith('/members/search')}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all font-label-md text-label-md
                 ${isActive
@@ -151,7 +151,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           ))}
           {/* Quick search hint */}
           <button
-            onClick={() => navigate('/members')}
+            onClick={() => navigate('/members/search?tab=qr')}
             className="w-full mt-3 flex items-center gap-2 px-3 py-2 rounded-xl text-on-surface-variant hover:bg-surface-container-low transition-colors text-label-sm border border-dashed border-outline-variant/50 group"
           >
             <span className="material-symbols-outlined text-[16px]">search</span>
@@ -234,7 +234,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <NavLink
             key={item.to}
             to={item.to}
-            end={item.to === '/members' || item.to === '/dashboard' || item.to === '/admin' || item.to === '/members/search'}
+            end={item.to === '/members' || item.to === '/dashboard' || item.to === '/admin' || item.to.startsWith('/members/search')}
             className={({ isActive }) =>
               `flex flex-col items-center justify-center px-3 py-1.5 rounded-2xl transition-all active:scale-95 cursor-pointer touch-manipulation min-w-[56px]
               ${isActive ? 'bg-primary-container text-on-primary-container' : 'text-on-surface-variant'}`
