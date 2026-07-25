@@ -39,10 +39,12 @@ rewards_router = APIRouter(prefix="/rewards", tags=["rewards"])
 
 @rewards_router.get("", response_model=List[RewardCatalogOut])
 def list_rewards(
-    merchant_id: str = Depends(get_merchant_id),
+    merchant_id: Optional[str] = Query(default=None),
+    user_merchant_id: str = Depends(get_merchant_id),
     db: Session = Depends(get_db),
 ):
-    return db.query(RewardCatalog).filter(RewardCatalog.merchant_id == merchant_id).order_by(RewardCatalog.created_at.desc()).all()
+    target_m_id = merchant_id or user_merchant_id
+    return db.query(RewardCatalog).filter(RewardCatalog.merchant_id == target_m_id).order_by(RewardCatalog.created_at.desc()).all()
 
 
 @rewards_router.post("", response_model=RewardCatalogOut, status_code=201)
@@ -166,10 +168,12 @@ coupons_router = APIRouter(prefix="/coupons", tags=["coupons"])
 
 @coupons_router.get("", response_model=List[CouponCodeOut])
 def list_coupons(
-    merchant_id: str = Depends(get_merchant_id),
+    merchant_id: Optional[str] = Query(default=None),
+    user_merchant_id: str = Depends(get_merchant_id),
     db: Session = Depends(get_db),
 ):
-    return db.query(CouponCode).filter(CouponCode.merchant_id == merchant_id).order_by(CouponCode.created_at.desc()).all()
+    target_m_id = merchant_id or user_merchant_id
+    return db.query(CouponCode).filter(CouponCode.merchant_id == target_m_id).order_by(CouponCode.created_at.desc()).all()
 
 
 @coupons_router.post("", response_model=CouponCodeOut, status_code=201)
@@ -178,14 +182,22 @@ def create_coupon(
     merchant_id: str = Depends(get_merchant_id),
     db: Session = Depends(get_db),
 ):
-    # Check uniqueness
+    code_str = payload.code.upper().strip()
     existing = db.query(CouponCode).filter(
         CouponCode.merchant_id == merchant_id,
-        CouponCode.code == payload.code.upper()
+        CouponCode.code == code_str
     ).first()
+    data = payload.model_dump(exclude_none=True)
+    data["code"] = code_str
+    data["is_active"] = True
     if existing:
-        raise HTTPException(409, "Coupon code already exists")
-    coupon = CouponCode(merchant_id=merchant_id, **{**payload.model_dump(), "code": payload.code.upper()})
+        for k, v in data.items():
+            setattr(existing, k, v)
+        db.commit()
+        db.refresh(existing)
+        return existing
+
+    coupon = CouponCode(merchant_id=merchant_id, **data)
     db.add(coupon)
     db.commit()
     db.refresh(coupon)
@@ -362,10 +374,12 @@ points_rules_router = APIRouter(prefix="/points-rules", tags=["points-rules"])
 
 @points_rules_router.get("", response_model=List[PointsRuleOut])
 def list_points_rules(
-    merchant_id: str = Depends(get_merchant_id),
+    merchant_id: Optional[str] = Query(default=None),
+    user_merchant_id: str = Depends(get_merchant_id),
     db: Session = Depends(get_db),
 ):
-    return db.query(PointsRule).filter(PointsRule.merchant_id == merchant_id).all()
+    target_m_id = merchant_id or user_merchant_id
+    return db.query(PointsRule).filter(PointsRule.merchant_id == target_m_id).all()
 
 
 @points_rules_router.post("", response_model=PointsRuleOut, status_code=201)

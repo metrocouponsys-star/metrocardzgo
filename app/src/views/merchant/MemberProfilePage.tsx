@@ -32,6 +32,7 @@ export default function MemberProfilePage() {
   const [scratchCards, setScratchCards] = useState<any[]>([]);
   const [autoRenew, setAutoRenew] = useState(false);
   const [purchaseAmount, setPurchaseAmount] = useState('');
+  const [coupons, setCoupons] = useState<any[]>([]);
 
   // Google Wallet state
   const [walletLoading, setWalletLoading] = useState(false);
@@ -89,12 +90,13 @@ export default function MemberProfilePage() {
     try {
       // FIX: Run ALL primary calls in parallel — eliminates the 2-RTT waterfall
       // (previously: getMember waited alone, then Promise.all ran = 2× latency)
-      const [m, reds, loyalty, rewards, pRules] = await Promise.all([
+      const [m, reds, loyalty, rewards, pRules, cList] = await Promise.all([
         api.getMember(mId, id),
         api.getMemberRedemptions(mId, id).catch(() => []),
         api.getLoyaltyHistory(mId, id).catch(() => []),
-        api.getRewards().catch(() => []),
-        api.getPointsRules().catch(() => []),
+        api.getRewards(mId).catch(() => []),
+        api.getPointsRules(mId).catch(() => []),
+        api.getCoupons(mId).catch(() => []),
       ]);
 
       setMember(m);
@@ -104,6 +106,7 @@ export default function MemberProfilePage() {
       setLoyaltyHistory(loyalty);
       setRewardCatalog(rewards.filter((r: any) => r.is_active !== false));
       setPointsRules(pRules || []);
+      setCoupons((cList || []).filter((c: any) => c.is_active !== false));
 
       // Non-critical — fire after primary data renders, no spinner needed
       api.getReferralLink(m.id).then(res => setReferralLink(res.referral_link)).catch(() => {});
@@ -791,6 +794,49 @@ export default function MemberProfilePage() {
                   })}
                 </div>
               )}
+
+              {/* Active Coupons Section */}
+              <div className="mt-6 pt-4 border-t border-outline-variant">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-bold text-body-md text-on-surface flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-secondary text-[20px]">confirmation_number</span>
+                    Active Store Coupons & Promos ({coupons.length})
+                  </h4>
+                </div>
+                {coupons.length === 0 ? (
+                  <p className="text-body-sm text-on-surface-variant italic">No active coupon codes right now.</p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-sm">
+                    {coupons.map((c: any) => (
+                      <div key={c.id} className="card p-3 flex items-center justify-between border border-secondary-container/50 bg-secondary-container/10">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-bold text-secondary text-body-md tracking-wider bg-secondary-container/40 px-2 py-0.5 rounded">
+                              {c.code}
+                            </span>
+                            <span className="text-label-xs font-semibold px-2 py-0.5 rounded-full bg-surface-container text-on-surface">
+                              {c.discount_type === 'percent' ? `${c.value}% OFF` : `₹${c.value} OFF`}
+                            </span>
+                          </div>
+                          <p className="text-label-xs text-on-surface-variant mt-1">
+                            Min purchase: ₹{c.min_purchase} {c.active_days ? `· Active: ${c.active_days}` : ''}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setPurchaseForm(f => ({ ...f, coupon_code: c.code }));
+                            setShowPurchaseModal(true);
+                          }}
+                          className="btn-outline !py-1 !px-2.5 text-label-xs flex items-center gap-1"
+                        >
+                          <span className="material-symbols-outlined text-[14px]">shopping_cart</span>
+                          Use in Purchase
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>

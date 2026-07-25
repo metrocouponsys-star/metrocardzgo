@@ -278,7 +278,7 @@ function CouponsTab() {
     try {
       const activeDaysStr = recurrenceMode === 'custom_days' ? selectedDays.join(', ') : undefined;
       const payload = {
-        code: form.code.toUpperCase() || genCode(),
+        code: (form.code.trim().toUpperCase()) || genCode(),
         discount_type: form.discount_type as 'flat' | 'percent',
         value: Number(form.value),
         min_purchase: Number(form.min_purchase),
@@ -286,19 +286,26 @@ function CouponsTab() {
         expires_at: form.expires_at || undefined,
         active_days: activeDaysStr,
       };
+      let res: any;
       if (editTarget) {
-        await api.updateCoupon(editTarget.id, payload);
+        res = await api.updateCoupon(editTarget.id, payload);
+        if (res && res.id) setCoupons(prev => prev.map(c => c.id === res.id ? res : c));
         addToast('success', 'Coupon updated');
       } else {
-        await api.createCoupon(payload);
+        res = await api.createCoupon(payload);
+        if (res && res.id) setCoupons(prev => [res, ...prev.filter(c => c.id !== res.id)]);
         addToast('success', 'Coupon created');
       }
+      invalidateContaining('coupon');
+      invalidateContaining('member');
+      invalidateContaining('public');
       setShowModal(false);
       setEditTarget(null);
       setForm({ code: '', discount_type: 'flat', value: '', min_purchase: '0', max_uses: '', expires_at: '' });
       load();
-    } catch { addToast('error', editTarget ? 'Failed to update coupon' : 'Failed to create coupon'); }
-    finally { setSaving(false); }
+    } catch (err: any) {
+      addToast('error', err.message || (editTarget ? 'Failed to update coupon' : 'Failed to create coupon'));
+    } finally { setSaving(false); }
   };
 
   const copyCode = (code: string) => {

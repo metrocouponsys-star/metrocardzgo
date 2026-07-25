@@ -538,7 +538,7 @@ export async function getRetentionReport(merchantId: string, cohortMonths = 6): 
 
 // ── Reward Catalog ────────────────────────────────────────────────────────────
 export interface Reward { id: string; merchant_id: string; name: string; description: string; points_cost: number; quantity_available: number | null; is_active: boolean; created_at: string; }
-export async function getRewards(): Promise<Reward[]> { return get<Reward[]>('/rewards'); }
+export async function getRewards(merchantId?: string): Promise<Reward[]> { return get<Reward[]>(`/rewards${merchantId ? `?merchant_id=${merchantId}` : ''}`); }
 export async function createReward(data: Partial<Reward>): Promise<Reward> { return post<Reward>('/rewards', data); }
 export async function updateReward(id: string, data: Partial<Reward>): Promise<Reward> { return patch<Reward>(`/rewards/${id}`, data); }
 export async function deleteReward(id: string): Promise<void> { return del(`/rewards/${id}`); }
@@ -547,7 +547,7 @@ export async function getRewardClaims(memberId?: string): Promise<any[]> { retur
 
 // ── Coupon Codes ──────────────────────────────────────────────────────────────
 export interface Coupon { id: string; merchant_id: string; code: string; discount_type: 'flat' | 'percent'; value: number; min_purchase: number; max_uses: number | null; used_count: number; expires_at: string | null; active_days?: string | null; is_active: boolean; created_at: string; }
-export async function getCoupons(): Promise<Coupon[]> { return get<Coupon[]>('/coupons'); }
+export async function getCoupons(merchantId?: string): Promise<Coupon[]> { return get<Coupon[]>(`/coupons${merchantId ? `?merchant_id=${merchantId}` : ''}`); }
 export async function createCoupon(data: Partial<Coupon>): Promise<Coupon> { return post<Coupon>('/coupons', data); }
 export async function updateCoupon(id: string, data: Partial<Coupon>): Promise<Coupon> { return patch<Coupon>(`/coupons/${id}`, data); }
 export async function deleteCoupon(id: string): Promise<void> { return del(`/coupons/${id}`); }
@@ -555,13 +555,13 @@ export async function validateCoupon(code: string, purchaseAmount: number): Prom
 
 // ── Gift Vouchers ─────────────────────────────────────────────────────────────
 export interface GiftVoucher { id: string; merchant_id: string; code: string; value: number; is_redeemed: boolean; redeemed_by_member_id: string | null; expires_at: string | null; created_at: string; }
-export async function getVouchers(): Promise<GiftVoucher[]> { return get<GiftVoucher[]>('/vouchers'); }
+export async function getVouchers(merchantId?: string): Promise<GiftVoucher[]> { return get<GiftVoucher[]>(`/vouchers${merchantId ? `?merchant_id=${merchantId}` : ''}`); }
 export async function generateVouchers(value: number, quantity: number, expiresAt?: string): Promise<GiftVoucher[]> { return post<GiftVoucher[]>('/vouchers/generate', { value, quantity, expires_at: expiresAt }); }
 export async function redeemVoucher(code: string, memberId: string): Promise<GiftVoucher> { return post<GiftVoucher>('/vouchers/redeem', { code, member_id: memberId }); }
 
 // ── Points Rules ──────────────────────────────────────────────────────────────
 export interface PointsRule { id: string; merchant_id: string; rule_type: 'per_visit' | 'per_rupee'; points_value: number; spend_unit?: number; is_active: boolean; created_at: string; }
-export async function getPointsRules(): Promise<PointsRule[]> { return get<PointsRule[]>('/points-rules'); }
+export async function getPointsRules(merchantId?: string): Promise<PointsRule[]> { return get<PointsRule[]>(`/points-rules${merchantId ? `?merchant_id=${merchantId}` : ''}`); }
 export async function createPointsRule(data: Partial<PointsRule>): Promise<PointsRule> { return post<PointsRule>('/points-rules', data); }
 export async function updatePointsRule(id: string, data: Partial<PointsRule>): Promise<PointsRule> { return patch<PointsRule>(`/points-rules/${id}`, data); }
 export async function deletePointsRule(id: string): Promise<void> { return del(`/points-rules/${id}`); }
