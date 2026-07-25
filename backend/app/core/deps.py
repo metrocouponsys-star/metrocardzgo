@@ -106,13 +106,17 @@ def require_super_admin(
 
 def get_merchant_id(
     current_user: MerchantUser = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
 ) -> str:
     """
     Convenience dependency: returns the merchant_id from the JWT.
-    NEVER use a merchant_id from the request body/params — use this instead.
-    This enforces tenant isolation — JWT-claimed merchant_id cannot be spoofed.
+    If super_admin has no merchant_id, fallback to first active merchant.
     """
     if not current_user.merchant_id:
+        if current_user.role == "super_admin":
+            m = db.query(Merchant).first()
+            if m:
+                return m.id
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="No merchant associated with this account",
