@@ -382,6 +382,17 @@ class ReminderRuleOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class ReminderRuleCreate(BaseModel):
+    trigger_type: Literal["birthday", "anniversary", "loyalty_threshold", "expiry"]
+    channel: Literal["sms", "whatsapp"]
+    template_text: str
+    threshold_value: Optional[Decimal] = None
+    active: bool = True
+    send_time: Optional[time] = None
+    days_before: int = Field(default=0, ge=0)
+    timezone: str = "Asia/Kolkata"
+
+
 class ReminderRuleUpdate(BaseModel):
     template_text: Optional[str] = None
     channel: Optional[Literal["sms", "whatsapp"]] = None
@@ -417,6 +428,8 @@ class PublicMemberView(BaseModel):
     referral_code: Optional[str] = None
     offers: List[dict]
     open_lucky_draws: Optional[List[dict]] = []
+    coupons: Optional[List[dict]] = []
+    rewards: Optional[List[dict]] = []
 
 
 # ── Dashboard Stats ───────────────────────────────────────────────────────────
@@ -433,6 +446,26 @@ class PointsRuleCreate(BaseModel):
     rule_type: Literal["per_visit", "per_rupee"]
     points_value: Decimal
     spend_unit: Optional[Decimal] = Decimal("1")
+
+
+# ── Purchase & Loyalty Integration ───────────────────────────────────────────
+class PurchaseRequest(BaseModel):
+    amount: Decimal = Field(..., gt=0)
+    coupon_code: Optional[str] = None
+    offer_state_id: Optional[str] = None
+    note: Optional[str] = None
+
+class PurchaseResult(BaseModel):
+    member_id: str
+    gross_amount: Decimal
+    discount_amount: Decimal
+    net_amount: Decimal
+    points_earned: Decimal
+    new_loyalty_balance: Decimal
+    coupon_applied: Optional[str] = None
+    offer_redeemed_title: Optional[str] = None
+    message: str
+
 
 
 class PointsRuleUpdate(BaseModel):
@@ -572,12 +605,14 @@ class CouponCodeCreate(BaseModel):
     min_purchase: Decimal = Decimal("0")
     max_uses: Optional[int] = None
     expires_at: Optional[date] = None
+    active_days: Optional[str] = None
 
 
 class CouponCodeUpdate(BaseModel):
     is_active: Optional[bool] = None
     max_uses: Optional[int] = None
     expires_at: Optional[date] = None
+    active_days: Optional[str] = None
 
 
 class CouponCodeOut(BaseModel):
@@ -590,6 +625,7 @@ class CouponCodeOut(BaseModel):
     max_uses: Optional[int] = None
     used_count: int
     expires_at: Optional[date] = None
+    active_days: Optional[str] = None
     is_active: bool
     created_at: datetime
     model_config = {"from_attributes": True}

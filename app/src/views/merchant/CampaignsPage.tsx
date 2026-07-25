@@ -29,6 +29,15 @@ export default function CampaignsPage() {
   const [showNewCampaign, setShowNewCampaign] = useState(false);
   const [editingReminder, setEditingReminder] = useState<ReminderRule | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [showNewReminder, setShowNewReminder] = useState(false);
+  const [reminderForm, setReminderForm] = useState({
+    trigger_type: 'birthday' as ReminderRule['trigger_type'],
+    channel: 'whatsapp' as ReminderRule['channel'],
+    template_text: '',
+    days_before: 0,
+    send_time: '09:00',
+    threshold_value: '',
+  });
   // Feature 2: expanded timing state per rule
   const [expandedRuleId, setExpandedRuleId] = useState<string | null>(null);
   const [timingForm, setTimingForm] = useState<Record<string, { send_time: string; days_before: number }>>({});
@@ -63,6 +72,41 @@ export default function CampaignsPage() {
     const updated = await api.updateReminderRule(user?.merchant_id || '', rule.id, { active: !rule.active });
     setReminders(rs => rs.map(r => r.id === rule.id ? updated : r));
     addToast('success', `${TRIGGER_LABELS[rule.trigger_type]} ${updated.active ? 'enabled' : 'disabled'}`);
+  };
+
+  const createReminder = async () => {
+    setSubmitting(true);
+    try {
+      const newRule = await api.createReminderRule(user?.merchant_id || '', {
+        trigger_type: reminderForm.trigger_type,
+        channel: reminderForm.channel,
+        template_text: reminderForm.template_text,
+        days_before: reminderForm.days_before,
+        send_time: reminderForm.send_time || '09:00',
+        threshold_value: reminderForm.threshold_value ? Number(reminderForm.threshold_value) : undefined,
+        active: true,
+        timezone: 'Asia/Kolkata',
+      });
+      setReminders(rs => [...rs, newRule]);
+      setShowNewReminder(false);
+      setReminderForm({ trigger_type: 'birthday', channel: 'whatsapp', template_text: '', days_before: 0, send_time: '09:00', threshold_value: '' });
+      addToast('success', `${TRIGGER_LABELS[reminderForm.trigger_type]} created!`);
+    } catch {
+      addToast('error', 'Failed to create reminder');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const deleteReminder = async (rule: ReminderRule) => {
+    if (!window.confirm(`Delete "${TRIGGER_LABELS[rule.trigger_type]}" reminder?`)) return;
+    try {
+      await api.deleteReminderRule(user?.merchant_id || '', rule.id);
+      setReminders(rs => rs.filter(r => r.id !== rule.id));
+      addToast('success', 'Reminder deleted');
+    } catch {
+      addToast('error', 'Failed to delete reminder');
+    }
   };
 
   // Feature 2: save reminder timing
@@ -169,7 +213,13 @@ export default function CampaignsPage() {
 
       {/* Automated Reminders */}
       <section>
-        <h3 className="section-title mb-md">Automated Reminders</h3>
+        <div className="flex items-center justify-between mb-md">
+          <h3 className="section-title">Automated Reminders</h3>
+          <button onClick={() => setShowNewReminder(true)} className="btn-primary flex items-center gap-2">
+            <span className="material-symbols-outlined text-[18px]">add</span>
+            New Reminder
+          </button>
+        </div>
         <div className="card divide-y divide-outline-variant/30">
           {loading ? (
             Array.from({ length: 4 }).map((_, i) => (
@@ -206,13 +256,22 @@ export default function CampaignsPage() {
                   </p>
                 </div>
                 {/* Toggle */}
-                <button
-                  onClick={() => toggleReminder(rule)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0
-                    ${rule.active ? 'bg-secondary' : 'bg-surface-container-high'}`}
-                >
-                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${rule.active ? 'translate-x-6' : 'translate-x-1'}`} />
-                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => deleteReminder(rule)}
+                    className="flex items-center justify-center w-7 h-7 rounded-full border border-error/30 text-error hover:bg-error/10"
+                    title="Delete reminder"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">delete</span>
+                  </button>
+                  <button
+                    onClick={() => toggleReminder(rule)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0
+                      ${rule.active ? 'bg-secondary' : 'bg-surface-container-high'}`}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${rule.active ? 'translate-x-6' : 'translate-x-1'}`} />
+                  </button>
+                </div>
               </div>
               {/* Feature 2: expandable timing controls */}
               {expandedRuleId === rule.id && (
@@ -387,6 +446,72 @@ export default function CampaignsPage() {
           </div>
         )}
       </section>
+
+      {/* New Reminder Modal */}
+      <Modal isOpen={showNewReminder} onClose={() => setShowNewReminder(false)} title="New Automatic Reminder" maxWidth="max-w-lg">
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="form-label">Trigger Event *</label>
+              <select className="input-field" value={reminderForm.trigger_type} onChange={e => setReminderForm(f => ({ ...f, trigger_type: e.target.value as any }))}>
+                <option value="birthday">🎂 Birthday</option>
+                <option value="anniversary">💍 Anniversary</option>
+                <option value="expiry">⏰ Card Expiry</option>
+                <option value="loyalty_threshold">⭐ Loyalty Points</option>
+              </select>
+            </div>
+            <div>
+              <label className="form-label">Channel *</label>
+              <select className="input-field" value={reminderForm.channel} onChange={e => setReminderForm(f => ({ ...f, channel: e.target.value as any }))}>
+                <option value="whatsapp">WhatsApp</option>
+                <option value="sms">SMS</option>
+              </select>
+            </div>
+          </div>
+          {reminderForm.trigger_type === 'loyalty_threshold' && (
+            <div>
+              <label className="form-label">Points Threshold</label>
+              <input type="number" className="input-field" placeholder="e.g. 500" value={reminderForm.threshold_value} onChange={e => setReminderForm(f => ({ ...f, threshold_value: e.target.value }))} />
+              <p className="text-label-sm text-on-surface-variant mt-1">Reminder fires when member reaches this many points.</p>
+            </div>
+          )}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="form-label">Send Time (IST)</label>
+              <input type="time" className="input-field" value={reminderForm.send_time} onChange={e => setReminderForm(f => ({ ...f, send_time: e.target.value }))} />
+            </div>
+            <div>
+              <label className="form-label">
+                {reminderForm.trigger_type === 'expiry' ? 'Days before expiry' : reminderForm.trigger_type === 'birthday' ? 'Days before birthday' : 'Days before event'}
+              </label>
+              <input type="number" className="input-field" min={0} max={60} value={reminderForm.days_before} onChange={e => setReminderForm(f => ({ ...f, days_before: parseInt(e.target.value) || 0 }))} />
+              <p className="text-label-sm text-on-surface-variant mt-1">{reminderForm.days_before === 0 ? 'Sends on the day' : `Sends ${reminderForm.days_before} day(s) before`}</p>
+            </div>
+          </div>
+          <div>
+            <label className="form-label">Message Template *</label>
+            <textarea
+              rows={3}
+              className="input-field h-auto py-3 resize-none"
+              placeholder="e.g. Happy Birthday {name}! 🎂 Visit us for a special treat."
+              value={reminderForm.template_text}
+              onChange={e => setReminderForm(f => ({ ...f, template_text: e.target.value }))}
+            />
+            <p className="text-label-sm text-on-surface-variant mt-1">Placeholders: &#123;name&#125;, &#123;business_name&#125;, &#123;points&#125;</p>
+          </div>
+          <div className="flex gap-3">
+            <button onClick={() => setShowNewReminder(false)} className="btn-secondary flex-1">Cancel</button>
+            <button
+              onClick={createReminder}
+              disabled={submitting || !reminderForm.template_text}
+              className="btn-primary flex-1 flex items-center justify-center gap-2"
+            >
+              {submitting && <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>}
+              Create Reminder
+            </button>
+          </div>
+        </div>
+      </Modal>
 
       {/* New Campaign Modal */}
       <Modal isOpen={showNewCampaign} onClose={() => setShowNewCampaign(false)} title="New Campaign" maxWidth="max-w-lg">

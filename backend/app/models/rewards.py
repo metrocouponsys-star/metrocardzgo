@@ -50,6 +50,7 @@ class CouponCode(Base):
     max_uses = Column(Integer, nullable=True)    # None = unlimited
     used_count = Column(Integer, default=0, nullable=False)
     expires_at = Column(Date, nullable=True)
+    active_days = Column(Text, nullable=True)     # e.g. "Mon,Wed,Fri" or "Daily"
     is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

@@ -49,6 +49,17 @@ export default function MemberProfilePage() {
   const [voucherCodeInput, setVoucherCodeInput] = useState('');
   const [redeemingVoucher, setRedeemingVoucher] = useState(false);
 
+  // Purchase Modal State
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const [purchaseForm, setPurchaseForm] = useState({
+    amount: '',
+    coupon_code: '',
+    offer_state_id: '',
+    note: '',
+  });
+  const [recordingPurchase, setRecordingPurchase] = useState(false);
+  const [pointsRules, setPointsRules] = useState<any[]>([]);
+
   // Edit Member Modal state
   const [showEditModal, setShowEditModal] = useState(false);
   const [membershipTypes, setMembershipTypes] = useState<MembershipType[]>([]);
@@ -78,11 +89,12 @@ export default function MemberProfilePage() {
     try {
       // FIX: Run ALL primary calls in parallel — eliminates the 2-RTT waterfall
       // (previously: getMember waited alone, then Promise.all ran = 2× latency)
-      const [m, reds, loyalty, rewards] = await Promise.all([
+      const [m, reds, loyalty, rewards, pRules] = await Promise.all([
         api.getMember(mId, id),
         api.getMemberRedemptions(mId, id).catch(() => []),
         api.getLoyaltyHistory(mId, id).catch(() => []),
         api.getRewards().catch(() => []),
+        api.getPointsRules().catch(() => []),
       ]);
 
       setMember(m);
@@ -91,6 +103,7 @@ export default function MemberProfilePage() {
       setRedemptions(reds);
       setLoyaltyHistory(loyalty);
       setRewardCatalog(rewards.filter((r: any) => r.is_active));
+      setPointsRules(pRules || []);
 
       // Non-critical — fire after primary data renders, no spinner needed
       api.getReferralLink(m.id).then(res => setReferralLink(res.referral_link)).catch(() => {});
@@ -256,6 +269,55 @@ export default function MemberProfilePage() {
     }
   };
 
+  const handleRecordPurchase = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!member || !user) return;
+    const amt = Number(purchaseForm.amount);
+    if (isNaN(amt) || amt <= 0) {
+      addToast('error', 'Please enter a valid purchase amount');
+      return;
+    }
+    setRecordingPurchase(true);
+    try {
+      const res = await api.recordPurchase(user.merchant_id || '', member.id, {
+        amount: amt,
+        coupon_code: purchaseForm.coupon_code.trim() || undefined,
+        offer_state_id: purchaseForm.offer_state_id || undefined,
+        note: purchaseForm.note.trim() || undefined,
+      });
+      addToast('success', res.message || `Purchase recorded! Earned ${res.points_earned} points.`);
+      setShowPurchaseModal(false);
+      setPurchaseForm({ amount: '', coupon_code: '', offer_state_id: '', note: '' });
+      fetchMember();
+    } catch (err: any) {
+      addToast('error', err.message || 'Failed to record purchase');
+    } finally {
+      setRecordingPurchase(false);
+    }
+  };
+
+  const calculateEstimatedPoints = (amountStr: string) => {
+    const amt = Number(amountStr);
+    if (isNaN(amt) || amt <= 0) return 0;
+    let total = 0;
+    const activeRules = pointsRules.filter((r: any) => r.is_active !== false);
+    if (activeRules.length === 0) {
+      // Default standard logic: 10% points or 1 point per 10 rupees
+      return Math.floor(amt / 10);
+    }
+    activeRules.forEach((rule: any) => {
+      if (rule.rule_type === 'per_rupee') {
+        const unit = rule.spend_unit || 1;
+        if (unit > 0) {
+          total += Math.floor((amt / unit) * rule.points_value);
+        }
+      } else if (rule.rule_type === 'per_visit') {
+        total += Number(rule.points_value) || 0;
+      }
+    });
+    return total;
+  };
+
   const handleScratch = async (cardId: string) => {
     try {
       const res = await api.revealScratchCard(cardId);
@@ -415,13 +477,23 @@ export default function MemberProfilePage() {
 
         </div>
 
-        {/* Owner actions */}
-        {isOwner && (
-          <div className="relative z-10 flex gap-2 mt-4 flex-wrap">
-            <button
-              onClick={handleOpenEditModal}
-              className="bg-white/15 hover:bg-white/25 text-white px-4 py-2 rounded-lg text-label-md font-label-md flex items-center gap-1 transition-colors"
-            >
+        {/* Actions Bar */}
+        <div className="relative z-10 flex gap-2 mt-4 flex-wrap items-center">
+          <button
+            id="record-purchase-btn"
+            onClick={() => setShowPurchaseModal(true)}
+            className="bg-secondary hover:bg-secondary/90 text-on-secondary px-4 py-2 rounded-lg text-label-md font-bold flex items-center gap-1.5 shadow-md transition-all"
+          >
+            <span className="material-symbols-outlined text-[18px]">shopping_cart_checkout</span>
+            Record Purchase
+          </button>
+
+          {isOwner && (
+            <>
+              <button
+                onClick={handleOpenEditModal}
+                className="bg-white/15 hover:bg-white/25 text-white px-4 py-2 rounded-lg text-label-md font-label-md flex items-center gap-1 transition-colors"
+              >
               <span className="material-symbols-outlined text-[16px]">edit</span>
               Edit
             </button>
@@ -467,8 +539,9 @@ export default function MemberProfilePage() {
                 {walletLoading ? 'Generating…' : 'Google Wallet Pass'}
               </button>
             )}
-          </div>
+          </>
         )}
+        </div>
 
         {/* Physical Card Row */}
         <div className="relative z-10 mt-4 border-t border-white/10 pt-4">
@@ -1046,6 +1119,142 @@ export default function MemberProfilePage() {
             <button type="submit" className="btn-primary flex items-center gap-2" disabled={updatingMember}>
               {updatingMember && <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>}
               Save Changes
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* ── Record Purchase Modal ── */}
+      <Modal
+        isOpen={showPurchaseModal}
+        onClose={() => {
+          setShowPurchaseModal(false);
+          setPurchaseForm({ amount: '', coupon_code: '', offer_state_id: '', note: '' });
+        }}
+        title="Record Shopping Purchase & Assign Points"
+        maxWidth="max-w-lg"
+      >
+        <form onSubmit={handleRecordPurchase} className="space-y-4">
+          <p className="text-body-sm text-on-surface-variant">
+            Enter shopping amount. Configured reward rules will automatically assign loyalty points to <strong>{member.name}</strong>.
+          </p>
+
+          <div>
+            <label className="form-label" htmlFor="purchase-amount">
+              Shopping Amount (₹) *
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant font-bold text-body-md">₹</span>
+              <input
+                id="purchase-amount"
+                type="number"
+                step="0.01"
+                min="1"
+                required
+                className="input-field pl-8 text-title-md font-bold"
+                placeholder="e.g. 1500"
+                value={purchaseForm.amount}
+                onChange={e => setPurchaseForm({ ...purchaseForm, amount: e.target.value })}
+              />
+            </div>
+          </div>
+
+          {/* Live Estimated Points Preview */}
+          {Number(purchaseForm.amount) > 0 && (
+            <div className="p-3 bg-secondary-container/20 border border-secondary-container rounded-xl flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-secondary text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
+                <div>
+                  <p className="text-label-md font-bold text-on-surface">Loyalty Points to Earn</p>
+                  <p className="text-label-sm text-on-surface-variant">Calculated based on store points rules</p>
+                </div>
+              </div>
+              <span className="text-headline-sm font-bold text-secondary">
+                +{calculateEstimatedPoints(purchaseForm.amount)} pts
+              </span>
+            </div>
+          )}
+
+          <div>
+            <label className="form-label" htmlFor="purchase-coupon">
+              Coupon Code <span className="text-on-surface-variant font-normal">(Optional)</span>
+            </label>
+            <input
+              id="purchase-coupon"
+              type="text"
+              className="input-field uppercase tracking-wider font-mono"
+              placeholder="e.g. SUMMER50"
+              value={purchaseForm.coupon_code}
+              onChange={e => setPurchaseForm({ ...purchaseForm, coupon_code: e.target.value.toUpperCase() })}
+            />
+          </div>
+
+          {/* Optional Member Offer Redemption */}
+          {member.offer_states && member.offer_states.filter(s => s.status === 'active').length > 0 && (
+            <div>
+              <label className="form-label" htmlFor="purchase-offer">
+                Redeem Offer <span className="text-on-surface-variant font-normal">(Optional)</span>
+              </label>
+              <select
+                id="purchase-offer"
+                className="input-field"
+                value={purchaseForm.offer_state_id}
+                onChange={e => setPurchaseForm({ ...purchaseForm, offer_state_id: e.target.value })}
+              >
+                <option value="">-- No offer --</option>
+                {member.offer_states
+                  .filter(s => s.status === 'active')
+                  .map(s => {
+                    const title = (s as any).offer_template?.title || (s as any).offer?.title || `Offer #${s.offer_template_id.slice(0, 6)}`;
+                    const qtyStr = s.remaining_qty !== null ? `(${s.remaining_qty} left)` : '(Unlimited)';
+                    return (
+                      <option key={s.id} value={s.id}>
+                        {title} {qtyStr}
+                      </option>
+                    );
+                  })}
+              </select>
+            </div>
+          )}
+
+          <div>
+            <label className="form-label" htmlFor="purchase-note">
+              Transaction Note <span className="text-on-surface-variant font-normal">(Optional)</span>
+            </label>
+            <input
+              id="purchase-note"
+              type="text"
+              className="input-field"
+              placeholder="e.g. Bill #1042 — Salon Service"
+              value={purchaseForm.note}
+              onChange={e => setPurchaseForm({ ...purchaseForm, note: e.target.value })}
+            />
+          </div>
+
+          <div className="flex gap-3 justify-end pt-4 border-t border-outline-variant/30">
+            <button
+              type="button"
+              onClick={() => {
+                setShowPurchaseModal(false);
+                setPurchaseForm({ amount: '', coupon_code: '', offer_state_id: '', note: '' });
+              }}
+              className="btn-secondary flex-1"
+              disabled={recordingPurchase}
+            >
+              Cancel
+            </button>
+            <button
+              id="confirm-purchase-btn"
+              type="submit"
+              className="btn-primary flex-1 flex items-center justify-center gap-2"
+              disabled={recordingPurchase || !purchaseForm.amount}
+            >
+              {recordingPurchase ? (
+                <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+              ) : (
+                <span className="material-symbols-outlined text-[18px]">check_circle</span>
+              )}
+              Assign Points & Save
             </button>
           </div>
         </form>

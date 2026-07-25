@@ -42,23 +42,23 @@ class PageErrorBoundary extends Component<{ children: React.ReactNode }, EBState
 
 const MERCHANT_NAV = [
   { to: '/dashboard',        icon: 'dashboard',       label: 'Dashboard',   roles: ['owner', 'staff'] },
-  { to: '/members',          icon: 'groups',          label: 'Members List', roles: ['owner', 'staff'] },
-  { to: '/members/search?tab=qr', icon: 'qr_code_scanner', label: 'Scan & Lookup', roles: ['owner', 'staff'] },
+  { to: '/members',          icon: 'groups',          label: 'Members',     roles: ['owner', 'staff'] },
+  { to: '/members/search?tab=qr', icon: 'qr_code_scanner', label: 'Scan',   roles: ['owner', 'staff'] },
   { to: '/cards',            icon: 'credit_card',     label: 'Cards',       roles: ['owner'] },
   { to: '/offers',           icon: 'local_offer',     label: 'Offers',      roles: ['owner'] },
   { to: '/membership-types', icon: 'card_membership', label: 'Memberships', roles: ['owner'] },
-  { to: '/rewards',          icon: 'workspace_premium', label: 'Rewards & Loyalty', roles: ['owner'] },
+  { to: '/rewards',          icon: 'workspace_premium', label: 'Rewards',   roles: ['owner'] },
   { to: '/campaigns',        icon: 'campaign',        label: 'Campaigns',   roles: ['owner'] },
   { to: '/reports',          icon: 'bar_chart',       label: 'Reports',     roles: ['owner'] },
   { to: '/settings',         icon: 'settings',        label: 'Settings',    roles: ['owner'] },
 ];
 
 const ADMIN_NAV = [
-  { to: '/admin',           icon: 'dashboard',   label: 'Dashboard',      roles: ['super_admin'] },
-  { to: '/admin/merchants', icon: 'storefront',  label: 'Merchants',      roles: ['super_admin'] },
-  { to: '/admin/members',   icon: 'groups',      label: 'All Members',    roles: ['super_admin'] },
-  { to: '/admin/cards',     icon: 'credit_card', label: 'Card Inventory', roles: ['super_admin'] },
-  { to: '/admin/reports',   icon: 'bar_chart',   label: 'Reports',        roles: ['super_admin'] },
+  { to: '/admin',           icon: 'dashboard',   label: 'Dashboard', roles: ['super_admin'] },
+  { to: '/admin/merchants', icon: 'storefront',  label: 'Merchants', roles: ['super_admin'] },
+  { to: '/admin/members',   icon: 'groups',      label: 'Members',   roles: ['super_admin'] },
+  { to: '/admin/cards',     icon: 'credit_card', label: 'Inventory', roles: ['super_admin'] },
+  { to: '/admin/reports',   icon: 'bar_chart',   label: 'Reports',   roles: ['super_admin'] },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {

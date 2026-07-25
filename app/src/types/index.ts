@@ -284,4 +284,20 @@ export interface PublicMemberView {
     already_entered: boolean;
     eligible: boolean;
   }>;
+  coupons?: Array<{
+    id: string;
+    code: string;
+    discount_type: 'flat' | 'percent';
+    value: number;
+    min_purchase: number;
+    active_days?: string;
+    expires_at?: string | null;
+  }>;
+  rewards?: Array<{
+    id: string;
+    name: string;
+    description: string;
+    points_cost: number;
+    quantity_available?: number | null;
+  }>;
 }

@@ -208,6 +208,14 @@ export const publicMemberViews: Record<string, PublicMemberView> = {
       { id: 'off-001', title: 'Free Hair Wash', description: 'Valid on styling above ₹800.', offer_type: 'free_service', value: 1 },
       { id: 'off-002', title: '10% Off All Services', description: 'Flat 10% on total billing.', offer_type: 'percent_off', value: 10 },
     ],
+    coupons: [
+      { id: 'coup-001', code: 'GLAMOUR20', discount_type: 'percent', value: 20, min_purchase: 500, active_days: 'Mon, Wed, Fri', expires_at: '2026-12-31' },
+      { id: 'coup-002', code: 'FLAT100', discount_type: 'flat', value: 100, min_purchase: 1000, active_days: 'Sat, Sun', expires_at: '2026-11-30' },
+    ],
+    rewards: [
+      { id: 'rew-001', name: 'Free Facial Treatment Voucher', description: 'Redeem 500 loyalty points for a complete facial treatment.', points_cost: 500 },
+      { id: 'rew-002', name: '₹200 Spa Gift Voucher', description: 'Redeem 250 points for ₹200 off on any spa service.', points_cost: 250 },
+    ],
   },
   'tok-ins001': {
     member_id: 'mem-ins-1',

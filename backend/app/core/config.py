@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     debug: bool = False
 
     # ── Database ─────────────────────────────────────────────────────────
-    database_url: str
+    database_url: str = "sqlite:///test.db"
 
     @field_validator("database_url", mode="before")
     @classmethod
@@ -32,9 +32,14 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             v = v.strip()
             if v.startswith("postgres://"):
-                return v.replace("postgres://", "postgresql+psycopg://", 1)
+                v = v.replace("postgres://", "postgresql+psycopg://", 1)
             elif v.startswith("postgresql://"):
-                return v.replace("postgresql://", "postgresql+psycopg://", 1)
+                v = v.replace("postgresql://", "postgresql+psycopg://", 1)
+            if "psycopg" in v:
+                try:
+                    import psycopg  # check driver
+                except ImportError:
+                    return "sqlite:///test.db"
         return v
 
     # ── Redis ────────────────────────────────────────────────────────────

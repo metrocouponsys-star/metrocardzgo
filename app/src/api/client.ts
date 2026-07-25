@@ -258,6 +258,55 @@ export async function updateMember(merchantId: string, memberId: string, data: P
   return db.members[idx];
 }
 
+export async function recordPurchase(
+  merchantId: string,
+  memberId: string,
+  data: { amount: number; coupon_code?: string; offer_state_id?: string; note?: string },
+): Promise<any> {
+  await delay(FAKE_DELAY);
+  const idx = db.members.findIndex(m => m.id === memberId && m.merchant_id === merchantId);
+  if (idx === -1) throw new Error('Member not found');
+  const member = db.members[idx];
+  let grossAmount = data.amount;
+  let discountAmount = 0;
+  let couponApplied: string | undefined = undefined;
+
+  if (data.coupon_code) {
+    couponApplied = data.coupon_code.toUpperCase();
+    discountAmount = Math.min(50, grossAmount); // mock discount 50
+  }
+
+  const netAmount = Math.max(0, grossAmount - discountAmount);
+
+  // Calculate points using rulesDb
+  let pointsEarned = 0;
+  if (typeof rulesDb !== 'undefined' && rulesDb.length > 0) {
+    rulesDb.filter((p: any) => p.is_active !== false).forEach((rule: any) => {
+      if (rule.rule_type === 'per_rupee') {
+        pointsEarned += Math.floor((netAmount / (rule.spend_unit || 1)) * rule.points_value);
+      } else if (rule.rule_type === 'per_visit') {
+        pointsEarned += rule.points_value;
+      }
+    });
+  } else {
+    pointsEarned = Math.floor(netAmount / 10);
+  }
+
+  member.loyalty_points = (member.loyalty_points || 0) + pointsEarned;
+  member.total_visits = (member.total_visits || 0) + 1;
+
+  return {
+    member_id: memberId,
+    gross_amount: grossAmount,
+    discount_amount: discountAmount,
+    net_amount: netAmount,
+    points_earned: pointsEarned,
+    new_loyalty_balance: member.loyalty_points,
+    coupon_applied: couponApplied,
+    message: `Purchase recorded! ${pointsEarned} loyalty points earned.`,
+  };
+}
+
 export async function getMembers(merchantId: string): Promise<Member[]> {
   await delay(FAKE_DELAY);
   return db.members.filter(m => m.merchant_id === merchantId).map(m => ({
@@ -501,12 +550,29 @@ export async function getReminderRules(merchantId: string): Promise<ReminderRule
   return db.reminderRules.filter(r => r.merchant_id === merchantId);
 }
 
+export async function createReminderRule(merchantId: string, data: Omit<ReminderRule, 'id' | 'merchant_id'>): Promise<ReminderRule> {
+  await delay(FAKE_DELAY);
+  const newRule: ReminderRule = {
+    id: `rr-${Date.now()}`,
+    merchant_id: merchantId,
+    ...data,
+  };
+  db.reminderRules.push(newRule);
+  return newRule;
+}
+
 export async function updateReminderRule(merchantId: string, ruleId: string, data: Partial<ReminderRule>): Promise<ReminderRule> {
   await delay(FAKE_DELAY);
   const idx = db.reminderRules.findIndex(r => r.id === ruleId && r.merchant_id === merchantId);
   if (idx === -1) throw new Error('Rule not found');
   db.reminderRules[idx] = { ...db.reminderRules[idx], ...data };
   return db.reminderRules[idx];
+}
+
+export async function deleteReminderRule(merchantId: string, ruleId: string): Promise<void> {
+  await delay(FAKE_DELAY);
+  const idx = db.reminderRules.findIndex(r => r.id === ruleId && r.merchant_id === merchantId);
+  if (idx !== -1) db.reminderRules.splice(idx, 1);
 }
 
 // ---- Reports ----
@@ -1096,8 +1162,21 @@ export async function deleteReward(id: string): Promise<void> {
   const idx = rewardsDb.findIndex(x => x.id === id);
   if (idx !== -1) rewardsDb.splice(idx, 1);
 }
-export async function claimReward(memberId: string, rewardId: string): Promise<any> { return { success: true }; }
-export async function getRewardClaims(memberId: string): Promise<any[]> { return []; }
+export async function claimReward(rewardId: string, memberId: string): Promise<any> {
+  await delay(FAKE_DELAY);
+  const reward = rewardsDb.find(r => r.id === rewardId);
+  if (!reward) throw new Error('Reward not found');
+  const member = db.members.find(m => m.id === memberId);
+  if (member) {
+    if ((member.loyalty_points || 0) < reward.points_cost) throw new Error(`Insufficient points. Need ${reward.points_cost} pts`);
+    member.loyalty_points = (member.loyalty_points || 0) - reward.points_cost;
+  }
+  if (reward.quantity_available !== null && reward.quantity_available !== undefined) {
+    reward.quantity_available = Math.max(0, reward.quantity_available - 1);
+  }
+  return { id: `claim-${Date.now()}`, reward_id: rewardId, member_id: memberId, points_spent: reward.points_cost };
+}
+export async function getRewardClaims(memberId?: string): Promise<any[]> { return []; }
 
 // ── Mock Coupons ──────────────────────────────────────────────────────────────
 const couponsDb: any[] = [
@@ -1282,6 +1361,16 @@ export async function publicEnterLuckyDraw(_drawId: string, _token: string): Pro
   await delay(FAKE_DELAY);
   return { message: 'Entered draw successfully!' };
 }
+
+// ── Admin: Change Password (mock) ─────────────────────────────────────────────
+export async function changeAdminPassword(currentPassword: string, newPassword: string): Promise<void> {
+  await delay(FAKE_DELAY);
+  // In mock mode, accept any non-empty current password so the UX can be tested
+  if (!currentPassword || currentPassword.length < 1) throw new Error('Current password is incorrect.');
+  if (!newPassword || newPassword.length < 8) throw new Error('New password must be at least 8 characters.');
+  // No-op: mock doesn't persist state
+}
+
 
 
 

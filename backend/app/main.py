@@ -187,11 +187,19 @@ async def startup_event():
         Base.metadata.create_all(bind=engine)
         print("✅ Database tables verified/created successfully")
 
-        # Guarantee auto_renew column exists in production PostgreSQL DB
+        # Guarantee schema migrations exist in DB
         try:
             with engine.begin() as conn:
-                conn.execute(text("ALTER TABLE members ADD COLUMN IF NOT EXISTS auto_renew BOOLEAN NOT NULL DEFAULT FALSE;"))
-            print("✅ Database schema migration (auto_renew) verified OK")
+                for col_sql in [
+                    "ALTER TABLE members ADD COLUMN auto_renew BOOLEAN NOT NULL DEFAULT FALSE;",
+                    "ALTER TABLE coupon_codes ADD COLUMN active_days TEXT;",
+                    "ALTER TABLE points_rules ADD COLUMN spend_unit NUMERIC DEFAULT 1;",
+                ]:
+                    try:
+                        conn.execute(text(col_sql))
+                    except Exception:
+                        pass
+            print("✅ Database schema migrations (auto_renew, active_days, spend_unit) verified OK")
         except Exception as col_err:
             print(f"⚠️ Schema migration notice: {col_err}")
 

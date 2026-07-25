@@ -213,7 +213,11 @@ function CouponsTab() {
   const [showModal, setShowModal] = useState(false);
   const [editTarget, setEditTarget] = useState<any | null>(null);
   const [saving, setSaving] = useState(false);
+  const [recurrenceMode, setRecurrenceMode] = useState<'always' | 'custom_days'>('always');
+  const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [form, setForm] = useState({ code: '', discount_type: 'flat', value: '', min_purchase: '0', max_uses: '', expires_at: '' });
+
+  const ALL_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   const load = () => api.getCoupons().then(setCoupons).catch(() => {}).finally(() => setLoading(false));
   useEffect(() => { load(); }, []);
@@ -222,12 +226,21 @@ function CouponsTab() {
 
   const openCreate = () => {
     setEditTarget(null);
+    setRecurrenceMode('always');
+    setSelectedDays([]);
     setForm({ code: '', discount_type: 'flat', value: '', min_purchase: '0', max_uses: '', expires_at: '' });
     setShowModal(true);
   };
 
   const openEdit = (c: any) => {
     setEditTarget(c);
+    if (c.active_days && c.active_days !== 'Daily' && c.active_days !== 'Always') {
+      setRecurrenceMode('custom_days');
+      setSelectedDays(c.active_days.split(',').map((d: string) => d.trim()).filter(Boolean));
+    } else {
+      setRecurrenceMode('always');
+      setSelectedDays([]);
+    }
     setForm({
       code: c.code || '',
       discount_type: c.discount_type || 'flat',
@@ -239,10 +252,21 @@ function CouponsTab() {
     setShowModal(true);
   };
 
+  const toggleDay = (day: string) => {
+    setSelectedDays(prev =>
+      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
+    );
+  };
+
   const save = async () => {
     if (!form.value) { addToast('error', 'Discount value is required'); return; }
+    if (recurrenceMode === 'custom_days' && selectedDays.length === 0) {
+      addToast('error', 'Please select at least one active weekday for the loop');
+      return;
+    }
     setSaving(true);
     try {
+      const activeDaysStr = recurrenceMode === 'custom_days' ? selectedDays.join(', ') : undefined;
       const payload = {
         code: form.code.toUpperCase() || genCode(),
         discount_type: form.discount_type as 'flat' | 'percent',
@@ -250,6 +274,7 @@ function CouponsTab() {
         min_purchase: Number(form.min_purchase),
         max_uses: form.max_uses ? Number(form.max_uses) : undefined,
         expires_at: form.expires_at || undefined,
+        active_days: activeDaysStr,
       };
       if (editTarget) {
         await api.updateCoupon(editTarget.id, payload);
@@ -273,7 +298,7 @@ function CouponsTab() {
   return (
     <div className="space-y-md">
       <div className="flex items-center justify-between">
-        <p className="text-body-md text-on-surface-variant">Create discount codes for members to use at checkout.</p>
+        <p className="text-body-md text-on-surface-variant">Create discount codes with custom weekday loops for members to use at checkout.</p>
         <button onClick={openCreate} className="btn-primary flex items-center gap-2">
           <span className="material-symbols-outlined text-[18px]">add</span>
           Create Coupon
@@ -285,7 +310,7 @@ function CouponsTab() {
           <table className="w-full">
             <thead className="bg-surface-container-low">
               <tr>
-                {['Code', 'Type', 'Value', 'Min Purchase', 'Uses', 'Expires', 'Status', ''].map(h => (
+                {['Code', 'Type', 'Value', 'Min Purchase', 'Loop / Active Days', 'Uses', 'Expires', 'Status', ''].map(h => (
                   <th key={h} className="text-left px-4 py-3 text-label-md text-on-surface-variant whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -293,12 +318,12 @@ function CouponsTab() {
             <tbody className="divide-y divide-outline-variant/20">
               {loading ? (
                 Array.from({ length: 3 }).map((_, i) => (
-                  <tr key={i}>{Array.from({ length: 8 }).map((_, j) => (
+                  <tr key={i}>{Array.from({ length: 9 }).map((_, j) => (
                     <td key={j} className="px-4 py-3"><div className="h-4 bg-surface-container rounded animate-pulse" /></td>
                   ))}</tr>
                 ))
               ) : coupons.length === 0 ? (
-                <tr><td colSpan={8} className="px-4 py-16 text-center text-on-surface-variant">
+                <tr><td colSpan={9} className="px-4 py-16 text-center text-on-surface-variant">
                   <span className="material-symbols-outlined text-[40px] block mb-2 opacity-40">confirmation_number</span>
                   No coupons yet
                 </td></tr>
@@ -315,6 +340,16 @@ function CouponsTab() {
                   <td className="px-4 py-3 text-body-md capitalize text-on-surface-variant">{c.discount_type}</td>
                   <td className="px-4 py-3 text-body-md font-bold">{c.discount_type === 'percent' ? `${c.value}%` : `₹${c.value}`}</td>
                   <td className="px-4 py-3 text-body-md text-on-surface-variant">₹{c.min_purchase || 0}</td>
+                  <td className="px-4 py-3 text-label-sm">
+                    {c.active_days ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary-container/30 text-primary font-medium">
+                        <span className="material-symbols-outlined text-[12px]">repeat</span>
+                        {c.active_days}
+                      </span>
+                    ) : (
+                      <span className="text-on-surface-variant opacity-70">Everyday</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-body-md text-on-surface-variant">{c.used_count}{c.max_uses ? `/${c.max_uses}` : ''}</td>
                   <td className="px-4 py-3 text-label-sm text-on-surface-variant">{c.expires_at || <span className="italic">Never</span>}</td>
                   <td className="px-4 py-3">
@@ -350,6 +385,7 @@ function CouponsTab() {
             <label className="form-label">Coupon Code <span className="text-on-surface-variant font-normal">(leave blank to auto-generate)</span></label>
             <input className="input-field font-mono uppercase" placeholder="e.g. SAVE20" value={form.code} onChange={e => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))} />
           </div>
+
           <div className="grid grid-cols-2 gap-md">
             <div>
               <label className="form-label">Discount Type *</label>
@@ -371,10 +407,63 @@ function CouponsTab() {
               <input type="number" min={1} className="input-field" placeholder="Unlimited" value={form.max_uses} onChange={e => setForm(f => ({ ...f, max_uses: e.target.value }))} />
             </div>
           </div>
+
+          {/* Repetitive Option / Custom Weekdays Loop */}
+          <div className="space-y-2 bg-surface-container/50 p-3.5 rounded-xl border border-outline-variant/40">
+            <label className="form-label mb-1 flex items-center gap-1.5 font-bold">
+              <span className="material-symbols-outlined text-primary text-[18px]">repeat</span>
+              Repetitive / Active Days in Loop
+            </label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setRecurrenceMode('always')}
+                className={`flex-1 py-1.5 px-3 rounded-lg text-label-md transition-all border ${recurrenceMode === 'always' ? 'bg-primary text-on-primary border-primary font-bold shadow-sm' : 'bg-surface border-outline-variant text-on-surface-variant'}`}
+              >
+                Everyday / Always
+              </button>
+              <button
+                type="button"
+                onClick={() => setRecurrenceMode('custom_days')}
+                className={`flex-1 py-1.5 px-3 rounded-lg text-label-md transition-all border ${recurrenceMode === 'custom_days' ? 'bg-primary text-on-primary border-primary font-bold shadow-sm' : 'bg-surface border-outline-variant text-on-surface-variant'}`}
+              >
+                Custom Weekdays (Loop)
+              </button>
+            </div>
+
+            {recurrenceMode === 'custom_days' && (
+              <div className="pt-2 animate-fade-in">
+                <p className="text-label-sm text-on-surface-variant mb-2">Select days when this coupon repeats in loop:</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {ALL_DAYS.map(day => {
+                    const isSelected = selectedDays.includes(day);
+                    return (
+                      <button
+                        key={day}
+                        type="button"
+                        onClick={() => toggleDay(day)}
+                        className={`px-3 py-1.5 rounded-lg text-label-sm font-semibold transition-all ${isSelected ? 'bg-secondary text-on-secondary shadow-sm scale-105' : 'bg-surface-container-high text-on-surface-variant hover:bg-outline-variant/30'}`}
+                      >
+                        {day}
+                      </button>
+                    );
+                  })}
+                </div>
+                {selectedDays.length > 0 && (
+                  <p className="text-label-xs text-primary font-medium mt-2 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[14px]">sync</span>
+                    Repeats every: {selectedDays.join(', ')}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
           <div>
             <label className="form-label">Expires At <span className="text-on-surface-variant font-normal">(blank = never)</span></label>
             <input type="date" className="input-field" value={form.expires_at} onChange={e => setForm(f => ({ ...f, expires_at: e.target.value }))} />
           </div>
+
           <div className="flex gap-3 pt-1">
             <button onClick={() => { setShowModal(false); setEditTarget(null); }} className="btn-secondary flex-1">Cancel</button>
             <button onClick={save} disabled={saving || !form.value} className="btn-primary flex-1 flex items-center justify-center gap-2">

@@ -264,7 +264,7 @@ export default function PublicMemberPage() {
           <div className="animate-slide-up" style={{ animationDelay: '80ms' }}>
             <h3 className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-3 flex items-center gap-2">
               <span className="material-symbols-outlined text-[16px] text-primary">workspace_premium</span>
-              Your Benefits
+              Your Tier Benefits
             </h3>
             <div className="space-y-3 stagger-children">
               {data.offers.map((offer: any, idx: number) => (
@@ -285,6 +285,94 @@ export default function PublicMemberPage() {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* ── Active Coupons & Discount Vouchers ─── */}
+        {data.coupons && data.coupons.length > 0 && !isExpired && (
+          <div className="animate-slide-up space-y-3" style={{ animationDelay: '100ms' }}>
+            <h3 className="text-xs font-bold text-on-surface-variant uppercase tracking-wider flex items-center gap-2">
+              <span className="material-symbols-outlined text-[16px] text-secondary">confirmation_number</span>
+              Coupons & Discount Vouchers
+            </h3>
+            <div className="space-y-3">
+              {data.coupons.map((coupon: any) => (
+                <div key={coupon.id} className="bg-surface rounded-2xl p-4 border border-secondary-container/40 shadow-sm space-y-2 relative overflow-hidden">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-bold text-secondary text-base tracking-widest bg-secondary-container/30 px-3 py-1 rounded-xl border border-secondary/20">
+                        {coupon.code}
+                      </span>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(coupon.code);
+                          alert(`Code "${coupon.code}" copied! Show this code at POS checkout.`);
+                        }}
+                        className="text-xs text-primary font-bold hover:underline flex items-center gap-1 bg-primary/10 px-2.5 py-1 rounded-lg"
+                      >
+                        <span className="material-symbols-outlined text-[14px]">content_copy</span> Copy Code
+                      </button>
+                    </div>
+                    <span className="text-sm font-bold text-on-surface">
+                      {coupon.discount_type === 'percent' ? `${coupon.value}% OFF` : `₹${coupon.value} OFF`}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-between text-xs text-on-surface-variant gap-2 pt-1 border-t border-outline-variant/20">
+                    <span>Min purchase: ₹{coupon.min_purchase || 0}</span>
+                    {coupon.active_days && (
+                      <span className="inline-flex items-center gap-1 font-semibold text-primary">
+                        <span className="material-symbols-outlined text-[12px]">repeat</span> Active: {coupon.active_days}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Rewards Catalog & Gift Vouchers ─── */}
+        {data.rewards && data.rewards.length > 0 && !isExpired && (
+          <div className="animate-slide-up space-y-3" style={{ animationDelay: '120ms' }}>
+            <h3 className="text-xs font-bold text-on-surface-variant uppercase tracking-wider flex items-center gap-2">
+              <span className="material-symbols-outlined text-[16px] text-amber-600">card_giftcard</span>
+              Rewards & Gift Vouchers Catalog
+            </h3>
+            <div className="space-y-3">
+              {data.rewards.map((reward: any) => (
+                <div key={reward.id} className="bg-surface rounded-2xl p-4 border border-outline-variant/20 shadow-sm flex items-center justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-bold text-on-surface text-sm">{reward.name}</h4>
+                    {reward.description && <p className="text-xs text-on-surface-variant mt-0.5">{reward.description}</p>}
+                    <p className="text-xs font-bold text-amber-700 mt-1 flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[14px]">stars</span>
+                      {reward.points_cost} points required
+                    </p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <span className="text-xs px-3 py-1.5 rounded-xl bg-amber-100 text-amber-800 font-bold block">
+                      Claim at Counter
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── How to Redeem Info Guide ─── */}
+        {!isExpired && (
+          <div className="bg-surface-container rounded-2xl p-4 border border-outline-variant/30 space-y-2 animate-slide-up" style={{ animationDelay: '140ms' }}>
+            <h4 className="text-xs font-bold text-on-surface uppercase tracking-wider flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-primary text-[16px]">help_outline</span>
+              How to Redeem Offers & Rewards
+            </h4>
+            <ul className="text-xs text-on-surface-variant space-y-1.5 list-disc pl-4 leading-relaxed">
+              <li><strong>Coupon Codes:</strong> Copy code or mention it at checkout to get instant discounts.</li>
+              <li><strong>Loyalty Points & Rewards:</strong> Show your member QR / Mobile Number at store counter. The cashier will apply your points & vouchers instantly.</li>
+              <li><strong>WhatsApp Alerts:</strong> Exclusive offers & vouchers are sent directly to your registered WhatsApp number.</li>
+            </ul>
           </div>
         )}
 

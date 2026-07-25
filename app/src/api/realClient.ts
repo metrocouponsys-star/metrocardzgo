@@ -215,6 +215,14 @@ export async function updateMember(_merchantId: string, memberId: string, data: 
   return patch<Member>(`/members/${memberId}`, data);
 }
 
+export async function recordPurchase(
+  _merchantId: string,
+  memberId: string,
+  data: { amount: number; coupon_code?: string; offer_state_id?: string; note?: string },
+): Promise<any> {
+  return post<any>(`/members/${memberId}/purchase`, data);
+}
+
 // ── Redemptions ───────────────────────────────────────────────────────────────
 export async function redeemOffer(
   _merchantId: string,
@@ -292,8 +300,16 @@ export async function getReminderRules(_merchantId: string): Promise<ReminderRul
   return get<ReminderRule[]>('/reminders');
 }
 
+export async function createReminderRule(_merchantId: string, data: Omit<ReminderRule, 'id' | 'merchant_id'>): Promise<ReminderRule> {
+  return post<ReminderRule>('/reminders', data);
+}
+
 export async function updateReminderRule(_merchantId: string, ruleId: string, data: Partial<ReminderRule>): Promise<ReminderRule> {
   return patch<ReminderRule>(`/reminders/${ruleId}`, data);
+}
+
+export async function deleteReminderRule(_merchantId: string, ruleId: string): Promise<void> {
+  return del<void>(`/reminders/${ruleId}`);
 }
 
 // ── Reports ───────────────────────────────────────────────────────────────────
@@ -530,7 +546,7 @@ export async function claimReward(rewardId: string, memberId: string): Promise<a
 export async function getRewardClaims(memberId?: string): Promise<any[]> { return get(`/rewards/claims${memberId ? `?member_id=${memberId}` : ''}`); }
 
 // ── Coupon Codes ──────────────────────────────────────────────────────────────
-export interface Coupon { id: string; merchant_id: string; code: string; discount_type: 'flat' | 'percent'; value: number; min_purchase: number; max_uses: number | null; used_count: number; expires_at: string | null; is_active: boolean; created_at: string; }
+export interface Coupon { id: string; merchant_id: string; code: string; discount_type: 'flat' | 'percent'; value: number; min_purchase: number; max_uses: number | null; used_count: number; expires_at: string | null; active_days?: string | null; is_active: boolean; created_at: string; }
 export async function getCoupons(): Promise<Coupon[]> { return get<Coupon[]>('/coupons'); }
 export async function createCoupon(data: Partial<Coupon>): Promise<Coupon> { return post<Coupon>('/coupons', data); }
 export async function updateCoupon(id: string, data: Partial<Coupon>): Promise<Coupon> { return patch<Coupon>(`/coupons/${id}`, data); }
@@ -639,4 +655,10 @@ export async function downloadCardsQrExcel(cardNumbers: string[]): Promise<void>
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+
+// ── Admin: Change Password ────────────────────────────────────────────────────
+export async function changeAdminPassword(currentPassword: string, newPassword: string): Promise<void> {
+  await post('/admin/change-password', { current_password: currentPassword, new_password: newPassword });
+}
+
 

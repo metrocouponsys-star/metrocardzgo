@@ -21,7 +21,7 @@ from app.schemas import (
     OfferTemplateCreate, OfferTemplateUpdate, OfferTemplateOut,
     MembershipTypeCreate, MembershipTypeUpdate, MembershipTypeOut,
     CampaignCreate, CampaignOut,
-    ReminderRuleUpdate, ReminderRuleOut,
+    ReminderRuleCreate, ReminderRuleUpdate, ReminderRuleOut,
     DashboardStats, RedemptionOut, PublicMemberView, MembershipLookupRequest,
     NewMembersDataPoint, TopCustomer, PointsDataPoint, RetentionDataPoint,
     MerchantUpdate, MerchantOut,
@@ -399,6 +399,29 @@ def list_reminders(merchant_id: str = Depends(get_merchant_id), db: Session = De
     return db.query(ReminderRule).filter(ReminderRule.merchant_id == merchant_id).all()
 
 
+@reminders_router.post("", response_model=ReminderRuleOut, status_code=201)
+def create_reminder(
+    payload: ReminderRuleCreate,
+    merchant_id: str = Depends(get_merchant_id),
+    db: Session = Depends(get_db),
+):
+    rule = ReminderRule(
+        merchant_id=merchant_id,
+        trigger_type=payload.trigger_type,
+        channel=payload.channel,
+        template_text=payload.template_text,
+        threshold_value=payload.threshold_value,
+        active=payload.active,
+        send_time=payload.send_time,
+        days_before=payload.days_before,
+        timezone=payload.timezone,
+    )
+    db.add(rule)
+    db.commit()
+    db.refresh(rule)
+    return rule
+
+
 @reminders_router.patch("/{rule_id}", response_model=ReminderRuleOut)
 def update_reminder(
     rule_id: str,
@@ -416,6 +439,21 @@ def update_reminder(
     db.commit()
     db.refresh(rule)
     return rule
+
+
+@reminders_router.delete("/{rule_id}", status_code=204)
+def delete_reminder(
+    rule_id: str,
+    merchant_id: str = Depends(get_merchant_id),
+    db: Session = Depends(get_db),
+):
+    rule = db.query(ReminderRule).filter(
+        ReminderRule.id == rule_id, ReminderRule.merchant_id == merchant_id
+    ).first()
+    if not rule:
+        raise HTTPException(status_code=404, detail="Reminder rule not found")
+    db.delete(rule)
+    db.commit()
 
 
 # ── Dashboard / Reports Router ────────────────────────────────────────────────
@@ -725,7 +763,8 @@ def _build_public_member_view(member: Member, merchant: Merchant, db: Session) -
                 "offer_type": ot.offer_type, "value": str(ot.value),
             })
 
-    from app.models.rewards import LuckyDraw, LuckyDrawEntry
+    from app.models.rewards import LuckyDraw, LuckyDrawEntry, CouponCode, RewardCatalog
+    from datetime import date
     open_draws = db.query(LuckyDraw).filter(
         LuckyDraw.merchant_id == member.merchant_id,
         LuckyDraw.status == "open",
@@ -747,6 +786,38 @@ def _build_public_member_view(member: Member, merchant: Merchant, db: Session) -
             "eligible": float(member.loyalty_points or 0) >= float(draw.min_points or 0) and (member.total_visits or 0) >= (draw.min_visits or 0),
         })
 
+    active_coupons = db.query(CouponCode).filter(
+        CouponCode.merchant_id == member.merchant_id,
+        CouponCode.is_active == True,
+    ).all()
+    coupons_out = []
+    for c in active_coupons:
+        if c.expires_at and c.expires_at < date.today():
+            continue
+        coupons_out.append({
+            "id": c.id,
+            "code": c.code,
+            "discount_type": c.discount_type,
+            "value": float(c.value),
+            "min_purchase": float(c.min_purchase or 0),
+            "active_days": c.active_days,
+            "expires_at": str(c.expires_at) if c.expires_at else None,
+        })
+
+    active_rewards = db.query(RewardCatalog).filter(
+        RewardCatalog.merchant_id == member.merchant_id,
+        RewardCatalog.is_active == True,
+    ).all()
+    rewards_out = []
+    for r in active_rewards:
+        rewards_out.append({
+            "id": r.id,
+            "name": r.name,
+            "description": r.description,
+            "points_cost": float(r.points_cost),
+            "quantity_available": r.quantity_available,
+        })
+
     return PublicMemberView(
         member_id=member.id,
         merchant_name=merchant.business_name,
@@ -762,6 +833,8 @@ def _build_public_member_view(member: Member, merchant: Merchant, db: Session) -
         referral_code=member.referral_code,
         offers=offers,
         open_lucky_draws=draws_out,
+        coupons=coupons_out,
+        rewards=rewards_out,
     )
 
 

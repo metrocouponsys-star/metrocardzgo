@@ -749,3 +749,44 @@ def get_merchant_detail(
             for u in users
         ],
     }
+
+
+# ── Super Admin: Change Own Password ─────────────────────────────────────────
+from pydantic import BaseModel as _BaseModel, Field as _Field, field_validator as _field_validator
+
+class ChangePasswordRequest(_BaseModel):
+    current_password: str
+    new_password: str = _Field(..., min_length=8)
+
+    @_field_validator("new_password")
+    @classmethod
+    def _no_whitespace_only(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("Password cannot be blank")
+        return v
+
+
+@router.post("/change-password")
+def change_own_password(
+    payload: ChangePasswordRequest,
+    admin: MerchantUser = Depends(require_super_admin),
+    db: Session = Depends(get_db),
+):
+    """Allow the authenticated super admin to change their own password."""
+    from app.core.security import verify_password as _verify, hash_password as _hash
+
+    if not admin.password_hash:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Account has no password set. Please use OTP login.",
+        )
+    if not _verify(payload.current_password, admin.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password is incorrect.",
+        )
+    admin.password_hash = _hash(payload.new_password)
+    db.commit()
+    _log_action(db, admin.id, None, "change_password", "Super admin changed their own password")
+    db.commit()
+    return {"message": "Password updated successfully."}

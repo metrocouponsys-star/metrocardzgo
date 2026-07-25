@@ -27,6 +27,7 @@ export const getMember = api.getMember;
 export const createMember = api.createMember;
 export const bulkImportMembers = api.bulkImportMembers;
 export const updateMember = api.updateMember;
+export const recordPurchase = api.recordPurchase;
 export const redeemOffer = api.redeemOffer;
 export const redeemPoints = api.redeemPoints;
 export const getMemberRedemptions = api.getMemberRedemptions;
@@ -42,7 +43,9 @@ export const deleteMembershipType = api.deleteMembershipType;
 export const getCampaigns = api.getCampaigns;
 export const createCampaign = api.createCampaign;
 export const getReminderRules = api.getReminderRules;
+export const createReminderRule = api.createReminderRule;
 export const updateReminderRule = api.updateReminderRule;
+export const deleteReminderRule = api.deleteReminderRule;
 export const getReportData = api.getReportData;
 export const getAdminStats = api.getAdminStats;
 export const getAllMerchants = api.getAllMerchants;
@@ -125,4 +128,8 @@ export const getPublicWalletPassUrl = api.getPublicWalletPassUrl;
 export const uploadMerchantLogo = api.uploadMerchantLogo;
 export const setMerchantCardDesign = api.setMerchantCardDesign;
 export const downloadCardsQrExcel = api.downloadCardsQrExcel;
+
+// ── Admin ─────────────────────────────────────────────────────────────────────
+export const changeAdminPassword = api.changeAdminPassword;
+
 
