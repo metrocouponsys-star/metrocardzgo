@@ -58,11 +58,37 @@ export default function AdminDashboardPage() {
           Array.from({ length: 5 }).map((_, i) => <StatCardSkeleton key={i} />)
         ) : stats ? (
           <>
-            <StatCard label="Total Merchants" value={stats.total_merchants} icon="storefront" />
-            <StatCard label="Pending Approval" value={stats.pending_approvals || 0} icon="pending_actions" iconColor={(stats.pending_approvals || 0) > 0 ? "text-yellow-600" : "text-on-surface-variant"} />
-            <StatCard label="Total Members" value={stats.total_members.toLocaleString()} icon="groups" />
-            <StatCard label="Redemptions Today" value={stats.redemptions_today} icon="receipt_long" />
-            <StatCard label="Active Merchants" value={`${stats.active_merchants} / ${stats.total_merchants}`} icon="check_circle" />
+            <StatCard
+              label="Total Merchants"
+              value={stats.total_merchants}
+              icon="storefront"
+              onClick={() => navigate('/admin/merchants')}
+            />
+            <StatCard
+              label="Pending Approval"
+              value={stats.pending_approvals || 0}
+              icon="pending_actions"
+              iconColor={(stats.pending_approvals || 0) > 0 ? "text-yellow-600" : "text-on-surface-variant"}
+              onClick={() => navigate('/admin/merchants')}
+            />
+            <StatCard
+              label="Total Members"
+              value={stats.total_members.toLocaleString()}
+              icon="groups"
+              onClick={() => navigate('/admin/members')}
+            />
+            <StatCard
+              label="Redemptions Today"
+              value={stats.redemptions_today}
+              icon="receipt_long"
+              onClick={() => navigate('/admin/reports')}
+            />
+            <StatCard
+              label="Active Merchants"
+              value={`${stats.active_merchants} / ${stats.total_merchants}`}
+              icon="check_circle"
+              onClick={() => navigate('/admin/merchants')}
+            />
           </>
         ) : null}
       </section>
@@ -86,7 +112,7 @@ export default function AdminDashboardPage() {
           </button>
 
           <button
-            onClick={() => navigate('/cards')}
+            onClick={() => navigate('/admin/cards')}
             className="p-md bg-surface-container-low border border-outline-variant/30 hover:border-primary rounded-xl text-left transition-all group flex items-center gap-3"
           >
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">

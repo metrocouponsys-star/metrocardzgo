@@ -8,6 +8,7 @@ interface StatCardProps {
   icon?: string;
   iconColor?: string;
   className?: string;
+  onClick?: () => void;
 }
 
 /** Animate a numeric value from 0 → target over `duration` ms */
@@ -34,7 +35,7 @@ function useCountUp(target: number, duration = 800) {
   return current;
 }
 
-export function StatCard({ label, value, trend, trendUp, icon, iconColor = 'text-secondary', className = '' }: StatCardProps) {
+export function StatCard({ label, value, trend, trendUp, icon, iconColor = 'text-secondary', className = '', onClick }: StatCardProps) {
   // Extract numeric value if value is a string with a number prefix
   const numericMatch = typeof value === 'string' ? value.match(/^([\d.,]+)(.*)$/) : null;
   const rawNumber = typeof value === 'number' ? value : numericMatch ? parseFloat(numericMatch[1].replace(/,/g, '')) : null;
@@ -49,9 +50,21 @@ export function StatCard({ label, value, trend, trendUp, icon, iconColor = 'text
     : value;
 
   return (
-    <div className={`stat-card animate-slide-up group hover:shadow-md transition-all hover:-translate-y-0.5 ${className}`}>
+    <div
+      onClick={onClick}
+      className={`stat-card animate-slide-up group transition-all ${
+        onClick ? 'cursor-pointer hover:shadow-lg hover:border-primary/40 hover:-translate-y-0.5 active:scale-[0.98]' : 'hover:shadow-md hover:-translate-y-0.5'
+      } ${className}`}
+    >
       <div className="flex items-start justify-between">
-        <p className="text-label-md font-label-md text-on-surface-variant leading-tight">{label}</p>
+        <p className="text-label-md font-label-md text-on-surface-variant leading-tight flex items-center gap-1">
+          {label}
+          {onClick && (
+            <span className="material-symbols-outlined text-[14px] text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+              arrow_forward
+            </span>
+          )}
+        </p>
         {icon && (
           <div className={`w-8 h-8 rounded-lg flex items-center justify-center bg-surface-container group-hover:scale-110 transition-transform ${iconColor.replace('text-', 'bg-').replace(/text-\w+/, '')} `}>
             <span className={`material-symbols-outlined text-[18px] ${iconColor}`}>{icon}</span>
