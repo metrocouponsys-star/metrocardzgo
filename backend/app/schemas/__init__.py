@@ -600,7 +600,7 @@ class RewardClaimOut(BaseModel):
 
 # ── Coupon Codes ──────────────────────────────────────────────────────────────
 class CouponCodeCreate(BaseModel):
-    code: str
+    code: Optional[str] = None
     discount_type: Literal["flat", "percent"]
     value: Decimal
     min_purchase: Decimal = Decimal("0")

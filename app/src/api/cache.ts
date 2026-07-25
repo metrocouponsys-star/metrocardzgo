@@ -37,7 +37,8 @@ const TTL_MAP: { pattern: RegExp; ttl: number }[] = [
   { pattern: /members$/, ttl: 60_000 },          // full member list
   { pattern: /membership-types/, ttl: 120_000 },
   { pattern: /offers/, ttl: 120_000 },
-  { pattern: /rewards/, ttl: 120_000 },
+  { pattern: /rewards/, ttl: 5_000 },
+  { pattern: /coupons/, ttl: 5_000 },
   { pattern: /reports/, ttl: 60_000 },
 ];
 

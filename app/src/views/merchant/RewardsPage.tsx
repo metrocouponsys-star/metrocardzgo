@@ -46,11 +46,11 @@ export default function RewardsPage() {
         ))}
       </div>
 
-      {/* Tab Content */}
-      {tab === 'catalog'      && <RewardCatalogTab />}
-      {tab === 'coupons'      && <CouponsTab />}
-      {tab === 'vouchers'     && <VouchersTab />}
-      {tab === 'points_rules' && <PointsRulesTab />}
+      {/* Tab Content — always mounted, hidden via CSS to preserve state across tab switches */}
+      <div style={{ display: tab === 'catalog' ? 'block' : 'none' }}><RewardCatalogTab active={tab === 'catalog'} /></div>
+      <div style={{ display: tab === 'coupons' ? 'block' : 'none' }}><CouponsTab active={tab === 'coupons'} /></div>
+      <div style={{ display: tab === 'vouchers' ? 'block' : 'none' }}><VouchersTab /></div>
+      <div style={{ display: tab === 'points_rules' ? 'block' : 'none' }}><PointsRulesTab /></div>
     </div>
   );
 }
@@ -58,8 +58,9 @@ export default function RewardsPage() {
 // ─────────────────────────────────────────────────────────────────────────────
 // REWARD CATALOG TAB
 // ─────────────────────────────────────────────────────────────────────────────
-function RewardCatalogTab() {
+function RewardCatalogTab({ active }: { active?: boolean }) {
   const { addToast } = useToastStore();
+  const { user } = useAuthStore();
   const [rewards, setRewards] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -67,8 +68,13 @@ function RewardCatalogTab() {
   const [form, setForm] = useState({ name: '', description: '', points_cost: '', quantity_available: '' });
   const [saving, setSaving] = useState(false);
 
-  const load = () => api.getRewards().then(setRewards).catch(() => {}).finally(() => setLoading(false));
+  const load = () => {
+    invalidateContaining('rewards');
+    return api.getRewards().then(setRewards).catch(() => {}).finally(() => setLoading(false));
+  };
   useEffect(() => { load(); }, []);
+  // Re-fetch whenever this tab becomes active (in case data changed while on another tab)
+  useEffect(() => { if (active) load(); }, [active]);
 
   const openCreate = () => { setEditTarget(null); setForm({ name: '', description: '', points_cost: '', quantity_available: '' }); setShowModal(true); };
   const openEdit = (r: any) => { setEditTarget(r); setForm({ name: r.name, description: r.description, points_cost: String(r.points_cost), quantity_available: r.quantity_available != null ? String(r.quantity_available) : '' }); setShowModal(true); };
@@ -216,7 +222,7 @@ function RewardCatalogTab() {
 // ─────────────────────────────────────────────────────────────────────────────
 // COUPONS TAB
 // ─────────────────────────────────────────────────────────────────────────────
-function CouponsTab() {
+function CouponsTab({ active }: { active?: boolean }) {
   const { addToast } = useToastStore();
   const [coupons, setCoupons] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -229,8 +235,13 @@ function CouponsTab() {
 
   const ALL_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-  const load = () => api.getCoupons().then(setCoupons).catch(() => {}).finally(() => setLoading(false));
+  const load = () => {
+    invalidateContaining('coupons');
+    return api.getCoupons().then(setCoupons).catch(() => {}).finally(() => setLoading(false));
+  };
   useEffect(() => { load(); }, []);
+  // Re-fetch whenever this tab becomes active
+  useEffect(() => { if (active) load(); }, [active]);
 
   const genCode = () => Array.from({ length: 8 }, () => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[Math.floor(Math.random() * 36)]).join('');
 

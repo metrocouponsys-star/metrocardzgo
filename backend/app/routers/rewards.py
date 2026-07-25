@@ -182,7 +182,9 @@ def create_coupon(
     merchant_id: str = Depends(get_merchant_id),
     db: Session = Depends(get_db),
 ):
-    code_str = payload.code.upper().strip()
+    code_str = (payload.code or "").upper().strip()
+    if not code_str:
+        code_str = "".join(random.choices(string.ascii_uppercase + string.digits, k=8))
     existing = db.query(CouponCode).filter(
         CouponCode.merchant_id == merchant_id,
         CouponCode.code == code_str
