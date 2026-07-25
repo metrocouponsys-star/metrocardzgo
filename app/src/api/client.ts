@@ -1188,7 +1188,6 @@ const couponsDb: any[] = [
 ];
 export async function getCoupons(): Promise<any[]> { return couponsDb; }
 export async function createCoupon(data: any): Promise<any> {
-  await delay(FAKE_DELAY);
   const codeStr = (data.code || '').toUpperCase().trim();
   const existingIdx = couponsDb.findIndex(x => (x.code || '').toUpperCase() === codeStr);
   if (existingIdx !== -1) {

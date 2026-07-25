@@ -37,9 +37,14 @@ class Settings(BaseSettings):
                 v = v.replace("postgresql://", "postgresql+psycopg://", 1)
             if "psycopg" in v:
                 try:
-                    import psycopg  # check driver
+                    import psycopg  # check driver is available
                 except ImportError:
-                    return "sqlite:///test.db"
+                    import logging
+                    logging.getLogger(__name__).critical(
+                        "psycopg driver NOT found. PostgreSQL connection will fail. "
+                        "Check requirements.txt includes psycopg[binary]."
+                    )
+                    # Do NOT fall back to SQLite — surface the real error
         return v
 
     # ── Redis ────────────────────────────────────────────────────────────

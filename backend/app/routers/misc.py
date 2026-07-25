@@ -942,9 +942,22 @@ health_router = APIRouter(tags=["health"])
 
 
 @health_router.get("/health")
-def health_check():
+def health_check(db: Session = Depends(get_db)):
     """Used by UptimeRobot and GitHub Actions keep-alive cron to prevent Render.com sleep."""
-    return {"status": "ok", "service": "Metro Cardz API"}
+    from app.core.config import settings
+    db_type = "sqlite" if settings.database_url.startswith("sqlite") else "postgresql"
+    # Quick DB connectivity probe
+    try:
+        db.execute(__import__("sqlalchemy").text("SELECT 1"))
+        db_ok = True
+    except Exception as e:
+        db_ok = False
+    return {
+        "status": "ok",
+        "service": "Metro Cardz API",
+        "db_type": db_type,
+        "db_ok": db_ok,
+    }
 
 
 # ── Internal Cron Trigger ─────────────────────────────────────────────────────

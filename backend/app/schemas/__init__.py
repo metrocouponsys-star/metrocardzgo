@@ -608,12 +608,48 @@ class CouponCodeCreate(BaseModel):
     expires_at: Optional[date] = None
     active_days: Optional[str] = None
 
+    @field_validator("expires_at", mode="before")
+    @classmethod
+    def parse_expires_at(cls, v):
+        if not v or v == "":
+            return None
+        if isinstance(v, date):
+            return v
+        if isinstance(v, str):
+            v_clean = v.strip()
+            if not v_clean:
+                return None
+            for fmt in ("%Y-%m-%d", "%d-%m-%Y", "%d/%m/%Y", "%Y/%m/%d"):
+                try:
+                    return datetime.strptime(v_clean, fmt).date()
+                except ValueError:
+                    pass
+        return v
+
 
 class CouponCodeUpdate(BaseModel):
     is_active: Optional[bool] = None
     max_uses: Optional[int] = None
     expires_at: Optional[date] = None
     active_days: Optional[str] = None
+
+    @field_validator("expires_at", mode="before")
+    @classmethod
+    def parse_expires_at(cls, v):
+        if not v or v == "":
+            return None
+        if isinstance(v, date):
+            return v
+        if isinstance(v, str):
+            v_clean = v.strip()
+            if not v_clean:
+                return None
+            for fmt in ("%Y-%m-%d", "%d-%m-%Y", "%d/%m/%Y", "%Y/%m/%d"):
+                try:
+                    return datetime.strptime(v_clean, fmt).date()
+                except ValueError:
+                    pass
+        return v
 
 
 class CouponCodeOut(BaseModel):
