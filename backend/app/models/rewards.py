@@ -44,7 +44,7 @@ class CouponCode(Base):
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     merchant_id = Column(String, ForeignKey("merchants.id", ondelete="CASCADE"), nullable=False)
     code = Column(Text, nullable=False)
-    discount_type = Column(Enum("flat", "percent", name="discount_type"), nullable=False)
+    discount_type = Column(String, nullable=False)
     value = Column(Numeric, nullable=False)
     min_purchase = Column(Numeric, default=0)
     max_uses = Column(Integer, nullable=True)    # None = unlimited
@@ -81,7 +81,7 @@ class PointsRule(Base):
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     merchant_id = Column(String, ForeignKey("merchants.id", ondelete="CASCADE"), nullable=False)
-    rule_type = Column(Enum("per_visit", "per_rupee", name="points_rule_type"), nullable=False)
+    rule_type = Column(String, nullable=False)
     points_value = Column(Numeric, nullable=False)    # points earned per visit OR per ₹ spend_unit
     spend_unit = Column(Numeric, nullable=True, default=1) # ₹ amount for rule (default ₹1, or ₹100, etc)
     is_active = Column(Boolean, default=True, nullable=False)
@@ -97,7 +97,7 @@ class ScratchCard(Base):
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     merchant_id = Column(String, ForeignKey("merchants.id", ondelete="CASCADE"), nullable=False)
     member_id = Column(String, ForeignKey("members.id", ondelete="CASCADE"), nullable=False)
-    reward_type = Column(Enum("points", "voucher", "coupon", "gift", name="scratch_reward_type"), nullable=False)
+    reward_type = Column(String, nullable=False)
     reward_value = Column(Text, nullable=False)      # points amount OR voucher code OR description
     is_revealed = Column(Boolean, default=False, nullable=False)
     revealed_at = Column(DateTime(timezone=True), nullable=True)
@@ -119,7 +119,7 @@ class LuckyDraw(Base):
     draw_date = Column(Date, nullable=False)
     min_points = Column(Numeric, default=0)          # minimum loyalty points to enter
     min_visits = Column(Integer, default=0)          # minimum visits to enter
-    status = Column(Enum("open", "closed", "drawn", name="lucky_draw_status"), default="open", nullable=False)
+    status = Column(String, default="open", nullable=False)
     winner_member_id = Column(String, ForeignKey("members.id", ondelete="SET NULL"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
