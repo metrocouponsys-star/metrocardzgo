@@ -898,16 +898,19 @@ def lookup_membership(payload: MembershipLookupRequest, request: Request, db: Se
     last10 = id_digits[-10:] if len(id_digits) >= 10 else id_digits
 
     # Build comprehensive search filter across member_code, phone, and card number
+    clean_phone_sql = func.replace(func.replace(Member.phone, " ", ""), "-", "")
+    clean_card_sql = func.replace(func.replace(Member.physical_card_number, " ", ""), "-", "")
+
     q_filter = (
         (Member.member_code.ilike(identifier)) |
         (Member.member_code.ilike(f"%{id_strip_hash}%")) |
-        (Member.phone == identifier) |
-        (Member.physical_card_number == identifier)
+        (clean_phone_sql.ilike(f"%{identifier}%")) |
+        (clean_card_sql.ilike(f"%{identifier}%"))
     )
     if last10:
-        q_filter = q_filter | (Member.phone.ilike(f"%{last10}%"))
+        q_filter = q_filter | (clean_phone_sql.ilike(f"%{last10}%"))
     if id_digits and len(id_digits) >= 8:
-        q_filter = q_filter | (func.replace(Member.physical_card_number, " ", "").ilike(f"%{id_digits}%"))
+        q_filter = q_filter | (clean_card_sql.ilike(f"%{id_digits}%"))
 
     candidates = db.query(Member).filter(q_filter).all()
 

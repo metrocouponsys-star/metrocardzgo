@@ -252,10 +252,13 @@ function MembershipResult({
   onReset: () => void;
 }) {
   const [dataReady, setDataReady] = useState(false);
-  const points = useCountUp(Number(data.loyalty_points) ?? 0, 1200, dataReady);
+  const [walletLoading, setWalletLoading] = useState(false);
+  const [walletUrl, setWalletUrl] = useState<string | null>(null);
+
+  const pointsVal = Number(data.loyalty_points) || 0;
+  const points = useCountUp(pointsVal, 1200, dataReady);
 
   useEffect(() => {
-    // Small delay so the count-up triggers after the slide-up animation starts
     const t = setTimeout(() => setDataReady(true), 120);
     return () => clearTimeout(t);
   }, []);
@@ -265,7 +268,7 @@ function MembershipResult({
   return (
     <div className="min-h-screen bg-surface-container-low">
 
-      {/* ── Hero header (mirrors PublicMemberPage) ── */}
+      {/* ── Hero header ── */}
       <header className="hero-shimmer px-4 pt-8 pb-16 text-on-primary text-center relative overflow-hidden">
         <div className="absolute -right-12 -top-12 w-48 h-48 bg-white/5 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -left-12 -bottom-4 w-40 h-40 bg-white/5 rounded-full blur-3xl pointer-events-none" />
@@ -281,7 +284,7 @@ function MembershipResult({
       {/* ── Content ── */}
       <div className="max-w-md mx-auto px-4 -mt-10 pb-8 space-y-4">
 
-        {/* View-only badge — prominent, can't be missed */}
+        {/* View-only badge */}
         <div className="flex justify-center animate-slide-up">
           <span className="inline-flex items-center gap-1.5 bg-surface border border-outline-variant/40 shadow-md rounded-full px-4 py-1.5 text-xs font-semibold text-on-surface-variant">
             <span className="material-symbols-outlined text-[15px]">visibility</span>
@@ -319,18 +322,18 @@ function MembershipResult({
                   </span>
                   <StatusBadge status={data.status} />
                 </div>
-                <p className="text-xs text-on-surface-variant mt-1">{data.member_code}</p>
+                <p className="text-xs text-on-surface-variant font-mono font-semibold mt-1">{data.member_code}</p>
               </div>
             </div>
 
-            {/* Stats grid */}
+            {/* Stats grid — High-contrast Loyalty Points */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-primary-container rounded-xl p-4 text-center">
-                <p className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-1">Loyalty Points</p>
-                <p className="text-2xl font-bold text-on-primary-container tabular-nums">
-                  {dataReady ? points.toLocaleString() : '—'}
+              <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl p-4 text-center text-white shadow-sm">
+                <p className="text-xs font-bold uppercase tracking-wider mb-1 opacity-90">Loyalty Points</p>
+                <p className="text-3xl font-extrabold tabular-nums tracking-tight">
+                  {dataReady ? points.toLocaleString() : pointsVal.toLocaleString()}
                 </p>
-                <p className="text-xs text-on-surface-variant mt-0.5">pts</p>
+                <p className="text-xs font-semibold opacity-90 mt-0.5">pts</p>
               </div>
               <div className={`rounded-xl p-4 text-center ${isExpired ? 'bg-error-container' : 'bg-surface-container'}`}>
                 <p className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-1">
@@ -353,17 +356,17 @@ function MembershipResult({
           </div>
         </div>
 
-        {/* ── Active offers ── (read-only — no redeem buttons) */}
-        {data.offers.length > 0 && !isExpired && (
-          <div className="animate-slide-up" style={{ animationDelay: '80ms' }}>
-            <h3 className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-3 flex items-center gap-2">
+        {/* ── Active Tier Benefits ── */}
+        {data.offers && data.offers.length > 0 && !isExpired && (
+          <div className="animate-slide-up space-y-3" style={{ animationDelay: '80ms' }}>
+            <h3 className="text-xs font-bold text-on-surface-variant uppercase tracking-wider flex items-center gap-2">
               <span className="material-symbols-outlined text-[16px] text-primary">workspace_premium</span>
-              Your Active Benefits
+              Your Tier Benefits ({data.offers.length})
             </h3>
             <div className="space-y-3">
               {data.offers.map((offer: any, idx: number) => (
                 <div
-                  key={offer.id}
+                  key={offer.id || idx}
                   className="bg-surface rounded-2xl p-4 flex items-start gap-4 border border-outline-variant/20 shadow-sm animate-slide-up"
                   style={{ animationDelay: `${idx * 60 + 120}ms` }}
                 >
@@ -379,6 +382,149 @@ function MembershipResult({
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* ── Active Store Coupons & Promos ── */}
+        {data.coupons && data.coupons.length > 0 && !isExpired && (
+          <div className="animate-slide-up space-y-3" style={{ animationDelay: '100ms' }}>
+            <h3 className="text-xs font-bold text-on-surface-variant uppercase tracking-wider flex items-center gap-2">
+              <span className="material-symbols-outlined text-[16px] text-secondary">confirmation_number</span>
+              Active Store Coupons & Promos ({data.coupons.length})
+            </h3>
+            <div className="space-y-3">
+              {data.coupons.map((coupon: any) => (
+                <div key={coupon.id} className="bg-surface rounded-2xl p-4 border border-secondary-container/40 shadow-sm space-y-2 relative overflow-hidden">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-bold text-secondary text-base tracking-widest bg-secondary-container/30 px-3 py-1 rounded-xl border border-secondary/20">
+                        {coupon.code}
+                      </span>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(coupon.code);
+                          alert(`Coupon Code "${coupon.code}" copied! Show this code at checkout.`);
+                        }}
+                        className="text-xs text-primary font-bold hover:underline flex items-center gap-1 bg-primary/10 px-2.5 py-1 rounded-lg"
+                      >
+                        <span className="material-symbols-outlined text-[14px]">content_copy</span> Copy Code
+                      </button>
+                    </div>
+                    <span className="text-sm font-bold text-on-surface">
+                      {coupon.discount_type === 'percent' ? `${coupon.value}% OFF` : `₹${coupon.value} OFF`}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-between text-xs text-on-surface-variant gap-2 pt-1 border-t border-outline-variant/20">
+                    <span>Min purchase: ₹{coupon.min_purchase || 0}</span>
+                    {coupon.active_days && (
+                      <span className="inline-flex items-center gap-1 font-semibold text-primary">
+                        <span className="material-symbols-outlined text-[12px]">repeat</span> Active: {coupon.active_days}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Rewards Catalog ── */}
+        {data.rewards && data.rewards.length > 0 && !isExpired && (
+          <div className="animate-slide-up space-y-3" style={{ animationDelay: '120ms' }}>
+            <h3 className="text-xs font-bold text-on-surface-variant uppercase tracking-wider flex items-center gap-2">
+              <span className="material-symbols-outlined text-[16px] text-amber-600">card_giftcard</span>
+              Reward Catalog ({data.rewards.length})
+            </h3>
+            <div className="space-y-3">
+              {data.rewards.map((reward: any) => (
+                <div key={reward.id} className="bg-surface rounded-2xl p-4 border border-outline-variant/20 shadow-sm flex items-center justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-bold text-on-surface text-sm">{reward.name}</h4>
+                    {reward.description && <p className="text-xs text-on-surface-variant mt-0.5">{reward.description}</p>}
+                    <p className="text-xs font-bold text-amber-700 mt-1 flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[14px]">stars</span>
+                      {reward.points_cost} points required
+                    </p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <span className="text-xs px-3 py-1.5 rounded-xl bg-amber-100 text-amber-800 font-bold block">
+                      Claim at Counter
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Active Lucky Draws Section ── */}
+        {data.open_lucky_draws && data.open_lucky_draws.length > 0 && (
+          <div className="bg-surface rounded-2xl border border-amber-200/60 shadow-sm overflow-hidden animate-slide-up bg-gradient-to-br from-amber-50/50 to-orange-50/30 space-y-3 p-4">
+            <div className="flex items-center justify-between pb-2 border-b border-amber-200/40">
+              <h3 className="font-bold text-on-surface flex items-center gap-2">
+                <span className="material-symbols-outlined text-[20px] text-amber-600" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
+                Active Lucky Draws
+              </h3>
+              <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-semibold">Enter to Win</span>
+            </div>
+            <div className="space-y-3">
+              {data.open_lucky_draws.map((draw: any) => (
+                <div key={draw.id} className="bg-white p-4 rounded-xl border border-amber-200/40 flex items-center justify-between gap-3">
+                  <div>
+                    <h4 className="font-bold text-on-surface">{draw.name}</h4>
+                    <p className="text-sm text-amber-800 font-medium">Prize: {draw.prize}</p>
+                    {draw.draw_date && <p className="text-xs text-on-surface-variant mt-0.5">Draw Date: {draw.draw_date}</p>}
+                  </div>
+                  <div>
+                    {draw.already_entered ? (
+                      <span className="inline-flex items-center gap-1 text-xs font-bold text-green-700 bg-green-100 px-3 py-1.5 rounded-full">
+                        <span className="material-symbols-outlined text-[16px]">check_circle</span> Entered
+                      </span>
+                    ) : (
+                      <span className="text-xs text-on-surface-variant bg-surface-container px-2.5 py-1.5 rounded-lg">
+                        {draw.min_points > 0 ? `${draw.min_points} pts needed` : `${draw.min_visits} visits needed`}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Invite Code & WhatsApp Share ── */}
+        {data.referral_code && (
+          <div className="bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-2xl p-4 shadow-md space-y-2 animate-slide-up">
+            <div className="flex items-center justify-between">
+              <span className="text-xs uppercase font-bold tracking-wider opacity-90">Your Invite Code</span>
+              <span className="font-mono font-bold text-lg bg-black/20 px-3 py-1 rounded-lg tracking-widest">{data.referral_code}</span>
+            </div>
+            <p className="text-xs opacity-90">Share with friends to earn bonus loyalty points on your next visit!</p>
+            <a
+              href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Join ${data.merchant_name} membership using my invite code ${data.referral_code}`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-white text-amber-700 hover:bg-amber-50 w-full py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shadow-sm"
+            >
+              <span className="material-symbols-outlined text-[16px]">share</span>
+              Share on WhatsApp
+            </a>
+          </div>
+        )}
+
+        {/* ── How to Redeem Info Guide ── */}
+        {!isExpired && (
+          <div className="bg-surface-container rounded-2xl p-4 border border-outline-variant/30 space-y-2 animate-slide-up" style={{ animationDelay: '140ms' }}>
+            <h4 className="text-xs font-bold text-on-surface uppercase tracking-wider flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-primary text-[16px]">help_outline</span>
+              How to Redeem Offers & Rewards
+            </h4>
+            <ul className="text-xs text-on-surface-variant space-y-1.5 list-disc pl-4 leading-relaxed">
+              <li><strong>Coupons:</strong> Mention code at POS checkout to get instant discounts.</li>
+              <li><strong>Loyalty Points & Rewards:</strong> Show your member Code / Mobile Number at store counter. The cashier will apply your points & rewards instantly.</li>
+              <li><strong>WhatsApp Alerts:</strong> Exclusive offers are sent directly to your registered WhatsApp number.</li>
+            </ul>
           </div>
         )}
 
