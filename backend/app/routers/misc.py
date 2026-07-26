@@ -874,14 +874,22 @@ def lookup_membership(payload: MembershipLookupRequest, request: Request, db: Se
             detail="Enter your membership/mobile number and the last 4 digits of your registered mobile number",
         )
 
-    # Extract digits from identifier (e.g. 9987379000 from +91 99873 79000 or 9987379000)
-    digits_only = "".join(c for c in identifier if c.isdigit())
-    last10 = digits_only[-10:] if len(digits_only) >= 10 else digits_only
+    # Extract digits and cleaned string variants
+    id_digits = "".join(c for c in identifier if c.isdigit())
+    id_strip_hash = identifier.lstrip("#").strip()
+    last10 = id_digits[-10:] if len(id_digits) >= 10 else id_digits
 
-    # Search candidates: match by member_code OR phone ending with last10 digits OR exact phone match
-    q_filter = (Member.member_code.ilike(identifier)) | (Member.phone == identifier)
+    # Build comprehensive search filter across member_code, phone, and card number
+    q_filter = (
+        (Member.member_code.ilike(identifier)) |
+        (Member.member_code.ilike(f"%{id_strip_hash}%")) |
+        (Member.phone == identifier) |
+        (Member.physical_card_number == identifier)
+    )
     if last10:
-        q_filter = q_filter | (Member.phone.ilike(f"%{last10}"))
+        q_filter = q_filter | (Member.phone.ilike(f"%{last10}%"))
+    if id_digits and len(id_digits) >= 8:
+        q_filter = q_filter | (func.replace(Member.physical_card_number, " ", "").ilike(f"%{id_digits}%"))
 
     candidates = db.query(Member).filter(q_filter).all()
 
@@ -890,11 +898,16 @@ def lookup_membership(payload: MembershipLookupRequest, request: Request, db: Se
     verified = []
     for m in candidates:
         m_phone_digits = "".join(c for c in (m.phone or "") if c.isdigit())
-        if m_phone_digits and m_phone_digits[-4:] == last4:
-            # If search was by mobile, ensure last10 also matches
-            if len(digits_only) >= 10 and not m_phone_digits.endswith(last10):
+        if not m_phone_digits or m_phone_digits[-4:] != last4:
+            continue
+
+        # If user searched by full 10-digit mobile number, ensure last 10 digits match
+        if len(id_digits) >= 10 and not (m.member_code and id_strip_hash.lower() in m.member_code.lower()):
+            card_digits = "".join(c for c in (m.physical_card_number or "") if c.isdigit())
+            if not (m_phone_digits.endswith(last10) or (card_digits and card_digits.endswith(id_digits))):
                 continue
-            verified.append(m)
+
+        verified.append(m)
 
     # If more than one member matches (rare edge case: same member_code across
     # merchants), fail closed rather than leaking which merchant matched.
