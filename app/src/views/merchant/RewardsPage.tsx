@@ -88,10 +88,22 @@ function RewardCatalogTab({ active }: { active?: boolean }) {
       let res: any;
       if (editTarget) {
         res = await api.updateReward(editTarget.id, data);
-        if (res && res.id) setRewards(prev => prev.map(r => r.id === res.id ? res : r));
+        // Optimistically update the list in-place — no refetch needed, avoids race condition
+        if (res && res.id) {
+          setRewards(prev => prev.map(r => r.id === res.id ? res : r));
+        } else {
+          load(); // fallback: server returned unexpected shape, force refetch
+        }
       } else {
         res = await api.createReward(data);
-        if (res && res.id) setRewards(prev => [res, ...prev]);
+        // Optimistically prepend the newly created reward — the server returned the full object
+        // Do NOT call load() here: an immediate GET after POST races against this setState
+        // and can overwrite the correctly-updated list before the component re-renders.
+        if (res && res.id) {
+          setRewards(prev => [res, ...prev]);
+        } else {
+          load(); // fallback: server returned unexpected shape, force refetch
+        }
       }
       invalidateContaining('reward');
       invalidateContaining('member');
@@ -99,7 +111,6 @@ function RewardCatalogTab({ active }: { active?: boolean }) {
       addToast('success', editTarget ? 'Reward updated' : 'Reward created successfully');
       setShowModal(false); setEditTarget(null);
       setForm({ name: '', description: '', points_cost: '', quantity_available: '' });
-      load();
     } catch { addToast('error', 'Failed to save reward'); }
     finally { setSaving(false); }
   };
@@ -300,11 +311,23 @@ function CouponsTab({ active }: { active?: boolean }) {
       let res: any;
       if (editTarget) {
         res = await api.updateCoupon(editTarget.id, payload);
-        if (res && res.id) setCoupons(prev => prev.map(c => c.id === res.id ? res : c));
+        // Optimistically update the coupon in-place — avoids the GET-race overwrite
+        if (res && res.id) {
+          setCoupons(prev => prev.map(c => c.id === res.id ? res : c));
+        } else {
+          load(); // fallback: server returned unexpected shape
+        }
         addToast('success', 'Coupon updated');
       } else {
         res = await api.createCoupon(payload);
-        if (res && res.id) setCoupons(prev => [res, ...prev.filter(c => c.id !== res.id)]);
+        // Optimistically prepend the new coupon — the server returned the full CouponCodeOut object.
+        // Do NOT call load() here: an immediate GET after POST races against this setState
+        // and can overwrite the correctly-updated list before the component re-renders.
+        if (res && res.id) {
+          setCoupons(prev => [res, ...prev.filter(c => c.id !== res.id)]);
+        } else {
+          load(); // fallback: server returned unexpected shape
+        }
         addToast('success', 'Coupon created');
       }
       invalidateContaining('coupon');
@@ -313,7 +336,6 @@ function CouponsTab({ active }: { active?: boolean }) {
       setShowModal(false);
       setEditTarget(null);
       setForm({ code: '', discount_type: 'flat', value: '', min_purchase: '0', max_uses: '', expires_at: '' });
-      load();
     } catch (err: any) {
       addToast('error', err.message || (editTarget ? 'Failed to update coupon' : 'Failed to create coupon'));
     } finally { setSaving(false); }

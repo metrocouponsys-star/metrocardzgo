@@ -23,18 +23,22 @@ def _get_redis():
 
 def _build_login_response(user: MerchantUser, db: Session) -> LoginResponse:
     merchant_name = None
-    if user.merchant_id:
-        m = db.query(Merchant).filter(Merchant.id == user.merchant_id).first()
+    # Strip any accidental whitespace from merchant_id — a corrupted DB value
+    # like 'merch_ 6' (with a space) would otherwise flow into the JWT and every
+    # subsequent API call, causing 500s on queries.
+    clean_merchant_id = (user.merchant_id or '').strip() or None
+    if clean_merchant_id:
+        m = db.query(Merchant).filter(Merchant.id == clean_merchant_id).first()
         merchant_name = m.business_name if m else None
 
-    token_data = {"sub": user.id, "merchant_id": user.merchant_id, "role": user.role}
+    token_data = {"sub": user.id, "merchant_id": clean_merchant_id, "role": user.role}
     access_token = create_access_token(token_data)
     refresh_token = create_refresh_token(token_data)
 
     return LoginResponse(
         user=AuthUserOut(
             id=user.id, name=user.name, phone=user.phone, role=user.role,
-            merchant_id=user.merchant_id, merchant_name=merchant_name,
+            merchant_id=clean_merchant_id, merchant_name=merchant_name,
         ),
         access_token=access_token,
         refresh_token=refresh_token,

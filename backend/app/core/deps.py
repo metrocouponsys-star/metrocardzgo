@@ -121,7 +121,9 @@ def get_merchant_id(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="No merchant associated with this account",
         )
-    return current_user.merchant_id
+    # Strip whitespace — guards against corrupted DB values like 'merch_ 6'
+    # that would otherwise cause every downstream SQL query to use a bad ID.
+    return current_user.merchant_id.strip()
 
 
 def require_super_admin_or_merchant_owner(

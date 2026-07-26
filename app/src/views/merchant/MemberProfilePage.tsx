@@ -61,6 +61,29 @@ export default function MemberProfilePage() {
   const [recordingPurchase, setRecordingPurchase] = useState(false);
   const [pointsRules, setPointsRules] = useState<any[]>([]);
 
+  // Derived: coupons that are applicable for this purchase amount
+  // Mirrors the backend validation in record_member_purchase so the merchant
+  // sees exactly what will be accepted before they submit.
+  const getApplicableCoupons = (amount: string) => {
+    const today = new Date().toISOString().split('T')[0];
+    const purchaseAmt = Number(amount) || 0;
+    return coupons.filter((c: any) => {
+      if (!c.is_active) return false;
+      if (c.expires_at && c.expires_at < today) return false;
+      if (c.max_uses != null && c.used_count >= c.max_uses) return false;
+      if (purchaseAmt > 0 && c.min_purchase > 0 && purchaseAmt < c.min_purchase) return false;
+      return true;
+    });
+  };
+
+  // Compute the discount amount a selected coupon gives for the current amount
+  const computeCouponDiscount = (coupon: any, amount: string): number => {
+    const amt = Number(amount) || 0;
+    if (!coupon || amt <= 0) return 0;
+    if (coupon.discount_type === 'flat') return Math.min(Number(coupon.value), amt);
+    return Math.round((amt * Number(coupon.value)) / 100 * 100) / 100;
+  };
+
   // Edit Member Modal state
   const [showEditModal, setShowEditModal] = useState(false);
   const [membershipTypes, setMembershipTypes] = useState<MembershipType[]>([]);
@@ -1205,51 +1228,114 @@ export default function MemberProfilePage() {
             </div>
           </div>
 
-          {/* Live Estimated Points Preview */}
-          {Number(purchaseForm.amount) > 0 && (
-            <div className="p-3 bg-secondary-container/20 border border-secondary-container rounded-xl flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-secondary text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
-                <div>
-                  <p className="text-label-md font-bold text-on-surface">Loyalty Points to Earn</p>
-                  <p className="text-label-sm text-on-surface-variant">Calculated based on store points rules</p>
+          {/* Live Estimated Points Preview — uses NET amount if a coupon is selected */}
+          {Number(purchaseForm.amount) > 0 && (() => {
+            // Compute net amount after any selected coupon so the preview matches backend
+            const selectedCouponForPreview = coupons.find((c: any) => c.code === purchaseForm.coupon_code && c.is_active);
+            const previewDiscount = selectedCouponForPreview ? computeCouponDiscount(selectedCouponForPreview, purchaseForm.amount) : 0;
+            const netAmtForPreview = Math.max(0, Number(purchaseForm.amount) - previewDiscount);
+            const estimatedPts = calculateEstimatedPoints(String(netAmtForPreview));
+            return (
+              <div className="p-3 bg-secondary-container/20 border border-secondary-container rounded-xl flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-secondary text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
+                  <div>
+                    <p className="text-label-md font-bold text-on-surface">Loyalty Points to Earn</p>
+                    <p className="text-label-sm text-on-surface-variant">
+                      {previewDiscount > 0
+                        ? `On net ₹${netAmtForPreview.toLocaleString()} after ₹${previewDiscount} coupon`
+                        : 'Calculated based on store points rules'}
+                    </p>
+                  </div>
                 </div>
+                <span className="text-headline-sm font-bold text-secondary">
+                  +{estimatedPts} pts
+                </span>
               </div>
-              <span className="text-headline-sm font-bold text-secondary">
-                +{calculateEstimatedPoints(purchaseForm.amount)} pts
-              </span>
-            </div>
-          )}
+            );
+          })()}
 
+          {/* ── Coupon Selection ── */}
           <div>
             <label className="form-label" htmlFor="purchase-coupon">
               Apply Coupon Code <span className="text-on-surface-variant font-normal">(Optional)</span>
             </label>
-            {coupons.length > 0 && (
-              <select
-                className="input-field mb-2"
-                value={purchaseForm.coupon_code}
-                onChange={e => setPurchaseForm({ ...purchaseForm, coupon_code: e.target.value })}
-              >
-                <option value="">-- Auto-select / Select Available Coupon --</option>
-                {coupons.map((c: any) => {
-                  const label = `${c.code} (${c.discount_type === 'percent' ? `${c.value}% OFF` : `₹${c.value} OFF`}${c.min_purchase > 0 ? ` · Min ₹${c.min_purchase}` : ''})`;
-                  return (
-                    <option key={c.id} value={c.code}>
-                      {label}
-                    </option>
-                  );
-                })}
-              </select>
-            )}
-            <input
-              id="purchase-coupon"
-              type="text"
-              className="input-field uppercase tracking-wider font-mono"
-              placeholder={coupons.length > 0 ? "Or type custom promo code..." : "e.g. SAVE20"}
-              value={purchaseForm.coupon_code}
-              onChange={e => setPurchaseForm({ ...purchaseForm, coupon_code: e.target.value.toUpperCase() })}
-            />
+            {(() => {
+              // Only show coupons applicable to this purchase amount so the merchant
+              // isn't confused by coupons that the backend would reject.
+              const applicableCoupons = getApplicableCoupons(purchaseForm.amount);
+              const allActiveCoupons = coupons.filter((c: any) => c.is_active);
+              const selectedCoupon = applicableCoupons.find((c: any) => c.code === purchaseForm.coupon_code)
+                ?? allActiveCoupons.find((c: any) => c.code === purchaseForm.coupon_code);
+              const discountAmt = selectedCoupon ? computeCouponDiscount(selectedCoupon, purchaseForm.amount) : 0;
+
+              return (
+                <div className="space-y-2">
+                  {allActiveCoupons.length === 0 ? (
+                    // Merchant has no coupons at all
+                    <p className="text-label-sm text-on-surface-variant italic bg-surface-container px-3 py-2 rounded-lg">
+                      No coupon codes configured for this store yet.
+                    </p>
+                  ) : applicableCoupons.length === 0 ? (
+                    // Coupons exist but none pass the filter for this amount
+                    <div className="flex items-start gap-2 bg-surface-container px-3 py-2 rounded-lg">
+                      <span className="material-symbols-outlined text-on-surface-variant text-[16px] mt-0.5">info</span>
+                      <p className="text-label-sm text-on-surface-variant">
+                        No coupons available for this purchase
+                        {Number(purchaseForm.amount) > 0 ? ` (₹${purchaseForm.amount})` : ''}.
+                        {Number(purchaseForm.amount) <= 0 && ' Enter an amount above to check eligibility.'}
+                      </p>
+                    </div>
+                  ) : (
+                    // Show applicable coupon dropdown
+                    <select
+                      className="input-field"
+                      value={purchaseForm.coupon_code}
+                      onChange={e => setPurchaseForm({ ...purchaseForm, coupon_code: e.target.value })}
+                    >
+                      <option value="">-- No coupon --</option>
+                      {applicableCoupons.map((c: any) => {
+                        const discount = computeCouponDiscount(c, purchaseForm.amount);
+                        const discountLabel = c.discount_type === 'percent'
+                          ? `${c.value}% OFF${Number(purchaseForm.amount) > 0 ? ` = ₹${discount} savings` : ''}`
+                          : `₹${c.value} OFF`;
+                        const limitLabel = c.max_uses != null ? ` · ${c.max_uses - c.used_count} uses left` : '';
+                        return (
+                          <option key={c.id} value={c.code}>
+                            {c.code} ({discountLabel}{limitLabel})
+                          </option>
+                        );
+                      })}
+                    </select>
+                  )}
+
+                  {/* Live discount preview when a valid coupon is selected */}
+                  {selectedCoupon && discountAmt > 0 && (
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-50 border border-green-200">
+                      <span className="material-symbols-outlined text-green-600 text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>confirmation_number</span>
+                      <div className="flex-1">
+                        <p className="text-label-sm font-bold text-green-800">Coupon <span className="font-mono">{selectedCoupon.code}</span> applied</p>
+                        <p className="text-label-xs text-green-700">
+                          You save ₹{discountAmt.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                          {Number(purchaseForm.amount) > 0 && (
+                            <> · Net amount: ₹{Math.max(0, Number(purchaseForm.amount) - discountAmt).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</>)}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Free-text fallback for manual / staff-keyed codes */}
+                  <input
+                    id="purchase-coupon"
+                    type="text"
+                    className="input-field uppercase tracking-wider font-mono"
+                    placeholder={applicableCoupons.length > 0 ? 'Or type a promo code manually...' : 'Enter promo code...'}
+                    value={purchaseForm.coupon_code}
+                    onChange={e => setPurchaseForm({ ...purchaseForm, coupon_code: e.target.value.toUpperCase() })}
+                  />
+                </div>
+              );
+            })()}
           </div>
 
           {/* Optional Member Offer Redemption */}

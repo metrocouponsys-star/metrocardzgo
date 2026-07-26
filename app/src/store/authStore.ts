@@ -40,8 +40,16 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       originalAdminUser: null,
       isAuthenticated: false,
-      setAuth: (user, token) => set({ user, token, isAuthenticated: true, originalAdminUser: null }),
-      updateUser: (partial) => set((state) => ({ user: state.user ? { ...state.user, ...partial } : null })),
+      setAuth: (user, token) => {
+        const cleanUser = user ? { ...user, merchant_id: user.merchant_id ? user.merchant_id.trim() : user.merchant_id } : null;
+        set({ user: cleanUser, token, isAuthenticated: true, originalAdminUser: null });
+      },
+      updateUser: (partial) => set((state) => {
+        if (!state.user) return { user: null };
+        const updated = { ...state.user, ...partial };
+        if (updated.merchant_id) updated.merchant_id = updated.merchant_id.trim();
+        return { user: updated };
+      }),
       impersonate: (merchantId, merchantName) => set((state) => {
         if (state.user?.role !== 'super_admin' && !state.originalAdminUser) return {};
         const adminBackup = state.originalAdminUser || state.user;
@@ -52,7 +60,7 @@ export const useAuthStore = create<AuthState>()(
             name: adminBackup!.name,
             phone: adminBackup!.phone,
             role: 'owner',
-            merchant_id: merchantId,
+            merchant_id: merchantId ? merchantId.trim() : merchantId,
             merchant_name: merchantName,
           }
         };
