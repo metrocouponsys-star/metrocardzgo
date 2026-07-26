@@ -874,19 +874,27 @@ def lookup_membership(payload: MembershipLookupRequest, request: Request, db: Se
             detail="Enter your membership/mobile number and the last 4 digits of your registered mobile number",
         )
 
-    # Match on membership number (case-insensitive) OR full mobile number.
-    # Normalise phone for comparison — strip non-digits.
-    clean_identifier = identifier.replace(" ", "").replace("-", "")
-    candidates = db.query(Member).filter(
-        (Member.member_code.ilike(identifier)) | (Member.phone == clean_identifier)
-    ).all()
+    # Extract digits from identifier (e.g. 9987379000 from +91 99873 79000 or 9987379000)
+    digits_only = "".join(c for c in identifier if c.isdigit())
+    last10 = digits_only[-10:] if len(digits_only) >= 10 else digits_only
+
+    # Search candidates: match by member_code OR phone ending with last10 digits OR exact phone match
+    q_filter = (Member.member_code.ilike(identifier)) | (Member.phone == identifier)
+    if last10:
+        q_filter = q_filter | (Member.phone.ilike(f"%{last10}"))
+
+    candidates = db.query(Member).filter(q_filter).all()
 
     # Require the last-4-digits of the registered phone to match — this is the
     # verification gate that closes the sequential-ID enumeration risk.
-    verified = [
-        m for m in candidates
-        if (m.phone or "").replace(" ", "").replace("-", "")[-4:] == last4
-    ]
+    verified = []
+    for m in candidates:
+        m_phone_digits = "".join(c for c in (m.phone or "") if c.isdigit())
+        if m_phone_digits and m_phone_digits[-4:] == last4:
+            # If search was by mobile, ensure last10 also matches
+            if len(digits_only) >= 10 and not m_phone_digits.endswith(last10):
+                continue
+            verified.append(m)
 
     # If more than one member matches (rare edge case: same member_code across
     # merchants), fail closed rather than leaking which merchant matched.
