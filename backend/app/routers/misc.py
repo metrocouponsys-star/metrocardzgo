@@ -743,6 +743,58 @@ def report_retention(
 public_router = APIRouter(prefix="/public", tags=["public"])
 
 
+def _fetch_member_catalog_internal(merchant_id: str, db: Session) -> dict:
+    """Helper function to fetch active rewards and active coupons for a merchant."""
+    rewards_out = []
+    try:
+        from app.models.rewards import RewardCatalog
+        for r in db.query(RewardCatalog).filter(
+            RewardCatalog.merchant_id == merchant_id,
+            RewardCatalog.is_active == True,
+        ).order_by(RewardCatalog.created_at.desc()).all():
+            try:
+                rewards_out.append({
+                    "id": str(r.id),
+                    "name": str(r.name),
+                    "description": r.description or "",
+                    "points_cost": float(r.points_cost or 0),
+                    "quantity_available": r.quantity_available,
+                })
+            except Exception:
+                pass
+    except Exception as err:
+        print(f"catalog rewards error: {err}")
+
+    coupons_out = []
+    try:
+        from app.models.rewards import CouponCode
+        from datetime import date as date_type
+        today = date_type.today()
+        for c in db.query(CouponCode).filter(
+            CouponCode.merchant_id == merchant_id,
+            CouponCode.is_active == True,
+        ).all():
+            try:
+                exp = c.expires_at
+                if exp and exp < today:
+                    continue
+                coupons_out.append({
+                    "id": str(c.id),
+                    "code": str(c.code),
+                    "discount_type": str(c.discount_type),
+                    "value": float(c.value or 0),
+                    "min_purchase": float(c.min_purchase or 0),
+                    "active_days": c.active_days or None,
+                    "expires_at": str(exp) if exp else None,
+                })
+            except Exception:
+                pass
+    except Exception as err:
+        print(f"catalog coupons error: {err}")
+
+    return {"rewards": rewards_out, "coupons": coupons_out}
+
+
 def _build_public_member_view(member: Member, merchant: Merchant, db: Session) -> PublicMemberView:
     """Shared read-only view builder used by both the QR-token page and the
     membership-number self-lookup page. Keeping logic in one place ensures
@@ -842,54 +894,10 @@ def _build_public_member_view(member: Member, merchant: Merchant, db: Session) -
     except Exception as err:
         print(f"Notice: lucky draws notice: {err}")
 
-    coupons_out = []
-    try:
-        from app.models.rewards import CouponCode
-        from datetime import date as date_cls
-        today_date = date_cls.today()
-        active_coupons = db.query(CouponCode).filter(
-            CouponCode.merchant_id == merchant_id,
-            CouponCode.is_active == True,
-        ).all()
-        for c in active_coupons:
-            try:
-                exp = getattr(c, "expires_at", None)
-                if exp and exp < today_date:
-                    continue
-                coupons_out.append({
-                    "id": str(c.id),
-                    "code": str(c.code),
-                    "discount_type": str(c.discount_type),
-                    "value": float(c.value or 0),
-                    "min_purchase": float(getattr(c, "min_purchase", 0) or 0),
-                    "active_days": getattr(c, "active_days", None),
-                    "expires_at": str(exp) if exp else None,
-                })
-            except Exception as item_err:
-                print(f"Notice: coupon item parse error: {item_err}")
-    except Exception as err:
-        print(f"Notice: coupons build notice: {err}")
-
-    rewards_out = []
-    try:
-        from app.models.rewards import RewardCatalog
-        active_rewards = db.query(RewardCatalog).filter(
-            RewardCatalog.merchant_id == merchant_id,
-            RewardCatalog.is_active == True,
-        ).order_by(RewardCatalog.created_at.desc()).all()
-        for r in active_rewards:
-            try:
-                rewards_out.append({
-                    "id": str(r.id),
-                    "name": str(r.name),
-                    "description": getattr(r, "description", "") or "",
-                    "points_cost": float(r.points_cost or 0),
-                    "quantity_available": getattr(r, "quantity_available", None),
-                })
-            except Exception as item_err:
-                print(f"Notice: reward item parse error: {item_err}")
-    except Exception as err:
-        print(f"Notice: rewards build notice: {err}")
+    # Fetch rewards and coupons using shared catalog helper
+    catalog_res = _fetch_member_catalog_internal(merchant_id, db)
+    coupons_out = catalog_res["coupons"]
+    rewards_out = catalog_res["rewards"]
 
     # Calculate actual points balance from member record or sum of loyalty transactions
     pts_balance = float(member.loyalty_points or 0)
@@ -1082,57 +1090,7 @@ def get_public_member_catalog(member_id: str = Query(...), db: Session = Depends
     member = db.query(Member).filter(Member.id == member_id).first()
     if not member:
         return {"rewards": [], "coupons": []}
-
-    merchant_id = member.merchant_id
-
-    rewards_out = []
-    try:
-        from app.models.rewards import RewardCatalog
-        for r in db.query(RewardCatalog).filter(
-            RewardCatalog.merchant_id == merchant_id,
-            RewardCatalog.is_active == True,
-        ).order_by(RewardCatalog.created_at.desc()).all():
-            try:
-                rewards_out.append({
-                    "id": r.id,
-                    "name": r.name,
-                    "description": r.description or "",
-                    "points_cost": float(r.points_cost or 0),
-                    "quantity_available": r.quantity_available,
-                })
-            except Exception:
-                pass
-    except Exception as err:
-        print(f"public member-catalog rewards error: {err}")
-
-    coupons_out = []
-    try:
-        from app.models.rewards import CouponCode
-        from datetime import date as date_type
-        today = date_type.today()
-        for c in db.query(CouponCode).filter(
-            CouponCode.merchant_id == merchant_id,
-            CouponCode.is_active == True,
-        ).all():
-            try:
-                exp = c.expires_at
-                if exp and exp < today:
-                    continue
-                coupons_out.append({
-                    "id": c.id,
-                    "code": c.code,
-                    "discount_type": str(c.discount_type),
-                    "value": float(c.value or 0),
-                    "min_purchase": float(c.min_purchase or 0),
-                    "active_days": c.active_days or None,
-                    "expires_at": str(exp) if exp else None,
-                })
-            except Exception:
-                pass
-    except Exception as err:
-        print(f"public member-catalog coupons error: {err}")
-
-    return {"rewards": rewards_out, "coupons": coupons_out}
+    return _fetch_member_catalog_internal(member.merchant_id, db)
 
 
 @public_router.post("/lucky-draws/{draw_id}/enter")
