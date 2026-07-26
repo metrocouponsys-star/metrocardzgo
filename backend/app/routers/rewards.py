@@ -207,7 +207,19 @@ def create_coupon(
         return coupon
     except Exception as e:
         db.rollback()
-        raise HTTPException(400, f"Failed to create coupon: {str(e)}")
+        # Fallback: if database error happens due to legacy Postgres Enum type on discount_type column
+        try:
+            from sqlalchemy import text
+            db.execute(text("ALTER TABLE coupon_codes ALTER COLUMN discount_type TYPE VARCHAR USING discount_type::VARCHAR;"))
+            db.commit()
+            coupon = CouponCode(merchant_id=merchant_id, **data)
+            db.add(coupon)
+            db.commit()
+            db.refresh(coupon)
+            return coupon
+        except Exception:
+            db.rollback()
+            raise HTTPException(400, f"Failed to create coupon: {str(e)}")
 
 
 @coupons_router.patch("/{coupon_id}", response_model=CouponCodeOut)
