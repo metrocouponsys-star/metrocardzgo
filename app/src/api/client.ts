@@ -124,7 +124,7 @@ function buildDynamicPublicMemberView(m: Member): PublicMemberView {
       title: tmpl.title,
       description: tmpl.description || '',
       offer_type: tmpl.offer_type,
-      value: String(tmpl.value),
+      value: Number(tmpl.value) || 0,
       remaining_qty: tmpl.offer_type === 'percent_off' ? null : (state?.remaining_qty ?? bundledQty ?? 3),
       is_points_redemption: !!tmpl.is_points_redemption,
       points_cost: tmpl.loyalty_points_cost || 0,

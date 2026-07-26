@@ -119,6 +119,25 @@ export const HeroSection: React.FC = () => {
             </button>
           </div>
 
+          {/* Portal Quick Access Links */}
+          <div className="mt-6 flex flex-wrap items-center justify-center lg:justify-start gap-4 text-sm font-semibold">
+            <a
+              href="/check-membership"
+              className="inline-flex items-center gap-1.5 text-gold hover:text-warm-white transition-colors duration-200 border-b border-gold/20 hover:border-warm-white pb-0.5"
+            >
+              <span className="material-symbols-outlined text-[16px] text-gold">qr_code_scanner</span>
+              Check Membership Points
+            </a>
+            <span className="text-warm-white/20">|</span>
+            <a
+              href="/login"
+              className="inline-flex items-center gap-1.5 text-warm-white/60 hover:text-warm-white transition-colors duration-200 border-b border-warm-white/10 hover:border-warm-white pb-0.5"
+            >
+              <span className="material-symbols-outlined text-[16px]">storefront</span>
+              Merchant Portal
+            </a>
+          </div>
+
           {/* Trust stats */}
           <div className="mt-10 flex gap-8 justify-center lg:justify-start">
             {[

@@ -154,6 +154,7 @@ export interface LoyaltyTransaction {
   source_offer_id?: string | null;
   source_offer_title?: string | null;
   balance_after: number;       // running balance snapshot
+  note?: string | null;
   created_at: string;
 }
 

@@ -20,6 +20,7 @@ export const LandingNavbar: React.FC = () => {
   ];
 
   const pageLinks = [
+    { label: 'Check Membership', href: '/check-membership' },
     { label: 'Features', href: '/features' },
     { label: 'How It Works', href: '/how-it-works' },
     { label: 'About', href: '/about-us' },
@@ -147,6 +148,15 @@ export const LandingNavbar: React.FC = () => {
             </button>
           ))}
           <hr className="border-warm-white/10" />
+          {pageLinks.map(link => (
+            <a
+              key={link.href}
+              href={link.href}
+              className="text-warm-white/80 hover:text-gold text-base font-medium py-1"
+            >
+              {link.label}
+            </a>
+          ))}
           <a href="/login" className="text-warm-white/80 hover:text-gold text-base font-medium py-1">Merchant Login</a>
           <button
             type="button"
