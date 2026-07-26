@@ -758,14 +758,25 @@ def _build_public_member_view(member: Member, merchant: Merchant, db: Session) -
 
     offers = []
     try:
-        for state in (getattr(member, "offer_states", []) or []):
-            if state.status == "active" and state.offer_template and getattr(state.offer_template, "active", True):
-                ot = state.offer_template
-                offers.append({
-                    "id": ot.id, "title": ot.title,
-                    "description": getattr(ot, "description", "") or "",
-                    "offer_type": ot.offer_type, "value": str(ot.value),
-                })
+        from app.models.offer import OfferTemplate
+        from app.models.member import MemberOfferState
+        states = db.query(MemberOfferState).filter(MemberOfferState.member_id == member.id).all()
+        for state in states:
+            raw_st_status = getattr(state, "status", "active")
+            st_status_str = str(getattr(raw_st_status, "value", raw_st_status))
+            if st_status_str == "active":
+                ot = db.query(OfferTemplate).filter(OfferTemplate.id == state.offer_template_id).first()
+                if ot and getattr(ot, "active", True):
+                    offers.append({
+                        "id": state.id,
+                        "title": ot.title,
+                        "description": getattr(ot, "description", "") or "",
+                        "offer_type": str(ot.offer_type),
+                        "value": str(ot.value),
+                        "remaining_qty": float(state.remaining_qty) if state.remaining_qty is not None else None,
+                        "is_points_redemption": getattr(ot, "is_points_redemption", False),
+                        "points_cost": float(getattr(ot, "loyalty_points_cost", 0) or 0),
+                    })
     except Exception as err:
         print(f"Notice: offers build notice: {err}")
 
@@ -927,14 +938,18 @@ def lookup_membership(payload: MembershipLookupRequest, request: Request, db: Se
             if matches:
                 verified.append(m)
 
-        # Fail closed if no match or multiple matches across merchants
-        if len(verified) != 1:
+        if len(verified) == 0:
             raise HTTPException(
                 status_code=404,
                 detail="No matching membership found. Please check your details and try again.",
             )
 
-        member = verified[0]
+        from datetime import datetime
+        member = sorted(
+            verified,
+            key=lambda m: (getattr(m, "status", "active") == "active", getattr(m, "updated_at", None) or getattr(m, "created_at", None) or datetime.min),
+            reverse=True
+        )[0]
         merchant = db.query(Merchant).filter(Merchant.id == member.merchant_id).first()
         if not merchant or merchant.status != "active":
             raise HTTPException(

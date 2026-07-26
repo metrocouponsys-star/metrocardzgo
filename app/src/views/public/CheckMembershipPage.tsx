@@ -40,11 +40,11 @@ function useCountUp(target: number, duration = 1200, enabled = true) {
 
 function LookupSkeleton() {
   return (
-    <div className="min-h-screen bg-[#090D16] text-white flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md space-y-4 animate-pulse">
-        <div className="h-44 rounded-3xl bg-white/5 border border-white/10" />
-        <div className="h-28 rounded-2xl bg-white/5 border border-white/10" />
-        <div className="h-36 rounded-2xl bg-white/5 border border-white/10" />
+        <div className="h-44 rounded-3xl bg-white border border-slate-200 shadow-sm" />
+        <div className="h-28 rounded-2xl bg-white border border-slate-200 shadow-sm" />
+        <div className="h-36 rounded-2xl bg-white border border-slate-200 shadow-sm" />
       </div>
     </div>
   );
@@ -93,48 +93,45 @@ function LookupForm({
   };
 
   return (
-    <div className="min-h-screen bg-[#07090E] text-white flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden selection:bg-amber-500 selection:text-black">
-      {/* Dynamic ambient background glow */}
-      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-amber-500/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-indigo-600/15 rounded-full blur-[140px] pointer-events-none" />
-
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden selection:bg-amber-500 selection:text-black">
+      
       <div className="w-full max-w-md space-y-6 relative z-10 animate-fade-in">
         
-        {/* Brand header */}
+        {/* Brand Header */}
         <div className="text-center space-y-3">
-          <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-amber-500/20 via-amber-400/10 to-transparent p-0.5 mx-auto shadow-2xl backdrop-blur-xl border border-amber-500/30">
-            <div className="w-full h-full rounded-[22px] bg-[#0F1420] flex items-center justify-center">
-              <span className="material-symbols-outlined text-amber-400 text-[36px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+          <div className="w-20 h-20 rounded-3xl bg-amber-500/10 border border-amber-300 p-0.5 mx-auto shadow-sm flex items-center justify-center">
+            <div className="w-full h-full rounded-[22px] bg-white flex items-center justify-center">
+              <span className="material-symbols-outlined text-amber-600 text-[36px]" style={{ fontVariationSettings: "'FILL' 1" }}>
                 badge
               </span>
             </div>
           </div>
-          <h1 className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-amber-200/90 bg-clip-text text-transparent">
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">
             Check Your Membership
           </h1>
-          <p className="text-sm text-slate-400 max-w-xs mx-auto leading-relaxed">
-            Instant balance enquiry & digital pass view — no login required.
+          <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed font-medium">
+            View your points balance, benefits & active store coupons — no login required.
           </p>
-          <span className="inline-flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 rounded-full px-4 py-1 text-xs font-semibold text-amber-300 backdrop-blur-md">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-            Live Customer Portal
+          <span className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 rounded-full px-3.5 py-1 text-xs font-bold text-amber-800">
+            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+            Balance & Rewards Enquiry
           </span>
         </div>
 
-        {/* Premium Form Box */}
-        <div className="bg-[#0F1420]/80 backdrop-blur-2xl rounded-3xl p-6 sm:p-7 shadow-2xl border border-white/10 space-y-5">
+        {/* Crisp Light Form Card */}
+        <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-sm border border-slate-200 space-y-5">
           <form onSubmit={handleSubmit} className="space-y-5" noValidate>
 
             <div className="space-y-2">
-              <label htmlFor="cm-identifier" className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[16px] text-amber-400">card_membership</span>
+              <label htmlFor="cm-identifier" className="text-xs font-extrabold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[16px] text-amber-600">card_membership</span>
                 Membership Code or Mobile Number
               </label>
               <div className="relative">
                 <input
                   id="cm-identifier"
                   type="text"
-                  className="w-full bg-[#161B28] border border-white/15 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 rounded-2xl px-4 py-3.5 text-white placeholder:text-slate-500 text-sm font-medium transition-all outline-none"
+                  className="w-full bg-slate-50 border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 rounded-2xl px-4 py-3.5 text-slate-900 placeholder:text-slate-400 text-sm font-bold transition-all outline-none"
                   placeholder="e.g. #MC0004 or 9987379000"
                   value={identifier}
                   onChange={e => setIdentifier(e.target.value)}
@@ -145,12 +142,12 @@ function LookupForm({
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="cm-last4" className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center justify-between">
+              <label htmlFor="cm-last4" className="text-xs font-extrabold uppercase tracking-wider text-slate-600 flex items-center justify-between">
                 <span className="flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[16px] text-amber-400">lock</span>
+                  <span className="material-symbols-outlined text-[16px] text-amber-600">lock</span>
                   Last 4 Digits of Registered Phone
                 </span>
-                <span className="text-[10px] text-slate-400 font-normal uppercase">Security Gate</span>
+                <span className="text-[10px] text-slate-400 font-bold uppercase">Security Check</span>
               </label>
               <input
                 id="cm-last4"
@@ -158,29 +155,29 @@ function LookupForm({
                 inputMode="numeric"
                 maxLength={4}
                 pattern="\d{4}"
-                className="w-full bg-[#161B28] border border-white/15 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 rounded-2xl px-4 py-3.5 text-center font-mono text-xl tracking-[0.4em] font-bold text-amber-300 placeholder:text-slate-600 transition-all outline-none"
+                className="w-full bg-slate-50 border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 rounded-2xl px-4 py-3.5 text-center font-mono text-xl tracking-[0.4em] font-black text-amber-700 placeholder:text-slate-300 transition-all outline-none"
                 placeholder="0 0 0 0"
                 value={last4}
                 onChange={e => setLast4(e.target.value.replace(/\D/g, '').slice(0, 4))}
                 autoComplete="off"
                 disabled={loading}
               />
-              <p className="text-[11px] text-slate-400 leading-relaxed">
-                Prevents unauthorized lookup by verifying ownership of the registered phone number.
+              <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
+                Confirms your identity and protects your points privacy.
               </p>
             </div>
 
             {error && (
-              <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-3.5 flex items-start gap-2.5 animate-shake">
-                <span className="material-symbols-outlined text-rose-400 text-[18px] shrink-0 mt-0.5">error</span>
-                <p className="text-xs text-rose-200 font-medium leading-relaxed">{error}</p>
+              <div className="bg-rose-50 border border-rose-200 rounded-2xl p-3.5 flex items-start gap-2.5">
+                <span className="material-symbols-outlined text-rose-600 text-[18px] shrink-0 mt-0.5">error</span>
+                <p className="text-xs text-rose-800 font-bold leading-relaxed">{error}</p>
               </div>
             )}
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-extrabold text-sm tracking-wide shadow-lg shadow-amber-500/20 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98]"
+              className="w-full py-4 px-6 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs tracking-wide shadow-md transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98]"
             >
               {loading ? (
                 <>
@@ -190,7 +187,7 @@ function LookupForm({
               ) : (
                 <>
                   <span className="material-symbols-outlined text-[20px]">search</span>
-                  <span>View Member Pass</span>
+                  <span>View My Pass & Benefits</span>
                 </>
               )}
             </button>
@@ -198,12 +195,12 @@ function LookupForm({
         </div>
 
         {/* Footer info */}
-        <div className="text-center space-y-2 text-xs text-slate-400">
-          <p className="opacity-80">Have a physical card? Scan the QR code on your card.</p>
+        <div className="text-center space-y-2 text-xs text-slate-400 font-medium">
+          <p>Scanning QR code on card directly opens this view.</p>
           <div className="flex items-center justify-center gap-3 pt-1">
-            <Link to="/login" className="text-amber-400 hover:underline font-semibold">Merchant Portal</Link>
-            <span className="text-slate-600">·</span>
-            <a href="/" className="text-slate-300 hover:underline font-medium">MetroCardz Home</a>
+            <Link to="/login" className="text-amber-700 hover:underline font-bold">Merchant Login</Link>
+            <span className="text-slate-300">·</span>
+            <a href="/" className="text-slate-600 hover:underline font-medium">MetroCardz Home</a>
           </div>
         </div>
 
@@ -239,79 +236,72 @@ function MembershipResult({
   };
 
   return (
-    <div className="min-h-screen bg-[#07090E] text-white pb-14 selection:bg-amber-500 selection:text-black">
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 pb-14 selection:bg-amber-500 selection:text-black">
       
       {/* Top Banner Header */}
-      <div className="bg-gradient-to-b from-[#131927] via-[#0F1422] to-[#07090E] pt-8 pb-14 px-4 text-center border-b border-white/5 relative overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[250px] bg-amber-500/10 rounded-full blur-[140px] pointer-events-none" />
-        
-        <div className="max-w-md mx-auto relative z-10 space-y-2">
-          <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-3.5 py-1 text-xs text-amber-300 font-semibold mb-1">
-            <span className="material-symbols-outlined text-[16px] text-amber-400">verified</span>
+      <div className="bg-white border-b border-slate-200 py-6 px-4 text-center shadow-sm">
+        <div className="max-w-md mx-auto space-y-1">
+          <span className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 rounded-full px-3.5 py-0.5 text-xs text-amber-900 font-bold">
+            <span className="material-symbols-outlined text-[16px] text-amber-600">verified</span>
             {data.merchant_name}
-          </div>
-          <h1 className="text-xl font-black text-white tracking-tight">{data.merchant_name}</h1>
-          <p className="text-xs text-slate-400 font-medium">Digital Loyalty Membership Pass</p>
+          </span>
+          <h1 className="text-xl font-black text-slate-900">{data.merchant_name}</h1>
+          <p className="text-xs text-slate-500 font-semibold">Digital Loyalty Member Pass</p>
         </div>
       </div>
 
       {/* Main Container */}
-      <div className="max-w-md mx-auto px-4 -mt-8 space-y-5 relative z-20">
+      <div className="max-w-md mx-auto px-4 pt-6 space-y-5">
 
-        {/* ── Luxury Metallic Digital Pass Card ── */}
-        <div className="rounded-3xl p-6 bg-gradient-to-br from-[#161C2E] via-[#0F1424] to-[#0A0D18] border border-amber-500/30 shadow-2xl space-y-6 relative overflow-hidden">
-          {/* Card texture lines */}
-          <div className="absolute -right-16 -top-16 w-48 h-48 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
-
-          {/* Card Top Row */}
-          <div className="flex items-start justify-between gap-3 relative z-10">
+        {/* ── Light Modern Digital Member Card ── */}
+        <div className="rounded-3xl p-6 bg-white border border-slate-200 shadow-sm space-y-6 relative overflow-hidden">
+          
+          {/* Card Header */}
+          <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-300 text-slate-950 font-black text-xl flex items-center justify-center shadow-lg shadow-amber-500/20">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-400 text-slate-950 font-black text-xl flex items-center justify-center shadow-md">
                 {data.member_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
               </div>
               <div>
-                <h2 className="text-base font-extrabold text-white tracking-tight">{data.member_name}</h2>
-                <p className="text-xs font-mono font-semibold text-amber-400 mt-0.5">{data.member_code}</p>
+                <h2 className="text-lg font-black text-slate-900">{data.member_name}</h2>
+                <p className="text-xs font-mono font-bold text-amber-700">#{data.member_code}</p>
               </div>
             </div>
 
-            <div className="text-right">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-400/15 border border-amber-400/30 text-amber-300">
-                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                {data.membership_type_name}
-              </span>
-            </div>
+            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black bg-amber-100 border border-amber-300 text-amber-900">
+              {data.membership_type_name}
+            </span>
           </div>
 
-          {/* Card Middle: Loyalty Points Banner */}
-          <div className="bg-gradient-to-r from-amber-500/20 via-amber-400/10 to-amber-500/20 rounded-2xl p-4 border border-amber-400/30 flex items-center justify-between shadow-inner">
+          {/* Hero Loyalty Points Card */}
+          <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl p-5 text-slate-950 shadow-md flex items-center justify-between">
             <div>
-              <p className="text-[11px] font-extrabold uppercase tracking-widest text-amber-300/80">Loyalty Balance</p>
+              <p className="text-[11px] font-black uppercase tracking-widest text-slate-950/75">Loyalty Points Balance</p>
               <div className="flex items-baseline gap-1.5 mt-0.5">
-                <span className="text-3xl font-black text-white tabular-nums tracking-tight">
+                <span className="text-4xl font-black tabular-nums tracking-tight">
                   {dataReady ? points.toLocaleString() : pointsVal.toLocaleString()}
                 </span>
-                <span className="text-xs font-bold text-amber-400 uppercase">Points</span>
+                <span className="text-xs font-black uppercase text-slate-950/80">pts</span>
               </div>
             </div>
 
-            <div className="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-400/30 flex items-center justify-center text-amber-300 shadow-md">
-              <span className="material-symbols-outlined text-[26px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
+            <div className="w-12 h-12 rounded-xl bg-slate-950/10 border border-slate-950/15 flex items-center justify-center text-slate-950 shadow-sm">
+              <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
             </div>
           </div>
 
-          {/* Card Bottom Grid */}
-          <div className="grid grid-cols-2 gap-3 pt-2 text-xs border-t border-white/10">
-            <div className="bg-white/5 rounded-xl p-3 border border-white/5">
-              <p className="text-[10px] uppercase font-bold text-slate-400">Member Status</p>
-              <p className="text-xs font-extrabold text-emerald-400 mt-0.5 capitalize flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+          {/* Card Footer Details */}
+          <div className="grid grid-cols-2 gap-3 pt-2 text-xs border-t border-slate-100">
+            <div className="bg-slate-50 rounded-xl p-3 border border-slate-200">
+              <p className="text-[10px] uppercase font-bold text-slate-400">Status</p>
+              <p className="text-xs font-black text-emerald-700 mt-0.5 capitalize flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                 {data.status || 'Active'}
               </p>
             </div>
-            <div className="bg-white/5 rounded-xl p-3 border border-white/5">
+            <div className="bg-slate-50 rounded-xl p-3 border border-slate-200">
               <p className="text-[10px] uppercase font-bold text-slate-400">{isExpired ? 'Expired On' : 'Valid Until'}</p>
-              <p className="text-xs font-extrabold text-slate-200 mt-0.5">
+              <p className="text-xs font-black text-slate-900 mt-0.5">
                 {format(new Date(data.expiry_date), 'dd MMM yyyy')}
               </p>
             </div>
@@ -321,33 +311,29 @@ function MembershipResult({
         {/* ── Active Store Coupons & Discount Vouchers ── */}
         {data.coupons && data.coupons.length > 0 && !isExpired && (
           <div className="space-y-3">
-            <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-              <span className="material-symbols-outlined text-[16px] text-amber-400">confirmation_number</span>
-              Store Coupons & Promo Vouchers ({data.coupons.length})
+            <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-600 flex items-center gap-2">
+              <span className="material-symbols-outlined text-[16px] text-amber-600">confirmation_number</span>
+              Available Store Coupons & Promos ({data.coupons.length})
             </h3>
 
             <div className="space-y-3">
               {data.coupons.map((coupon: any) => (
-                <div key={coupon.id} className="bg-[#0F1422] rounded-2xl p-4 border border-amber-500/20 shadow-lg space-y-3 relative overflow-hidden">
+                <div key={coupon.id} className="bg-amber-50/40 rounded-2xl p-4 border-2 border-dashed border-amber-300 shadow-sm space-y-3">
                   <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <span className="font-mono font-black text-amber-300 text-base tracking-widest bg-amber-500/10 px-3 py-1 rounded-xl border border-amber-500/30 inline-block">
-                        {coupon.code}
-                      </span>
-                    </div>
+                    <span className="font-mono font-black text-amber-900 text-sm tracking-widest bg-amber-200/60 px-3 py-1 rounded-xl border border-amber-300">
+                      {coupon.code}
+                    </span>
 
-                    <div className="text-right">
-                      <span className="text-sm font-black text-emerald-400">
-                        {coupon.discount_type === 'percent' ? `${coupon.value}% OFF` : `₹${coupon.value} OFF`}
-                      </span>
-                    </div>
+                    <span className="text-sm font-black text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                      {coupon.discount_type === 'percent' ? `${coupon.value}% OFF` : `₹${coupon.value} OFF`}
+                    </span>
                   </div>
 
-                  <div className="flex items-center justify-between text-xs text-slate-400 pt-2 border-t border-white/5">
-                    <span>Min Purchase: ₹{coupon.min_purchase || 0}</span>
+                  <div className="flex items-center justify-between text-xs text-slate-600 pt-2 border-t border-amber-200/60">
+                    <span className="font-semibold">Min Purchase: ₹{coupon.min_purchase || 0}</span>
                     <button
                       onClick={() => copyCoupon(coupon.code)}
-                      className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-bold flex items-center gap-1 transition-colors border border-amber-500/30"
+                      className="px-3 py-1 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold flex items-center gap-1 transition-all shadow-sm"
                     >
                       <span className="material-symbols-outlined text-[14px]">
                         {copiedCode === coupon.code ? 'check' : 'content_copy'}
@@ -361,25 +347,25 @@ function MembershipResult({
           </div>
         )}
 
-        {/* ── Active Tier Benefits ── */}
+        {/* ── Active Tier Perks ── */}
         {data.offers && data.offers.length > 0 && !isExpired && (
           <div className="space-y-3">
-            <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-              <span className="material-symbols-outlined text-[16px] text-indigo-400">workspace_premium</span>
-              Tier Membership Perks ({data.offers.length})
+            <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-600 flex items-center gap-2">
+              <span className="material-symbols-outlined text-[16px] text-amber-600">workspace_premium</span>
+              Tier Perks & Benefits ({data.offers.length})
             </h3>
 
             <div className="space-y-3">
               {data.offers.map((offer: any, idx: number) => (
-                <div key={offer.id || idx} className="bg-[#0F1422] rounded-2xl p-4 flex items-start gap-3.5 border border-white/10 shadow-lg">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center shrink-0 text-indigo-300">
+                <div key={offer.id || idx} className="bg-white rounded-2xl p-4 flex items-start gap-3.5 border border-slate-200 shadow-sm">
+                  <div className="w-10 h-10 rounded-xl bg-amber-100 border border-amber-300 flex items-center justify-center shrink-0 text-amber-800">
                     <span className="material-symbols-outlined text-[20px]">
                       {OFFER_ICONS[offer.offer_type] || 'star'}
                     </span>
                   </div>
                   <div>
-                    <h4 className="font-bold text-white text-sm">{offer.title}</h4>
-                    <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">{offer.description}</p>
+                    <h4 className="font-bold text-slate-900 text-sm">{offer.title}</h4>
+                    <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{offer.description}</p>
                   </div>
                 </div>
               ))}
@@ -390,23 +376,23 @@ function MembershipResult({
         {/* ── Reward Catalog ── */}
         {data.rewards && data.rewards.length > 0 && !isExpired && (
           <div className="space-y-3">
-            <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-              <span className="material-symbols-outlined text-[16px] text-amber-400">card_giftcard</span>
+            <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-600 flex items-center gap-2">
+              <span className="material-symbols-outlined text-[16px] text-amber-600">card_giftcard</span>
               Rewards & Gift Catalog ({data.rewards.length})
             </h3>
 
             <div className="space-y-3">
               {data.rewards.map((reward: any) => (
-                <div key={reward.id} className="bg-[#0F1422] rounded-2xl p-4 border border-white/10 shadow-lg flex items-center justify-between gap-3">
+                <div key={reward.id} className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex items-center justify-between gap-3">
                   <div>
-                    <h4 className="font-bold text-white text-sm">{reward.name}</h4>
-                    {reward.description && <p className="text-xs text-slate-400 mt-0.5">{reward.description}</p>}
-                    <p className="text-xs font-bold text-amber-400 mt-1 flex items-center gap-1">
+                    <h4 className="font-bold text-slate-900 text-sm">{reward.name}</h4>
+                    {reward.description && <p className="text-xs text-slate-500 mt-0.5">{reward.description}</p>}
+                    <p className="text-xs font-bold text-amber-700 mt-1 flex items-center gap-1">
                       <span className="material-symbols-outlined text-[14px]">stars</span>
-                      {reward.points_cost} points required
+                      {reward.points_cost} pts required
                     </p>
                   </div>
-                  <span className="text-[11px] px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 font-bold shrink-0">
+                  <span className="text-[11px] px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 font-bold shrink-0">
                     Claim at Store
                   </span>
                 </div>
@@ -415,21 +401,21 @@ function MembershipResult({
           </div>
         )}
 
-        {/* ── Invite & WhatsApp Share ── */}
+        {/* ── WhatsApp Referral Share Card ── */}
         {data.referral_code && (
-          <div className="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-3xl p-5 shadow-xl text-white space-y-3">
+          <div className="bg-emerald-600 rounded-3xl p-5 shadow-md text-white space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-extrabold uppercase tracking-wider text-emerald-200">Your Referral Invite Code</span>
+              <span className="text-xs font-extrabold uppercase tracking-wider text-emerald-100">Invite Code</span>
               <span className="font-mono font-black text-lg bg-black/20 px-3 py-1 rounded-xl tracking-widest">{data.referral_code}</span>
             </div>
-            <p className="text-xs text-emerald-100 leading-relaxed">
-              Invite friends to join {data.merchant_name}. Earn bonus loyalty points on your next purchase!
+            <p className="text-xs text-emerald-100 leading-relaxed font-medium">
+              Share your invite code with friends to earn bonus loyalty points on your next store visit!
             </p>
             <a
               href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Join ${data.merchant_name} loyalty program using my invite code ${data.referral_code}`)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-white text-emerald-950 hover:bg-emerald-50 w-full py-3 rounded-2xl text-xs font-extrabold flex items-center justify-center gap-2 shadow-lg transition-colors"
+              className="bg-white text-emerald-950 hover:bg-emerald-50 w-full py-3 rounded-2xl text-xs font-extrabold flex items-center justify-center gap-2 shadow-sm transition-colors"
             >
               <span className="material-symbols-outlined text-[18px]">share</span>
               Share Invite Code on WhatsApp
@@ -437,22 +423,10 @@ function MembershipResult({
           </div>
         )}
 
-        {/* ── How to Redeem Guide ── */}
-        <div className="bg-[#0F1422] rounded-3xl p-5 border border-white/10 space-y-2 text-xs text-slate-300">
-          <h4 className="font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-amber-400 text-[16px]">help_outline</span>
-            How to Redeem
-          </h4>
-          <ul className="space-y-1.5 text-slate-400 list-disc pl-4 leading-relaxed">
-            <li><strong className="text-slate-200">Coupons & Promos:</strong> Mention or show coupon code at store POS checkout.</li>
-            <li><strong className="text-slate-200">Points & Rewards:</strong> State your Mobile Number or Member Code at checkout counter.</li>
-          </ul>
-        </div>
-
         {/* Reset Action */}
         <button
           onClick={onReset}
-          className="w-full py-3.5 px-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 font-bold text-xs flex items-center justify-center gap-2 transition-colors"
+          className="w-full py-3.5 px-4 rounded-2xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-colors"
         >
           <span className="material-symbols-outlined text-[18px]">search</span>
           Check Another Membership
