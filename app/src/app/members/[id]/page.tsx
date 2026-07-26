@@ -1,4 +1,9 @@
-'use client';
-import dynamic from 'next/dynamic';
-const MerchantApp = dynamic(() => import('@/views/MerchantApp'), { ssr: false });
-export default function MemberDetailRoutePage() { return <MerchantApp />; }
+import MemberDetailClientWrapper from './ClientWrapper';
+
+export function generateStaticParams() {
+  return [{ id: 'demo' }];
+}
+
+export default function MemberDetailRoutePage() {
+  return <MemberDetailClientWrapper />;
+}
