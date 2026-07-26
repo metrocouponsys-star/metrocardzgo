@@ -436,7 +436,7 @@ export default function MemberProfilePage() {
 
       <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="flex border-b border-slate-100 bg-slate-50/50 px-4 pt-3 gap-1 overflow-x-auto">
-          {['offers', 'coupons', 'history', 'notes', 'scratch'].map((t) => (
+          {(['offers', 'coupons', 'history', 'notes', 'scratch'] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
