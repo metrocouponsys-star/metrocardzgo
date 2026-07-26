@@ -456,7 +456,7 @@ export default function MemberProfilePage() {
                 <div key={state.id} className="p-4 border rounded-2xl border-slate-100 bg-slate-50">
                   <h4 className="font-bold text-sm">{state.offer?.title || 'Offer'}</h4>
                   <button 
-                    onClick={() => setRedeemState({ offerStateId: state.id, offerTitle: state.offer?.title || '' })}
+                    onClick={() => setRedeemState({ offerStateId: state.id, offerTitle: state.offer?.title || '', remainingBefore: state.remaining_qty })}
                     className="mt-3 w-full py-2 bg-amber-500 text-slate-900 rounded-lg text-xs font-bold"
                   >
                     Redeem
