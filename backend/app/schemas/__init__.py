@@ -426,6 +426,7 @@ class PublicMemberView(BaseModel):
     loyalty_points: Optional[Decimal] = Decimal(0)
     total_visits: Optional[int] = 0
     referral_code: Optional[str] = None
+    physical_card_number: Optional[str] = None
     offers: Optional[List[dict]] = []
     open_lucky_draws: Optional[List[dict]] = []
     coupons: Optional[List[dict]] = []

@@ -777,6 +777,21 @@ def _build_public_member_view(member: Member, merchant: Merchant, db: Session) -
                         "is_points_redemption": getattr(ot, "is_points_redemption", False),
                         "points_cost": float(getattr(ot, "loyalty_points_cost", 0) or 0),
                     })
+        # Fallback: if no specific member states exist, populate store active offer templates
+        if not offers:
+            all_ot = db.query(OfferTemplate).filter(OfferTemplate.merchant_id == member.merchant_id).all()
+            for ot in all_ot:
+                if getattr(ot, "active", True):
+                    offers.append({
+                        "id": ot.id,
+                        "title": ot.title,
+                        "description": getattr(ot, "description", "") or "",
+                        "offer_type": str(ot.offer_type),
+                        "value": str(ot.value),
+                        "remaining_qty": None,
+                        "is_points_redemption": getattr(ot, "is_points_redemption", False),
+                        "points_cost": float(getattr(ot, "loyalty_points_cost", 0) or 0),
+                    })
     except Exception as err:
         print(f"Notice: offers build notice: {err}")
 
@@ -811,9 +826,10 @@ def _build_public_member_view(member: Member, merchant: Merchant, db: Session) -
         from datetime import date
         active_coupons = db.query(CouponCode).filter(
             CouponCode.merchant_id == member.merchant_id,
-            CouponCode.is_active == True,
         ).all()
         for c in active_coupons:
+            if getattr(c, "is_active", True) is False:
+                continue
             exp = getattr(c, "expires_at", None)
             if exp and exp < date.today():
                 continue
@@ -834,9 +850,10 @@ def _build_public_member_view(member: Member, merchant: Merchant, db: Session) -
         from app.models.rewards import RewardCatalog
         active_rewards = db.query(RewardCatalog).filter(
             RewardCatalog.merchant_id == member.merchant_id,
-            RewardCatalog.is_active == True,
         ).all()
         for r in active_rewards:
+            if getattr(r, "is_active", True) is False:
+                continue
             rewards_out.append({
                 "id": r.id,
                 "name": r.name,
@@ -846,6 +863,19 @@ def _build_public_member_view(member: Member, merchant: Merchant, db: Session) -
             })
     except Exception as err:
         print(f"Notice: rewards build notice: {err}")
+
+    # Calculate actual points balance from member record or sum of loyalty transactions
+    pts_balance = float(member.loyalty_points or 0)
+    try:
+        from app.models.loyalty import LoyaltyTransaction
+        from sqlalchemy import func
+        tx_points = db.query(func.sum(LoyaltyTransaction.points)).filter(
+            LoyaltyTransaction.member_id == member.id
+        ).scalar()
+        if tx_points is not None and float(tx_points) > pts_balance:
+            pts_balance = float(tx_points)
+    except Exception as err:
+        print(f"Notice: points sum notice: {err}")
 
     raw_status = getattr(member, "status", "active")
     status_str = getattr(raw_status, "value", str(raw_status or "active"))
@@ -860,9 +890,10 @@ def _build_public_member_view(member: Member, merchant: Merchant, db: Session) -
         membership_type_name=mt.name if mt else "Standard",
         status=status_str,
         expiry_date=member.expiry_date,
-        loyalty_points=member.loyalty_points or 0,
+        loyalty_points=pts_balance,
         total_visits=getattr(member, "total_visits", 0) or 0,
         referral_code=getattr(member, "referral_code", None),
+        physical_card_number=getattr(member, "physical_card_number", None),
         offers=offers,
         open_lucky_draws=draws_out,
         coupons=coupons_out,

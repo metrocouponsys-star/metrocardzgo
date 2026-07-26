@@ -306,6 +306,16 @@ function MembershipResult({
               </p>
             </div>
           </div>
+
+          {data.physical_card_number && (
+            <div className="bg-slate-900 rounded-xl p-3 text-slate-100 flex items-center justify-between text-xs font-mono font-bold tracking-widest shadow-inner">
+              <span className="flex items-center gap-1.5 text-amber-400">
+                <span className="material-symbols-outlined text-[16px]">credit_card</span>
+                Card Number
+              </span>
+              <span className="text-white">{data.physical_card_number}</span>
+            </div>
+          )}
         </div>
 
         {/* ── Tabbed View Container ── */}

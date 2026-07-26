@@ -273,6 +273,7 @@ export interface PublicMemberView {
   loyalty_points: number;
   total_visits?: number;
   referral_code?: string;
+  physical_card_number?: string;
   offers: Pick<OfferTemplate, 'id' | 'title' | 'description' | 'offer_type' | 'value'>[];
   open_lucky_draws?: Array<{
     id: string;
