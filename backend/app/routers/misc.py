@@ -1067,6 +1067,69 @@ def lookup_membership(payload: MembershipLookupRequest, request: Request, db: Se
         )
 
 
+@public_router.get("/member-catalog")
+def get_public_member_catalog(member_id: str = Query(...), db: Session = Depends(get_db)):
+    """
+    No-auth endpoint: returns active rewards catalog + active coupons for the merchant
+    that owns the given member. Used by the public check-membership page to fetch
+    rewards/coupons separately (same pattern as the authenticated merchant portal).
+    """
+    member = db.query(Member).filter(Member.id == member_id).first()
+    if not member:
+        return {"rewards": [], "coupons": []}
+
+    merchant_id = member.merchant_id
+
+    rewards_out = []
+    try:
+        from app.models.rewards import RewardCatalog
+        for r in db.query(RewardCatalog).filter(
+            RewardCatalog.merchant_id == merchant_id,
+            RewardCatalog.is_active == True,
+        ).order_by(RewardCatalog.created_at.desc()).all():
+            try:
+                rewards_out.append({
+                    "id": r.id,
+                    "name": r.name,
+                    "description": r.description or "",
+                    "points_cost": float(r.points_cost or 0),
+                    "quantity_available": r.quantity_available,
+                })
+            except Exception:
+                pass
+    except Exception as err:
+        print(f"public member-catalog rewards error: {err}")
+
+    coupons_out = []
+    try:
+        from app.models.rewards import CouponCode
+        from datetime import date as date_type
+        today = date_type.today()
+        for c in db.query(CouponCode).filter(
+            CouponCode.merchant_id == merchant_id,
+            CouponCode.is_active == True,
+        ).all():
+            try:
+                exp = c.expires_at
+                if exp and exp < today:
+                    continue
+                coupons_out.append({
+                    "id": c.id,
+                    "code": c.code,
+                    "discount_type": str(c.discount_type),
+                    "value": float(c.value or 0),
+                    "min_purchase": float(c.min_purchase or 0),
+                    "active_days": c.active_days or None,
+                    "expires_at": str(exp) if exp else None,
+                })
+            except Exception:
+                pass
+    except Exception as err:
+        print(f"public member-catalog coupons error: {err}")
+
+    return {"rewards": rewards_out, "coupons": coupons_out}
+
+
 @public_router.post("/lucky-draws/{draw_id}/enter")
 def public_enter_lucky_draw(draw_id: str, token: str = Query(...), request: Request = None, db: Session = Depends(get_db)):
     """Public self-entry endpoint allowing members to enter lucky draws using their public token."""

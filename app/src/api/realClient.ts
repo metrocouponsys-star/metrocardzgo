@@ -399,11 +399,32 @@ export async function getPublicMemberView(token: string): Promise<PublicMemberVi
 /**
  * Customer self-lookup by membership number or mobile number, verified with
  * the last 4 digits of the registered mobile number. No login required.
- * Throws on failure (not-found / rate-limited / invalid input) so the UI can
- * show a specific error message rather than a silent null.
+ *
+ * After getting the member view, we separately fetch rewards and coupons from
+ * the public catalog endpoint — exactly the same pattern the merchant portal
+ * uses (separate API calls). This makes rewards/coupons immune to any session
+ * state issues inside _build_public_member_view.
  */
 export async function lookupMembership(identifier: string, last4: string): Promise<PublicMemberView> {
-  return post<PublicMemberView>('/public/lookup-membership', { identifier, last4 }, true);
+  const view = await post<PublicMemberView>('/public/lookup-membership', { identifier, last4 }, true);
+
+  // Separately fetch rewards + coupons (mirrors merchant portal pattern)
+  if (view?.member_id) {
+    try {
+      const catalog = await get<{ rewards: any[]; coupons: any[] }>(
+        `/public/member-catalog?member_id=${encodeURIComponent(view.member_id)}`,
+        true, // public endpoint — no auth header
+      );
+      if (catalog) {
+        if (catalog.rewards?.length) view.rewards = catalog.rewards;
+        if (catalog.coupons?.length) view.coupons = catalog.coupons;
+      }
+    } catch {
+      // Non-fatal: UI will show whatever the primary view returned
+    }
+  }
+
+  return view;
 }
 
 // ── Card Inventory ────────────────────────────────────────────────────────────
