@@ -106,10 +106,106 @@ export async function searchMembers(merchantId: string, query: string): Promise<
   }));
 }
 
+function buildDynamicPublicMemberView(m: Member): PublicMemberView {
+  const merchant = db.merchants.find(mer => mer.id === m.merchant_id) || db.merchants[0];
+  const mType = db.membershipTypes.find(mt => mt.id === m.membership_type_id);
+
+  // Load offer states/templates
+  let templates = db.offerTemplates.filter(o => (o.merchant_id === m.merchant_id) && o.active);
+  if (templates.length === 0) {
+    templates = db.offerTemplates.filter(o => o.active);
+  }
+  const existingStates = db.memberOfferStates.filter(s => s.member_id === m.id);
+  const offers = templates.map(tmpl => {
+    const state = existingStates.find(s => s.offer_template_id === tmpl.id);
+    const bundledQty = mType?.bundled_offers?.find(b => b.offer_template_id === tmpl.id)?.default_qty;
+    return {
+      id: state?.id || `mos-auto-${m.id}-${tmpl.id}`,
+      title: tmpl.title,
+      description: tmpl.description || '',
+      offer_type: tmpl.offer_type,
+      value: String(tmpl.value),
+      remaining_qty: tmpl.offer_type === 'percent_off' ? null : (state?.remaining_qty ?? bundledQty ?? 3),
+      is_points_redemption: !!tmpl.is_points_redemption,
+      points_cost: tmpl.loyalty_points_cost || 0,
+    };
+  });
+
+  // Load coupons from couponsDb
+  const today = new Date().toISOString().split('T')[0];
+  const coupons = couponsDb
+    .filter(c => c.is_active !== false)
+    .filter(c => !c.expires_at || c.expires_at >= today)
+    .map(c => ({
+      id: c.id,
+      code: c.code,
+      discount_type: c.discount_type,
+      value: Number(c.value),
+      min_purchase: Number(c.min_purchase || 0),
+      active_days: c.active_days || undefined,
+      expires_at: c.expires_at || undefined,
+    }));
+
+  // Load rewards from rewardsDb
+  const rewards = rewardsDb
+    .filter(r => r.is_active !== false)
+    .map(r => ({
+      id: r.id,
+      name: r.name,
+      description: r.description || '',
+      points_cost: Number(r.points_cost),
+      quantity_available: r.quantity_available || undefined,
+    }));
+
+  // Load redemptions
+  const memberReds = db.redemptions
+    .filter(r => r.member_id === m.id)
+    .map(r => ({
+      id: r.id,
+      offer_title: r.offer?.title || 'Redemption',
+      redeemed_at: r.created_at,
+      amount_spent: r.amount || undefined,
+    }));
+
+  // Load loyalty history
+  const memberHistory = db.loyaltyTransactions
+    .filter(t => t.member_id === m.id)
+    .map(t => ({
+      id: t.id,
+      transaction_type: t.type,
+      points: Number(t.points),
+      description: t.source_offer_title || t.note || '',
+      created_at: t.created_at,
+    }));
+
+  return {
+    member_id: m.id,
+    merchant_name: merchant.business_name,
+    merchant_logo: merchant.logo_url || undefined,
+    merchant_phone: merchant.whatsapp_number || undefined,
+    member_name: m.name,
+    member_code: m.member_code,
+    membership_type_name: mType?.name || 'Standard',
+    status: m.status,
+    expiry_date: m.expiry_date,
+    loyalty_points: Number(m.loyalty_points || 0),
+    total_visits: m.total_visits || 0,
+    referral_code: m.referral_code || undefined,
+    physical_card_number: m.physical_card_number || undefined,
+    offers,
+    open_lucky_draws: [],
+    coupons,
+    rewards,
+    redemptions: memberReds,
+    loyalty_history: memberHistory,
+  };
+}
+
 export async function getMemberByToken(token: string): Promise<PublicMemberView | null> {
   await delay(FAKE_DELAY);
-  const view = db.publicMemberViews[token];
-  return view || null;
+  const m = db.members.find(x => x.public_token === token);
+  if (!m) return null;
+  return buildDynamicPublicMemberView(m);
 }
 
 export async function getMember(merchantId: string, memberId: string): Promise<Member & { offer_states: MemberOfferState[] }> {
@@ -696,7 +792,9 @@ export async function createMerchant(data: Partial<Merchant> & { owner_name: str
 // ---- Public self-check ----
 export async function getPublicMemberView(token: string): Promise<PublicMemberView | null> {
   await delay(FAKE_DELAY);
-  return db.publicMemberViews[token] || null;
+  const m = db.members.find(x => x.public_token === token);
+  if (!m) return null;
+  return buildDynamicPublicMemberView(m);
 }
 
 // ---- Membership-number / mobile-number self-lookup ----
@@ -723,11 +821,7 @@ export async function lookupMembership(identifier: string, last4: string): Promi
     throw new Error('No matching membership found. Please check your details and try again.');
   }
 
-  const view = db.publicMemberViews[verified[0].public_token];
-  if (!view) {
-    throw new Error('No matching membership found. Please check your details and try again.');
-  }
-  return view;
+  return buildDynamicPublicMemberView(verified[0]);
 }
 
 // ---- Card Inventory (Admin) ----

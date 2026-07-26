@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>API Diagnostic</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #0f172a; color: #38bdf8; }
+    h1 { color: #f8fafc; }
+    pre { background: #1e293b; padding: 15px; border-radius: 8px; border: 1px solid #334155; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
+  </style>
+</head>
+<body>
+  <h1>Production API Diagnostic</h1>
+  <div id="status">Fetching...</div>
+  <pre id="output"></pre>
+
+  <script>
+    async function run() {
+      try {
+        const res = await fetch('https://metrocardz-api.onrender.com/api/v1/public/lookup-membership', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            identifier: '#MC0004',
+            last4: '9000'
+          })
+        });
+        document.getElementById('status').innerText = 'Status: ' + res.status;
+        const data = await res.json();
+        document.getElementById('output').innerText = JSON.stringify(data, null, 2);
+      } catch (err) {
+        document.getElementById('status').innerText = 'Error: ' + err.message;
+      }
+    }
+    run();
+  </script>
+</body>
+</html>

@@ -883,7 +883,7 @@ def _build_public_member_view(member: Member, merchant: Merchant, db: Session) -
         from app.models.offer import OfferTemplate
         reds = db.query(RedemptionLog).filter(
             RedemptionLog.member_id == member.id
-        ).order_by(RedemptionLog.redeemed_at.desc()).limit(20).all()
+        ).order_by(RedemptionLog.created_at.desc()).limit(20).all()
         for r in reds:
             ot_title = "Redemption"
             if r.offer_template_id:
@@ -893,8 +893,8 @@ def _build_public_member_view(member: Member, merchant: Merchant, db: Session) -
             redemptions_out.append({
                 "id": r.id,
                 "offer_title": ot_title,
-                "redeemed_at": str(r.redeemed_at) if r.redeemed_at else None,
-                "amount_spent": float(r.amount_spent) if r.amount_spent is not None else None,
+                "redeemed_at": str(r.created_at) if r.created_at else None,
+                "amount_spent": float(r.amount) if r.amount is not None else None,
             })
     except Exception as err:
         print(f"Notice: redemptions build notice: {err}")
@@ -908,9 +908,9 @@ def _build_public_member_view(member: Member, merchant: Merchant, db: Session) -
         for t in txs:
             history_out.append({
                 "id": t.id,
-                "transaction_type": str(t.transaction_type),
+                "transaction_type": str(t.type.value if hasattr(t.type, "value") else t.type),
                 "points": float(t.points),
-                "description": t.description or "",
+                "description": t.note or "",
                 "created_at": str(t.created_at) if t.created_at else None,
             })
     except Exception as err:
