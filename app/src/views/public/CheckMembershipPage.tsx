@@ -218,6 +218,7 @@ function MembershipResult({
 }) {
   const [dataReady, setDataReady] = useState(false);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'perks' | 'coupons' | 'rewards' | 'referral'>('perks');
 
   const pointsVal = Number(data.loyalty_points) || 0;
   const points = useCountUp(pointsVal, 1200, dataReady);
@@ -241,7 +242,7 @@ function MembershipResult({
       {/* Top Banner Header */}
       <div className="bg-white border-b border-slate-200 py-6 px-4 text-center shadow-sm">
         <div className="max-w-md mx-auto space-y-1">
-          <span className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 rounded-full px-3.5 py-0.5 text-xs text-amber-900 font-bold">
+          <span className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 rounded-full px-3 py-0.5 text-xs text-amber-900 font-bold">
             <span className="material-symbols-outlined text-[16px] text-amber-600">verified</span>
             {data.merchant_name}
           </span>
@@ -274,7 +275,7 @@ function MembershipResult({
           </div>
 
           {/* Hero Loyalty Points Card */}
-          <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl p-5 text-slate-950 shadow-md flex items-center justify-between">
+          <div className="bg-gradient-to-br from-amber-500 via-amber-500 to-amber-600 rounded-2xl p-5 text-slate-950 shadow-md flex items-center justify-between">
             <div>
               <p className="text-[11px] font-black uppercase tracking-widest text-slate-950/75">Loyalty Points Balance</p>
               <div className="flex items-baseline gap-1.5 mt-0.5">
@@ -293,10 +294,9 @@ function MembershipResult({
           {/* Card Footer Details */}
           <div className="grid grid-cols-2 gap-3 pt-2 text-xs border-t border-slate-100">
             <div className="bg-slate-50 rounded-xl p-3 border border-slate-200">
-              <p className="text-[10px] uppercase font-bold text-slate-400">Status</p>
-              <p className="text-xs font-black text-emerald-700 mt-0.5 capitalize flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                {data.status || 'Active'}
+              <p className="text-[10px] uppercase font-bold text-slate-400">Total Visits</p>
+              <p className="text-xs font-black text-slate-900 mt-0.5">
+                {data.total_visits || 0} visits
               </p>
             </div>
             <div className="bg-slate-50 rounded-xl p-3 border border-slate-200">
@@ -308,120 +308,166 @@ function MembershipResult({
           </div>
         </div>
 
-        {/* ── Active Store Coupons & Discount Vouchers ── */}
-        {data.coupons && data.coupons.length > 0 && !isExpired && (
-          <div className="space-y-3">
-            <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-600 flex items-center gap-2">
-              <span className="material-symbols-outlined text-[16px] text-amber-600">confirmation_number</span>
-              Available Store Coupons & Promos ({data.coupons.length})
-            </h3>
-
-            <div className="space-y-3">
-              {data.coupons.map((coupon: any) => (
-                <div key={coupon.id} className="bg-amber-50/40 rounded-2xl p-4 border-2 border-dashed border-amber-300 shadow-sm space-y-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="font-mono font-black text-amber-900 text-sm tracking-widest bg-amber-200/60 px-3 py-1 rounded-xl border border-amber-300">
-                      {coupon.code}
-                    </span>
-
-                    <span className="text-sm font-black text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                      {coupon.discount_type === 'percent' ? `${coupon.value}% OFF` : `₹${coupon.value} OFF`}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs text-slate-600 pt-2 border-t border-amber-200/60">
-                    <span className="font-semibold">Min Purchase: ₹{coupon.min_purchase || 0}</span>
-                    <button
-                      onClick={() => copyCoupon(coupon.code)}
-                      className="px-3 py-1 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold flex items-center gap-1 transition-all shadow-sm"
-                    >
-                      <span className="material-symbols-outlined text-[14px]">
-                        {copiedCode === coupon.code ? 'check' : 'content_copy'}
-                      </span>
-                      {copiedCode === coupon.code ? 'Copied!' : 'Copy Code'}
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ── Active Tier Perks ── */}
-        {data.offers && data.offers.length > 0 && !isExpired && (
-          <div className="space-y-3">
-            <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-600 flex items-center gap-2">
-              <span className="material-symbols-outlined text-[16px] text-amber-600">workspace_premium</span>
-              Tier Perks & Benefits ({data.offers.length})
-            </h3>
-
-            <div className="space-y-3">
-              {data.offers.map((offer: any, idx: number) => (
-                <div key={offer.id || idx} className="bg-white rounded-2xl p-4 flex items-start gap-3.5 border border-slate-200 shadow-sm">
-                  <div className="w-10 h-10 rounded-xl bg-amber-100 border border-amber-300 flex items-center justify-center shrink-0 text-amber-800">
-                    <span className="material-symbols-outlined text-[20px]">
-                      {OFFER_ICONS[offer.offer_type] || 'star'}
-                    </span>
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-slate-900 text-sm">{offer.title}</h4>
-                    <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{offer.description}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ── Reward Catalog ── */}
-        {data.rewards && data.rewards.length > 0 && !isExpired && (
-          <div className="space-y-3">
-            <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-600 flex items-center gap-2">
-              <span className="material-symbols-outlined text-[16px] text-amber-600">card_giftcard</span>
-              Rewards & Gift Catalog ({data.rewards.length})
-            </h3>
-
-            <div className="space-y-3">
-              {data.rewards.map((reward: any) => (
-                <div key={reward.id} className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex items-center justify-between gap-3">
-                  <div>
-                    <h4 className="font-bold text-slate-900 text-sm">{reward.name}</h4>
-                    {reward.description && <p className="text-xs text-slate-500 mt-0.5">{reward.description}</p>}
-                    <p className="text-xs font-bold text-amber-700 mt-1 flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[14px]">stars</span>
-                      {reward.points_cost} pts required
-                    </p>
-                  </div>
-                  <span className="text-[11px] px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 font-bold shrink-0">
-                    Claim at Store
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ── WhatsApp Referral Share Card ── */}
-        {data.referral_code && (
-          <div className="bg-emerald-600 rounded-3xl p-5 shadow-md text-white space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-extrabold uppercase tracking-wider text-emerald-100">Invite Code</span>
-              <span className="font-mono font-black text-lg bg-black/20 px-3 py-1 rounded-xl tracking-widest">{data.referral_code}</span>
-            </div>
-            <p className="text-xs text-emerald-100 leading-relaxed font-medium">
-              Share your invite code with friends to earn bonus loyalty points on your next store visit!
-            </p>
-            <a
-              href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Join ${data.merchant_name} loyalty program using my invite code ${data.referral_code}`)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-white text-emerald-950 hover:bg-emerald-50 w-full py-3 rounded-2xl text-xs font-extrabold flex items-center justify-center gap-2 shadow-sm transition-colors"
+        {/* ── Tabbed View Container ── */}
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden space-y-4">
+          
+          {/* Tab Navigation Header */}
+          <div className="flex border-b border-slate-200 bg-slate-50/50 px-3 pt-2 gap-1 overflow-x-auto">
+            <button
+              onClick={() => setActiveTab('perks')}
+              className={`px-3 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1 shrink-0 ${
+                activeTab === 'perks' ? 'text-amber-700 border-amber-500 bg-white rounded-t-xl shadow-sm' : 'text-slate-500 border-transparent hover:text-slate-900'
+              }`}
             >
-              <span className="material-symbols-outlined text-[18px]">share</span>
-              Share Invite Code on WhatsApp
-            </a>
+              <span className="material-symbols-outlined text-[14px]">workspace_premium</span>
+              Perks ({data.offers?.length || 0})
+            </button>
+
+            <button
+              onClick={() => setActiveTab('coupons')}
+              className={`px-3 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1 shrink-0 ${
+                activeTab === 'coupons' ? 'text-amber-700 border-amber-500 bg-white rounded-t-xl shadow-sm' : 'text-slate-500 border-transparent hover:text-slate-900'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[14px]">confirmation_number</span>
+              Coupons ({data.coupons?.length || 0})
+            </button>
+
+            <button
+              onClick={() => setActiveTab('rewards')}
+              className={`px-3 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1 shrink-0 ${
+                activeTab === 'rewards' ? 'text-amber-700 border-amber-500 bg-white rounded-t-xl shadow-sm' : 'text-slate-500 border-transparent hover:text-slate-900'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[14px]">card_giftcard</span>
+              Rewards ({data.rewards?.length || 0})
+            </button>
+
+            {data.referral_code && (
+              <button
+                onClick={() => setActiveTab('referral')}
+                className={`px-3 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1 shrink-0 ${
+                  activeTab === 'referral' ? 'text-amber-700 border-amber-500 bg-white rounded-t-xl shadow-sm' : 'text-slate-500 border-transparent hover:text-slate-900'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[14px]">share</span>
+                Invite Code
+              </button>
+            )}
           </div>
-        )}
+
+          <div className="p-4 space-y-4">
+
+            {/* TAB: PERKS */}
+            {activeTab === 'perks' && (
+              <div className="space-y-3">
+                {(!data.offers || data.offers.length === 0) ? (
+                  <p className="text-xs text-slate-500 italic text-center py-6">No active tier perks configured right now.</p>
+                ) : (
+                  data.offers.map((offer: any, idx: number) => (
+                    <div key={offer.id || idx} className="bg-slate-50 rounded-2xl p-3.5 flex items-start gap-3 border border-slate-200">
+                      <div className="w-9 h-9 rounded-xl bg-amber-100 border border-amber-300 flex items-center justify-center shrink-0 text-amber-800">
+                        <span className="material-symbols-outlined text-[18px]">
+                          {OFFER_ICONS[offer.offer_type] || 'star'}
+                        </span>
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-slate-900 text-xs">{offer.title}</h4>
+                        <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">{offer.description}</p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+
+            {/* TAB: COUPONS */}
+            {activeTab === 'coupons' && (
+              <div className="space-y-3">
+                {(!data.coupons || data.coupons.length === 0) ? (
+                  <p className="text-xs text-slate-500 italic text-center py-6">No active store coupons right now.</p>
+                ) : (
+                  data.coupons.map((coupon: any) => (
+                    <div key={coupon.id} className="bg-amber-50/40 rounded-2xl p-4 border-2 border-dashed border-amber-300 space-y-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="font-mono font-black text-amber-900 text-xs tracking-widest bg-amber-200/60 px-2.5 py-1 rounded-lg border border-amber-300">
+                          {coupon.code}
+                        </span>
+                        <span className="text-xs font-black text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">
+                          {coupon.discount_type === 'percent' ? `${coupon.value}% OFF` : `₹${coupon.value} OFF`}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-[11px] text-slate-600 pt-2 border-t border-amber-200/60">
+                        <span className="font-semibold">Min purchase: ₹{coupon.min_purchase || 0}</span>
+                        <button
+                          onClick={() => copyCoupon(coupon.code)}
+                          className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 text-[11px] font-bold flex items-center gap-1 transition-all shadow-sm"
+                        >
+                          <span className="material-symbols-outlined text-[13px]">
+                            {copiedCode === coupon.code ? 'check' : 'content_copy'}
+                          </span>
+                          {copiedCode === coupon.code ? 'Copied!' : 'Copy Code'}
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+
+            {/* TAB: REWARDS */}
+            {activeTab === 'rewards' && (
+              <div className="space-y-3">
+                {(!data.rewards || data.rewards.length === 0) ? (
+                  <p className="text-xs text-slate-500 italic text-center py-6">No catalog rewards available right now.</p>
+                ) : (
+                  data.rewards.map((reward: any) => {
+                    const canAfford = pointsVal >= reward.points_cost;
+                    return (
+                      <div key={reward.id} className="bg-white rounded-2xl p-3.5 border border-slate-200 shadow-sm flex items-center justify-between gap-3">
+                        <div>
+                          <h4 className="font-bold text-slate-900 text-xs">{reward.name}</h4>
+                          {reward.description && <p className="text-[11px] text-slate-500 mt-0.5">{reward.description}</p>}
+                          <p className="text-[11px] font-bold text-amber-700 mt-1 flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[13px]">stars</span>
+                            {reward.points_cost} pts required
+                          </p>
+                        </div>
+                        <span className={`text-[10px] px-2.5 py-1 rounded-xl font-bold shrink-0 ${canAfford ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-100 text-slate-500'}`}>
+                          {canAfford ? 'Claim at Store' : 'Needs More Pts'}
+                        </span>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            )}
+
+            {/* TAB: REFERRAL */}
+            {activeTab === 'referral' && data.referral_code && (
+              <div className="bg-emerald-600 rounded-2xl p-4 text-white space-y-3 shadow-md">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-100">Invite Code</span>
+                  <span className="font-mono font-black text-sm bg-black/20 px-2.5 py-0.5 rounded-lg tracking-widest">{data.referral_code}</span>
+                </div>
+                <p className="text-[11px] text-emerald-100 leading-relaxed font-medium">
+                  Share your invite code with friends to earn bonus loyalty points on your next store visit!
+                </p>
+                <a
+                  href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Join ${data.merchant_name} loyalty program using my invite code ${data.referral_code}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-white text-emerald-950 hover:bg-emerald-50 w-full py-2.5 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-sm transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[16px]">share</span>
+                  Share on WhatsApp
+                </a>
+              </div>
+            )}
+
+          </div>
+
+        </div>
 
         {/* Reset Action */}
         <button

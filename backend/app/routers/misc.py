@@ -947,7 +947,11 @@ def lookup_membership(payload: MembershipLookupRequest, request: Request, db: Se
         from datetime import datetime
         member = sorted(
             verified,
-            key=lambda m: (getattr(m, "status", "active") == "active", getattr(m, "updated_at", None) or getattr(m, "created_at", None) or datetime.min),
+            key=lambda m: (
+                getattr(m, "status", "active") == "active",
+                float(getattr(m, "loyalty_points", 0) or 0),
+                getattr(m, "updated_at", None) or getattr(m, "created_at", None) or datetime.min
+            ),
             reverse=True
         )[0]
         merchant = db.query(Merchant).filter(Merchant.id == member.merchant_id).first()
