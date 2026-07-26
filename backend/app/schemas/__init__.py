@@ -415,18 +415,18 @@ class MembershipLookupRequest(BaseModel):
 
 class PublicMemberView(BaseModel):
     member_id: str
-    merchant_name: str
+    merchant_name: Optional[str] = "Store"
     merchant_logo: Optional[str] = None
     merchant_phone: Optional[str] = None
-    member_name: str
-    member_code: str
-    membership_type_name: str
-    status: str
-    expiry_date: date
-    loyalty_points: Decimal
-    total_visits: int = 0
+    member_name: Optional[str] = "Member"
+    member_code: Optional[str] = ""
+    membership_type_name: Optional[str] = "Standard"
+    status: Optional[str] = "active"
+    expiry_date: Optional[date] = None
+    loyalty_points: Optional[Decimal] = Decimal(0)
+    total_visits: Optional[int] = 0
     referral_code: Optional[str] = None
-    offers: List[dict]
+    offers: Optional[List[dict]] = []
     open_lucky_draws: Optional[List[dict]] = []
     coupons: Optional[List[dict]] = []
     rewards: Optional[List[dict]] = []

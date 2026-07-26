@@ -836,6 +836,9 @@ def _build_public_member_view(member: Member, merchant: Merchant, db: Session) -
     except Exception as err:
         print(f"Notice: rewards build notice: {err}")
 
+    raw_status = getattr(member, "status", "active")
+    status_str = getattr(raw_status, "value", str(raw_status or "active"))
+
     return PublicMemberView(
         member_id=member.id,
         merchant_name=merchant.business_name if merchant else "Store",
@@ -844,10 +847,10 @@ def _build_public_member_view(member: Member, merchant: Merchant, db: Session) -
         member_name=member.name,
         member_code=member.member_code,
         membership_type_name=mt.name if mt else "Standard",
-        status=member.status or "active",
+        status=status_str,
         expiry_date=member.expiry_date,
         loyalty_points=member.loyalty_points or 0,
-        total_visits=member.total_visits or 0,
+        total_visits=getattr(member, "total_visits", 0) or 0,
         referral_code=getattr(member, "referral_code", None),
         offers=offers,
         open_lucky_draws=draws_out,
