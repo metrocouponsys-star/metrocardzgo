@@ -877,6 +877,45 @@ def _build_public_member_view(member: Member, merchant: Merchant, db: Session) -
     except Exception as err:
         print(f"Notice: points sum notice: {err}")
 
+    redemptions_out = []
+    try:
+        from app.models.redemption import RedemptionLog
+        from app.models.offer import OfferTemplate
+        reds = db.query(RedemptionLog).filter(
+            RedemptionLog.member_id == member.id
+        ).order_by(RedemptionLog.redeemed_at.desc()).limit(20).all()
+        for r in reds:
+            ot_title = "Redemption"
+            if r.offer_template_id:
+                ot = db.query(OfferTemplate).filter(OfferTemplate.id == r.offer_template_id).first()
+                if ot:
+                    ot_title = ot.title
+            redemptions_out.append({
+                "id": r.id,
+                "offer_title": ot_title,
+                "redeemed_at": str(r.redeemed_at) if r.redeemed_at else None,
+                "amount_spent": float(r.amount_spent) if r.amount_spent is not None else None,
+            })
+    except Exception as err:
+        print(f"Notice: redemptions build notice: {err}")
+
+    history_out = []
+    try:
+        from app.models.loyalty import LoyaltyTransaction
+        txs = db.query(LoyaltyTransaction).filter(
+            LoyaltyTransaction.member_id == member.id
+        ).order_by(LoyaltyTransaction.created_at.desc()).limit(20).all()
+        for t in txs:
+            history_out.append({
+                "id": t.id,
+                "transaction_type": str(t.transaction_type),
+                "points": float(t.points),
+                "description": t.description or "",
+                "created_at": str(t.created_at) if t.created_at else None,
+            })
+    except Exception as err:
+        print(f"Notice: history build notice: {err}")
+
     raw_status = getattr(member, "status", "active")
     status_str = getattr(raw_status, "value", str(raw_status or "active"))
 
@@ -898,6 +937,8 @@ def _build_public_member_view(member: Member, merchant: Merchant, db: Session) -
         open_lucky_draws=draws_out,
         coupons=coupons_out,
         rewards=rewards_out,
+        redemptions=redemptions_out,
+        loyalty_history=history_out,
     )
 
 

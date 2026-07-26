@@ -431,6 +431,8 @@ class PublicMemberView(BaseModel):
     open_lucky_draws: Optional[List[dict]] = []
     coupons: Optional[List[dict]] = []
     rewards: Optional[List[dict]] = []
+    redemptions: Optional[List[dict]] = []
+    loyalty_history: Optional[List[dict]] = []
 
 
 # ── Dashboard Stats ───────────────────────────────────────────────────────────

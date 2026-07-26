@@ -301,4 +301,17 @@ export interface PublicMemberView {
     points_cost: number;
     quantity_available?: number | null;
   }>;
+  redemptions?: Array<{
+    id: string;
+    offer_title: string;
+    redeemed_at?: string;
+    amount_spent?: number;
+  }>;
+  loyalty_history?: Array<{
+    id: string;
+    transaction_type: string;
+    points: number;
+    description: string;
+    created_at?: string;
+  }>;
 }

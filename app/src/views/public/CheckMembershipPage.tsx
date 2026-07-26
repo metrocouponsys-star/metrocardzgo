@@ -218,7 +218,7 @@ function MembershipResult({
 }) {
   const [dataReady, setDataReady] = useState(false);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'perks' | 'coupons' | 'rewards' | 'referral'>('perks');
+  const [activeTab, setActiveTab] = useState<'perks' | 'coupons' | 'rewards' | 'history' | 'referral'>('perks');
 
   const pointsVal = Number(data.loyalty_points) || 0;
   const points = useCountUp(pointsVal, 1200, dataReady);
@@ -353,6 +353,16 @@ function MembershipResult({
               Rewards ({data.rewards?.length || 0})
             </button>
 
+            <button
+              onClick={() => setActiveTab('history')}
+              className={`px-3 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1 shrink-0 ${
+                activeTab === 'history' ? 'text-amber-700 border-amber-500 bg-white rounded-t-xl shadow-sm' : 'text-slate-500 border-transparent hover:text-slate-900'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[14px]">history</span>
+              History
+            </button>
+
             {data.referral_code && (
               <button
                 onClick={() => setActiveTab('referral')}
@@ -449,6 +459,40 @@ function MembershipResult({
                       </div>
                     );
                   })
+                )}
+              </div>
+            )}
+
+            {/* TAB: HISTORY */}
+            {activeTab === 'history' && (
+              <div className="space-y-3">
+                {((!data.loyalty_history || data.loyalty_history.length === 0) && (!data.redemptions || data.redemptions.length === 0)) ? (
+                  <p className="text-xs text-slate-500 italic text-center py-6">No transaction or redemption history recorded yet.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {data.loyalty_history?.map((t: any) => (
+                      <div key={t.id} className="bg-slate-50 rounded-2xl p-3 border border-slate-200 flex items-center justify-between text-xs">
+                        <div>
+                          <p className="font-bold text-slate-900 capitalize">{t.description || t.transaction_type.replace('_', ' ')}</p>
+                          {t.created_at && <p className="text-[10px] text-slate-400 mt-0.5">{format(new Date(t.created_at), 'dd MMM yyyy, HH:mm')}</p>}
+                        </div>
+                        <span className={`font-mono font-black text-xs ${t.points >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                          {t.points >= 0 ? `+${t.points}` : t.points} pts
+                        </span>
+                      </div>
+                    ))}
+                    {data.redemptions?.map((r: any) => (
+                      <div key={r.id} className="bg-amber-50/50 rounded-2xl p-3 border border-amber-200 flex items-center justify-between text-xs">
+                        <div>
+                          <p className="font-bold text-amber-900">{r.offer_title}</p>
+                          {r.redeemed_at && <p className="text-[10px] text-amber-700 mt-0.5">{format(new Date(r.redeemed_at), 'dd MMM yyyy, HH:mm')}</p>}
+                        </div>
+                        <span className="font-bold text-amber-800 text-[11px] bg-amber-100 px-2 py-0.5 rounded-lg border border-amber-300">
+                          Redeemed
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             )}
