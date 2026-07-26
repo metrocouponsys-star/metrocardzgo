@@ -800,9 +800,13 @@ def _build_public_member_view(member: Member, merchant: Merchant, db: Session) -
     membership-number self-lookup page. Keeping logic in one place ensures
     both entry points always return identical data with zero drift."""
 
-    # Cache scalar IDs BEFORE any DB writes — so they survive session expiry/rollback
     member_id = member.id
     merchant_id = member.merchant_id
+
+    # Fetch rewards and coupons immediately BEFORE any state sync or DB mutations
+    catalog_res = _fetch_member_catalog_internal(merchant_id, db)
+    coupons_out = catalog_res["coupons"]
+    rewards_out = catalog_res["rewards"]
 
     try:
         from app.routers.members import ensure_member_offer_states
@@ -810,8 +814,6 @@ def _build_public_member_view(member: Member, merchant: Merchant, db: Session) -
         db.refresh(member)
     except Exception as err:
         print(f"Notice: offer state sync notice: {err}")
-        # Reset the session so subsequent read-only queries are not poisoned
-        # by a pending rollback left behind by ensure_member_offer_states.
         try:
             db.rollback()
         except Exception:
@@ -894,10 +896,6 @@ def _build_public_member_view(member: Member, merchant: Merchant, db: Session) -
     except Exception as err:
         print(f"Notice: lucky draws notice: {err}")
 
-    # Fetch rewards and coupons using shared catalog helper
-    catalog_res = _fetch_member_catalog_internal(merchant_id, db)
-    coupons_out = catalog_res["coupons"]
-    rewards_out = catalog_res["rewards"]
 
     # Calculate actual points balance from member record or sum of loyalty transactions
     pts_balance = float(member.loyalty_points or 0)
