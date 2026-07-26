@@ -132,7 +132,7 @@ class MembershipTypeOut(BaseModel):
     id: str
     merchant_id: str
     name: str
-    description: str
+    description: Optional[str] = ""
     member_count: Optional[int] = None
     offers: Optional[List[BundledOfferOut]] = []
 
@@ -156,7 +156,7 @@ class OfferTemplateOut(BaseModel):
     id: str
     merchant_id: str
     title: str
-    description: str
+    description: Optional[str] = ""
     offer_type: str
     value: Decimal
     active: bool
@@ -580,7 +580,7 @@ class RewardCatalogOut(BaseModel):
     id: str
     merchant_id: str
     name: str
-    description: str
+    description: Optional[str] = ""
     points_cost: Decimal
     quantity_available: Optional[int] = None
     is_active: bool

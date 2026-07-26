@@ -214,16 +214,16 @@ async def startup_event():
 
         # Guarantee schema migrations exist in DB
         try:
-            with engine.begin() as conn:
-                for col_sql in [
-                    "ALTER TABLE members ADD COLUMN auto_renew BOOLEAN NOT NULL DEFAULT FALSE;",
-                    "ALTER TABLE coupon_codes ADD COLUMN active_days TEXT;",
-                    "ALTER TABLE points_rules ADD COLUMN spend_unit NUMERIC DEFAULT 1;",
-                ]:
-                    try:
+            for col_sql in [
+                "ALTER TABLE members ADD COLUMN IF NOT EXISTS auto_renew BOOLEAN NOT NULL DEFAULT FALSE;",
+                "ALTER TABLE coupon_codes ADD COLUMN IF NOT EXISTS active_days TEXT;",
+                "ALTER TABLE points_rules ADD COLUMN IF NOT EXISTS spend_unit NUMERIC DEFAULT 1;",
+            ]:
+                try:
+                    with engine.begin() as conn:
                         conn.execute(text(col_sql))
-                    except Exception:
-                        pass
+                except Exception as stmt_err:
+                    print(f"Notice executing {col_sql}: {stmt_err}")
             print("✅ Database schema migrations (auto_renew, active_days, spend_unit) verified OK")
         except Exception as col_err:
             print(f"⚠️ Schema migration notice: {col_err}")
