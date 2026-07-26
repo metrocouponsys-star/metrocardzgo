@@ -872,81 +872,83 @@ def get_public_member_view(token: str, request: Request, db: Session = Depends(g
 @public_router.post("/lookup-membership", response_model=PublicMemberView)
 def lookup_membership(payload: MembershipLookupRequest, request: Request, db: Session = Depends(get_db)):
     """
-    Customer self-lookup by membership number (e.g. SAL001) or mobile number —
+    Customer self-lookup by membership number (e.g. SAL001, #MC0004) or mobile number —
     no login required.
-
-    Security: membership numbers are sequential and guessable (unlike the opaque
-    QR public_token), so this endpoint:
-      1. Requires the last 4 digits of the registered mobile to also match
-         (second-factor verification — prevents enumeration of SAL001, SAL002...).
-      2. Uses a stricter rate limiter (10/hour/IP) vs the QR endpoint (30/min).
     """
-    membership_lookup_rate_limit(request)
+    try:
+        membership_lookup_rate_limit(request)
 
-    identifier = (payload.identifier or "").strip()
-    last4 = (payload.last4 or "").strip()
+        id_clean = (payload.identifier or "").strip()
+        last4 = (payload.last4 or "").strip()
 
-    if not identifier or not last4.isdigit() or len(last4) != 4:
-        raise HTTPException(
-            status_code=400,
-            detail="Enter your membership/mobile number and the last 4 digits of your registered mobile number",
-        )
+        if not id_clean or not last4.isdigit() or len(last4) != 4:
+            raise HTTPException(
+                status_code=400,
+                detail="Enter your membership/mobile number and the last 4 digits of your registered mobile number",
+            )
 
-    # Extract digits and cleaned string variants
-    id_digits = "".join(c for c in identifier if c.isdigit())
-    id_strip_hash = identifier.lstrip("#").strip()
-    last10 = id_digits[-10:] if len(id_digits) >= 10 else id_digits
+        # Extract digits and clean identifiers
+        id_digits = "".join(c for c in id_clean if c.isdigit())
+        id_strip_hash = id_clean.lstrip("#").strip().lower()
+        last10 = id_digits[-10:] if len(id_digits) >= 10 else id_digits
 
-    # Build comprehensive search filter across member_code, phone, and card number
-    clean_phone_sql = func.replace(func.replace(Member.phone, " ", ""), "-", "")
-    clean_card_sql = func.replace(func.replace(Member.physical_card_number, " ", ""), "-", "")
+        members_list = db.query(Member).all()
+        verified = []
 
-    q_filter = (
-        (Member.member_code.ilike(identifier)) |
-        (Member.member_code.ilike(f"%{id_strip_hash}%")) |
-        (clean_phone_sql.ilike(f"%{identifier}%")) |
-        (clean_card_sql.ilike(f"%{identifier}%"))
-    )
-    if last10:
-        q_filter = q_filter | (clean_phone_sql.ilike(f"%{last10}%"))
-    if id_digits and len(id_digits) >= 8:
-        q_filter = q_filter | (clean_card_sql.ilike(f"%{id_digits}%"))
+        for m in members_list:
+            m_phone_digits = "".join(c for c in (m.phone or "") if c.isdigit())
+            m_card_digits = "".join(c for c in (m.physical_card_number or "") if c.isdigit())
+            m_code = (m.member_code or "").strip().lower()
+            m_code_strip = m_code.lstrip("#").strip()
 
-    candidates = db.query(Member).filter(q_filter).all()
-
-    # Require the last-4-digits of the registered phone to match — this is the
-    # verification gate that closes the sequential-ID enumeration risk.
-    verified = []
-    for m in candidates:
-        m_phone_digits = "".join(c for c in (m.phone or "") if c.isdigit())
-        if not m_phone_digits or m_phone_digits[-4:] != last4:
-            continue
-
-        # If user searched by full 10-digit mobile number, ensure last 10 digits match
-        if len(id_digits) >= 10 and not (m.member_code and id_strip_hash.lower() in m.member_code.lower()):
-            card_digits = "".join(c for c in (m.physical_card_number or "") if c.isdigit())
-            if not (m_phone_digits.endswith(last10) or (card_digits and card_digits.endswith(id_digits))):
+            # Step 1: Security verification gate — last 4 digits of registered mobile MUST match
+            if not m_phone_digits or m_phone_digits[-4:] != last4:
                 continue
 
-        verified.append(m)
+            # Step 2: Identifier matching across Member Code, Phone, and Card Number
+            matches = False
 
-    # If more than one member matches (rare edge case: same member_code across
-    # merchants), fail closed rather than leaking which merchant matched.
-    if len(verified) != 1:
+            # Match A: Member Code (e.g. #MC0004, MC0004, SAL001)
+            if id_strip_hash and (m_code == id_strip_hash or m_code_strip == id_strip_hash or id_strip_hash in m_code):
+                matches = True
+            # Match B: Mobile Number (last 10 digits or exact digits)
+            elif last10 and len(id_digits) >= 10 and m_phone_digits.endswith(last10):
+                matches = True
+            # Match C: Physical Card Number (16-digit card number)
+            elif id_digits and len(id_digits) >= 6 and m_card_digits and m_card_digits.endswith(id_digits):
+                matches = True
+            # Match D: Exact string containment fallback
+            elif id_clean and (id_clean in (m.phone or "") or id_clean in (m.physical_card_number or "")):
+                matches = True
+
+            if matches:
+                verified.append(m)
+
+        # Fail closed if no match or multiple matches across merchants
+        if len(verified) != 1:
+            raise HTTPException(
+                status_code=404,
+                detail="No matching membership found. Please check your details and try again.",
+            )
+
+        member = verified[0]
+        merchant = db.query(Merchant).filter(Merchant.id == member.merchant_id).first()
+        if not merchant or merchant.status != "active":
+            raise HTTPException(
+                status_code=404,
+                detail="No matching membership found. Please check your details and try again.",
+            )
+
+        return _build_public_member_view(member, merchant, db)
+
+    except HTTPException:
+        raise
+    except Exception as err:
+        print(f"Error in lookup_membership: {err}")
         raise HTTPException(
             status_code=404,
             detail="No matching membership found. Please check your details and try again.",
         )
-
-    member = verified[0]
-    merchant = db.query(Merchant).filter(Merchant.id == member.merchant_id).first()
-    if not merchant or merchant.status != "active":
-        raise HTTPException(
-            status_code=404,
-            detail="No matching membership found. Please check your details and try again.",
-        )
-
-    return _build_public_member_view(member, merchant, db)
 
 
 @public_router.post("/lucky-draws/{draw_id}/enter")
