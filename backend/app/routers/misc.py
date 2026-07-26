@@ -747,90 +747,108 @@ def _build_public_member_view(member: Member, merchant: Merchant, db: Session) -
     """Shared read-only view builder used by both the QR-token page and the
     membership-number self-lookup page. Keeping logic in one place ensures
     both entry points always return identical data with zero drift."""
-    from app.routers.members import ensure_member_offer_states
-    ensure_member_offer_states(db, member)
-    db.refresh(member)
+    try:
+        from app.routers.members import ensure_member_offer_states
+        ensure_member_offer_states(db, member)
+        db.refresh(member)
+    except Exception as err:
+        print(f"Notice: offer state sync notice: {err}")
 
-    mt = member.membership_type
+    mt = getattr(member, "membership_type", None)
 
     offers = []
-    for state in member.offer_states:
-        if state.status == "active" and state.offer_template and state.offer_template.active:
-            ot = state.offer_template
-            offers.append({
-                "id": ot.id, "title": ot.title,
-                "description": ot.description,
-                "offer_type": ot.offer_type, "value": str(ot.value),
-            })
+    try:
+        for state in (getattr(member, "offer_states", []) or []):
+            if state.status == "active" and state.offer_template and getattr(state.offer_template, "active", True):
+                ot = state.offer_template
+                offers.append({
+                    "id": ot.id, "title": ot.title,
+                    "description": getattr(ot, "description", "") or "",
+                    "offer_type": ot.offer_type, "value": str(ot.value),
+                })
+    except Exception as err:
+        print(f"Notice: offers build notice: {err}")
 
-    from app.models.rewards import LuckyDraw, LuckyDrawEntry, CouponCode, RewardCatalog
-    from datetime import date
-    open_draws = db.query(LuckyDraw).filter(
-        LuckyDraw.merchant_id == member.merchant_id,
-        LuckyDraw.status == "open",
-    ).all()
     draws_out = []
-    for draw in open_draws:
-        already_entered = db.query(LuckyDrawEntry).filter(
-            LuckyDrawEntry.draw_id == draw.id,
-            LuckyDrawEntry.member_id == member.id,
-        ).first() is not None
-        draws_out.append({
-            "id": draw.id,
-            "name": draw.name,
-            "prize": draw.prize,
-            "draw_date": str(draw.draw_date) if draw.draw_date else None,
-            "min_points": float(draw.min_points or 0),
-            "min_visits": draw.min_visits or 0,
-            "already_entered": already_entered,
-            "eligible": float(member.loyalty_points or 0) >= float(draw.min_points or 0) and (member.total_visits or 0) >= (draw.min_visits or 0),
-        })
+    try:
+        from app.models.rewards import LuckyDraw, LuckyDrawEntry
+        open_draws = db.query(LuckyDraw).filter(
+            LuckyDraw.merchant_id == member.merchant_id,
+            LuckyDraw.status == "open",
+        ).all()
+        for draw in open_draws:
+            already_entered = db.query(LuckyDrawEntry).filter(
+                LuckyDrawEntry.draw_id == draw.id,
+                LuckyDrawEntry.member_id == member.id,
+            ).first() is not None
+            draws_out.append({
+                "id": draw.id,
+                "name": draw.name,
+                "prize": draw.prize,
+                "draw_date": str(draw.draw_date) if getattr(draw, "draw_date", None) else None,
+                "min_points": float(getattr(draw, "min_points", 0) or 0),
+                "min_visits": getattr(draw, "min_visits", 0) or 0,
+                "already_entered": already_entered,
+                "eligible": float(member.loyalty_points or 0) >= float(getattr(draw, "min_points", 0) or 0) and (member.total_visits or 0) >= (getattr(draw, "min_visits", 0) or 0),
+            })
+    except Exception as err:
+        print(f"Notice: lucky draws notice: {err}")
 
-    active_coupons = db.query(CouponCode).filter(
-        CouponCode.merchant_id == member.merchant_id,
-        CouponCode.is_active == True,
-    ).all()
     coupons_out = []
-    for c in active_coupons:
-        if c.expires_at and c.expires_at < date.today():
-            continue
-        coupons_out.append({
-            "id": c.id,
-            "code": c.code,
-            "discount_type": c.discount_type,
-            "value": float(c.value),
-            "min_purchase": float(c.min_purchase or 0),
-            "active_days": c.active_days,
-            "expires_at": str(c.expires_at) if c.expires_at else None,
-        })
+    try:
+        from app.models.rewards import CouponCode
+        from datetime import date
+        active_coupons = db.query(CouponCode).filter(
+            CouponCode.merchant_id == member.merchant_id,
+            CouponCode.is_active == True,
+        ).all()
+        for c in active_coupons:
+            exp = getattr(c, "expires_at", None)
+            if exp and exp < date.today():
+                continue
+            coupons_out.append({
+                "id": c.id,
+                "code": c.code,
+                "discount_type": str(c.discount_type),
+                "value": float(c.value),
+                "min_purchase": float(getattr(c, "min_purchase", 0) or 0),
+                "active_days": getattr(c, "active_days", None),
+                "expires_at": str(exp) if exp else None,
+            })
+    except Exception as err:
+        print(f"Notice: coupons build notice: {err}")
 
-    active_rewards = db.query(RewardCatalog).filter(
-        RewardCatalog.merchant_id == member.merchant_id,
-        RewardCatalog.is_active == True,
-    ).all()
     rewards_out = []
-    for r in active_rewards:
-        rewards_out.append({
-            "id": r.id,
-            "name": r.name,
-            "description": r.description,
-            "points_cost": float(r.points_cost),
-            "quantity_available": r.quantity_available,
-        })
+    try:
+        from app.models.rewards import RewardCatalog
+        active_rewards = db.query(RewardCatalog).filter(
+            RewardCatalog.merchant_id == member.merchant_id,
+            RewardCatalog.is_active == True,
+        ).all()
+        for r in active_rewards:
+            rewards_out.append({
+                "id": r.id,
+                "name": r.name,
+                "description": getattr(r, "description", "") or "",
+                "points_cost": float(r.points_cost),
+                "quantity_available": getattr(r, "quantity_available", None),
+            })
+    except Exception as err:
+        print(f"Notice: rewards build notice: {err}")
 
     return PublicMemberView(
         member_id=member.id,
-        merchant_name=merchant.business_name,
-        merchant_logo=merchant.logo_url,
-        merchant_phone=merchant.whatsapp_number,
+        merchant_name=merchant.business_name if merchant else "Store",
+        merchant_logo=getattr(merchant, "logo_url", None),
+        merchant_phone=getattr(merchant, "whatsapp_number", None),
         member_name=member.name,
         member_code=member.member_code,
-        membership_type_name=mt.name if mt else "Unknown",
-        status=member.status,
+        membership_type_name=mt.name if mt else "Standard",
+        status=member.status or "active",
         expiry_date=member.expiry_date,
-        loyalty_points=member.loyalty_points,
+        loyalty_points=member.loyalty_points or 0,
         total_visits=member.total_visits or 0,
-        referral_code=member.referral_code,
+        referral_code=getattr(member, "referral_code", None),
         offers=offers,
         open_lucky_draws=draws_out,
         coupons=coupons_out,
