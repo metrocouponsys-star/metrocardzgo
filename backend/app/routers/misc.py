@@ -747,12 +747,34 @@ def _build_public_member_view(member: Member, merchant: Merchant, db: Session) -
     """Shared read-only view builder used by both the QR-token page and the
     membership-number self-lookup page. Keeping logic in one place ensures
     both entry points always return identical data with zero drift."""
+
+    # Cache scalar IDs BEFORE any DB writes — so they survive session expiry/rollback
+    member_id = member.id
+    merchant_id = member.merchant_id
+
     try:
         from app.routers.members import ensure_member_offer_states
         ensure_member_offer_states(db, member)
         db.refresh(member)
     except Exception as err:
         print(f"Notice: offer state sync notice: {err}")
+        # Reset the session so subsequent read-only queries are not poisoned
+        # by a pending rollback left behind by ensure_member_offer_states.
+        try:
+            db.rollback()
+        except Exception:
+            pass
+        try:
+            db.expire_all()
+        except Exception:
+            pass
+
+    # Re-fetch member and merchant using cached IDs in case session was reset
+    try:
+        member = db.query(Member).filter(Member.id == member_id).first() or member
+        merchant = db.query(Merchant).filter(Merchant.id == merchant_id).first() or merchant
+    except Exception:
+        pass
 
     mt = getattr(member, "membership_type", None)
 
@@ -825,7 +847,7 @@ def _build_public_member_view(member: Member, merchant: Merchant, db: Session) -
         from app.models.rewards import CouponCode
         from datetime import date
         active_coupons = db.query(CouponCode).filter(
-            CouponCode.merchant_id == member.merchant_id,
+            CouponCode.merchant_id == merchant_id,
         ).all()
         for c in active_coupons:
             if getattr(c, "is_active", True) is False:
@@ -849,7 +871,7 @@ def _build_public_member_view(member: Member, merchant: Merchant, db: Session) -
     try:
         from app.models.rewards import RewardCatalog
         active_rewards = db.query(RewardCatalog).filter(
-            RewardCatalog.merchant_id == member.merchant_id,
+            RewardCatalog.merchant_id == merchant_id,
         ).all()
         for r in active_rewards:
             if getattr(r, "is_active", True) is False:
@@ -870,7 +892,7 @@ def _build_public_member_view(member: Member, merchant: Merchant, db: Session) -
         from app.models.loyalty import LoyaltyTransaction
         from sqlalchemy import func
         tx_points = db.query(func.sum(LoyaltyTransaction.points)).filter(
-            LoyaltyTransaction.member_id == member.id
+            LoyaltyTransaction.member_id == member_id
         ).scalar()
         if tx_points is not None and float(tx_points) > pts_balance:
             pts_balance = float(tx_points)
@@ -882,7 +904,7 @@ def _build_public_member_view(member: Member, merchant: Merchant, db: Session) -
         from app.models.redemption import RedemptionLog
         from app.models.offer import OfferTemplate
         reds = db.query(RedemptionLog).filter(
-            RedemptionLog.member_id == member.id
+            RedemptionLog.member_id == member_id
         ).order_by(RedemptionLog.created_at.desc()).limit(20).all()
         for r in reds:
             ot_title = "Redemption"
@@ -903,7 +925,7 @@ def _build_public_member_view(member: Member, merchant: Merchant, db: Session) -
     try:
         from app.models.loyalty import LoyaltyTransaction
         txs = db.query(LoyaltyTransaction).filter(
-            LoyaltyTransaction.member_id == member.id
+            LoyaltyTransaction.member_id == member_id
         ).order_by(LoyaltyTransaction.created_at.desc()).limit(20).all()
         for t in txs:
             history_out.append({
