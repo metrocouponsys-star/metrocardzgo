@@ -11,7 +11,7 @@ import * as api from '../../api';
 import { invalidateContaining } from '../../api/cache';
 import { format, differenceInDays } from 'date-fns';
 
-type Tab = 'offers' | 'history' | 'points' | 'rewards';
+type Tab = 'offers' | 'history' | 'points' | 'rewards' | 'coupons' | 'notes' | 'scratch';
 
 export default function MemberProfilePage() {
   const { id } = useParams<{ id: string }>();
