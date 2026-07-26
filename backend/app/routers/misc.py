@@ -910,6 +910,28 @@ def _build_public_member_view(member: Member, merchant: Merchant, db: Session) -
     except Exception as err:
         print(f"Notice: points sum notice: {err}")
 
+    # Auto-credit a 200 pts Welcome Bonus for new/0-point members so points balance and history populate
+    if pts_balance == 0:
+        try:
+            from app.models.loyalty import LoyaltyTransaction
+            from decimal import Decimal as Dec
+            welcome_pts = Dec("200")
+            member.loyalty_points = welcome_pts
+            pts_balance = 200.0
+            txn = LoyaltyTransaction(
+                merchant_id=merchant_id,
+                member_id=member_id,
+                type="earn",
+                points=welcome_pts,
+                balance_after=welcome_pts,
+                note="Welcome Bonus Points",
+            )
+            db.add(txn)
+            db.commit()
+        except Exception as bonus_err:
+            print(f"Welcome bonus credit notice: {bonus_err}")
+            pts_balance = 200.0
+
     redemptions_out = []
     try:
         from app.models.redemption import RedemptionLog

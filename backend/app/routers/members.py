@@ -814,6 +814,10 @@ def record_member_purchase(
                     points_earned += Decimal(str(int(earned)))
             elif rule.rule_type == "per_visit":
                 points_earned += rule.points_value
+    else:
+        # Default points rule fallback: 1 point per ₹10 spent + 10 points for the visit
+        earned_rupee = net_amount / Decimal("10")
+        points_earned = Decimal(str(int(earned_rupee))) + Decimal("10")
 
     # 4. Credit points & log loyalty transaction
     member.loyalty_points = Decimal(str(member.loyalty_points or 0)) + points_earned
