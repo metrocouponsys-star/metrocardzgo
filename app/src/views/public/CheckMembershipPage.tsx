@@ -8,6 +8,7 @@ import type { PublicMemberView } from '../../types';
 import * as api from '../../api';
 import { StatusBadge } from '../../components/ui/StatusBadge';
 import { format } from 'date-fns';
+import { useAuthStore } from '../../store/authStore';
 
 const OFFER_ICONS: Record<string, string> = {
   percent_off: 'percent',
@@ -50,15 +51,21 @@ function LookupSkeleton() {
   );
 }
 
-function LookupForm({
-  onResult,
-}: {
-  onResult: (data: PublicMemberView) => void;
-}) {
+interface CheckMembershipPageProps {
+  initialView?: PublicMemberView | null;
+}
+
+export default function CheckMembershipPage({ initialView = null }: CheckMembershipPageProps) {
+  const { user } = useAuthStore();
+  const [view, setView] = useState<PublicMemberView | null>(initialView);
   const [identifier, setIdentifier] = useState('');
   const [last4, setLast4] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  if (view) {
+    return <MembershipResult data={view} onReset={() => setView(null)} />;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,8 +85,8 @@ function LookupForm({
 
     setLoading(true);
     try {
-      const view = await api.lookupMembership(trimId, trimLast4);
-      onResult(view);
+      const viewRes = await api.lookupMembership(trimId, trimLast4);
+      setView(viewRes);
     } catch (err: any) {
       const msg: string = err?.message || '';
       if (msg.toLowerCase().includes('too many')) {
@@ -96,29 +103,28 @@ function LookupForm({
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden selection:bg-amber-500 selection:text-black">
-      
+
       <div className="w-full max-w-md space-y-6 relative z-10 animate-fade-in">
-        
+
         {/* Brand Header */}
         <div className="text-center space-y-3">
-          <div className="inline-flex items-center justify-center gap-2 mb-1">
-            <div className="w-9 h-9 rounded-xl bg-amber-500 flex items-center justify-center shadow-md">
-              <span className="material-symbols-outlined text-slate-950 text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                credit_card
-              </span>
-            </div>
-            <span className="text-xl font-black tracking-tight text-slate-900">
-              Metro <span className="text-amber-600">Cardz</span>
-            </span>
+          <div className="w-20 h-20 rounded-3xl bg-amber-500/10 border border-amber-300 p-0.5 mx-auto shadow-sm flex items-center justify-center overflow-hidden">
+            {user?.logo_url ? (
+              <img src={user.logo_url} alt={user.merchant_name || 'Store Logo'} className="w-full h-full rounded-[22px] object-cover" />
+            ) : (
+              <div className="w-full h-full rounded-[22px] bg-white flex items-center justify-center">
+                <span className="material-symbols-outlined text-amber-600 text-[36px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  badge
+                </span>
+              </div>
+            )}
           </div>
-
-          <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-300 p-0.5 mx-auto shadow-sm flex items-center justify-center">
-            <div className="w-full h-full rounded-xl bg-white flex items-center justify-center">
-              <span className="material-symbols-outlined text-amber-600 text-[30px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                badge
-              </span>
+          {user?.merchant_name && (
+            <div className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 rounded-full px-3 py-1 text-xs font-extrabold text-amber-900">
+              <span className="material-symbols-outlined text-[16px] text-amber-600">storefront</span>
+              {user.merchant_name}
             </div>
-          </div>
+          )}
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">
             Check Your Membership
           </h1>
@@ -176,7 +182,7 @@ function LookupForm({
                 disabled={loading}
               />
               <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
-                Must match the last 4 digits of the member's registered phone number.
+                Must match the last 4 digits of the member's registered phone number (e.g. use <strong className="text-amber-700 font-bold">9000</strong> for demo <code className="bg-amber-100/60 text-amber-800 px-1 py-0.5 rounded font-mono text-[10px]">#MC0004</code>).
               </p>
             </div>
 
@@ -185,6 +191,9 @@ function LookupForm({
                 <span className="material-symbols-outlined text-rose-600 text-[18px] shrink-0 mt-0.5">error</span>
                 <div className="space-y-1">
                   <p className="text-xs text-rose-800 font-bold leading-relaxed">{error}</p>
+                  <p className="text-[11px] text-rose-600 font-medium">
+                    Tip: Verify that the last 4 digits match the exact phone number registered for member <span className="font-mono font-bold">{identifier || 'code'}</span> in your Merchant Portal list.
+                  </p>
                 </div>
               </div>
             )}
@@ -253,21 +262,10 @@ function MembershipResult({
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 pb-14 selection:bg-amber-500 selection:text-black">
-      
+
       {/* Top Banner Header */}
       <div className="bg-white border-b border-slate-200 py-6 px-4 text-center shadow-sm">
-        <div className="max-w-md mx-auto space-y-2">
-          {data.merchant_logo ? (
-            <img
-              src={data.merchant_logo}
-              alt={data.merchant_name}
-              className="w-16 h-16 rounded-2xl object-cover mx-auto shadow-sm border border-slate-200"
-            />
-          ) : (
-            <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-300 flex items-center justify-center mx-auto text-amber-600 font-black text-xl">
-              {data.merchant_name ? data.merchant_name.slice(0, 2).toUpperCase() : 'MG'}
-            </div>
-          )}
+        <div className="max-w-md mx-auto space-y-1">
           <span className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 rounded-full px-3 py-0.5 text-xs text-amber-900 font-bold">
             <span className="material-symbols-outlined text-[16px] text-amber-600">verified</span>
             {data.merchant_name}
@@ -282,7 +280,7 @@ function MembershipResult({
 
         {/* ── Light Modern Digital Member Card ── */}
         <div className="rounded-3xl p-6 bg-white border border-slate-200 shadow-sm space-y-6 relative overflow-hidden">
-          
+
           {/* Card Header */}
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -346,14 +344,13 @@ function MembershipResult({
 
         {/* ── Tabbed View Container ── */}
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden space-y-4">
-          
+
           {/* Tab Navigation Header */}
           <div className="flex border-b border-slate-200 bg-slate-50/50 px-3 pt-2 gap-1 overflow-x-auto">
             <button
               onClick={() => setActiveTab('perks')}
-              className={`px-3 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1 shrink-0 ${
-                activeTab === 'perks' ? 'text-amber-700 border-amber-500 bg-white rounded-t-xl shadow-sm' : 'text-slate-500 border-transparent hover:text-slate-900'
-              }`}
+              className={`px-3 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1 shrink-0 ${activeTab === 'perks' ? 'text-amber-700 border-amber-500 bg-white rounded-t-xl shadow-sm' : 'text-slate-500 border-transparent hover:text-slate-900'
+                }`}
             >
               <span className="material-symbols-outlined text-[14px]">workspace_premium</span>
               Perks ({data.offers?.length || 0})
@@ -361,9 +358,8 @@ function MembershipResult({
 
             <button
               onClick={() => setActiveTab('coupons')}
-              className={`px-3 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1 shrink-0 ${
-                activeTab === 'coupons' ? 'text-amber-700 border-amber-500 bg-white rounded-t-xl shadow-sm' : 'text-slate-500 border-transparent hover:text-slate-900'
-              }`}
+              className={`px-3 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1 shrink-0 ${activeTab === 'coupons' ? 'text-amber-700 border-amber-500 bg-white rounded-t-xl shadow-sm' : 'text-slate-500 border-transparent hover:text-slate-900'
+                }`}
             >
               <span className="material-symbols-outlined text-[14px]">confirmation_number</span>
               Coupons ({data.coupons?.length || 0})
@@ -371,9 +367,8 @@ function MembershipResult({
 
             <button
               onClick={() => setActiveTab('rewards')}
-              className={`px-3 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1 shrink-0 ${
-                activeTab === 'rewards' ? 'text-amber-700 border-amber-500 bg-white rounded-t-xl shadow-sm' : 'text-slate-500 border-transparent hover:text-slate-900'
-              }`}
+              className={`px-3 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1 shrink-0 ${activeTab === 'rewards' ? 'text-amber-700 border-amber-500 bg-white rounded-t-xl shadow-sm' : 'text-slate-500 border-transparent hover:text-slate-900'
+                }`}
             >
               <span className="material-symbols-outlined text-[14px]">card_giftcard</span>
               Rewards ({data.rewards?.length || 0})
@@ -381,9 +376,8 @@ function MembershipResult({
 
             <button
               onClick={() => setActiveTab('history')}
-              className={`px-3 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1 shrink-0 ${
-                activeTab === 'history' ? 'text-amber-700 border-amber-500 bg-white rounded-t-xl shadow-sm' : 'text-slate-500 border-transparent hover:text-slate-900'
-              }`}
+              className={`px-3 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1 shrink-0 ${activeTab === 'history' ? 'text-amber-700 border-amber-500 bg-white rounded-t-xl shadow-sm' : 'text-slate-500 border-transparent hover:text-slate-900'
+                }`}
             >
               <span className="material-symbols-outlined text-[14px]">history</span>
               History
@@ -392,9 +386,8 @@ function MembershipResult({
             {data.referral_code && (
               <button
                 onClick={() => setActiveTab('referral')}
-                className={`px-3 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1 shrink-0 ${
-                  activeTab === 'referral' ? 'text-amber-700 border-amber-500 bg-white rounded-t-xl shadow-sm' : 'text-slate-500 border-transparent hover:text-slate-900'
-                }`}
+                className={`px-3 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1 shrink-0 ${activeTab === 'referral' ? 'text-amber-700 border-amber-500 bg-white rounded-t-xl shadow-sm' : 'text-slate-500 border-transparent hover:text-slate-900'
+                  }`}
               >
                 <span className="material-symbols-outlined text-[14px]">share</span>
                 Invite Code
@@ -582,4 +575,15 @@ export default function CheckMembershipPage() {
   if (loading) return <LookupSkeleton />;
   if (data) return <MembershipResult data={data} onReset={handleReset} />;
   return <LookupForm onResult={handleResult} />;
+}
+    }, 250);
+  };
+
+const handleReset = () => {
+  setData(null);
+};
+
+if (loading) return <LookupSkeleton />;
+if (data) return <MembershipResult data={data} onReset={handleReset} />;
+return <LookupForm onResult={handleResult} />;
 }
