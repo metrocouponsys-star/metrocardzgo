@@ -11,7 +11,7 @@ import * as api from '../../api';
 import { invalidateContaining } from '../../api/cache';
 import { format, differenceInDays } from 'date-fns';
 
-type Tab = 'offers' | 'history' | 'points' | 'rewards' | 'coupons' | 'notes' | 'scratch';
+type Tab = 'offers' | 'history' | 'points' | 'rewards';
 
 export default function MemberProfilePage() {
   const { id } = useParams<{ id: string }>();
@@ -60,29 +60,6 @@ export default function MemberProfilePage() {
   });
   const [recordingPurchase, setRecordingPurchase] = useState(false);
   const [pointsRules, setPointsRules] = useState<any[]>([]);
-
-  // Derived: coupons that are applicable for this purchase amount
-  // Mirrors the backend validation in record_member_purchase so the merchant
-  // sees exactly what will be accepted before they submit.
-  const getApplicableCoupons = (amount: string) => {
-    const today = new Date().toISOString().split('T')[0];
-    const purchaseAmt = Number(amount) || 0;
-    return coupons.filter((c: any) => {
-      if (!c.is_active) return false;
-      if (c.expires_at && c.expires_at < today) return false;
-      if (c.max_uses != null && c.used_count >= c.max_uses) return false;
-      if (purchaseAmt > 0 && c.min_purchase > 0 && purchaseAmt < c.min_purchase) return false;
-      return true;
-    });
-  };
-
-  // Compute the discount amount a selected coupon gives for the current amount
-  const computeCouponDiscount = (coupon: any, amount: string): number => {
-    const amt = Number(amount) || 0;
-    if (!coupon || amt <= 0) return 0;
-    if (coupon.discount_type === 'flat') return Math.min(Number(coupon.value), amt);
-    return Math.round((amt * Number(coupon.value)) / 100 * 100) / 100;
-  };
 
   // Edit Member Modal state
   const [showEditModal, setShowEditModal] = useState(false);
@@ -371,14 +348,19 @@ export default function MemberProfilePage() {
 
   if (loading) {
     return (
-      <div className="px-6 py-6 max-w-6xl mx-auto space-y-6">
-        <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm animate-pulse flex gap-4">
-          <Skeleton className="w-20 h-20 rounded-2xl" />
-          <div className="flex-1 space-y-3">
-            <Skeleton className="h-7 w-48" />
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-4 w-24" />
+      <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-5xl mx-auto space-y-xl">
+        <div className="prime-gradient rounded-2xl p-lg animate-pulse">
+          <div className="flex gap-4">
+            <Skeleton className="w-20 h-20 rounded-full" />
+            <div className="flex-1 space-y-3">
+              <Skeleton className="h-7 w-48" />
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-4 w-24" />
+            </div>
           </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
+          {Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)}
         </div>
       </div>
     );
@@ -387,136 +369,553 @@ export default function MemberProfilePage() {
   if (!member) return null;
 
   const offerTitle = redeemState?.offerTitle;
-  const activeScratchCards = scratchCards.filter((c: any) => !c.scratched);
+  const offerStateBefore = member.offer_states?.find(s => s.id === redeemState?.offerStateId);
+  const remainingAfter = offerStateBefore?.remaining_qty !== null && offerStateBefore?.remaining_qty !== undefined
+    ? offerStateBefore.remaining_qty - 1 : null;
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 px-4 sm:px-6 py-6 max-w-6xl mx-auto space-y-6 selection:bg-amber-200">
-      
-      <div className="flex items-center justify-between">
-        <button
-          onClick={() => navigate('/members')}
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm"
-        >
-          <span className="material-symbols-outlined text-[16px]">arrow_back</span>
-          Back
-        </button>
-      </div>
+    <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-5xl mx-auto space-y-xl animate-fade-in">
+      {/* Back */}
+      <button onClick={() => navigate('/members')} className="flex items-center gap-1 text-on-surface-variant hover:text-on-surface text-body-md transition-colors">
+        <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+        Back to Search
+      </button>
 
-      <section className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-5">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-amber-500 text-white font-black text-xl flex items-center justify-center shadow-md">
-              {member.name.slice(0, 2).toUpperCase()}
+      {/* Header Card */}
+      <section className="prime-gradient rounded-2xl p-lg text-white shadow-elevated relative overflow-hidden">
+        <div className="absolute -right-16 -top-16 w-56 h-56 bg-primary-container/20 rounded-full blur-3xl" />
+
+        {/* Expiry warning */}
+        {member.status === 'expiring_soon' && (
+          <div className="relative z-10 mb-4 bg-amber-500/20 border border-amber-400/30 rounded-xl px-4 py-2 flex items-center gap-2">
+            <span className="material-symbols-outlined text-amber-300 text-[18px]">warning</span>
+            <span className="text-sm text-amber-100">Membership expires in {daysToExpiry} days — renew to continue</span>
+          </div>
+        )}
+        {member.status === 'expired' && (
+          <div className="relative z-10 mb-4 bg-error/20 border border-error/30 rounded-xl px-4 py-2 flex items-center gap-2">
+            <span className="material-symbols-outlined text-red-300 text-[18px]">cancel</span>
+            <span className="text-sm text-red-100">Membership expired — renew to enable redemptions</span>
+          </div>
+        )}
+
+        <div className="relative z-10 flex flex-col md:flex-row gap-lg items-start md:items-center">
+          {/* Avatar */}
+          <div className="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-white/20 overflow-hidden shadow-xl bg-primary-container flex items-center justify-center text-on-primary-container text-headline-lg font-bold">
+            {member.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+          </div>
+
+          {/* Info */}
+          <div className="flex-1">
+            <div className="flex flex-wrap items-center gap-2 mb-1">
+              <h2 className="text-headline-lg-mobile md:text-headline-lg font-headline-lg-mobile">{member.name}</h2>
+              {member.membership_type && <MembershipBadge name={member.membership_type.name} />}
+              <StatusBadge status={member.status} />
             </div>
-            <div>
-              <h1 className="text-2xl font-black text-slate-900">{member.name}</h1>
-              <div className="flex items-center gap-2 text-xs text-slate-500">
-                <span className="font-mono font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">#{member.member_code}</span>
-                <span>{member.phone}</span>
+            <p className="text-body-md opacity-90 mb-1">#{member.member_code}</p>
+            <div className="flex flex-wrap gap-4 text-label-sm opacity-80">
+              <span className="flex items-center gap-1">
+                <span className="material-symbols-outlined text-[14px]">phone</span>
+                {member.phone}
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="material-symbols-outlined text-[14px]">calendar_today</span>
+                Expires: {format(new Date(member.expiry_date), 'dd MMM yyyy')}
+              </span>
+            </div>
+          </div>
+
+          {/* Feature 1: Loyalty Points & Stats */}
+          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+            {/* Loyalty Points */}
+            <div className="bg-white/10 backdrop-blur-md rounded-xl p-md border border-white/10 min-w-[140px]">
+              <p className="text-label-sm font-label-md uppercase opacity-70 mb-1 flex items-center gap-1">
+                <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
+                Loyalty Points
+              </p>
+              <p className="text-title-lg font-bold">
+                {member.loyalty_points.toLocaleString()} <span className="text-body-sm font-normal opacity-70">pts</span>
+              </p>
+              {loyaltyHistory.length > 0 && (
+                <p className="text-label-xs opacity-60 mt-1">
+                  {loyaltyHistory.filter(t => t.type === 'earn').length} earn events
+                </p>
+              )}
+            </div>
+
+            {/* Visits & Referral Code */}
+            <div className="bg-white/10 backdrop-blur-md rounded-xl p-md border border-white/10 min-w-[160px]">
+              <div className="flex justify-between gap-6">
+                <div>
+                  <p className="text-label-sm uppercase opacity-70 mb-0.5 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[14px]">local_activity</span>
+                    Visits
+                  </p>
+                  <p className="text-title-lg font-bold">{member.total_visits || 0}</p>
+                </div>
+                <div>
+                  <p className="text-label-sm uppercase opacity-70 mb-0.5 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[14px]">share</span>
+                    Invite Code
+                  </p>
+                  <div className="flex items-center gap-1">
+                    <p className="font-mono font-bold text-title-md">{member.referral_code || 'N/A'}</p>
+                    {member.referral_code && (
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(member.referral_code || '');
+                          addToast('success', 'Referral code copied!');
+                        }}
+                        className="hover:bg-white/20 p-1 rounded transition-colors"
+                        title="Copy Referral Code"
+                      >
+                        <span className="material-symbols-outlined text-[14px]">content_copy</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
+          </div>
+
+        </div>
+
+        {/* Actions Bar */}
+        <div className="relative z-10 flex gap-2 mt-4 flex-wrap items-center">
+          <button
+            id="record-purchase-btn"
+            onClick={() => setShowPurchaseModal(true)}
+            className="bg-secondary hover:bg-secondary/90 text-on-secondary px-4 py-2 rounded-lg text-label-md font-bold flex items-center gap-1.5 shadow-md transition-all"
+          >
+            <span className="material-symbols-outlined text-[18px]">shopping_cart_checkout</span>
+            Record Purchase
+          </button>
+
+          {isOwner && (
+            <>
+              <button
+                onClick={handleOpenEditModal}
+                className="bg-white/15 hover:bg-white/25 text-white px-4 py-2 rounded-lg text-label-md font-label-md flex items-center gap-1 transition-colors"
+              >
+              <span className="material-symbols-outlined text-[16px]">edit</span>
+              Edit
+            </button>
+            <button
+              className="bg-white/15 hover:bg-white/25 text-white px-4 py-2 rounded-lg text-label-md font-label-md flex items-center gap-1 transition-colors"
+              onClick={handleDownloadCard}
+            >
+              <span className="material-symbols-outlined text-[16px]">download</span>
+              Download Card PDF
+            </button>
+            {/* Google Wallet Button */}
+            {walletUrl ? (
+              <a
+                href={walletUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-white/15 hover:bg-white/25 text-white px-4 py-2 rounded-lg text-label-md font-label-md flex items-center gap-1.5 transition-colors"
+              >
+                <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>add_to_wallet</span>
+                Add to Google Wallet
+              </a>
+            ) : (
+              <button
+                disabled={walletLoading}
+                onClick={async () => {
+                  if (!member) return;
+                  setWalletLoading(true);
+                  try {
+                    const res = await api.generateWalletPassUrl(member.id);
+                    setWalletUrl(res.save_url);
+                    // Open immediately
+                    window.open(res.save_url, '_blank', 'noopener,noreferrer');
+                    addToast('success', 'Google Wallet pass generated!');
+                  } catch {
+                    addToast('error', 'Failed to generate Wallet pass — try again');
+                  } finally {
+                    setWalletLoading(false);
+                  }
+                }}
+                className="bg-white/15 hover:bg-white/25 text-white px-4 py-2 rounded-lg text-label-md font-label-md flex items-center gap-1.5 transition-colors disabled:opacity-50"
+              >
+                <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>add_to_wallet</span>
+                {walletLoading ? 'Generating…' : 'Google Wallet Pass'}
+              </button>
+            )}
+          </>
+        )}
+        </div>
+
+        {/* Physical Card Row */}
+        <div className="relative z-10 mt-4 border-t border-white/10 pt-4">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-3">
+              {/* Card design image or default icon */}
+              {(member as any).card_design_url ? (
+                <img
+                  src={(member as any).card_design_url}
+                  alt="Physical card"
+                  className="h-10 w-16 object-cover rounded-lg border border-white/20 shadow"
+                />
+              ) : (
+                <span className="material-symbols-outlined text-white/60 text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>credit_card</span>
+              )}
+              {member.physical_card_number ? (
+                <span className="font-mono text-white font-bold tracking-widest text-body-md">{member.physical_card_number}</span>
+              ) : (
+                <span className="text-white/50 text-label-md italic">No physical card linked</span>
+              )}
+            </div>
+            {isOwner && (
+              member.physical_card_number ? (
+                <button
+                  onClick={() => navigate('/cards')}
+                  className="bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-lg text-label-sm transition-colors"
+                >
+                  Manage Card
+                </button>
+              ) : (
+                <button
+                  onClick={() => navigate('/cards')}
+                  className="bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-lg text-label-sm flex items-center gap-1 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[14px]">add_card</span>
+                  Assign Card
+                </button>
+              )
+            )}
           </div>
         </div>
       </section>
 
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
-        <div className="md:col-span-7 bg-gradient-to-br from-amber-500 to-amber-600 rounded-3xl p-6 text-white shadow-md">
-          <p className="text-xs font-black uppercase opacity-75">Loyalty Balance</p>
-          <div className="text-5xl font-black">{member.loyalty_points.toLocaleString()} pts</div>
-        </div>
-        <div className="md:col-span-5 bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
-          <button
-            onClick={() => setShowPurchaseModal(true)}
-            className="w-full py-3 rounded-xl bg-slate-900 text-white font-bold text-sm shadow-sm hover:bg-slate-800"
-          >
-            Record Purchase
-          </button>
-        </div>
-      </div>
+      {/* Two Column Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-lg items-start">
+        {/* Left Column: Tabs and content */}
+        <div className="lg:col-span-8 space-y-md">
+          {/* Tabs */}
+          <div className="flex border-b border-outline-variant/30 flex-wrap">
+            {(['offers', 'history', 'points', 'rewards'] as Tab[]).map(t => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={`px-5 py-3 text-label-md font-label-md border-b-2 transition-all capitalize flex items-center gap-1.5
+                  ${tab === t ? 'text-primary border-primary' : 'text-on-surface-variant border-transparent hover:bg-surface-container'}`}
+              >
+                {t === 'offers' && <span className="material-symbols-outlined text-[16px]">local_offer</span>}
+                {t === 'history' && <span className="material-symbols-outlined text-[16px]">history</span>}
+                {t === 'points' && <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>}
+                {t === 'rewards' && <span className="material-symbols-outlined text-[16px]">card_giftcard</span>}
+                {t === 'offers' ? 'Active Offers' : t === 'history' ? 'Redemption History' : t === 'points' ? 'Points History' : 'Reward Catalog'}
+              </button>
+            ))}
+          </div>
 
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="flex border-b border-slate-100 bg-slate-50/50 px-4 pt-3 gap-1 overflow-x-auto">
-          {(['offers', 'coupons', 'history', 'notes', 'scratch'] as Tab[]).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`px-4 py-3 text-xs font-bold border-b-2 capitalize transition-all ${
-                tab === t ? 'text-amber-700 border-amber-500' : 'text-slate-500 border-transparent hover:text-slate-900'
-              }`}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
-
-        <div className="p-6">
+          {/* Tab: Active Offers */}
           {tab === 'offers' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {member.offer_states?.map(state => (
-                <div key={state.id} className="p-4 border rounded-2xl border-slate-100 bg-slate-50">
-                  <h4 className="font-bold text-sm">{state.offer?.title || 'Offer'}</h4>
-                  <button 
-                    onClick={() => setRedeemState({ offerStateId: state.id, offerTitle: state.offer?.title || '', remainingBefore: state.remaining_qty })}
-                    className="mt-3 w-full py-2 bg-amber-500 text-slate-900 rounded-lg text-xs font-bold"
-                  >
-                    Redeem
-                  </button>
+            <div>
+              {member.status === 'expired' && (
+                <div className="mb-4 p-4 bg-error-container rounded-xl border border-error/20 text-on-error-container flex items-center gap-2">
+                  <span className="material-symbols-outlined">block</span>
+                  Redemptions are disabled — membership expired
                 </div>
-              ))}
+              )}
+              {member.offer_states && member.offer_states.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
+                  {member.offer_states.map(state => {
+                    const offer = state.offer || {
+                      id: state.offer_template_id,
+                      merchant_id: '',
+                      title: 'Member Offer',
+                      description: 'Contact staff to redeem.',
+                      offer_type: 'free_service' as const,
+                      value: 1,
+                      active: true,
+                    };
+                    return (
+                      <div key={state.id} className="relative">
+                        {/* Feature 1: points redemption badge */}
+                        {offer.is_points_redemption && (
+                          <div className="absolute top-2 right-2 z-10 bg-amber-100 text-amber-700 border border-amber-200 rounded-full px-2 py-0.5 text-label-sm flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
+                            {offer.loyalty_points_cost} pts
+                          </div>
+                        )}
+                        {/* Feature 1: earn badge */}
+                        {offer.loyalty_points_earn && !offer.is_points_redemption && (
+                          <div className="absolute top-2 right-2 z-10 bg-green-100 text-green-700 border border-green-200 rounded-full px-2 py-0.5 text-label-sm flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>add_circle</span>
+                            +{offer.loyalty_points_earn} pts
+                          </div>
+                        )}
+                        <OfferCard
+                          offer={offer}
+                          offerState={state}
+                          readOnly={member.status === 'expired'}
+                          onRedeem={(offerStateId) => {
+                            setRedeemState({
+                              offerStateId,
+                              offerTitle: offer?.title || '',
+                              remainingBefore: state.remaining_qty,
+                              isPointsRedemption: offer?.is_points_redemption,
+                              pointsCost: offer?.loyalty_points_cost ?? undefined,
+                            });
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-12 text-on-surface-variant">
+                  <span className="material-symbols-outlined text-[48px] mb-2">local_offer</span>
+                  <p>No active offers for this member.</p>
+                </div>
+              )}
             </div>
           )}
 
-          {tab === 'coupons' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {coupons.map((c: any) => (
-                <div key={c.id} className="p-4 border-2 border-dashed border-slate-200 rounded-2xl flex justify-between items-center">
-                  <span className="font-mono font-bold text-slate-900">{c.code}</span>
-                  <button 
-                    onClick={() => { setPurchaseForm(f => ({ ...f, coupon_code: c.code })); setShowPurchaseModal(true); }}
-                    className="text-amber-600 font-bold text-xs"
-                  >
-                    Apply
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-          
+          {/* Tab: Redemption History */}
           {tab === 'history' && (
-             <div className="space-y-3">
-               {loyaltyHistory.map(tx => (
-                 <div key={tx.id} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl text-xs">
-                   <span className="font-bold">{tx.type === 'earn' ? 'Earned' : 'Redeemed'}</span>
-                   <span className={`font-black ${tx.type === 'earn' ? 'text-emerald-600' : 'text-rose-600'}`}>
-                     {tx.type === 'earn' ? '+' : '-'}{tx.points}
-                   </span>
-                 </div>
-               ))}
-             </div>
+            <div className="space-y-2">
+              {redemptions.length === 0 ? (
+                <div className="text-center py-12 text-on-surface-variant">
+                  <span className="material-symbols-outlined text-[48px] mb-2">history</span>
+                  <p>No redemptions yet</p>
+                </div>
+              ) : (
+                redemptions.map(r => (
+                  <div key={r.id} className="card p-md flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-secondary-container/30 flex items-center justify-center text-secondary">
+                      <span className="material-symbols-outlined text-[20px]">check_circle</span>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-body-md font-bold">{r.offer?.title}</p>
+                      <p className="text-label-sm text-on-surface-variant">
+                        {format(new Date(r.created_at), 'dd MMM yyyy, HH:mm')} · Staff: {r.staff_name}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           )}
 
-          {tab === 'notes' && (
-            <div className="space-y-4">
-              <div className="card p-md space-y-sm">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-label-md font-bold text-on-surface flex items-center gap-2">
-                    <span className="material-symbols-outlined text-[18px]">notes</span>
-                    Customer Notes
-                  </h4>
-                  {savingNotes && <span className="text-label-xs text-on-surface-variant animate-pulse">Saving…</span>}
+          {/* Tab: Points History — Feature 1 */}
+          {tab === 'points' && (
+            <div className="space-y-3">
+              {/* Balance summary bar */}
+              <div className="card p-md flex items-center gap-4 bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200">
+                <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-amber-600 text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
                 </div>
-                <textarea
-                  rows={3}
-                  className="input-field text-body-sm w-full"
-                  placeholder="Add internal notes about this customer (e.g. preferences, allergies, VIP status)..."
-                  value={notes}
-                  onChange={e => setNotes(e.target.value)}
-                  onBlur={handleSaveNotes}
-                />
-                <p className="text-label-xs text-on-surface-variant/70">Saves automatically on blur</p>
+                <div>
+                  <p className="text-label-sm text-amber-700 uppercase font-semibold">Current Balance</p>
+                  <p className="text-headline-md font-bold text-amber-900">{member.loyalty_points.toLocaleString()} points</p>
+                </div>
+                <div className="ml-auto text-right">
+                  <p className="text-label-sm text-amber-700">Total earned</p>
+                  <p className="text-body-md font-bold text-amber-900">
+                    +{loyaltyHistory.filter(t => t.type === 'earn').reduce((s, t) => s + t.points, 0)} pts
+                  </p>
+                </div>
+              </div>
+
+              {loyaltyHistory.length === 0 ? (
+                <div className="text-center py-12 text-on-surface-variant">
+                  <span className="material-symbols-outlined text-[48px] mb-2">stars</span>
+                  <p>No loyalty points earned yet.</p>
+                  <p className="text-label-sm mt-1">Points are earned when offers with point rewards are redeemed.</p>
+                </div>
+              ) : (
+                loyaltyHistory.map(tx => (
+                  <div key={tx.id} className="card p-md flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${tx.type === 'earn' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                      <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                        {tx.type === 'earn' ? 'add_circle' : 'remove_circle'}
+                      </span>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-body-md font-bold">{tx.source_offer_title || (tx.type === 'earn' ? 'Points Earned' : 'Points Redeemed')}</p>
+                      <p className="text-label-sm text-on-surface-variant">
+                        {format(new Date(tx.created_at), 'dd MMM yyyy, HH:mm')}
+                        {' '}· Balance after: {tx.balance_after.toLocaleString()} pts
+                      </p>
+                    </div>
+                    <div className={`text-body-lg font-bold ${tx.type === 'earn' ? 'text-green-600' : 'text-red-600'}`}>
+                      {tx.type === 'earn' ? '+' : ''}{tx.points} pts
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+
+          {/* Tab: Reward Catalog */}
+          {tab === 'rewards' && (
+            <div className="space-y-3">
+              {rewardCatalog.length === 0 ? (
+                <div className="text-center py-12 text-on-surface-variant">
+                  <span className="material-symbols-outlined text-[48px] mb-2">card_giftcard</span>
+                  <p>No rewards available in the catalog yet.</p>
+                  <p className="text-label-sm mt-1">Configure reward catalog items from Settings / Rewards page.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+                  {rewardCatalog.map((rew: any) => {
+                    const canAfford = member.loyalty_points >= rew.points_cost;
+                    return (
+                      <div key={rew.id} className="card p-md flex flex-col justify-between space-y-3 border border-outline-variant">
+                        <div>
+                          <div className="flex justify-between items-start">
+                            <h4 className="font-bold text-body-lg text-on-surface">{rew.name}</h4>
+                            <span className="bg-amber-100 text-amber-800 text-label-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                              <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
+                              {rew.points_cost} pts
+                            </span>
+                          </div>
+                          {rew.description && (
+                            <p className="text-body-sm text-on-surface-variant mt-1">{rew.description}</p>
+                          )}
+                        </div>
+                        <div className="pt-2 border-t border-outline-variant/30 flex items-center justify-between">
+                          <span className="text-label-xs text-on-surface-variant">
+                            {rew.quantity_available !== null ? `${rew.quantity_available} left` : 'Unlimited'}
+                          </span>
+                          <button
+                            disabled={!canAfford || claimingRewardId === rew.id || member.status === 'expired'}
+                            onClick={() => handleClaimReward(rew)}
+                            className="btn-primary !py-1.5 !px-3 text-label-sm disabled:opacity-50"
+                          >
+                            {claimingRewardId === rew.id ? 'Claiming...' : canAfford ? 'Claim Reward' : 'Needs More Points'}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Active Coupons Section */}
+              <div className="mt-6 pt-4 border-t border-outline-variant">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-bold text-body-md text-on-surface flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-secondary text-[20px]">confirmation_number</span>
+                    Active Store Coupons & Promos ({coupons.length})
+                  </h4>
+                </div>
+                {coupons.length === 0 ? (
+                  <p className="text-body-sm text-on-surface-variant italic">No active coupon codes right now.</p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-sm">
+                    {coupons.map((c: any) => (
+                      <div key={c.id} className="card p-3 flex items-center justify-between border border-secondary-container/50 bg-secondary-container/10">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-bold text-secondary text-body-md tracking-wider bg-secondary-container/40 px-2 py-0.5 rounded">
+                              {c.code}
+                            </span>
+                            <span className="text-label-xs font-semibold px-2 py-0.5 rounded-full bg-surface-container text-on-surface">
+                              {c.discount_type === 'percent' ? `${c.value}% OFF` : `₹${c.value} OFF`}
+                            </span>
+                          </div>
+                          <p className="text-label-xs text-on-surface-variant mt-1">
+                            Min purchase: ₹{c.min_purchase} {c.active_days ? `· Active: ${c.active_days}` : ''}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setPurchaseForm(f => ({ ...f, coupon_code: c.code }));
+                            setShowPurchaseModal(true);
+                          }}
+                          className="btn-outline !py-1 !px-2.5 text-label-xs flex items-center gap-1"
+                        >
+                          <span className="material-symbols-outlined text-[14px]">shopping_cart</span>
+                          Use in Purchase
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
+        </div>
+
+        {/* Right Column: Actions / Notes / Referrals */}
+        <div className="lg:col-span-4 space-y-md">
+          {/* Renewal CTA if expired/expiring */}
+          {(member.status === 'expired' || member.status === 'expiring_soon' || daysToExpiry <= 30) && (
+            <div className="card p-md border border-amber-200 bg-amber-50/30 space-y-3">
+              <div className="flex items-center gap-2 text-amber-800 font-bold text-label-md">
+                <span className="material-symbols-outlined">autorenew</span>
+                Renew Membership
+              </div>
+              <p className="text-body-sm text-on-surface-variant">
+                Extend membership validity by 1 year from today.
+              </p>
+              <button
+                onClick={handleRenew}
+                disabled={renewing}
+                className="btn-primary w-full py-2.5 flex items-center justify-center gap-2"
+              >
+                {renewing && <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>}
+                Renew Validity
+              </button>
+            </div>
+          )}
+
+          {/* Redeem Gift Voucher Card */}
+          <div className="card p-md space-y-md">
+            <h4 className="text-label-md font-bold text-on-surface flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px]">confirmation_number</span>
+              Redeem Gift Voucher / Card
+            </h4>
+            <form onSubmit={handleRedeemVoucher} className="space-y-3">
+              <p className="text-body-sm text-on-surface-variant">
+                Enter gift voucher or card code to link & credit value to member:
+              </p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={voucherCodeInput}
+                  onChange={e => setVoucherCodeInput(e.target.value.toUpperCase())}
+                  placeholder="VOUCHER CODE"
+                  className="flex-1 px-3 py-2 bg-surface-container-low border border-outline-variant rounded-lg font-mono text-body-md text-center outline-none focus:border-primary transition-all uppercase"
+                />
+                <button
+                  type="submit"
+                  disabled={redeemingVoucher || !voucherCodeInput.trim()}
+                  className="btn-primary py-2 px-4 flex items-center gap-1"
+                >
+                  {redeemingVoucher ? '...' : 'Redeem'}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Customer Notes */}
+          <div className="card p-md space-y-md">
+            <h4 className="text-label-md font-bold text-on-surface flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px]">sticky_note_2</span>
+              Customer Notes
+            </h4>
+            <textarea
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              onBlur={handleSaveNotes}
+              placeholder="Add internal notes about this customer (e.g. preferences, allergies, VIP status)..."
+              className="w-full h-32 p-3 bg-surface-container-low border border-outline-variant rounded-lg text-body-md outline-none focus:border-primary transition-all resize-none"
+            />
+            <div className="flex justify-between items-center text-label-xs text-on-surface-variant">
+              <span>Saves automatically on blur</span>
+              {savingNotes && (
+                <span className="text-primary flex items-center gap-1">
+                  <span className="material-symbols-outlined animate-spin text-[12px]">progress_activity</span>
+                  Saving...
+                </span>
+              )}
+            </div>
+          </div>
 
           {/* Referral Engine */}
           <div className="card p-md space-y-md">
@@ -806,114 +1205,51 @@ export default function MemberProfilePage() {
             </div>
           </div>
 
-          {/* Live Estimated Points Preview — uses NET amount if a coupon is selected */}
-          {Number(purchaseForm.amount) > 0 && (() => {
-            // Compute net amount after any selected coupon so the preview matches backend
-            const selectedCouponForPreview = coupons.find((c: any) => c.code === purchaseForm.coupon_code && c.is_active);
-            const previewDiscount = selectedCouponForPreview ? computeCouponDiscount(selectedCouponForPreview, purchaseForm.amount) : 0;
-            const netAmtForPreview = Math.max(0, Number(purchaseForm.amount) - previewDiscount);
-            const estimatedPts = calculateEstimatedPoints(String(netAmtForPreview));
-            return (
-              <div className="p-3 bg-secondary-container/20 border border-secondary-container rounded-xl flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-secondary text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
-                  <div>
-                    <p className="text-label-md font-bold text-on-surface">Loyalty Points to Earn</p>
-                    <p className="text-label-sm text-on-surface-variant">
-                      {previewDiscount > 0
-                        ? `On net ₹${netAmtForPreview.toLocaleString()} after ₹${previewDiscount} coupon`
-                        : 'Calculated based on store points rules'}
-                    </p>
-                  </div>
+          {/* Live Estimated Points Preview */}
+          {Number(purchaseForm.amount) > 0 && (
+            <div className="p-3 bg-secondary-container/20 border border-secondary-container rounded-xl flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-secondary text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
+                <div>
+                  <p className="text-label-md font-bold text-on-surface">Loyalty Points to Earn</p>
+                  <p className="text-label-sm text-on-surface-variant">Calculated based on store points rules</p>
                 </div>
-                <span className="text-headline-sm font-bold text-secondary">
-                  +{estimatedPts} pts
-                </span>
               </div>
-            );
-          })()}
+              <span className="text-headline-sm font-bold text-secondary">
+                +{calculateEstimatedPoints(purchaseForm.amount)} pts
+              </span>
+            </div>
+          )}
 
-          {/* ── Coupon Selection ── */}
           <div>
             <label className="form-label" htmlFor="purchase-coupon">
               Apply Coupon Code <span className="text-on-surface-variant font-normal">(Optional)</span>
             </label>
-            {(() => {
-              // Only show coupons applicable to this purchase amount so the merchant
-              // isn't confused by coupons that the backend would reject.
-              const applicableCoupons = getApplicableCoupons(purchaseForm.amount);
-              const allActiveCoupons = coupons.filter((c: any) => c.is_active);
-              const selectedCoupon = applicableCoupons.find((c: any) => c.code === purchaseForm.coupon_code)
-                ?? allActiveCoupons.find((c: any) => c.code === purchaseForm.coupon_code);
-              const discountAmt = selectedCoupon ? computeCouponDiscount(selectedCoupon, purchaseForm.amount) : 0;
-
-              return (
-                <div className="space-y-2">
-                  {allActiveCoupons.length === 0 ? (
-                    // Merchant has no coupons at all
-                    <p className="text-label-sm text-on-surface-variant italic bg-surface-container px-3 py-2 rounded-lg">
-                      No coupon codes configured for this store yet.
-                    </p>
-                  ) : applicableCoupons.length === 0 ? (
-                    // Coupons exist but none pass the filter for this amount
-                    <div className="flex items-start gap-2 bg-surface-container px-3 py-2 rounded-lg">
-                      <span className="material-symbols-outlined text-on-surface-variant text-[16px] mt-0.5">info</span>
-                      <p className="text-label-sm text-on-surface-variant">
-                        No coupons available for this purchase
-                        {Number(purchaseForm.amount) > 0 ? ` (₹${purchaseForm.amount})` : ''}.
-                        {Number(purchaseForm.amount) <= 0 && ' Enter an amount above to check eligibility.'}
-                      </p>
-                    </div>
-                  ) : (
-                    // Show applicable coupon dropdown
-                    <select
-                      className="input-field"
-                      value={purchaseForm.coupon_code}
-                      onChange={e => setPurchaseForm({ ...purchaseForm, coupon_code: e.target.value })}
-                    >
-                      <option value="">-- No coupon --</option>
-                      {applicableCoupons.map((c: any) => {
-                        const discount = computeCouponDiscount(c, purchaseForm.amount);
-                        const discountLabel = c.discount_type === 'percent'
-                          ? `${c.value}% OFF${Number(purchaseForm.amount) > 0 ? ` = ₹${discount} savings` : ''}`
-                          : `₹${c.value} OFF`;
-                        const limitLabel = c.max_uses != null ? ` · ${c.max_uses - c.used_count} uses left` : '';
-                        return (
-                          <option key={c.id} value={c.code}>
-                            {c.code} ({discountLabel}{limitLabel})
-                          </option>
-                        );
-                      })}
-                    </select>
-                  )}
-
-                  {/* Live discount preview when a valid coupon is selected */}
-                  {selectedCoupon && discountAmt > 0 && (
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-50 border border-green-200">
-                      <span className="material-symbols-outlined text-green-600 text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>confirmation_number</span>
-                      <div className="flex-1">
-                        <p className="text-label-sm font-bold text-green-800">Coupon <span className="font-mono">{selectedCoupon.code}</span> applied</p>
-                        <p className="text-label-xs text-green-700">
-                          You save ₹{discountAmt.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
-                          {Number(purchaseForm.amount) > 0 && (
-                            <> · Net amount: ₹{Math.max(0, Number(purchaseForm.amount) - discountAmt).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</>)}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Free-text fallback for manual / staff-keyed codes */}
-                  <input
-                    id="purchase-coupon"
-                    type="text"
-                    className="input-field uppercase tracking-wider font-mono"
-                    placeholder={applicableCoupons.length > 0 ? 'Or type a promo code manually...' : 'Enter promo code...'}
-                    value={purchaseForm.coupon_code}
-                    onChange={e => setPurchaseForm({ ...purchaseForm, coupon_code: e.target.value.toUpperCase() })}
-                  />
-                </div>
-              );
-            })()}
+            {coupons.length > 0 && (
+              <select
+                className="input-field mb-2"
+                value={purchaseForm.coupon_code}
+                onChange={e => setPurchaseForm({ ...purchaseForm, coupon_code: e.target.value })}
+              >
+                <option value="">-- Auto-select / Select Available Coupon --</option>
+                {coupons.map((c: any) => {
+                  const label = `${c.code} (${c.discount_type === 'percent' ? `${c.value}% OFF` : `₹${c.value} OFF`}${c.min_purchase > 0 ? ` · Min ₹${c.min_purchase}` : ''})`;
+                  return (
+                    <option key={c.id} value={c.code}>
+                      {label}
+                    </option>
+                  );
+                })}
+              </select>
+            )}
+            <input
+              id="purchase-coupon"
+              type="text"
+              className="input-field uppercase tracking-wider font-mono"
+              placeholder={coupons.length > 0 ? "Or type custom promo code..." : "e.g. SAVE20"}
+              value={purchaseForm.coupon_code}
+              onChange={e => setPurchaseForm({ ...purchaseForm, coupon_code: e.target.value.toUpperCase() })}
+            />
           </div>
 
           {/* Optional Member Offer Redemption */}

@@ -1029,9 +1029,13 @@ def lookup_membership(payload: MembershipLookupRequest, request: Request, db: Se
             )
 
         # Extract digits and clean identifiers
+        import re
         id_digits = "".join(c for c in id_clean if c.isdigit())
         id_strip_hash = id_clean.lstrip("#").strip().lower()
         last10 = id_digits[-10:] if len(id_digits) >= 10 else id_digits
+
+        m_code_match = re.match(r"^([a-z]+)0*(\d+)$", id_strip_hash)
+        id_canonical = f"{m_code_match.group(1)}{m_code_match.group(2)}" if m_code_match else id_strip_hash
 
         members_list = db.query(Member).all()
         verified = []
@@ -1042,6 +1046,9 @@ def lookup_membership(payload: MembershipLookupRequest, request: Request, db: Se
             m_code = (m.member_code or "").strip().lower()
             m_code_strip = m_code.lstrip("#").strip()
 
+            m_match = re.match(r"^([a-z]+)0*(\d+)$", m_code_strip)
+            m_code_canonical = f"{m_match.group(1)}{m_match.group(2)}" if m_match else m_code_strip
+
             # Step 1: Security verification gate — last 4 digits of registered mobile MUST match
             if not m_phone_digits or m_phone_digits[-4:] != last4:
                 continue
@@ -1049,14 +1056,23 @@ def lookup_membership(payload: MembershipLookupRequest, request: Request, db: Se
             # Step 2: Identifier matching across Member Code, Phone, and Card Number
             matches = False
 
-            # Match A: Member Code (e.g. #MC0004, MC0004, SAL001)
-            if id_strip_hash and (m_code == id_strip_hash or m_code_strip == id_strip_hash or id_strip_hash in m_code):
+            # Match A: Member Code (e.g. #MC0004, MC0004, MC4, SAL001)
+            if id_strip_hash and (
+                m_code == id_strip_hash
+                or m_code_strip == id_strip_hash
+                or id_strip_hash in m_code
+                or (id_canonical and m_code_canonical and id_canonical == m_code_canonical)
+            ):
                 matches = True
             # Match B: Mobile Number (last 10 digits or exact digits)
-            elif last10 and len(id_digits) >= 10 and m_phone_digits.endswith(last10):
+            elif id_digits and (
+                m_phone_digits.endswith(id_digits)
+                or id_digits.endswith(m_phone_digits)
+                or (last10 and m_phone_digits.endswith(last10))
+            ):
                 matches = True
             # Match C: Physical Card Number (16-digit card number)
-            elif id_digits and len(id_digits) >= 6 and m_card_digits and m_card_digits.endswith(id_digits):
+            elif id_digits and len(id_digits) >= 4 and m_card_digits and (m_card_digits.endswith(id_digits) or id_digits in m_card_digits):
                 matches = True
             # Match D: Exact string containment fallback
             elif id_clean and (id_clean in (m.phone or "") or id_clean in (m.physical_card_number or "")):
@@ -1064,6 +1080,8 @@ def lookup_membership(payload: MembershipLookupRequest, request: Request, db: Se
 
             if matches:
                 verified.append(m)
+
+        print(f"[lookup_membership] id_clean='{id_clean}' id_strip_hash='{id_strip_hash}' last4='{last4}' total_members={len(members_list)} verified={len(verified)}")
 
         if len(verified) == 0:
             raise HTTPException(
@@ -1082,7 +1100,14 @@ def lookup_membership(payload: MembershipLookupRequest, request: Request, db: Se
             reverse=True
         )[0]
         merchant = db.query(Merchant).filter(Merchant.id == member.merchant_id).first()
-        if not merchant or merchant.status != "active":
+        if not merchant:
+            raise HTTPException(
+                status_code=404,
+                detail="No matching membership found. Please check your details and try again.",
+            )
+        # Compare status robustly — SQLAlchemy Enum may return enum object or string
+        merchant_status = str(merchant.status).lower() if merchant.status else ""
+        if merchant_status == "suspended":
             raise HTTPException(
                 status_code=404,
                 detail="No matching membership found. Please check your details and try again.",
