@@ -84,6 +84,8 @@ function LookupForm({
       const msg: string = err?.message || '';
       if (msg.toLowerCase().includes('too many')) {
         setError('Too many attempts. Please try again in an hour.');
+      } else if (msg) {
+        setError(msg);
       } else {
         setError('No matching membership found. Please check your details and try again.');
       }
@@ -99,9 +101,20 @@ function LookupForm({
         
         {/* Brand Header */}
         <div className="text-center space-y-3">
-          <div className="w-20 h-20 rounded-3xl bg-amber-500/10 border border-amber-300 p-0.5 mx-auto shadow-sm flex items-center justify-center">
-            <div className="w-full h-full rounded-[22px] bg-white flex items-center justify-center">
-              <span className="material-symbols-outlined text-amber-600 text-[36px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+          <div className="inline-flex items-center justify-center gap-2 mb-1">
+            <div className="w-9 h-9 rounded-xl bg-amber-500 flex items-center justify-center shadow-md">
+              <span className="material-symbols-outlined text-slate-950 text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                credit_card
+              </span>
+            </div>
+            <span className="text-xl font-black tracking-tight text-slate-900">
+              Metro <span className="text-amber-600">Cardz</span>
+            </span>
+          </div>
+
+          <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-300 p-0.5 mx-auto shadow-sm flex items-center justify-center">
+            <div className="w-full h-full rounded-xl bg-white flex items-center justify-center">
+              <span className="material-symbols-outlined text-amber-600 text-[30px]" style={{ fontVariationSettings: "'FILL' 1" }}>
                 badge
               </span>
             </div>
@@ -163,7 +176,7 @@ function LookupForm({
                 disabled={loading}
               />
               <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
-                Must match the last 4 digits of the member's registered phone number (e.g. use <strong className="text-amber-700 font-bold">9000</strong> for demo <code className="bg-amber-100/60 text-amber-800 px-1 py-0.5 rounded font-mono text-[10px]">#MC0004</code>).
+                Must match the last 4 digits of the member's registered phone number.
               </p>
             </div>
 
@@ -172,9 +185,6 @@ function LookupForm({
                 <span className="material-symbols-outlined text-rose-600 text-[18px] shrink-0 mt-0.5">error</span>
                 <div className="space-y-1">
                   <p className="text-xs text-rose-800 font-bold leading-relaxed">{error}</p>
-                  <p className="text-[11px] text-rose-600 font-medium">
-                    Tip: Verify that the last 4 digits match the exact phone number registered for member <span className="font-mono font-bold">{identifier || 'code'}</span> in your Merchant Portal list.
-                  </p>
                 </div>
               </div>
             )}
