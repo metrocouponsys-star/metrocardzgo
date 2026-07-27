@@ -162,15 +162,20 @@ function LookupForm({
                 autoComplete="off"
                 disabled={loading}
               />
-              <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
-                Confirms your identity and protects your points privacy.
+              <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
+                Must match the last 4 digits of the member's registered phone number (e.g. use <strong className="text-amber-700 font-bold">9000</strong> for demo <code className="bg-amber-100/60 text-amber-800 px-1 py-0.5 rounded font-mono text-[10px]">#MC0004</code>).
               </p>
             </div>
 
             {error && (
               <div className="bg-rose-50 border border-rose-200 rounded-2xl p-3.5 flex items-start gap-2.5">
                 <span className="material-symbols-outlined text-rose-600 text-[18px] shrink-0 mt-0.5">error</span>
-                <p className="text-xs text-rose-800 font-bold leading-relaxed">{error}</p>
+                <div className="space-y-1">
+                  <p className="text-xs text-rose-800 font-bold leading-relaxed">{error}</p>
+                  <p className="text-[11px] text-rose-600 font-medium">
+                    Tip: Verify that the last 4 digits match the exact phone number registered for member <span className="font-mono font-bold">{identifier || 'code'}</span> in your Merchant Portal list.
+                  </p>
+                </div>
               </div>
             )}
 

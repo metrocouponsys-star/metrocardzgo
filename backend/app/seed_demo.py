@@ -163,7 +163,10 @@ def seed_database(override_url=None):
                 {"title": "10% Off All Services", "type": "percent_off", "value": 10},
                 {"title": "100 Points = ₹100 Off", "type": "points_redemption", "value": 100}
             ],
-            "member": {"code": "SAL001", "name": "Arjun Sharma", "phone": "9845012345", "points": 350}
+            "members": [
+                {"code": "SAL001", "name": "Arjun Sharma", "phone": "9845012345", "points": 350},
+                {"code": "MC0004", "name": "Priya Sharma", "phone": "9987379000", "points": 1250}
+            ]
         },
         {
             "merchant_id": "mer-auto",
@@ -413,28 +416,30 @@ def seed_database(override_url=None):
                 db.add(new_o)
                 db.commit()
 
-        # Create Member
-        mem_info = item["member"]
-        existing_mem = db.query(Member).filter(
-            Member.merchant_id == m.id,
-            Member.phone == mem_info["phone"]
-        ).first()
-        if not existing_mem:
-            from datetime import date, timedelta
-            new_mem = Member(
-                merchant_id=m.id,
-                member_code=mem_info["code"],
-                public_token=f"tok-{mem_info['code'].lower()}",
-                name=mem_info["name"],
-                phone=mem_info["phone"],
-                membership_type_id=first_tier_id,
-                joined_date=date.today(),
-                expiry_date=date.today() + timedelta(days=365),
-                loyalty_points=mem_info["points"],
-                status="active"
-            )
-            db.add(new_mem)
-            db.commit()
+        # Create Members
+        members_to_create = item.get("members", [item["member"]]) if "member" in item or "members" in item else []
+        for mem_info in members_to_create:
+            existing_mem = db.query(Member).filter(
+                Member.merchant_id == m.id,
+                Member.phone == mem_info["phone"]
+            ).first()
+            if not existing_mem:
+                from datetime import date, timedelta
+                new_mem = Member(
+                    merchant_id=m.id,
+                    member_code=mem_info["code"],
+                    public_token=f"tok-{mem_info['code'].lower()}",
+                    name=mem_info["name"],
+                    phone=mem_info["phone"],
+                    physical_card_number=f"4000 1000 0004 {mem_info['phone'][-4:]}",
+                    membership_type_id=first_tier_id,
+                    joined_date=date.today(),
+                    expiry_date=date.today() + timedelta(days=365),
+                    loyalty_points=mem_info["points"],
+                    status="active"
+                )
+                db.add(new_mem)
+                db.commit()
 
     print("\n[SUCCESS] All 10 Target Vertical Demo Database Accounts seeded successfully!")
     db.close()

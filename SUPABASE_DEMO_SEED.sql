@@ -201,6 +201,7 @@ VALUES
   ('mem-sup-1', 'mer-sup', 'SUP001', 'tok-sup001', '4000 1000 0005 0001', 'Sangeeta Patel',   '9855566778', 'mtype-sup-1', CURRENT_DATE - INTERVAL '5 months', CURRENT_DATE + INTERVAL '7 months', 680,  'active'),
   ('mem-gym-1', 'mer-gym', 'GYM001', 'tok-gym001', '4000 1000 0006 0001', 'Karan Malhotra',   '9866677889', 'mtype-gym-1', CURRENT_DATE - INTERVAL '1 month',  CURRENT_DATE + INTERVAL '11 months', 850,  'active'),
   ('mem-sln-1', 'mer-sln', 'SAL001', 'tok-sln001', '4821 6739 0012 3847', 'Arjun Sharma',     '9845012345', 'mtype-sln-1', CURRENT_DATE - INTERVAL '6 months', CURRENT_DATE + INTERVAL '6 months', 350,  'active'),
+  ('mem-mc0004','mer-sln', 'MC0004', 'tok-mc0004', '4000 1000 0004 9000', 'Priya Sharma',     '9987379000', 'mtype-sln-1', CURRENT_DATE - INTERVAL '1 month',  CURRENT_DATE + INTERVAL '11 months', 1250, 'active'),
   ('mem-auto-1','mer-auto','AUT001', 'tok-aut001', '4000 1000 0008 0001', 'Vikramaditya Rao', '9877788990', 'mtype-auto-1',CURRENT_DATE - INTERVAL '2 months', CURRENT_DATE + INTERVAL '10 months', 2100, 'active'),
   ('mem-caf-1', 'mer-caf', 'CAF001', 'tok-caf001', '4000 1000 0009 0001', 'Anish Giri',       '9888899001', 'mtype-caf-1', CURRENT_DATE - INTERVAL '1 month',  CURRENT_DATE + INTERVAL '11 months', 420,  'active'),
   ('mem-jwl-1', 'mer-jwl', 'JWL001', 'tok-jwl001', '4000 1000 0010 0001', 'Sunita Agrawal',   '9899900112', 'mtype-jwl-1', CURRENT_DATE - INTERVAL '3 months', CURRENT_DATE + INTERVAL '9 months', 14500,'active'),

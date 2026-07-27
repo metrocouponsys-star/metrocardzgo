@@ -79,7 +79,7 @@ export async function getDashboardStats(merchantId: string): Promise<DashboardSt
   }).length;
   return {
     total_active_members: merchantMembers.filter(m => m.status === 'active').length,
-    total_cards_assigned: db.cards.filter(c => c.allocated_merchant_id === merchantId).length || merchantMembers.length,
+    total_cards_assigned: merchantMembers.length,
     redemptions_today: db.redemptions.filter(r => new Date(r.created_at).toDateString() === today).length,
     expiring_this_month: expiringMonthCount,
     expiring_this_week: expiringWeekCount,
