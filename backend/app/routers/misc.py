@@ -927,7 +927,11 @@ def _build_public_member_view(member: Member, merchant: Merchant, db: Session) -
                 note="Welcome Bonus Points",
             )
             db.add(txn)
-            db.commit()
+            try:
+                db.commit()
+            except Exception as commit_err:
+                print(f"Welcome bonus commit notice: {commit_err}")
+                db.rollback()
         except Exception as bonus_err:
             print(f"Welcome bonus credit notice: {bonus_err}")
             pts_balance = 200.0
@@ -972,29 +976,35 @@ def _build_public_member_view(member: Member, merchant: Merchant, db: Session) -
         print(f"Notice: history build notice: {err}")
 
     raw_status = getattr(member, "status", "active")
-    status_str = getattr(raw_status, "value", str(raw_status or "active"))
+    status_str = str(getattr(raw_status, "value", str(raw_status or "active")))
 
-    return PublicMemberView(
-        member_id=member.id,
-        merchant_name=merchant.business_name if merchant else "Store",
-        merchant_logo=getattr(merchant, "logo_url", None),
-        merchant_phone=getattr(merchant, "whatsapp_number", None),
-        member_name=member.name,
-        member_code=member.member_code,
-        membership_type_name=mt.name if mt else "Standard",
-        status=status_str,
-        expiry_date=member.expiry_date,
-        loyalty_points=pts_balance,
-        total_visits=getattr(member, "total_visits", 0) or 0,
-        referral_code=getattr(member, "referral_code", None),
-        physical_card_number=getattr(member, "physical_card_number", None),
-        offers=offers,
-        open_lucky_draws=draws_out,
-        coupons=coupons_out,
-        rewards=rewards_out,
-        redemptions=redemptions_out,
-        loyalty_history=history_out,
-    )
+    try:
+        return PublicMemberView(
+            member_id=member.id,
+            merchant_name=str(merchant.business_name) if merchant and merchant.business_name else "Store",
+            merchant_logo=getattr(merchant, "logo_url", None),
+            merchant_phone=getattr(merchant, "whatsapp_number", None),
+            member_name=str(member.name or "Member"),
+            member_code=str(member.member_code or ""),
+            membership_type_name=str(mt.name) if mt else "Standard",
+            status=status_str,
+            expiry_date=member.expiry_date,
+            loyalty_points=float(pts_balance),
+            total_visits=int(getattr(member, "total_visits", 0) or 0),
+            referral_code=getattr(member, "referral_code", None),
+            physical_card_number=getattr(member, "physical_card_number", None),
+            offers=offers,
+            open_lucky_draws=draws_out,
+            coupons=coupons_out,
+            rewards=rewards_out,
+            redemptions=redemptions_out,
+            loyalty_history=history_out,
+        )
+    except Exception as build_err:
+        import traceback
+        print(f"[_build_public_member_view] PublicMemberView() constructor error: {build_err}")
+        print(traceback.format_exc())
+        raise
 
 
 @public_router.get("/m/{token}", response_model=PublicMemberView)
@@ -1113,12 +1123,24 @@ def lookup_membership(payload: MembershipLookupRequest, request: Request, db: Se
                 detail="No matching membership found. Please check your details and try again.",
             )
 
-        return _build_public_member_view(member, merchant, db)
+        print(f"[lookup_membership] Found member: id={member.id} code='{member.member_code}' merchant_id={member.merchant_id} merchant_status={merchant.status}")
+        try:
+            return _build_public_member_view(member, merchant, db)
+        except Exception as view_err:
+            import traceback
+            print(f"[lookup_membership] ERROR in _build_public_member_view for member {member.id}: {view_err}")
+            print(traceback.format_exc())
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error building member view: {str(view_err)}",
+            )
 
     except HTTPException:
         raise
     except Exception as err:
-        print(f"Error in lookup_membership: {err}")
+        import traceback
+        print(f"[lookup_membership] LOOKUP ERROR: {err}")
+        print(traceback.format_exc())
         raise HTTPException(
             status_code=404,
             detail="No matching membership found. Please check your details and try again.",
