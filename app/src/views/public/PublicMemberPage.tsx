@@ -153,12 +153,8 @@ export default function PublicMemberPage() {
         <div className="absolute -right-12 -top-12 w-48 h-48 bg-white/5 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -left-12 -bottom-4 w-40 h-40 bg-white/5 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 animate-slide-up">
-          <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center mx-auto mb-3 card-shine backdrop-blur-sm border border-white/20 overflow-hidden">
-            {data.merchant_logo ? (
-              <img src={data.merchant_logo} alt={data.merchant_name} className="w-full h-full object-cover" />
-            ) : (
-              <span className="material-symbols-outlined text-on-primary text-[30px]" style={{ fontVariationSettings: "'FILL' 1" }}>storefront</span>
-            )}
+          <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center mx-auto mb-3 card-shine backdrop-blur-sm border border-white/20">
+            <span className="material-symbols-outlined text-on-primary text-[30px]" style={{ fontVariationSettings: "'FILL' 1" }}>storefront</span>
           </div>
           <h1 className="text-xl font-bold tracking-tight">{data.merchant_name}</h1>
           <p className="text-sm opacity-70 mt-0.5">Loyalty Membership</p>
