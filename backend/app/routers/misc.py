@@ -472,6 +472,16 @@ def get_dashboard_stats(
     active_members = db.query(Member).filter(
         Member.merchant_id == merchant_id, Member.status == "active"
     ).count()
+
+    from app.models.card import CardInventoryItem
+    total_cards_assigned = db.query(CardInventoryItem).filter(
+        CardInventoryItem.allocated_merchant_id == merchant_id
+    ).count()
+    if total_cards_assigned == 0:
+        total_cards_assigned = db.query(Member).filter(
+            Member.merchant_id == merchant_id
+        ).count()
+
     redemptions_today = db.query(RedemptionLog).join(Member).filter(
         Member.merchant_id == merchant_id,
         RedemptionLog.created_at >= today_start,
@@ -515,6 +525,7 @@ def get_dashboard_stats(
 
     return DashboardStats(
         total_active_members=active_members,
+        total_cards_assigned=total_cards_assigned,
         redemptions_today=redemptions_today,
         expiring_this_month=expiring_this_month,
         expiring_this_week=expiring_this_week,
@@ -1038,62 +1049,46 @@ def lookup_membership(payload: MembershipLookupRequest, request: Request, db: Se
                 detail="Enter your membership/mobile number and the last 4 digits of your registered mobile number",
             )
 
-        # Extract digits and clean identifiers
-        import re
-        id_digits = "".join(c for c in id_clean if c.isdigit())
-        id_strip_hash = id_clean.lstrip("#").strip().lower()
-        last10 = id_digits[-10:] if len(id_digits) >= 10 else id_digits
+        # Clean up the identifier
+        id_strip_hash = id_clean.lstrip("#").strip()
+        id_digits_only = "".join(c for c in id_clean if c.isdigit())
 
-        m_code_match = re.match(r"^([a-z]+)0*(\d+)$", id_strip_hash)
-        id_canonical = f"{m_code_match.group(1)}{m_code_match.group(2)}" if m_code_match else id_strip_hash
+        print(f"[lookup] id_clean='{id_clean}' id_strip_hash='{id_strip_hash}' id_digits='{id_digits_only}' last4='{last4}'")
 
-        members_list = db.query(Member).all()
+        # ── Strategy 1: Look up by member_code (case-insensitive exact match) ──
+        # MC0004, SAL001, etc.
+        candidates = db.query(Member).filter(
+            Member.member_code.ilike(id_strip_hash)
+        ).all()
+        print(f"[lookup] Strategy 1 (code ilike '{id_strip_hash}'): {len(candidates)} hits")
+
+        # ── Strategy 2: Look up by phone number ──
+        if not candidates and len(id_digits_only) >= 6:
+            # Try matching phone ending with the digits entered
+            all_members = db.query(Member).filter(
+                Member.phone.ilike(f"%{id_digits_only[-10:]}")
+            ).all() if len(id_digits_only) >= 10 else []
+            candidates = all_members
+            print(f"[lookup] Strategy 2 (phone ends with digits): {len(candidates)} hits")
+
+        # ── Strategy 3: Broad partial code match (MC0004 ≈ MC4) ──
+        if not candidates:
+            candidates = db.query(Member).filter(
+                Member.member_code.ilike(f"%{id_strip_hash}%")
+            ).all()
+            print(f"[lookup] Strategy 3 (code contains '{id_strip_hash}'): {len(candidates)} hits")
+
+        # ── Security gate: verify last4 of registered phone ──
         verified = []
-
-        for m in members_list:
+        for m in candidates:
             m_phone_digits = "".join(c for c in (m.phone or "") if c.isdigit())
-            m_card_digits = "".join(c for c in (m.physical_card_number or "") if c.isdigit())
-            m_code = (m.member_code or "").strip().lower()
-            m_code_strip = m_code.lstrip("#").strip()
-
-            m_match = re.match(r"^([a-z]+)0*(\d+)$", m_code_strip)
-            m_code_canonical = f"{m_match.group(1)}{m_match.group(2)}" if m_match else m_code_strip
-
-            # Step 1: Security verification gate — last 4 digits of registered mobile MUST match
-            if not m_phone_digits or m_phone_digits[-4:] != last4:
-                continue
-
-            # Step 2: Identifier matching across Member Code, Phone, and Card Number
-            matches = False
-
-            # Match A: Member Code (e.g. #MC0004, MC0004, MC4, SAL001)
-            if id_strip_hash and (
-                m_code == id_strip_hash
-                or m_code_strip == id_strip_hash
-                or id_strip_hash in m_code
-                or (id_canonical and m_code_canonical and id_canonical == m_code_canonical)
-            ):
-                matches = True
-            # Match B: Mobile Number (last 10 digits or exact digits)
-            elif id_digits and (
-                m_phone_digits.endswith(id_digits)
-                or id_digits.endswith(m_phone_digits)
-                or (last10 and m_phone_digits.endswith(last10))
-            ):
-                matches = True
-            # Match C: Physical Card Number (16-digit card number)
-            elif id_digits and len(id_digits) >= 4 and m_card_digits and (m_card_digits.endswith(id_digits) or id_digits in m_card_digits):
-                matches = True
-            # Match D: Exact string containment fallback
-            elif id_clean and (id_clean in (m.phone or "") or id_clean in (m.physical_card_number or "")):
-                matches = True
-
-            if matches:
+            print(f"[lookup] Checking member {m.member_code} phone='{m.phone}' digits='{m_phone_digits}' last4='{m_phone_digits[-4:] if m_phone_digits else ''}'")
+            if m_phone_digits and m_phone_digits[-4:] == last4:
                 verified.append(m)
 
-        print(f"[lookup_membership] id_clean='{id_clean}' id_strip_hash='{id_strip_hash}' last4='{last4}' total_members={len(members_list)} verified={len(verified)}")
+        print(f"[lookup] After security gate: {len(verified)} verified")
 
-        if len(verified) == 0:
+        if not verified:
             raise HTTPException(
                 status_code=404,
                 detail="No matching membership found. Please check your details and try again.",
@@ -1103,48 +1098,41 @@ def lookup_membership(payload: MembershipLookupRequest, request: Request, db: Se
         member = sorted(
             verified,
             key=lambda m: (
-                getattr(m, "status", "active") == "active",
+                str(getattr(m, "status", "active") or "").lower() == "active",
                 float(getattr(m, "loyalty_points", 0) or 0),
                 getattr(m, "updated_at", None) or getattr(m, "created_at", None) or datetime.min
             ),
             reverse=True
         )[0]
+
         merchant = db.query(Merchant).filter(Merchant.id == member.merchant_id).first()
         if not merchant:
-            raise HTTPException(
-                status_code=404,
-                detail="No matching membership found. Please check your details and try again.",
-            )
-        # Compare status robustly — SQLAlchemy Enum may return enum object or string
-        merchant_status = str(merchant.status).lower() if merchant.status else ""
-        if merchant_status == "suspended":
-            raise HTTPException(
-                status_code=404,
-                detail="No matching membership found. Please check your details and try again.",
-            )
+            raise HTTPException(status_code=404, detail="No matching membership found. Please check your details and try again.")
 
-        print(f"[lookup_membership] Found member: id={member.id} code='{member.member_code}' merchant_id={member.merchant_id} merchant_status={merchant.status}")
+        merchant_status = str(merchant.status or "").lower()
+        print(f"[lookup] Found member '{member.member_code}' merchant='{merchant.business_name}' status='{merchant_status}'")
+        if merchant_status == "suspended":
+            raise HTTPException(status_code=404, detail="No matching membership found. Please check your details and try again.")
+
         try:
             return _build_public_member_view(member, merchant, db)
         except Exception as view_err:
             import traceback
-            print(f"[lookup_membership] ERROR in _build_public_member_view for member {member.id}: {view_err}")
+            print(f"[lookup] VIEW BUILD ERROR for {member.id}: {view_err}")
             print(traceback.format_exc())
-            raise HTTPException(
-                status_code=500,
-                detail=f"Error building member view: {str(view_err)}",
-            )
+            raise HTTPException(status_code=500, detail=f"Error building member view: {str(view_err)}")
 
     except HTTPException:
         raise
     except Exception as err:
         import traceback
-        print(f"[lookup_membership] LOOKUP ERROR: {err}")
+        print(f"[lookup] UNEXPECTED ERROR: {err}")
         print(traceback.format_exc())
         raise HTTPException(
-            status_code=404,
-            detail="No matching membership found. Please check your details and try again.",
+            status_code=500,
+            detail=f"Lookup error: {str(err)}",
         )
+
 
 
 @public_router.get("/member-catalog")

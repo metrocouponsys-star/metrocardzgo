@@ -79,6 +79,7 @@ export async function getDashboardStats(merchantId: string): Promise<DashboardSt
   }).length;
   return {
     total_active_members: merchantMembers.filter(m => m.status === 'active').length,
+    total_cards_assigned: db.cards.filter(c => c.allocated_merchant_id === merchantId).length || merchantMembers.length,
     redemptions_today: db.redemptions.filter(r => new Date(r.created_at).toDateString() === today).length,
     expiring_this_month: expiringMonthCount,
     expiring_this_week: expiringWeekCount,
@@ -808,16 +809,34 @@ export async function lookupMembership(identifier: string, last4: string): Promi
   }
 
   const normalise = (s: string) => s.replace(/\D/g, '');
-  const candidates = db.members.filter(
-    m =>
-      m.member_code?.toLowerCase() === id.toLowerCase() ||
-      normalise(m.phone || '') === normalise(id),
-  );
+  const cleanId = id.replace(/^#/, '').trim().toLowerCase();
+  const idDigits = normalise(id);
+
+  const candidates = db.members.filter(m => {
+    const code = (m.member_code || '').replace(/^#/, '').trim().toLowerCase();
+    const phone = normalise(m.phone || '');
+    const card = normalise(m.physical_card_number || '');
+
+    const codeCanonical = code.replace(/^([a-z]+)0*(\d+)$/, '$1$2');
+    const idCanonical = cleanId.replace(/^([a-z]+)0*(\d+)$/, '$1$2');
+
+    const codeMatch =
+      code === cleanId ||
+      code.includes(cleanId) ||
+      cleanId.includes(code) ||
+      (codeCanonical && idCanonical && codeCanonical === idCanonical);
+
+    const phoneMatch = idDigits.length >= 4 && (phone.endsWith(idDigits) || idDigits.endsWith(phone));
+    const cardMatch = idDigits.length >= 4 && (card.endsWith(idDigits) || idDigits.includes(card));
+
+    return codeMatch || phoneMatch || cardMatch;
+  });
+
   const verified = candidates.filter(
     m => normalise(m.phone || '').slice(-4) === last4Digits,
   );
 
-  if (verified.length !== 1) {
+  if (verified.length === 0) {
     throw new Error('No matching membership found. Please check your details and try again.');
   }
 

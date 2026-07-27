@@ -163,8 +163,8 @@ export default function DashboardPage() {
             <>
               <StatCard
                 label="Total Active Members"
-                value={stats.total_active_members}
-                trend="+12% this month"
+                value={`${stats.total_active_members} / ${stats.total_cards_assigned || stats.total_active_members}`}
+                trend={`${stats.total_active_members} Active / ${stats.total_cards_assigned || stats.total_active_members} Cards Assigned`}
                 icon="groups"
                 className="stagger-item"
                 onClick={() => navigate('/members')}

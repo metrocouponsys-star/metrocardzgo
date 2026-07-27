@@ -201,6 +201,7 @@ export interface MessageLog {
 
 export interface DashboardStats {
   total_active_members: number;
+  total_cards_assigned?: number;
   redemptions_today: number;
   expiring_this_month: number;
   expiring_this_week?: number;

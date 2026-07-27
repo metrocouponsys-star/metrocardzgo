@@ -438,6 +438,7 @@ class PublicMemberView(BaseModel):
 # ── Dashboard Stats ───────────────────────────────────────────────────────────
 class DashboardStats(BaseModel):
     total_active_members: int
+    total_cards_assigned: Optional[int] = 0
     redemptions_today: int
     expiring_this_month: int
     expiring_this_week: Optional[int] = 0
