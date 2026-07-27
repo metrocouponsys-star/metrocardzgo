@@ -256,7 +256,18 @@ function MembershipResult({
       
       {/* Top Banner Header */}
       <div className="bg-white border-b border-slate-200 py-6 px-4 text-center shadow-sm">
-        <div className="max-w-md mx-auto space-y-1">
+        <div className="max-w-md mx-auto space-y-2">
+          {data.merchant_logo ? (
+            <img
+              src={data.merchant_logo}
+              alt={data.merchant_name}
+              className="w-16 h-16 rounded-2xl object-cover mx-auto shadow-sm border border-slate-200"
+            />
+          ) : (
+            <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-300 flex items-center justify-center mx-auto text-amber-600 font-black text-xl">
+              {data.merchant_name ? data.merchant_name.slice(0, 2).toUpperCase() : 'MG'}
+            </div>
+          )}
           <span className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 rounded-full px-3 py-0.5 text-xs text-amber-900 font-bold">
             <span className="material-symbols-outlined text-[16px] text-amber-600">verified</span>
             {data.merchant_name}
