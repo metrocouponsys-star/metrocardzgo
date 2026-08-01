@@ -55,8 +55,8 @@ export default function LoginPage() {
               localStorage.setItem('metro-cardz-refresh', data.refresh_token);
             }
             setAuth(data.user, data.access_token);
-            addToast('success', `Welcome, ${data.user.name}! 👋`);
-            navigate(data.user.role === 'super_admin' ? '/admin' : '/dashboard');
+            const targetRoute = data.user.role === 'super_admin' ? '/admin' : data.user.role === 'staff' ? '/members/search?tab=qr' : '/dashboard';
+            navigate(targetRoute);
           } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : 'Login failed';
             setGoogleError(
@@ -113,7 +113,8 @@ export default function LoginPage() {
 
       setAuth(authResult.user, authResult.token);
       addToast('success', `Welcome, ${authResult.user.name}! 👋`);
-      navigate(authResult.user.role === 'super_admin' ? '/admin' : '/dashboard');
+      const targetRoute = authResult.user.role === 'super_admin' ? '/admin' : authResult.user.role === 'staff' ? '/members/search?tab=qr' : '/dashboard';
+      navigate(targetRoute);
     } catch (e: unknown) {
       setEmailError(e instanceof Error ? e.message : 'Login failed');
     } finally {
@@ -141,30 +142,30 @@ export default function LoginPage() {
   const isAnyLoading = emailLoading || googleLoading;
 
   return (
-    <div className="min-h-screen bg-surface flex flex-col justify-center items-center px-4 relative overflow-hidden">
+    <div className="min-h-screen bg-white flex flex-col justify-center items-center px-4 relative overflow-hidden">
       {/* Background glow */}
       <div className="fixed top-0 left-0 w-full h-full -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[10%] -right-[10%] w-[40%] h-[40%] rounded-full bg-primary-fixed opacity-20 blur-[120px]" />
-        <div className="absolute -bottom-[10%] -left-[10%] w-[40%] h-[40%] rounded-full bg-secondary-fixed opacity-20 blur-[120px]" />
+        <div className="absolute -top-[10%] -right-[10%] w-[40%] h-[40%] rounded-full bg-[#B8941F]-fixed opacity-20 blur-[120px]" />
+        <div className="absolute -bottom-[10%] -left-[10%] w-[40%] h-[40%] rounded-full bg-[#6B7280]-fixed opacity-20 blur-[120px]" />
       </div>
 
       <div className="w-full max-w-[420px] animate-slide-up">
         {/* Logo */}
         <div className="mb-8 text-center">
-          <div className="inline-flex items-center justify-center p-3 bg-primary rounded-2xl mb-3 shadow-elevated">
-            <span className="material-symbols-outlined text-on-primary text-[36px]" style={{ fontVariationSettings: "'FILL' 1" }}>credit_card</span>
+          <div className="inline-flex items-center justify-center p-3 bg-[#B8941F] rounded-2xl mb-3 shadow-card">
+            <span className="material-symbols-outlined text-white text-[36px]" style={{ fontVariationSettings: "'FILL' 1" }}>credit_card</span>
           </div>
-          <h1 className="text-headline-md font-headline-md font-bold text-primary">Metro Cardz</h1>
-          <p className="text-label-sm text-on-surface-variant mt-1">Loyalty Platform for Indian SMBs</p>
+          <h1 className="text-xl font-headline-md font-bold text-[#B8941F]">Metro Cardz</h1>
+          <p className="text-xs text-[#6B7280] mt-1">Loyalty Platform for Indian SMBs</p>
         </div>
 
         {/* Card */}
-        <div className="bg-surface-container-lowest rounded-2xl p-8 border border-outline-variant/30 shadow-tonal">
+        <div className="bg-[#F9FAFB]est rounded-2xl p-8 border border-[#F3F4F6] shadow-tonal">
           <div className="mb-6 text-center">
-            <h2 className="text-headline-lg-mobile font-headline-lg-mobile text-on-surface mb-1">
+            <h2 className="text-2xl font-bold text-[#111111] mb-1">
               Welcome Back
             </h2>
-            <p className="text-body-md text-on-surface-variant">
+            <p className="text-sm text-[#6B7280]">
               Sign in to your merchant or staff account.
             </p>
           </div>
@@ -173,11 +174,11 @@ export default function LoginPage() {
           <form onSubmit={handleEmailLogin} noValidate>
             {/* Email / Phone field */}
             <div className="mb-3">
-              <label htmlFor="login-email" className="block text-label-sm text-on-surface-variant mb-1.5 font-medium">
+              <label htmlFor="login-email" className="block text-xs text-[#6B7280] mb-1.5 font-medium">
                 Email or Mobile Number
               </label>
               <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px] pointer-events-none">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7280] text-[18px] pointer-events-none">
                   person
                 </span>
                 <input
@@ -188,18 +189,18 @@ export default function LoginPage() {
                   onChange={e => setEmail(e.target.value)}
                   disabled={isAnyLoading}
                   placeholder="e.g. 9876543210 or email@domain.com"
-                  className="w-full h-12 pl-10 pr-4 rounded-xl border border-outline-variant bg-surface-container text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 disabled:opacity-60"
+                  className="w-full h-12 pl-10 pr-4 rounded-xl border border-[#E5E7EB] bg-[#F3F4F6] text-sm text-[#111111] placeholder:text-[#6B7280]/50 focus:outline-none focus:border-[#B8941F] focus:ring-2 focus:ring-[#B8941F]/20 transition-all duration-200 disabled:opacity-60"
                 />
               </div>
             </div>
 
             {/* Password field */}
             <div className="mb-4">
-              <label htmlFor="login-password" className="block text-label-sm text-on-surface-variant mb-1.5 font-medium">
+              <label htmlFor="login-password" className="block text-xs text-[#6B7280] mb-1.5 font-medium">
                 Password
               </label>
               <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px] pointer-events-none">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7280] text-[18px] pointer-events-none">
                   lock
                 </span>
                 <input
@@ -210,13 +211,13 @@ export default function LoginPage() {
                   onChange={e => setPassword(e.target.value)}
                   disabled={isAnyLoading}
                   placeholder="Enter your password"
-                  className="w-full h-12 pl-10 pr-11 rounded-xl border border-outline-variant bg-surface-container text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 disabled:opacity-60"
+                  className="w-full h-12 pl-10 pr-11 rounded-xl border border-[#E5E7EB] bg-[#F3F4F6] text-sm text-[#111111] placeholder:text-[#6B7280]/50 focus:outline-none focus:border-[#B8941F] focus:ring-2 focus:ring-[#B8941F]/20 transition-all duration-200 disabled:opacity-60"
                 />
                 <button
                   type="button"
                   tabIndex={-1}
                   onClick={() => setShowPassword(v => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B7280] hover:text-[#111111] transition-colors"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   <span className="material-symbols-outlined text-[18px]">
@@ -228,9 +229,9 @@ export default function LoginPage() {
 
             {/* Email login error */}
             {emailError && (
-              <div className="mb-4 bg-error-container rounded-xl p-3 border border-error/20 flex items-start gap-2">
-                <span className="material-symbols-outlined text-error text-[18px] mt-0.5">error</span>
-                <p className="text-body-sm text-error">{emailError}</p>
+              <div className="mb-4 bg-red-50 rounded-xl p-3 border border-red-200 flex items-start gap-2">
+                <span className="material-symbols-outlined text-red-600 text-[18px] mt-0.5">error</span>
+                <p className="text-xs text-red-600">{emailError}</p>
               </div>
             )}
 
@@ -239,7 +240,7 @@ export default function LoginPage() {
               id="email-login-btn"
               type="submit"
               disabled={isAnyLoading || !email.trim() || !password}
-              className="w-full h-12 rounded-xl bg-primary text-on-primary font-semibold text-body-lg flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+              className="w-full h-12 rounded-xl bg-[#B8941F] text-white font-semibold text-base flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
             >
               {emailLoading ? (
                 <span className="material-symbols-outlined animate-spin text-[20px]">progress_activity</span>
@@ -255,15 +256,15 @@ export default function LoginPage() {
           {/* ── Divider ── */}
           <div className="flex items-center gap-3 my-5">
             <div className="flex-1 h-px bg-outline-variant/40" />
-            <span className="text-label-sm text-on-surface-variant font-medium">or</span>
+            <span className="text-xs text-[#6B7280] font-medium">or</span>
             <div className="flex-1 h-px bg-outline-variant/40" />
           </div>
 
           {/* Google error */}
           {googleError && (
-            <div className="mb-4 bg-error-container rounded-xl p-3 border border-error/20 flex items-start gap-2">
-              <span className="material-symbols-outlined text-error text-[18px] mt-0.5">error</span>
-              <p className="text-body-sm text-error">{googleError}</p>
+            <div className="mb-4 bg-red-50 rounded-xl p-3 border border-red-200 flex items-start gap-2">
+              <span className="material-symbols-outlined text-red-600 text-[18px] mt-0.5">error</span>
+              <p className="text-xs text-red-600">{googleError}</p>
             </div>
           )}
 
@@ -272,11 +273,11 @@ export default function LoginPage() {
             id="google-login-btn"
             onClick={handleGoogleLogin}
             disabled={isAnyLoading}
-            className="w-full h-12 rounded-xl border border-outline-variant flex items-center justify-center gap-3 font-medium text-body-md text-on-surface bg-surface-container hover:bg-surface-container-high transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full h-12 rounded-xl border border-[#E5E7EB] flex items-center justify-center gap-3 font-medium text-sm text-[#111111] bg-[#F3F4F6] hover:bg-[#F3F4F6]-high transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
             style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}
           >
             {googleLoading ? (
-              <span className="material-symbols-outlined animate-spin text-primary">progress_activity</span>
+              <span className="material-symbols-outlined animate-spin text-[#B8941F]">progress_activity</span>
             ) : (
               <>
                 {/* Google icon SVG */}
@@ -291,16 +292,18 @@ export default function LoginPage() {
             )}
           </button>
 
-          <p className="text-center text-body-sm text-on-surface-variant mt-5">
+          <p className="text-center text-xs text-[#6B7280] mt-5">
             Not a merchant yet?{' '}
-            <a href="#" className="text-primary font-semibold hover:underline">Contact support to get onboarded</a>
+            <a href="#" className="text-[#B8941F] font-semibold hover:underline">Contact support to get onboarded</a>
           </p>
         </div>
 
-        <p className="text-center text-label-sm text-on-surface-variant mt-6 opacity-60">
+        <p className="text-center text-xs text-[#6B7280] mt-6 opacity-60">
           Secure login powered by Google · Metro Cardz
         </p>
       </div>
     </div>
   );
 }
+
+

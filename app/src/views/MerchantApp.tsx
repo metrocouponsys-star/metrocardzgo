@@ -43,14 +43,18 @@ import CheckMembershipPage from './public/CheckMembershipPage';
 function ProtectedRoute({ children, roles }: { children: React.ReactNode; roles?: string[] }) {
   const { isAuthenticated, user } = useAuthStore();
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (roles && user && !roles.includes(user.role)) return <Navigate to="/dashboard" replace />;
+  if (roles && user && !roles.includes(user.role)) {
+    const fallback = user.role === 'staff' ? '/members/search?tab=qr' : '/dashboard';
+    return <Navigate to={fallback} replace />;
+  }
   return <>{children}</>;
 }
 
 function AuthRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, user } = useAuthStore();
   if (isAuthenticated) {
-    return <Navigate to={user?.role === 'super_admin' ? '/admin' : '/dashboard'} replace />;
+    const target = user?.role === 'super_admin' ? '/admin' : user?.role === 'staff' ? '/members/search?tab=qr' : '/dashboard';
+    return <Navigate to={target} replace />;
   }
   return <>{children}</>;
 }

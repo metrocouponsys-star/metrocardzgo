@@ -1,0 +1,21 @@
+# ==============================================================================
+# Hostinger Apache / Nginx .htaccess Configuration for WowCard.in
+# Routes /api requests to Node.js backend and all other requests to React SPA
+# ==============================================================================
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # 1. Route API requests to Node.js Backend App on Port 3000
+  RewriteCond %{REQUEST_URI} ^/api/ [NC]
+  RewriteRule ^api/(.*)$ http://127.0.0.1:3000/api/$1 [P,L]
+
+  # 2. Direct requests to actual existing files/folders
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # 3. Fallback all React SPA routes to index.html
+  RewriteRule ^ index.html [L]
+</IfModule>

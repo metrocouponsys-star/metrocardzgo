@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import * as api from '../../api';
 import { invalidateContaining } from '../../api/cache';
 import { Modal } from '../../components/ui/Modal';
@@ -19,26 +19,26 @@ export default function RewardsPage() {
   const [tab, setTab] = useState<Tab>('catalog');
 
   return (
-    <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-5xl mx-auto space-y-xl animate-fade-in">
+    <div className="px-4 md:px-10 py-8 max-w-5xl mx-auto space-y-8 animate-fade-in">
       {/* Page Header */}
       <div className="page-header">
         <h2 className="page-title flex items-center gap-2">
-          <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>card_giftcard</span>
+          <span className="material-symbols-outlined text-[#B8941F]" style={{ fontVariationSettings: "'FILL' 1" }}>card_giftcard</span>
           Rewards & Loyalty
         </h2>
         <p className="page-subtitle">Manage your reward catalog, coupon codes, gift vouchers, and loyalty points rules.</p>
       </div>
 
       {/* Tab Bar */}
-      <div className="flex bg-surface-container rounded-2xl p-1.5 gap-1 flex-wrap">
+      <div className="flex bg-[#F3F4F6] rounded-2xl p-1.5 gap-1 flex-wrap">
         {TABS.map(t => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-label-md font-medium transition-all whitespace-nowrap
+            className={`flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap
               ${tab === t.key
-                ? 'bg-primary text-on-primary shadow-sm'
-                : 'text-on-surface-variant hover:bg-surface-container-high'}`}
+                ? 'bg-[#B8941F] text-white shadow-sm'
+                : 'text-[#6B7280] hover:bg-[#F3F4F6]-high'}`}
           >
             <span className="material-symbols-outlined text-[18px]">{t.icon}</span>
             {t.label}
@@ -127,9 +127,9 @@ function RewardCatalogTab({ active }: { active?: boolean }) {
   };
 
   return (
-    <div className="space-y-md">
+    <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <p className="text-body-md text-on-surface-variant">Members redeem loyalty points for these rewards at checkout.</p>
+        <p className="text-sm text-[#6B7280]">Members redeem loyalty points for these rewards at checkout.</p>
         <button onClick={openCreate} className="btn-primary flex items-center gap-2">
           <span className="material-symbols-outlined text-[18px]">add</span>
           Add Reward
@@ -137,36 +137,36 @@ function RewardCatalogTab({ active }: { active?: boolean }) {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 4 }).map((_, i) => <div key={i} className="card h-44 animate-pulse" />)}
         </div>
       ) : rewards.length === 0 ? (
-        <div className="card p-lg flex flex-col items-center text-center py-16">
-          <div className="w-20 h-20 bg-secondary-container/30 rounded-2xl flex items-center justify-center mb-4">
-            <span className="material-symbols-outlined text-secondary text-[40px]" style={{ fontVariationSettings: "'FILL' 1" }}>card_giftcard</span>
+        <div className="card p-6 flex flex-col items-center text-center py-16">
+          <div className="w-20 h-20 bg-[#F3F4F6]/30 rounded-2xl flex items-center justify-center mb-4">
+            <span className="material-symbols-outlined text-[#6B7280] text-[40px]" style={{ fontVariationSettings: "'FILL' 1" }}>card_giftcard</span>
           </div>
-          <h3 className="text-headline-md font-bold mb-2">No rewards yet</h3>
-          <p className="text-body-md text-on-surface-variant max-w-sm mb-6">Create redeemable rewards so your members can spend their loyalty points on something they love.</p>
+          <h3 className="text-xl font-bold mb-2">No rewards yet</h3>
+          <p className="text-sm text-[#6B7280] max-w-sm mb-6">Create redeemable rewards so your members can spend their loyalty points on something they love.</p>
           <button onClick={openCreate} className="btn-primary flex items-center gap-2">
             <span className="material-symbols-outlined text-[18px]">add</span>
             Create First Reward
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {rewards.map(r => (
-            <div key={r.id} className={`card p-md flex flex-col gap-3 transition-all hover:shadow-elevated ${!r.is_active ? 'opacity-60' : ''}`}>
+            <div key={r.id} className={`card p-4 flex flex-col gap-3 transition-all hover:shadow-card ${!r.is_active ? 'opacity-60' : ''}`}>
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-headline-sm font-bold text-on-surface truncate">{r.name}</h3>
-                  <p className="text-body-sm text-on-surface-variant mt-0.5 line-clamp-2">{r.description}</p>
+                  <h3 className="text-lg font-bold text-[#111111] truncate">{r.name}</h3>
+                  <p className="text-xs text-[#6B7280] mt-0.5 line-clamp-2">{r.description}</p>
                 </div>
-                <div className={`px-3 py-1.5 rounded-xl font-bold text-label-sm flex-shrink-0 ${r.is_active ? 'bg-secondary-container text-secondary' : 'bg-surface-container text-on-surface-variant'}`}>
+                <div className={`px-3 py-1.5 rounded-xl font-bold text-xs flex-shrink-0 ${r.is_active ? 'bg-[#F3F4F6] text-[#6B7280]' : 'bg-[#F3F4F6] text-[#6B7280]'}`}>
                   {Number(r.points_cost).toFixed(0)} pts
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 text-label-sm text-on-surface-variant">
+              <div className="flex items-center gap-2 text-xs text-[#6B7280]">
                 <span className="material-symbols-outlined text-[14px]">inventory_2</span>
                 {r.quantity_available != null ? `${r.quantity_available} remaining` : 'Unlimited stock'}
                 <span className={`ml-auto px-2 py-0.5 rounded-full text-[11px] font-bold ${r.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
@@ -174,25 +174,25 @@ function RewardCatalogTab({ active }: { active?: boolean }) {
                 </span>
               </div>
 
-              <div className="flex gap-2 pt-1 border-t border-outline-variant/20">
-                <button onClick={() => openEdit(r)} className="flex-1 btn-outline text-label-sm py-1.5 flex items-center justify-center gap-1">
+              <div className="flex gap-2 pt-1 border-t border-[#E5E7EB]/20">
+                <button onClick={() => openEdit(r)} className="flex-1 btn-outline text-xs py-1.5 flex items-center justify-center gap-1">
                   <span className="material-symbols-outlined text-[14px]">edit</span>
                   Edit
                 </button>
-                <button onClick={() => toggleActive(r)} className="flex-1 py-1.5 rounded-xl border border-outline-variant text-on-surface-variant text-label-sm hover:bg-surface-container transition-colors flex items-center justify-center gap-1">
+                <button onClick={() => toggleActive(r)} className="flex-1 py-1.5 rounded-xl border border-[#E5E7EB] text-[#6B7280] text-xs hover:bg-[#F3F4F6] transition-colors flex items-center justify-center gap-1">
                   <span className="material-symbols-outlined text-[14px]">{r.is_active ? 'pause_circle' : 'play_circle'}</span>
                   {r.is_active ? 'Deactivate' : 'Activate'}
                 </button>
-                <button onClick={() => remove(r.id)} className="p-1.5 rounded-xl text-error hover:bg-error-container transition-colors" title="Delete reward">
+                <button onClick={() => remove(r.id)} className="p-1.5 rounded-xl text-red-600 hover:bg-red-50 transition-colors" title="Delete reward">
                   <span className="material-symbols-outlined text-[18px]">delete</span>
                 </button>
               </div>
             </div>
           ))}
 
-          <button onClick={openCreate} className="card border-dashed border-2 border-outline-variant/50 flex flex-col items-center justify-center gap-3 text-on-surface-variant hover:bg-surface-container-low hover:border-primary hover:text-primary transition-all min-h-[180px] rounded-2xl">
+          <button onClick={openCreate} className="card border-dashed border-2 border-[#E5E7EB]/50 flex flex-col items-center justify-center gap-3 text-[#6B7280] hover:bg-[#F9FAFB] hover:border-[#B8941F] hover:text-[#B8941F] transition-all min-h-[180px] rounded-2xl">
             <span className="material-symbols-outlined text-[28px]">add_circle</span>
-            <span className="text-label-md font-bold">Add Reward</span>
+            <span className="text-sm font-bold">Add Reward</span>
           </button>
         </div>
       )}
@@ -207,7 +207,7 @@ function RewardCatalogTab({ active }: { active?: boolean }) {
             <label className="form-label">Description</label>
             <textarea rows={2} className="input-field h-auto py-3 resize-none" placeholder="Briefly describe what the member receives" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
           </div>
-          <div className="grid grid-cols-2 gap-md">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="form-label">Points Cost *</label>
               <input type="number" min={1} className="input-field" placeholder="100" value={form.points_cost} onChange={e => setForm(f => ({ ...f, points_cost: e.target.value }))} />
@@ -346,9 +346,9 @@ function CouponsTab({ active }: { active?: boolean }) {
   };
 
   return (
-    <div className="space-y-md">
+    <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <p className="text-body-md text-on-surface-variant">Create discount codes with custom weekday loops for members to use at checkout.</p>
+        <p className="text-sm text-[#6B7280]">Create discount codes with custom weekday loops for members to use at checkout.</p>
         <button onClick={openCreate} className="btn-primary flex items-center gap-2">
           <span className="material-symbols-outlined text-[18px]">add</span>
           Create Coupon
@@ -358,10 +358,10 @@ function CouponsTab({ active }: { active?: boolean }) {
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-surface-container-low">
+            <thead className="bg-[#F9FAFB]">
               <tr>
                 {['Code', 'Type', 'Value', 'Min Purchase', 'Loop / Active Days', 'Uses', 'Expires', 'Status', ''].map(h => (
-                  <th key={h} className="text-left px-4 py-3 text-label-md text-on-surface-variant whitespace-nowrap">{h}</th>
+                  <th key={h} className="text-left px-4 py-3 text-sm text-[#6B7280] whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -369,55 +369,55 @@ function CouponsTab({ active }: { active?: boolean }) {
               {loading ? (
                 Array.from({ length: 3 }).map((_, i) => (
                   <tr key={i}>{Array.from({ length: 9 }).map((_, j) => (
-                    <td key={j} className="px-4 py-3"><div className="h-4 bg-surface-container rounded animate-pulse" /></td>
+                    <td key={j} className="px-4 py-3"><div className="h-4 bg-[#F3F4F6] rounded animate-pulse" /></td>
                   ))}</tr>
                 ))
               ) : coupons.length === 0 ? (
-                <tr><td colSpan={9} className="px-4 py-16 text-center text-on-surface-variant">
+                <tr><td colSpan={9} className="px-4 py-16 text-center text-[#6B7280]">
                   <span className="material-symbols-outlined text-[40px] block mb-2 opacity-40">confirmation_number</span>
                   No coupons yet
                 </td></tr>
               ) : coupons.map(c => (
-                <tr key={c.id} className="hover:bg-surface-container-low transition-colors group">
+                <tr key={c.id} className="hover:bg-[#F9FAFB] transition-colors group">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono font-bold text-primary tracking-widest">{c.code}</span>
-                      <button onClick={() => copyCode(c.code)} className="opacity-0 group-hover:opacity-100 text-on-surface-variant hover:text-primary transition-all">
+                      <span className="font-mono font-bold text-[#B8941F] tracking-widest">{c.code}</span>
+                      <button onClick={() => copyCode(c.code)} className="opacity-0 group-hover:opacity-100 text-[#6B7280] hover:text-[#B8941F] transition-all">
                         <span className="material-symbols-outlined text-[14px]">content_copy</span>
                       </button>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-body-md capitalize text-on-surface-variant">{c.discount_type}</td>
-                  <td className="px-4 py-3 text-body-md font-bold">{c.discount_type === 'percent' ? `${c.value}%` : `₹${c.value}`}</td>
-                  <td className="px-4 py-3 text-body-md text-on-surface-variant">₹{c.min_purchase || 0}</td>
-                  <td className="px-4 py-3 text-label-sm">
+                  <td className="px-4 py-3 text-sm capitalize text-[#6B7280]">{c.discount_type}</td>
+                  <td className="px-4 py-3 text-sm font-bold">{c.discount_type === 'percent' ? `${c.value}%` : `₹${c.value}`}</td>
+                  <td className="px-4 py-3 text-sm text-[#6B7280]">₹{c.min_purchase || 0}</td>
+                  <td className="px-4 py-3 text-xs">
                     {c.active_days ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary-container/30 text-primary font-medium">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#F5EDD0]/30 text-[#B8941F] font-medium">
                         <span className="material-symbols-outlined text-[12px]">repeat</span>
                         {c.active_days}
                       </span>
                     ) : (
-                      <span className="text-on-surface-variant opacity-70">Everyday</span>
+                      <span className="text-[#6B7280] opacity-70">Everyday</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-body-md text-on-surface-variant">{c.used_count}{c.max_uses ? `/${c.max_uses}` : ''}</td>
-                  <td className="px-4 py-3 text-label-sm text-on-surface-variant">{c.expires_at || <span className="italic">Never</span>}</td>
+                  <td className="px-4 py-3 text-sm text-[#6B7280]">{c.used_count}{c.max_uses ? `/${c.max_uses}` : ''}</td>
+                  <td className="px-4 py-3 text-xs text-[#6B7280]">{c.expires_at || <span className="italic">Never</span>}</td>
                   <td className="px-4 py-3">
-                    <span className={`text-label-sm px-2.5 py-1 rounded-full font-medium ${c.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                    <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${c.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                       {c.is_active ? 'Active' : 'Inactive'}
                     </span>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => openEdit(c)} className="text-label-sm px-2 py-1 rounded-lg border border-outline-variant hover:bg-surface-container text-on-surface-variant transition-colors flex items-center gap-1">
+                      <button onClick={() => openEdit(c)} className="text-xs px-2 py-1 rounded-lg border border-[#E5E7EB] hover:bg-[#F3F4F6] text-[#6B7280] transition-colors flex items-center gap-1">
                         <span className="material-symbols-outlined text-[14px]">edit</span> Edit
                       </button>
                       <button onClick={async () => { await api.updateCoupon(c.id, { is_active: !c.is_active }); load(); }}
-                        className="text-label-sm px-2 py-1 rounded-lg border border-outline-variant hover:bg-surface-container text-on-surface-variant transition-colors">
+                        className="text-xs px-2 py-1 rounded-lg border border-[#E5E7EB] hover:bg-[#F3F4F6] text-[#6B7280] transition-colors">
                         {c.is_active ? 'Disable' : 'Enable'}
                       </button>
                       <button onClick={async () => { await api.deleteCoupon(c.id); load(); addToast('success', 'Coupon deleted'); }}
-                        className="p-1 rounded-lg text-error hover:bg-error-container transition-colors">
+                        className="p-1 rounded-lg text-red-600 hover:bg-red-50 transition-colors">
                         <span className="material-symbols-outlined text-[16px]">delete</span>
                       </button>
                     </div>
@@ -432,11 +432,11 @@ function CouponsTab({ active }: { active?: boolean }) {
       <Modal isOpen={showModal} onClose={() => { setShowModal(false); setEditTarget(null); }} title={editTarget ? 'Edit Coupon Code' : 'Create Coupon Code'}>
         <div className="space-y-4">
           <div>
-            <label className="form-label">Coupon Code <span className="text-on-surface-variant font-normal">(leave blank to auto-generate)</span></label>
+            <label className="form-label">Coupon Code <span className="text-[#6B7280] font-normal">(leave blank to auto-generate)</span></label>
             <input className="input-field font-mono uppercase" placeholder="e.g. SAVE20" value={form.code} onChange={e => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))} />
           </div>
 
-          <div className="grid grid-cols-2 gap-md">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="form-label">Discount Type *</label>
               <select className="input-field" value={form.discount_type} onChange={e => setForm(f => ({ ...f, discount_type: e.target.value }))}>
@@ -453,29 +453,29 @@ function CouponsTab({ active }: { active?: boolean }) {
               <input type="number" min={0} className="input-field" placeholder="0" value={form.min_purchase} onChange={e => setForm(f => ({ ...f, min_purchase: e.target.value }))} />
             </div>
             <div>
-              <label className="form-label">Max Uses <span className="text-on-surface-variant font-normal">(blank = unlimited)</span></label>
+              <label className="form-label">Max Uses <span className="text-[#6B7280] font-normal">(blank = unlimited)</span></label>
               <input type="number" min={1} className="input-field" placeholder="Unlimited" value={form.max_uses} onChange={e => setForm(f => ({ ...f, max_uses: e.target.value }))} />
             </div>
           </div>
 
           {/* Repetitive Option / Custom Weekdays Loop */}
-          <div className="space-y-2 bg-surface-container/50 p-3.5 rounded-xl border border-outline-variant/40">
+          <div className="space-y-2 bg-[#F3F4F6]/50 p-3.5 rounded-xl border border-[#E5E7EB]/40">
             <label className="form-label mb-1 flex items-center gap-1.5 font-bold">
-              <span className="material-symbols-outlined text-primary text-[18px]">repeat</span>
+              <span className="material-symbols-outlined text-[#B8941F] text-[18px]">repeat</span>
               Repetitive / Active Days in Loop
             </label>
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={() => setRecurrenceMode('always')}
-                className={`flex-1 py-1.5 px-3 rounded-lg text-label-md transition-all border ${recurrenceMode === 'always' ? 'bg-primary text-on-primary border-primary font-bold shadow-sm' : 'bg-surface border-outline-variant text-on-surface-variant'}`}
+                className={`flex-1 py-1.5 px-3 rounded-lg text-sm transition-all border ${recurrenceMode === 'always' ? 'bg-[#B8941F] text-white border-[#B8941F] font-bold shadow-sm' : 'bg-white border-[#E5E7EB] text-[#6B7280]'}`}
               >
                 Everyday / Always
               </button>
               <button
                 type="button"
                 onClick={() => setRecurrenceMode('custom_days')}
-                className={`flex-1 py-1.5 px-3 rounded-lg text-label-md transition-all border ${recurrenceMode === 'custom_days' ? 'bg-primary text-on-primary border-primary font-bold shadow-sm' : 'bg-surface border-outline-variant text-on-surface-variant'}`}
+                className={`flex-1 py-1.5 px-3 rounded-lg text-sm transition-all border ${recurrenceMode === 'custom_days' ? 'bg-[#B8941F] text-white border-[#B8941F] font-bold shadow-sm' : 'bg-white border-[#E5E7EB] text-[#6B7280]'}`}
               >
                 Custom Weekdays (Loop)
               </button>
@@ -483,7 +483,7 @@ function CouponsTab({ active }: { active?: boolean }) {
 
             {recurrenceMode === 'custom_days' && (
               <div className="pt-2 animate-fade-in">
-                <p className="text-label-sm text-on-surface-variant mb-2">Select days when this coupon repeats in loop:</p>
+                <p className="text-xs text-[#6B7280] mb-2">Select days when this coupon repeats in loop:</p>
                 <div className="flex flex-wrap gap-1.5">
                   {ALL_DAYS.map(day => {
                     const isSelected = selectedDays.includes(day);
@@ -492,7 +492,7 @@ function CouponsTab({ active }: { active?: boolean }) {
                         key={day}
                         type="button"
                         onClick={() => toggleDay(day)}
-                        className={`px-3 py-1.5 rounded-lg text-label-sm font-semibold transition-all ${isSelected ? 'bg-secondary text-on-secondary shadow-sm scale-105' : 'bg-surface-container-high text-on-surface-variant hover:bg-outline-variant/30'}`}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${isSelected ? 'bg-[#6B7280] text-white shadow-sm scale-105' : 'bg-[#F3F4F6]-high text-[#6B7280] hover:bg-outline-variant/30'}`}
                       >
                         {day}
                       </button>
@@ -500,7 +500,7 @@ function CouponsTab({ active }: { active?: boolean }) {
                   })}
                 </div>
                 {selectedDays.length > 0 && (
-                  <p className="text-label-xs text-primary font-medium mt-2 flex items-center gap-1">
+                  <p className="text-[10px] text-[#B8941F] font-medium mt-2 flex items-center gap-1">
                     <span className="material-symbols-outlined text-[14px]">sync</span>
                     Repeats every: {selectedDays.join(', ')}
                   </p>
@@ -510,7 +510,7 @@ function CouponsTab({ active }: { active?: boolean }) {
           </div>
 
           <div>
-            <label className="form-label">Expires At <span className="text-on-surface-variant font-normal">(blank = never)</span></label>
+            <label className="form-label">Expires At <span className="text-[#6B7280] font-normal">(blank = never)</span></label>
             <input type="date" className="input-field" value={form.expires_at} onChange={e => setForm(f => ({ ...f, expires_at: e.target.value }))} />
           </div>
 
@@ -596,9 +596,9 @@ function VouchersTab() {
   };
 
   return (
-    <div className="space-y-md">
+    <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <p className="text-body-md text-on-surface-variant">Generate pre-loaded gift vouchers for customers or promotions.</p>
+        <p className="text-sm text-[#6B7280]">Generate pre-loaded gift vouchers for customers or promotions.</p>
         <button onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2">
           <span className="material-symbols-outlined text-[18px]">add</span>
           Generate Vouchers
@@ -606,55 +606,55 @@ function VouchersTab() {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 3 }).map((_, i) => <div key={i} className="card h-32 animate-pulse" />)}
         </div>
       ) : vouchers.length === 0 ? (
-        <div className="card p-lg flex flex-col items-center text-center py-16">
-          <div className="w-20 h-20 bg-secondary-container/20 rounded-2xl flex items-center justify-center mb-4">
-            <span className="material-symbols-outlined text-secondary text-[40px]" style={{ fontVariationSettings: "'FILL' 1" }}>wallet</span>
+        <div className="card p-6 flex flex-col items-center text-center py-16">
+          <div className="w-20 h-20 bg-[#F3F4F6]/20 rounded-2xl flex items-center justify-center mb-4">
+            <span className="material-symbols-outlined text-[#6B7280] text-[40px]" style={{ fontVariationSettings: "'FILL' 1" }}>wallet</span>
           </div>
-          <h3 className="text-headline-md font-bold mb-2">No vouchers yet</h3>
-          <p className="text-body-md text-on-surface-variant max-w-sm mb-6">Generate gift vouchers to distribute to customers as rewards, contest prizes, or promotional gifts.</p>
+          <h3 className="text-xl font-bold mb-2">No vouchers yet</h3>
+          <p className="text-sm text-[#6B7280] max-w-sm mb-6">Generate gift vouchers to distribute to customers as rewards, contest prizes, or promotional gifts.</p>
           <button onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2">
             <span className="material-symbols-outlined text-[18px]">add</span>
             Generate First Vouchers
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {vouchers.map(v => (
             <div
               key={v.id}
-              className={`card p-md flex flex-col gap-3 transition-all hover:shadow-elevated ${v.is_redeemed ? 'opacity-60' : ''}`}
+              className={`card p-4 flex flex-col gap-3 transition-all hover:shadow-card ${v.is_redeemed ? 'opacity-60' : ''}`}
             >
               <div className="flex items-center justify-between">
-                <code className={`font-mono font-bold tracking-widest text-body-lg ${v.is_redeemed ? 'text-on-surface-variant' : 'text-primary'}`}>
+                <code className={`font-mono font-bold tracking-widest text-base ${v.is_redeemed ? 'text-[#6B7280]' : 'text-[#B8941F]'}`}>
                   {v.code}
                 </code>
                 {!v.is_redeemed && (
-                  <button onClick={() => copyCode(v.code)} className="text-on-surface-variant hover:text-primary transition-colors" title="Copy code">
+                  <button onClick={() => copyCode(v.code)} className="text-[#6B7280] hover:text-[#B8941F] transition-colors" title="Copy code">
                     <span className="material-symbols-outlined text-[18px]">content_copy</span>
                   </button>
                 )}
               </div>
               <div className="flex items-baseline gap-1">
-                <span className={`text-headline-lg font-bold ${v.is_redeemed ? 'text-on-surface-variant' : 'text-secondary'}`}>₹{v.value}</span>
-                <span className="text-label-sm text-on-surface-variant">gift voucher</span>
+                <span className={`text-3xl font-bold ${v.is_redeemed ? 'text-[#6B7280]' : 'text-[#6B7280]'}`}>₹{v.value}</span>
+                <span className="text-xs text-[#6B7280]">gift voucher</span>
               </div>
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <span className={`text-label-sm px-2.5 py-1 rounded-full font-medium ${v.is_redeemed ? 'bg-surface-container text-on-surface-variant' : 'bg-green-100 text-green-700'}`}>
+                  <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${v.is_redeemed ? 'bg-[#F3F4F6] text-[#6B7280]' : 'bg-green-100 text-green-700'}`}>
                     {v.is_redeemed ? 'Redeemed' : 'Available'}
                   </span>
                   {v.expires_at && !v.is_redeemed && (
-                    <span className="text-label-sm text-on-surface-variant">Expires {v.expires_at}</span>
+                    <span className="text-xs text-[#6B7280]">Expires {v.expires_at}</span>
                   )}
                 </div>
                 {!v.is_redeemed && (
                   <button
                     onClick={() => { setRedeemTarget(v); setMemberSearch(''); setMemberResults([]); }}
-                    className="btn-primary text-label-sm py-1 px-3.5 flex items-center gap-1"
+                    className="btn-primary text-xs py-1 px-3.5 flex items-center gap-1"
                   >
                     <span className="material-symbols-outlined text-[16px]">person_add</span>
                     Link User
@@ -669,24 +669,24 @@ function VouchersTab() {
       {/* Generate Vouchers Modal */}
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Generate Gift Vouchers">
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-md">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="form-label">Voucher Value (₹) *</label>
               <input type="number" min={1} className="input-field" placeholder="500" value={form.value} onChange={e => setForm(f => ({ ...f, value: e.target.value }))} autoFocus />
             </div>
             <div>
-              <label className="form-label">Quantity <span className="text-on-surface-variant font-normal">(max 100)</span></label>
+              <label className="form-label">Quantity <span className="text-[#6B7280] font-normal">(max 100)</span></label>
               <input type="number" min={1} max={100} className="input-field" placeholder="1" value={form.quantity} onChange={e => setForm(f => ({ ...f, quantity: e.target.value }))} />
             </div>
           </div>
           <div>
-            <label className="form-label">Expiry Date <span className="text-on-surface-variant font-normal">(blank = no expiry)</span></label>
+            <label className="form-label">Expiry Date <span className="text-[#6B7280] font-normal">(blank = no expiry)</span></label>
             <input type="date" className="input-field" value={form.expires_at} onChange={e => setForm(f => ({ ...f, expires_at: e.target.value }))} />
           </div>
           {form.value && form.quantity && (
-            <div className="bg-secondary-container/20 rounded-xl p-3 flex items-center gap-3">
-              <span className="material-symbols-outlined text-secondary">info</span>
-              <p className="text-body-sm">
+            <div className="bg-[#F3F4F6]/20 rounded-xl p-3 flex items-center gap-3">
+              <span className="material-symbols-outlined text-[#6B7280]">info</span>
+              <p className="text-xs">
                 Will generate <strong>{form.quantity}</strong> voucher(s) each worth <strong>₹{form.value}</strong>
                 {form.expires_at ? `, expiring ${form.expires_at}` : ' with no expiry'}.
               </p>
@@ -706,27 +706,27 @@ function VouchersTab() {
       {redeemTarget && (
         <div className="fixed inset-0 z-[900] flex items-center justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => !linking && setRedeemTarget(null)} />
-          <div className="relative bg-surface rounded-2xl shadow-2xl p-lg w-full max-w-lg mx-4 animate-scale-in space-y-md">
+          <div className="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg mx-4 animate-scale-in space-y-5">
             <div className="flex items-center justify-between">
-              <h3 className="text-headline-md font-bold">Link Gift Voucher to Member</h3>
-              <button onClick={() => !linking && setRedeemTarget(null)} className="text-on-surface-variant hover:text-on-surface">
+              <h3 className="text-xl font-bold">Link Gift Voucher to Member</h3>
+              <button onClick={() => !linking && setRedeemTarget(null)} className="text-[#6B7280] hover:text-[#111111]">
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>
 
-            <div className="bg-secondary-container/30 rounded-xl p-4 flex items-center gap-3 text-on-surface">
-              <span className="material-symbols-outlined text-secondary text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>card_giftcard</span>
+            <div className="bg-[#F3F4F6]/30 rounded-xl p-4 flex items-center gap-3 text-[#111111]">
+              <span className="material-symbols-outlined text-[#6B7280] text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>card_giftcard</span>
               <div>
-                <p className="text-label-sm text-on-surface-variant">Redeeming & linking voucher code</p>
-                <p className="font-mono font-bold text-headline-md tracking-widest text-primary">{redeemTarget.code}</p>
-                <p className="text-label-md font-bold text-secondary">Value: ₹{redeemTarget.value}</p>
+                <p className="text-xs text-[#6B7280]">Redeeming & linking voucher code</p>
+                <p className="font-mono font-bold text-xl tracking-widest text-[#B8941F]">{redeemTarget.code}</p>
+                <p className="text-sm font-bold text-[#6B7280]">Value: ₹{redeemTarget.value}</p>
               </div>
             </div>
 
             <div>
               <label className="form-label">Search Member to Link</label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant">search</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#6B7280]">search</span>
                 <input
                   autoFocus
                   className="input-field pl-10"
@@ -735,7 +735,7 @@ function VouchersTab() {
                   onChange={e => handleMemberSearch(e.target.value)}
                 />
                 {memberSearching && (
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined animate-spin text-on-surface-variant">progress_activity</span>
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined animate-spin text-[#6B7280]">progress_activity</span>
                 )}
               </div>
             </div>
@@ -747,19 +747,19 @@ function VouchersTab() {
                     key={m.id}
                     onClick={() => handleLinkVoucher(m)}
                     disabled={linking}
-                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-surface-container-low transition-all text-left border border-outline-variant/30"
+                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-[#F9FAFB] transition-all text-left border border-[#F3F4F6]"
                   >
-                    <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center font-bold text-on-primary-container">
+                    <div className="w-10 h-10 rounded-full bg-[#F5EDD0] flex items-center justify-center font-bold text-[#7A5C12]">
                       {m.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-on-surface">{m.name}</p>
-                      <p className="text-label-sm text-on-surface-variant">{m.phone} · #{m.member_code}</p>
+                      <p className="font-bold text-[#111111]">{m.name}</p>
+                      <p className="text-xs text-[#6B7280]">{m.phone} · #{m.member_code}</p>
                     </div>
                     {linking ? (
-                      <span className="material-symbols-outlined animate-spin text-on-surface-variant">progress_activity</span>
+                      <span className="material-symbols-outlined animate-spin text-[#6B7280]">progress_activity</span>
                     ) : (
-                      <span className="material-symbols-outlined text-primary">check_circle</span>
+                      <span className="material-symbols-outlined text-[#B8941F]">check_circle</span>
                     )}
                   </button>
                 ))}
@@ -767,9 +767,9 @@ function VouchersTab() {
             )}
 
             {memberSearch.length >= 2 && !memberSearching && memberResults.length === 0 && (
-              <div className="text-center py-6 text-on-surface-variant">
+              <div className="text-center py-6 text-[#6B7280]">
                 <span className="material-symbols-outlined text-[32px] block mb-1">person_off</span>
-                <p className="text-body-md">No members found</p>
+                <p className="text-sm">No members found</p>
               </div>
             )}
           </div>
@@ -835,79 +835,79 @@ function PointsRulesTab() {
   };
 
   const RULE_META: Record<string, { icon: string; desc: string; color: string }> = {
-    per_visit: { icon: 'store', desc: 'Points earned on every visit', color: 'bg-primary-container/30 text-primary' },
-    per_rupee: { icon: 'currency_rupee', desc: 'Points earned per amount spent', color: 'bg-secondary-container text-secondary' },
+    per_visit: { icon: 'store', desc: 'Points earned on every visit', color: 'bg-[#F5EDD0]/30 text-[#B8941F]' },
+    per_rupee: { icon: 'currency_rupee', desc: 'Points earned per amount spent', color: 'bg-[#F3F4F6] text-[#6B7280]' },
   };
 
   return (
-    <div className="space-y-md">
+    <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <p className="text-body-md text-on-surface-variant">Define global rules for how members earn loyalty points.</p>
+        <p className="text-sm text-[#6B7280]">Define global rules for how members earn loyalty points.</p>
         <button onClick={openCreate} className="btn-primary flex items-center gap-2">
           <span className="material-symbols-outlined text-[18px]">add</span>
           Add Rule
         </button>
       </div>
 
-      <div className="bg-primary-container/10 border border-primary/20 rounded-xl p-4 flex gap-3">
-        <span className="material-symbols-outlined text-primary flex-shrink-0">info</span>
-        <div className="text-body-sm text-on-surface">
+      <div className="bg-[#F5EDD0]/10 border border-[#B8941F]/20 rounded-xl p-4 flex gap-3">
+        <span className="material-symbols-outlined text-[#B8941F] flex-shrink-0">info</span>
+        <div className="text-xs text-[#111111]">
           <strong>How points work:</strong> Merchants can define point earning rules (e.g. Members earn X points for every ₹1 or ₹100 spent, or flat points per visit). Members can then redeem earned points via the reward catalog or points redemption offers.
         </div>
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {Array.from({ length: 2 }).map((_, i) => <div key={i} className="card h-36 animate-pulse" />)}
         </div>
       ) : rules.length === 0 ? (
-        <div className="card p-lg flex flex-col items-center text-center py-16">
-          <div className="w-20 h-20 bg-primary-container/20 rounded-2xl flex items-center justify-center mb-4">
-            <span className="material-symbols-outlined text-primary text-[40px]" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>
+        <div className="card p-6 flex flex-col items-center text-center py-16">
+          <div className="w-20 h-20 bg-[#F5EDD0]/20 rounded-2xl flex items-center justify-center mb-4">
+            <span className="material-symbols-outlined text-[#B8941F] text-[40px]" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>
           </div>
-          <h3 className="text-headline-md font-bold mb-2">No points rules yet</h3>
-          <p className="text-body-md text-on-surface-variant max-w-sm mb-6">Set up rules to automatically award loyalty points to members on every visit or purchase.</p>
+          <h3 className="text-xl font-bold mb-2">No points rules yet</h3>
+          <p className="text-sm text-[#6B7280] max-w-sm mb-6">Set up rules to automatically award loyalty points to members on every visit or purchase.</p>
           <button onClick={openCreate} className="btn-primary flex items-center gap-2">
             <span className="material-symbols-outlined text-[18px]">add</span>
             Create First Rule
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {rules.map(r => {
-            const meta = RULE_META[r.rule_type] || { icon: 'stars', desc: r.rule_type, color: 'bg-surface-container text-on-surface-variant' };
+            const meta = RULE_META[r.rule_type] || { icon: 'stars', desc: r.rule_type, color: 'bg-[#F3F4F6] text-[#6B7280]' };
             const descText = r.rule_type === 'per_visit'
               ? `Members earn ${Number(r.points_value).toFixed(0)} points on each visit`
               : `Members earn ${Number(r.points_value).toFixed(0)} points for every ₹${r.spend_unit || 1} spent`;
             return (
-              <div key={r.id} className={`card p-md flex flex-col gap-4 transition-all hover:shadow-elevated ${!r.is_active ? 'opacity-60' : ''}`}>
+              <div key={r.id} className={`card p-4 flex flex-col gap-4 transition-all hover:shadow-card ${!r.is_active ? 'opacity-60' : ''}`}>
                 <div className="flex items-start gap-3">
                   <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${meta.color}`}>
                     <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>{meta.icon}</span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline gap-1 flex-wrap">
-                      <span className="text-headline-lg font-bold text-primary">⚡ {Number(r.points_value).toFixed(0)}</span>
-                      <span className="text-body-md text-on-surface-variant">pts / {r.rule_type === 'per_visit' ? 'visit' : `₹${r.spend_unit || 1}`}</span>
+                      <span className="text-3xl font-bold text-[#B8941F]">⚡ {Number(r.points_value).toFixed(0)}</span>
+                      <span className="text-sm text-[#6B7280]">pts / {r.rule_type === 'per_visit' ? 'visit' : `₹${r.spend_unit || 1}`}</span>
                     </div>
-                    <p className="text-body-sm text-on-surface-variant mt-0.5">{descText}</p>
+                    <p className="text-xs text-[#6B7280] mt-0.5">{descText}</p>
                   </div>
-                  <span className={`text-label-sm px-2.5 py-1 rounded-full font-medium flex-shrink-0 ${r.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                  <span className={`text-xs px-2.5 py-1 rounded-full font-medium flex-shrink-0 ${r.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                     {r.is_active ? 'Active' : 'Inactive'}
                   </span>
                 </div>
-                <div className="flex gap-2 border-t border-outline-variant/20 pt-3">
-                  <button onClick={() => openEdit(r)} className="flex-1 py-1.5 rounded-xl border border-outline-variant text-on-surface-variant text-label-sm hover:bg-surface-container transition-colors flex items-center justify-center gap-1">
+                <div className="flex gap-2 border-t border-[#E5E7EB]/20 pt-3">
+                  <button onClick={() => openEdit(r)} className="flex-1 py-1.5 rounded-xl border border-[#E5E7EB] text-[#6B7280] text-xs hover:bg-[#F3F4F6] transition-colors flex items-center justify-center gap-1">
                     <span className="material-symbols-outlined text-[14px]">edit</span>
                     Edit
                   </button>
                   <button onClick={async () => { await api.updatePointsRule(r.id, { is_active: !r.is_active }); load(); }}
-                    className="flex-1 py-1.5 rounded-xl border border-outline-variant text-on-surface-variant text-label-sm hover:bg-surface-container transition-colors flex items-center justify-center gap-1">
+                    className="flex-1 py-1.5 rounded-xl border border-[#E5E7EB] text-[#6B7280] text-xs hover:bg-[#F3F4F6] transition-colors flex items-center justify-center gap-1">
                     <span className="material-symbols-outlined text-[14px]">{r.is_active ? 'pause_circle' : 'play_circle'}</span>
                     {r.is_active ? 'Deactivate' : 'Activate'}
                   </button>
                   <button onClick={async () => { await api.deletePointsRule(r.id); load(); addToast('success', 'Rule deleted'); }}
-                    className="p-1.5 rounded-xl text-error hover:bg-error-container transition-colors" title="Delete rule">
+                    className="p-1.5 rounded-xl text-red-600 hover:bg-red-50 transition-colors" title="Delete rule">
                     <span className="material-symbols-outlined text-[18px]">delete</span>
                   </button>
                 </div>
@@ -934,21 +934,21 @@ function PointsRulesTab() {
                 <button
                   type="button"
                   onClick={() => setForm(f => ({ ...f, spend_unit: '1' }))}
-                  className={`flex-1 py-1.5 px-3 rounded-xl text-label-sm font-semibold border transition-all ${form.spend_unit === '1' ? 'bg-primary text-on-primary border-primary' : 'bg-surface border-outline-variant text-on-surface hover:bg-surface-container'}`}
+                  className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-semibold border transition-all ${form.spend_unit === '1' ? 'bg-[#B8941F] text-white border-[#B8941F]' : 'bg-white border-[#E5E7EB] text-[#111111] hover:bg-[#F3F4F6]'}`}
                 >
                   Every ₹1 Spent
                 </button>
                 <button
                   type="button"
                   onClick={() => setForm(f => ({ ...f, spend_unit: '100' }))}
-                  className={`flex-1 py-1.5 px-3 rounded-xl text-label-sm font-semibold border transition-all ${form.spend_unit === '100' ? 'bg-primary text-on-primary border-primary' : 'bg-surface border-outline-variant text-on-surface hover:bg-surface-container'}`}
+                  className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-semibold border transition-all ${form.spend_unit === '100' ? 'bg-[#B8941F] text-white border-[#B8941F]' : 'bg-white border-[#E5E7EB] text-[#111111] hover:bg-[#F3F4F6]'}`}
                 >
                   Every ₹100 Spent
                 </button>
                 <button
                   type="button"
                   onClick={() => setForm(f => ({ ...f, spend_unit: form.spend_unit !== '1' && form.spend_unit !== '100' ? form.spend_unit : '50' }))}
-                  className={`flex-1 py-1.5 px-3 rounded-xl text-label-sm font-semibold border transition-all ${form.spend_unit !== '1' && form.spend_unit !== '100' ? 'bg-primary text-on-primary border-primary' : 'bg-surface border-outline-variant text-on-surface hover:bg-surface-container'}`}
+                  className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-semibold border transition-all ${form.spend_unit !== '1' && form.spend_unit !== '100' ? 'bg-[#B8941F] text-white border-[#B8941F]' : 'bg-white border-[#E5E7EB] text-[#111111] hover:bg-[#F3F4F6]'}`}
                 >
                   Custom Amount
                 </button>
@@ -977,7 +977,7 @@ function PointsRulesTab() {
             />
           </div>
 
-          <div className="bg-primary-container/20 border border-primary/20 rounded-xl p-3 text-body-sm text-primary font-medium flex items-center gap-2">
+          <div className="bg-[#F5EDD0]/20 border border-[#B8941F]/20 rounded-xl p-3 text-xs text-[#B8941F] font-medium flex items-center gap-2">
             <span className="material-symbols-outlined text-[20px]">bolt</span>
             <span>
               {form.rule_type === 'per_visit'
@@ -998,3 +998,5 @@ function PointsRulesTab() {
     </div>
   );
 }
+
+

@@ -13,8 +13,12 @@ interface FormData {
   phone: string;
   date_of_birth: string;
   anniversary_date: string;
+  family_dob_1?: string;
+  family_dob_2?: string;
+  family_dob_3?: string;
   membership_type_id: string;
   card_id: string;
+  consent_received: boolean;
 }
 
 export default function AddMemberPage() {
@@ -141,15 +145,15 @@ export default function AddMemberPage() {
   };
 
   return (
-    <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-2xl mx-auto animate-fade-in">
+    <div className="px-4 md:px-10 py-8 max-w-2xl mx-auto animate-fade-in">
       <div className="flex items-center justify-between mb-6">
-        <button onClick={() => navigate('/members')} className="flex items-center gap-1 text-on-surface-variant hover:text-on-surface text-body-md transition-colors">
+        <button onClick={() => navigate('/members')} className="flex items-center gap-1 text-[#6B7280] hover:text-[#111111] text-sm transition-colors">
           <span className="material-symbols-outlined text-[18px]">arrow_back</span>
           Back
         </button>
         <button
           onClick={() => setShowBulkModal(true)}
-          className="btn-outline flex items-center gap-2 !py-2 !px-4 text-label-md"
+          className="btn-outline flex items-center gap-2 !py-2 !px-4 text-sm"
         >
           <span className="material-symbols-outlined text-[18px]">upload_file</span>
           Bulk Import CSV
@@ -161,7 +165,7 @@ export default function AddMemberPage() {
         <p className="page-subtitle">Enroll a new customer individually or bulk import from CSV.</p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="card p-lg space-y-md">
+      <form onSubmit={handleSubmit(onSubmit)} className="card p-6 space-y-5">
         {/* Name */}
         <div>
           <label className="form-label" htmlFor="name">Full Name *</label>
@@ -171,14 +175,14 @@ export default function AddMemberPage() {
             placeholder="e.g. Arjun Sharma"
             {...register('name', { required: 'Full name is required' })}
           />
-          {errors.name && <p className="text-error text-label-sm mt-1">{errors.name.message}</p>}
+          {errors.name && <p className="text-red-600 text-xs mt-1">{errors.name.message}</p>}
         </div>
 
         {/* Phone */}
         <div>
           <label className="form-label" htmlFor="phone">Mobile Number *</label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-body-lg border-r border-outline-variant pr-3">+91</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7280] text-base border-r border-[#E5E7EB] pr-3">+91</span>
             <input
               id="phone"
               type="tel"
@@ -191,11 +195,11 @@ export default function AddMemberPage() {
               })}
             />
           </div>
-          {errors.phone && <p className="text-error text-label-sm mt-1">{errors.phone.message}</p>}
+          {errors.phone && <p className="text-red-600 text-xs mt-1">{errors.phone.message}</p>}
           {duplicateId && (
             <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center justify-between">
-              <p className="text-amber-700 text-body-md">This number is already registered.</p>
-              <button type="button" onClick={() => navigate(`/members/${duplicateId}`)} className="text-primary font-bold text-label-md hover:underline">
+              <p className="text-amber-700 text-sm">This number is already registered.</p>
+              <button type="button" onClick={() => navigate(`/members/${duplicateId}`)} className="text-[#B8941F] font-bold text-sm hover:underline">
                 View Member →
               </button>
             </div>
@@ -215,12 +219,12 @@ export default function AddMemberPage() {
               <option key={mt.id} value={mt.id}>{mt.name} — {mt.description}</option>
             ))}
           </select>
-          {errors.membership_type_id && <p className="text-error text-label-sm mt-1">{errors.membership_type_id.message}</p>}
+          {errors.membership_type_id && <p className="text-red-600 text-xs mt-1">{errors.membership_type_id.message}</p>}
         </div>
 
         {/* DOB */}
         <div>
-          <label className="form-label" htmlFor="dob">Date of Birth <span className="text-on-surface-variant font-normal">(for birthday reminders)</span></label>
+          <label className="form-label" htmlFor="dob">Date of Birth <span className="text-[#6B7280] font-normal">(for birthday reminders)</span></label>
           <input
             id="dob"
             type="date"
@@ -231,7 +235,7 @@ export default function AddMemberPage() {
 
         {/* Anniversary */}
         <div>
-          <label className="form-label" htmlFor="anniversary">Anniversary Date <span className="text-on-surface-variant font-normal">(optional — for anniversary reminders)</span></label>
+          <label className="form-label" htmlFor="anniversary">Anniversary Date <span className="text-[#6B7280] font-normal">(optional — for anniversary reminders)</span></label>
           <input
             id="anniversary"
             type="date"
@@ -240,11 +244,49 @@ export default function AddMemberPage() {
           />
         </div>
 
+        {/* Family Member Birthdates (Up to 3) */}
+        <div className="bg-[#F9FAFB] border border-[#E5E7EB] rounded-2xl p-4 space-y-3">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="material-symbols-outlined text-[#B8941F] text-[20px]">family_restroom</span>
+            <p className="text-sm font-bold text-[#111111]">Family Member Birth Dates <span className="text-xs font-normal text-[#6B7280]">(Up to 3 for family birthday offers)</span></p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label className="form-label text-[11px]" htmlFor="family_dob_1">Family Member 1</label>
+              <input
+                id="family_dob_1"
+                type="date"
+                className="input-field !text-xs"
+                {...register('family_dob_1')}
+              />
+            </div>
+            <div>
+              <label className="form-label text-[11px]" htmlFor="family_dob_2">Family Member 2</label>
+              <input
+                id="family_dob_2"
+                type="date"
+                className="input-field !text-xs"
+                {...register('family_dob_2')}
+              />
+            </div>
+            <div>
+              <label className="form-label text-[11px]" htmlFor="family_dob_3">Family Member 3</label>
+              <input
+                id="family_dob_3"
+                type="date"
+                className="input-field !text-xs"
+                {...register('family_dob_3')}
+              />
+            </div>
+          </div>
+        </div>
+
         {/* Physical Card Assignment (optional) */}
         {availableCards.length > 0 && (
           <div>
             <label className="form-label" htmlFor="card_id">
-              Assign Physical Card <span className="text-on-surface-variant font-normal">(optional — assign a pre-printed card now)</span>
+              Assign Physical Card <span className="text-[#6B7280] font-normal">(optional — assign a pre-printed card now)</span>
             </label>
             <select
               id="card_id"
@@ -258,16 +300,35 @@ export default function AddMemberPage() {
                 </option>
               ))}
             </select>
-            <p className="text-label-sm text-on-surface-variant mt-1">{availableCards.length} cards available in your inventory</p>
+            <p className="text-xs text-[#6B7280] mt-1">{availableCards.length} cards available in your inventory</p>
           </div>
         )}
 
         {/* Info */}
-        <div className="bg-surface-container rounded-xl p-4 flex items-start gap-3">
-          <span className="material-symbols-outlined text-primary text-[20px]">info</span>
-          <div className="text-body-md text-on-surface-variant">
+        <div className="bg-[#F3F4F6] rounded-xl p-4 flex items-start gap-3">
+          <span className="material-symbols-outlined text-[#B8941F] text-[20px]">info</span>
+          <div className="text-sm text-[#6B7280]">
             <p>A <strong>membership number</strong> and <strong>QR code</strong> will be automatically generated on save.</p>
           </div>
+        </div>
+
+        {/* Customer Privacy & Data Consent */}
+        <div className="bg-primary/5 border border-[#B8941F]/20 rounded-xl p-4 space-y-2">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              id="consent_received"
+              defaultChecked
+              className="mt-1 h-4 w-4 rounded border-outline text-[#B8941F] focus:ring-[#B8941F]"
+              {...register('consent_received', { required: 'Customer consent is required to register personal data.' })}
+            />
+            <span className="text-xs text-[#111111]">
+              <strong>Customer Privacy Consent:</strong> Customer agrees to share their name & mobile number for loyalty point updates, reward offers, and account notifications via SMS/WhatsApp in accordance with DPDP Act data protection standards.
+            </span>
+          </label>
+          {errors.consent_received && (
+            <p className="text-red-600 text-xs pl-7">{errors.consent_received.message}</p>
+          )}
         </div>
 
         {/* Actions */}
@@ -291,11 +352,11 @@ export default function AddMemberPage() {
         title="Bulk Import Members (CSV)"
       >
         <div className="space-y-4">
-          <div className="flex items-center justify-between bg-surface-container p-3 rounded-xl">
-            <span className="text-body-sm text-on-surface-variant">Download sample CSV format:</span>
+          <div className="flex items-center justify-between bg-[#F3F4F6] p-3 rounded-xl">
+            <span className="text-xs text-[#6B7280]">Download sample CSV format:</span>
             <button
               onClick={downloadCsvTemplate}
-              className="text-primary text-label-md font-bold hover:underline flex items-center gap-1"
+              className="text-[#B8941F] text-sm font-bold hover:underline flex items-center gap-1"
             >
               <span className="material-symbols-outlined text-[16px]">download</span>
               Template.csv
@@ -304,23 +365,23 @@ export default function AddMemberPage() {
 
           <div>
             <label className="form-label">Paste CSV Content or Drag CSV Text</label>
-            <p className="text-label-xs text-on-surface-variant mb-2">Columns: Name, Phone, DateOfBirth (optional), AnniversaryDate (optional)</p>
+            <p className="text-[10px] text-[#6B7280] mb-2">Columns: Name, Phone, DateOfBirth (optional), AnniversaryDate (optional)</p>
             <textarea
               rows={8}
               value={csvText}
               onChange={e => setCsvText(e.target.value)}
               placeholder={`Name,Phone,DateOfBirth,AnniversaryDate\nRahul Sharma,9876543210,1990-05-15,2018-11-20\nPriya Patel,9876543211,1995-08-22,`}
-              className="w-full p-3 font-mono text-body-sm bg-surface-container-low border border-outline-variant rounded-xl outline-none focus:border-primary"
+              className="w-full p-3 font-mono text-xs bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl outline-none focus:border-[#B8941F]"
             />
           </div>
 
           {importResult && (
-            <div className={`p-4 rounded-xl text-body-sm border ${importResult.skipped === 0 ? 'bg-green-50 border-green-200 text-green-800' : 'bg-amber-50 border-amber-200 text-amber-900'}`}>
+            <div className={`p-4 rounded-xl text-xs border ${importResult.skipped === 0 ? 'bg-green-50 border-green-200 text-green-800' : 'bg-amber-50 border-amber-200 text-amber-900'}`}>
               <p className="font-bold">Import Summary:</p>
               <p>✅ Successfully imported: {importResult.imported}</p>
               {importResult.skipped > 0 && <p>⚠️ Skipped (duplicates/errors): {importResult.skipped}</p>}
               {importResult.errors.length > 0 && (
-                <ul className="mt-2 text-label-xs list-disc pl-4 space-y-0.5">
+                <ul className="mt-2 text-[10px] list-disc pl-4 space-y-0.5">
                   {importResult.errors.slice(0, 5).map((err, i) => <li key={i}>{err}</li>)}
                 </ul>
               )}
@@ -343,3 +404,5 @@ export default function AddMemberPage() {
     </div>
   );
 }
+
+

@@ -1,12 +1,12 @@
-import React from 'react';
+﻿import React from 'react';
 
 export function Skeleton({ className = '' }: { className?: string }) {
-  return <div className={`animate-pulse bg-surface-container rounded-lg ${className}`} />;
+  return <div className={`animate-pulse bg-[#F3F4F6] rounded-lg ${className}`} />;
 }
 
 export function CardSkeleton() {
   return (
-    <div className="card p-md space-y-3 animate-pulse">
+    <div className="card p-4 space-y-3 animate-pulse">
       <div className="flex gap-3">
         <Skeleton className="w-12 h-12 rounded-full" />
         <div className="flex-1 space-y-2">
@@ -46,3 +46,4 @@ export function StatCardSkeleton() {
     </div>
   );
 }
+

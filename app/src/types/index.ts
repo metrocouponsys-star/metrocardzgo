@@ -87,6 +87,9 @@ export interface Member {
   email?: string;
   date_of_birth?: string;
   anniversary_date?: string;
+  family_dob_1?: string;
+  family_dob_2?: string;
+  family_dob_3?: string;
   membership_type_id: string;
   membership_type?: MembershipType;
   joined_date: string;

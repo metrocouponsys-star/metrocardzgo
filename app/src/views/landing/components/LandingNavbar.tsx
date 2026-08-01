@@ -95,8 +95,9 @@ export const LandingNavbar: React.FC = () => {
         <div className="hidden md:flex items-center gap-3">
           <a
             href="/login"
-            className="text-warm-white/60 hover:text-warm-white text-sm font-medium transition-colors"
+            className="text-warm-white/80 hover:text-gold text-sm font-medium transition-colors border border-gold/30 px-3 py-1.5 rounded-lg bg-gold/5 flex items-center gap-1.5"
           >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             Merchant Login
           </a>
           <button
@@ -108,27 +109,37 @@ export const LandingNavbar: React.FC = () => {
           </button>
         </div>
 
-        {/* Mobile hamburger — min 48×48px touch target (WCAG 2.5.5) */}
-        <button
-          type="button"
-          className="md:hidden flex flex-col justify-center items-center gap-1.5 p-3 rounded-lg cursor-pointer touch-manipulation select-none active:bg-warm-white/10"
-          style={{ WebkitTapHighlightColor: 'transparent', minWidth: '48px', minHeight: '48px' }}
-          onClick={(e) => {
-            e.stopPropagation();
-            setMenuOpen(o => !o);
-          }}
-          aria-label="Toggle menu"
-          aria-expanded={menuOpen}
-        >
-          <span className={`block w-6 h-0.5 bg-warm-white transition-transform duration-300 pointer-events-none ${menuOpen ? 'rotate-45 translate-y-2' : ''}`} />
-          <span className={`block w-6 h-0.5 bg-warm-white transition-opacity duration-300 pointer-events-none ${menuOpen ? 'opacity-0' : ''}`} />
-          <span className={`block w-6 h-0.5 bg-warm-white transition-transform duration-300 pointer-events-none ${menuOpen ? '-rotate-45 -translate-y-2' : ''}`} />
-        </button>
+        {/* Mobile: persistent Login button + hamburger — always visible */}
+        <div className="md:hidden flex items-center gap-2">
+          <a
+            href="/login"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gold/40 bg-gold/10 text-gold text-sm font-semibold transition-all active:scale-95"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Login
+          </a>
+          <button
+            type="button"
+            className="flex flex-col justify-center items-center gap-1.5 p-3 rounded-lg cursor-pointer touch-manipulation select-none active:bg-warm-white/10"
+            style={{ WebkitTapHighlightColor: 'transparent', minWidth: '48px', minHeight: '48px' }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setMenuOpen(o => !o);
+            }}
+            aria-label="Toggle menu"
+            aria-expanded={menuOpen}
+          >
+            <span className={`block w-6 h-0.5 bg-warm-white transition-transform duration-300 pointer-events-none ${menuOpen ? 'rotate-45 translate-y-2' : ''}`} />
+            <span className={`block w-6 h-0.5 bg-warm-white transition-opacity duration-300 pointer-events-none ${menuOpen ? 'opacity-0' : ''}`} />
+            <span className={`block w-6 h-0.5 bg-warm-white transition-transform duration-300 pointer-events-none ${menuOpen ? '-rotate-45 -translate-y-2' : ''}`} />
+          </button>
+        </div>
       </div>
 
-      {/* Mobile menu — use explicit transition properties, not transition-all */}
+      {/* Mobile menu */}
       <div
-        className={`md:hidden overflow-hidden ${menuOpen ? 'max-h-96 opacity-100 py-2' : 'max-h-0 opacity-0 py-0'}`}
+        className={`md:hidden overflow-hidden ${menuOpen ? 'max-h-[85vh] opacity-100 py-2 overflow-y-auto' : 'max-h-0 opacity-0 py-0'}`}
         style={{
           transition: 'max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease',
           background: 'rgba(13,13,13,0.98)',
@@ -136,7 +147,21 @@ export const LandingNavbar: React.FC = () => {
           WebkitTapHighlightColor: 'transparent',
         }}
       >
-        <div className="px-6 py-4 flex flex-col gap-4">
+        <div className="px-6 py-4 flex flex-col gap-3.5">
+          {/* Prominent Merchant Portal Link for Mobile */}
+          <a
+            href="/login"
+            onClick={() => setMenuOpen(false)}
+            className="text-gold font-bold text-base py-2.5 px-4 rounded-xl bg-gold/10 border border-gold/30 flex items-center justify-between shadow-sm active:scale-[0.98] transition-all"
+          >
+            <span className="flex items-center gap-2">
+              <span className="font-poppins">Merchant Portal</span>
+            </span>
+            <span className="text-xs text-gold/90 bg-gold/20 px-2 py-0.5 rounded-md font-semibold">Login →</span>
+          </a>
+
+          <hr className="border-warm-white/10 my-0.5" />
+
           {links.map(link => (
             <button
               key={link.href}
@@ -147,7 +172,7 @@ export const LandingNavbar: React.FC = () => {
               {link.label}
             </button>
           ))}
-          <hr className="border-warm-white/10" />
+          <hr className="border-warm-white/10 my-0.5" />
           {pageLinks.map(link => (
             <a
               key={link.href}
@@ -157,11 +182,10 @@ export const LandingNavbar: React.FC = () => {
               {link.label}
             </a>
           ))}
-          <a href="/login" className="text-warm-white/80 hover:text-gold text-base font-medium py-1">Merchant Login</a>
           <button
             type="button"
             onClick={() => handleNav('#contact')}
-            className="px-5 py-3 rounded-full text-sm font-semibold font-poppins text-rich-black text-center cursor-pointer touch-manipulation active:scale-95"
+            className="px-5 py-3 rounded-full text-sm font-semibold font-poppins text-rich-black text-center cursor-pointer touch-manipulation active:scale-95 mt-1"
             style={{ background: 'linear-gradient(135deg, #D4AF37, #C9A227)' }}
           >
             Get Free Mockup

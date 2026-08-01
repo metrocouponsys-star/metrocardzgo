@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useToastStore } from '../../store/toastStore';
 import { StatCard } from '../../components/ui/StatCard';
@@ -127,34 +127,34 @@ export default function ReportsPage() {
   };
 
   return (
-    <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-5xl mx-auto space-y-xl animate-fade-in">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-md">
-        <div className="page-header mb-0">
-          <h2 className="page-title">Reports & Analytics</h2>
+    <div className="px-4 md:px-10 py-8 max-w-5xl mx-auto space-y-6 animate-fade-in">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="page-title">Reports &amp; Analytics</h2>
           <p className="page-subtitle">Track business performance, customer visits, and loyalty economy.</p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={exportRedemptionsCsv}
             disabled={loading || !data}
-            className="btn-outline flex items-center gap-2 py-2"
+            className="btn-outline flex items-center gap-2 py-2 text-sm"
           >
-            <span className="material-symbols-outlined text-[18px]">download</span>
+            <span className="material-symbols-outlined text-[16px]">download</span>
             Redemptions CSV
           </button>
           <button
             onClick={handleExportMembers}
             disabled={loading}
-            className="btn-outline flex items-center gap-2 py-2"
+            className="btn-outline flex items-center gap-2 py-2 text-sm"
           >
-            <span className="material-symbols-outlined text-[18px]">group</span>
+            <span className="material-symbols-outlined text-[16px]">group</span>
             Export Members
           </button>
         </div>
       </div>
 
       {/* Summary Cards */}
-      <section className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-gutter">
+      <section className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         {loading ? (
           Array.from({ length: 6 }).map((_, i) => <StatCardSkeleton key={i} />)
         ) : data ? (
@@ -169,22 +169,25 @@ export default function ReportsPage() {
         ) : null}
       </section>
 
-      {/* Tabs */}
-      <div className="flex border-b border-outline-variant/30">
+      {/* Tabs — PREMIUM: gold underline active */}
+      <div className="flex border-b border-[#E5E7EB] overflow-x-auto hide-scrollbar">
         {([
           { id: 'redemptions', label: 'Redemptions', icon: 'receipt_long' },
           { id: 'members', label: 'Member Growth', icon: 'person_add' },
           { id: 'points', label: 'Points Economy', icon: 'stars' },
           { id: 'leaderboard', label: 'Top Customers', icon: 'leaderboard' },
-          { id: 'retention', label: 'Customer Retention', icon: 'sync' },
+          { id: 'retention', label: 'Retention', icon: 'sync' },
         ] as const).map(t => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={`px-5 py-3 text-label-md font-label-md border-b-2 transition-all flex items-center gap-1.5
-              ${tab === t.id ? 'text-primary border-primary' : 'text-on-surface-variant border-transparent hover:bg-surface-container'}`}
+            className={`px-4 py-3.5 text-sm font-semibold border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap
+              ${tab === t.id
+                ? 'text-[#B8941F] border-[#B8941F]'
+                : 'text-[#6B7280] border-transparent hover:text-[#111111] hover:bg-[#F9FAFB]'
+              }`}
           >
-            <span className="material-symbols-outlined text-[18px]">{t.icon}</span>
+            <span className="material-symbols-outlined text-[16px]">{t.icon}</span>
             <span>{t.label}</span>
           </button>
         ))}
@@ -192,13 +195,13 @@ export default function ReportsPage() {
 
       {/* Tab content: Redemptions */}
       {tab === 'redemptions' && (
-        <div className="space-y-lg animate-fade-in">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-lg">
+        <div className="space-y-6 animate-fade-in">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Redemptions by Type */}
-            <div className="card p-lg">
+            <div className="card p-6">
               <h3 className="section-title mb-4">Redemptions by Offer Type</h3>
               {loading ? (
-                <div className="h-[220px] bg-surface-container rounded-xl animate-pulse" />
+                <div className="h-[220px] bg-[#F3F4F6] rounded-xl animate-pulse" />
               ) : (
                 <ResponsiveContainer width="100%" height={220}>
                   <BarChart data={data?.redemptions_by_offer.map(d => ({ ...d, name: OFFER_LABELS[d.offer_type] || d.offer_type }))}>
@@ -213,10 +216,10 @@ export default function ReportsPage() {
             </div>
 
             {/* Redemptions Over Time */}
-            <div className="card p-lg">
+            <div className="card p-6">
               <h3 className="section-title mb-4">Redemptions Over Time</h3>
               {loading ? (
-                <div className="h-[220px] bg-surface-container rounded-xl animate-pulse" />
+                <div className="h-[220px] bg-[#F3F4F6] rounded-xl animate-pulse" />
               ) : (
                 <ResponsiveContainer width="100%" height={220}>
                   <LineChart data={data?.redemptions_over_time.map(d => ({ ...d, date: format(new Date(d.date), 'dd MMM') }))}>
@@ -233,15 +236,15 @@ export default function ReportsPage() {
 
           {/* Redemptions Table */}
           <div className="card overflow-hidden">
-            <div className="p-lg border-b border-outline-variant/30">
+            <div className="p-6 border-b border-[#F3F4F6]">
               <h3 className="section-title">All Redemptions</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-surface-container-low">
+                <thead className="bg-[#F9FAFB]">
                   <tr>
                     {['Member', 'Offer Used', 'Staff Partner', 'Date & Time'].map(h => (
-                      <th key={h} className="text-left px-4 py-3 text-label-md font-label-md text-on-surface-variant">{h}</th>
+                      <th key={h} className="text-left px-4 py-3 text-sm font-semibold text-[#6B7280]">{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -251,22 +254,22 @@ export default function ReportsPage() {
                       <tr key={i}>
                         {Array.from({ length: 4 }).map((_, j) => (
                           <td key={j} className="px-4 py-3">
-                            <div className="h-4 bg-surface-container rounded animate-pulse" />
+                            <div className="h-4 bg-[#F3F4F6] rounded animate-pulse" />
                           </td>
                         ))}
                       </tr>
                     ))
                   ) : data?.all_redemptions.map(r => (
-                    <tr key={r.id} className="hover:bg-surface-container-low transition-colors">
+                    <tr key={r.id} className="hover:bg-[#F9FAFB] transition-colors">
                       <td className="px-4 py-3">
-                        <p className="text-body-md font-bold">{r.member?.name}</p>
-                        <p className="text-label-sm text-on-surface-variant">#{r.member?.member_code}</p>
+                        <p className="text-sm font-bold">{r.member?.name}</p>
+                        <p className="text-xs text-[#6B7280]">#{r.member?.member_code}</p>
                       </td>
-                      <td className="px-4 py-3 text-body-md">
-                        <span className="font-semibold text-on-surface">{r.offer?.title}</span>
+                      <td className="px-4 py-3 text-sm">
+                        <span className="font-semibold text-[#111111]">{r.offer?.title}</span>
                       </td>
-                      <td className="px-4 py-3 text-body-md text-on-surface-variant">{r.staff_name}</td>
-                      <td className="px-4 py-3 text-label-sm text-on-surface-variant">
+                      <td className="px-4 py-3 text-sm text-[#6B7280]">{r.staff_name}</td>
+                      <td className="px-4 py-3 text-xs text-[#6B7280]">
                         {format(new Date(r.created_at), 'dd MMM yyyy, HH:mm')}
                       </td>
                     </tr>
@@ -280,13 +283,13 @@ export default function ReportsPage() {
 
       {/* Tab content: Member Growth */}
       {tab === 'members' && (
-        <div className="card p-lg space-y-md animate-fade-in">
+        <div className="card p-6 space-y-5 animate-fade-in">
           <div>
             <h3 className="section-title">New Member Signups</h3>
-            <p className="text-body-sm text-on-surface-variant">Daily member acquisition over the last 30 days.</p>
+            <p className="text-xs text-[#6B7280]">Daily member acquisition over the last 30 days.</p>
           </div>
           {loading ? (
-            <div className="h-[300px] bg-surface-container rounded-xl animate-pulse" />
+            <div className="h-[300px] bg-[#F3F4F6] rounded-xl animate-pulse" />
           ) : (
             <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={newMembers.map(d => ({ ...d, date: format(new Date(d.date), 'dd MMM') }))}>
@@ -309,13 +312,13 @@ export default function ReportsPage() {
 
       {/* Tab content: Points Economy */}
       {tab === 'points' && (
-        <div className="card p-lg space-y-md animate-fade-in">
+        <div className="card p-6 space-y-5 animate-fade-in">
           <div>
             <h3 className="section-title">Points Earned vs Redeemed</h3>
-            <p className="text-body-sm text-on-surface-variant">Weekly volume of points issued via redemptions vs. points spent on rewards.</p>
+            <p className="text-xs text-[#6B7280]">Weekly volume of points issued via redemptions vs. points spent on rewards.</p>
           </div>
           {loading ? (
-            <div className="h-[300px] bg-surface-container rounded-xl animate-pulse" />
+            <div className="h-[300px] bg-[#F3F4F6] rounded-xl animate-pulse" />
           ) : (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={pointsData}>
@@ -335,16 +338,16 @@ export default function ReportsPage() {
       {/* Tab content: Top Customers */}
       {tab === 'leaderboard' && (
         <div className="card overflow-hidden animate-fade-in">
-          <div className="p-lg border-b border-outline-variant/30">
+          <div className="p-6 border-b border-[#F3F4F6]">
             <h3 className="section-title">Customer Leaderboard</h3>
-            <p className="text-body-sm text-on-surface-variant">Your top 10 most loyal customers ranked by total visits.</p>
+            <p className="text-xs text-[#6B7280]">Your top 10 most loyal customers ranked by total visits.</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-surface-container-low">
+              <thead className="bg-[#F9FAFB]">
                 <tr>
                   {['Rank', 'Customer', 'Mobile Number', 'Total Visits', 'Redemptions', 'Points Balance'].map(h => (
-                    <th key={h} className="text-left px-4 py-3 text-label-md font-label-md text-on-surface-variant">{h}</th>
+                    <th key={h} className="text-left px-4 py-3 text-sm font-semibold text-[#6B7280]">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -354,22 +357,22 @@ export default function ReportsPage() {
                     <tr key={i}>
                       {Array.from({ length: 6 }).map((_, j) => (
                         <td key={j} className="px-4 py-3">
-                          <div className="h-4 bg-surface-container rounded animate-pulse" />
+                          <div className="h-4 bg-[#F3F4F6] rounded animate-pulse" />
                         </td>
                       ))}
                     </tr>
                   ))
                 ) : topCustomers.map((c, i) => (
-                  <tr key={c.member_id} className="hover:bg-surface-container-low transition-colors">
-                    <td className="px-4 py-3 font-bold text-primary">#{i + 1}</td>
+                  <tr key={c.member_id} className="hover:bg-[#F9FAFB] transition-colors">
+                    <td className="px-4 py-3 font-bold text-[#B8941F]">#{i + 1}</td>
                     <td className="px-4 py-3">
-                      <p className="text-body-md font-bold">{c.name}</p>
-                      <p className="text-label-sm text-on-surface-variant">#{c.member_code}</p>
+                      <p className="text-sm font-bold">{c.name}</p>
+                      <p className="text-xs text-[#6B7280]">#{c.member_code}</p>
                     </td>
-                    <td className="px-4 py-3 text-body-md font-mono">{c.phone}</td>
-                    <td className="px-4 py-3 text-body-md font-bold text-on-surface">{c.total_visits}</td>
-                    <td className="px-4 py-3 text-body-md text-on-surface-variant">{c.redemption_count}</td>
-                    <td className="px-4 py-3 text-body-md font-bold text-amber-600">
+                    <td className="px-4 py-3 text-sm font-mono">{c.phone}</td>
+                    <td className="px-4 py-3 text-sm font-bold text-[#111111]">{c.total_visits}</td>
+                    <td className="px-4 py-3 text-sm text-[#6B7280]">{c.redemption_count}</td>
+                    <td className="px-4 py-3 text-sm font-bold text-amber-600">
                       {parseFloat(c.loyalty_points || '0').toLocaleString()} pts
                     </td>
                   </tr>
@@ -383,16 +386,16 @@ export default function ReportsPage() {
       {/* Tab content: Cohort Retention */}
       {tab === 'retention' && (
         <div className="card overflow-hidden animate-fade-in">
-          <div className="p-lg border-b border-outline-variant/30">
+          <div className="p-6 border-b border-[#F3F4F6]">
             <h3 className="section-title">Cohort Retention Report</h3>
-            <p className="text-body-sm text-on-surface-variant">Track signups by month and the percentage of members active (who redeemed an offer) in the last 30 days.</p>
+            <p className="text-xs text-[#6B7280]">Track signups by month and the percentage of members active (who redeemed an offer) in the last 30 days.</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-surface-container-low">
+              <thead className="bg-[#F9FAFB]">
                 <tr>
                   {['Signup Month', 'Joined Members', 'Retained (Active 30d)', 'Retention Rate'].map(h => (
-                    <th key={h} className="text-left px-4 py-3 text-label-md font-label-md text-on-surface-variant">{h}</th>
+                    <th key={h} className="text-left px-4 py-3 text-sm font-semibold text-[#6B7280]">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -402,22 +405,22 @@ export default function ReportsPage() {
                     <tr key={i}>
                       {Array.from({ length: 4 }).map((_, j) => (
                         <td key={j} className="px-4 py-3">
-                          <div className="h-4 bg-surface-container rounded animate-pulse" />
+                          <div className="h-4 bg-[#F3F4F6] rounded animate-pulse" />
                         </td>
                       ))}
                     </tr>
                   ))
                 ) : retentionData.map(c => (
-                  <tr key={c.cohort} className="hover:bg-surface-container-low transition-colors">
-                    <td className="px-4 py-3 text-body-md font-bold">{c.cohort}</td>
-                    <td className="px-4 py-3 text-body-md font-medium text-on-surface">{c.joined} members</td>
-                    <td className="px-4 py-3 text-body-md text-on-surface-variant">{c.retained} members</td>
+                  <tr key={c.cohort} className="hover:bg-[#F9FAFB] transition-colors">
+                    <td className="px-4 py-3 text-sm font-bold">{c.cohort}</td>
+                    <td className="px-4 py-3 text-sm font-medium text-[#111111]">{c.joined} members</td>
+                    <td className="px-4 py-3 text-sm text-[#6B7280]">{c.retained} members</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <div className="flex-1 bg-surface-container-highest rounded-full h-2 max-w-[120px] overflow-hidden">
-                          <div className="bg-primary h-full rounded-full" style={{ width: `${c.retention_rate}%` }} />
+                        <div className="flex-1 bg-[#F3F4F6]-highest rounded-full h-2 max-w-[120px] overflow-hidden">
+                          <div className="bg-[#B8941F] h-full rounded-full" style={{ width: `${c.retention_rate}%` }} />
                         </div>
-                        <span className="text-body-md font-bold text-primary">{c.retention_rate}%</span>
+                        <span className="text-sm font-bold text-[#B8941F]">{c.retention_rate}%</span>
                       </div>
                     </td>
                   </tr>
@@ -430,3 +433,5 @@ export default function ReportsPage() {
     </div>
   );
 }
+
+

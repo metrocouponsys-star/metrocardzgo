@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useToastStore } from '../../store/toastStore';
 import { Modal } from '../../components/ui/Modal';
@@ -92,7 +92,7 @@ export default function OffersPage() {
   const inactive = offers.filter(o => !o.active);
 
   return (
-    <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-4xl mx-auto space-y-xl animate-fade-in">
+    <div className="px-4 md:px-10 py-8 max-w-4xl mx-auto space-y-8 animate-fade-in">
       <div className="flex items-start justify-between">
         <div className="page-header mb-0">
           <h2 className="page-title">Offer Management</h2>
@@ -105,12 +105,12 @@ export default function OffersPage() {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="card p-md animate-pulse space-y-3">
-              <div className="h-12 w-12 bg-surface-container rounded-lg" />
-              <div className="h-5 w-2/3 bg-surface-container rounded" />
-              <div className="h-4 w-full bg-surface-container rounded" />
+            <div key={i} className="card p-4 animate-pulse space-y-3">
+              <div className="h-12 w-12 bg-[#F3F4F6] rounded-lg" />
+              <div className="h-5 w-2/3 bg-[#F3F4F6] rounded" />
+              <div className="h-4 w-full bg-[#F3F4F6] rounded" />
             </div>
           ))}
         </div>
@@ -118,22 +118,22 @@ export default function OffersPage() {
         <>
           {active.length > 0 && (
             <div>
-              <h3 className="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider mb-3">Active Offers ({active.length})</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+              <h3 className="text-sm font-semibold text-[#6B7280] uppercase tracking-wider mb-3">Active Offers ({active.length})</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {active.map(offer => <OfferRow key={offer.id} offer={offer} membershipTypes={membershipTypes} onEdit={openEdit} onToggle={toggleActive} />)}
               </div>
             </div>
           )}
           {inactive.length > 0 && (
             <div>
-              <h3 className="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider mb-3">Inactive Offers ({inactive.length})</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-md opacity-60">
+              <h3 className="text-sm font-semibold text-[#6B7280] uppercase tracking-wider mb-3">Inactive Offers ({inactive.length})</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 opacity-60">
                 {inactive.map(offer => <OfferRow key={offer.id} offer={offer} membershipTypes={membershipTypes} onEdit={openEdit} onToggle={toggleActive} />)}
               </div>
             </div>
           )}
           {offers.length === 0 && (
-            <div className="card p-8 text-center text-on-surface-variant">
+            <div className="card p-8 text-center text-[#6B7280]">
               <span className="material-symbols-outlined text-[48px] mb-2">local_offer</span>
               <p>No offers yet. Add your first offer to get started.</p>
             </div>
@@ -167,11 +167,11 @@ export default function OffersPage() {
 
           {/* Feature 1: Loyalty Points Controls */}
           {form.offer_type !== 'points_redemption' ? (
-            <div className="border border-outline-variant/40 rounded-xl p-3 space-y-2 bg-green-50/40">
+            <div className="border border-[#E5E7EB]/40 rounded-xl p-3 space-y-2 bg-green-50/40">
               <div className="flex items-center justify-between">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <span className="material-symbols-outlined text-green-600 text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>add_circle</span>
-                  <span className="text-body-md font-semibold text-green-800">Earns Loyalty Points on Redemption</span>
+                  <span className="text-sm font-semibold text-green-800">Earns Loyalty Points on Redemption</span>
                 </label>
                 <button
                   type="button"
@@ -192,7 +192,7 @@ export default function OffersPage() {
                     value={form.loyalty_points_earn}
                     onChange={e => setForm(f => ({ ...f, loyalty_points_earn: e.target.value }))}
                   />
-                  <p className="text-label-sm text-green-600 mt-1">Members earn this many points every time this offer is redeemed.</p>
+                  <p className="text-xs text-green-600 mt-1">Members earn this many points every time this offer is redeemed.</p>
                 </div>
               )}
             </div>
@@ -200,9 +200,9 @@ export default function OffersPage() {
             <div className="border border-amber-200 rounded-xl p-3 space-y-2 bg-amber-50/40">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-amber-600 text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
-                <span className="text-body-md font-semibold text-amber-800">Points Redemption Reward</span>
+                <span className="text-sm font-semibold text-amber-800">Points Redemption Reward</span>
               </div>
-              <p className="text-label-sm text-amber-700">Members spend loyalty points to claim this reward. Set how many points it costs.</p>
+              <p className="text-xs text-amber-700">Members spend loyalty points to claim this reward. Set how many points it costs.</p>
               <div>
                 <label className="form-label text-amber-700">Points cost</label>
                 <input
@@ -225,8 +225,8 @@ export default function OffersPage() {
                   key={mt.id}
                   type="button"
                   onClick={() => toggleMembershipType(mt.id)}
-                  className={`px-3 py-1.5 rounded-lg text-label-md transition-all border
-                    ${form.applicable_membership_type_ids.includes(mt.id) ? 'bg-primary text-on-primary border-primary' : 'border-outline-variant text-on-surface-variant hover:bg-surface-container'}`}
+                  className={`px-3 py-1.5 rounded-lg text-sm transition-all border
+                    ${form.applicable_membership_type_ids.includes(mt.id) ? 'bg-[#B8941F] text-white border-[#B8941F]' : 'border-[#E5E7EB] text-[#6B7280] hover:bg-[#F3F4F6]'}`}
                 >
                   {mt.name}
                 </button>
@@ -253,15 +253,15 @@ function OfferRow({ offer, membershipTypes, onEdit, onToggle }: {
   const icon = TYPE_ICONS[offer.offer_type] || 'star';
   const applicableNames = membershipTypes.filter(mt => offer.applicable_membership_type_ids?.includes(mt.id)).map(mt => mt.name);
   return (
-    <div className="card p-md flex flex-col gap-3">
+    <div className="card p-4 flex flex-col gap-3">
       <div className="flex items-start gap-3">
-        <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${offer.offer_type === 'points_redemption' ? 'bg-amber-100 text-amber-600' : 'bg-primary-container/10 text-primary'}`}>
+        <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${offer.offer_type === 'points_redemption' ? 'bg-amber-100 text-amber-600' : 'bg-[#F5EDD0]/10 text-[#B8941F]'}`}>
           <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: offer.offer_type === 'points_redemption' ? "'FILL' 1" : undefined }}>{icon}</span>
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h4 className="text-body-lg font-bold">{offer.title}</h4>
-            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${offer.active ? 'bg-secondary-container text-secondary' : 'bg-surface-container text-on-surface-variant'}`}>
+            <h4 className="text-base font-bold">{offer.title}</h4>
+            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${offer.active ? 'bg-[#F3F4F6] text-[#6B7280]' : 'bg-[#F3F4F6] text-[#6B7280]'}`}>
               {offer.active ? 'ACTIVE' : 'INACTIVE'}
             </span>
             {/* Feature 1: loyalty earn badge */}
@@ -279,20 +279,20 @@ function OfferRow({ offer, membershipTypes, onEdit, onToggle }: {
               </span>
             )}
           </div>
-          <p className="text-body-md text-on-surface-variant line-clamp-1">{offer.description}</p>
+          <p className="text-sm text-[#6B7280] line-clamp-1">{offer.description}</p>
         </div>
       </div>
       {applicableNames.length > 0 && (
         <div className="flex flex-wrap gap-1">
-          {applicableNames.map(n => <span key={n} className="text-[10px] px-2 py-0.5 bg-primary-fixed/20 text-primary rounded-full">{n}</span>)}
+          {applicableNames.map(n => <span key={n} className="text-[10px] px-2 py-0.5 bg-[#B8941F]-fixed/20 text-[#B8941F] rounded-full">{n}</span>)}
         </div>
       )}
       <div className="flex gap-2">
-        <button onClick={() => onEdit(offer)} className="flex-1 py-2 rounded-lg border border-outline-variant text-on-surface-variant text-label-md hover:bg-surface-container transition-colors flex items-center justify-center gap-1">
+        <button onClick={() => onEdit(offer)} className="flex-1 py-2 rounded-lg border border-[#E5E7EB] text-[#6B7280] text-sm hover:bg-[#F3F4F6] transition-colors flex items-center justify-center gap-1">
           <span className="material-symbols-outlined text-[14px]">edit</span> Edit
         </button>
-        <button onClick={() => onToggle(offer)} className={`flex-1 py-2 rounded-lg text-label-md flex items-center justify-center gap-1 transition-colors
-          ${offer.active ? 'border border-error/30 text-error hover:bg-error-container' : 'border border-secondary/30 text-secondary hover:bg-secondary-container/20'}`}>
+        <button onClick={() => onToggle(offer)} className={`flex-1 py-2 rounded-lg text-sm flex items-center justify-center gap-1 transition-colors
+          ${offer.active ? 'border border-red-200 text-red-600 hover:bg-red-50' : 'border border-[#6B7280]/30 text-[#6B7280] hover:bg-[#F3F4F6]/20'}`}>
           <span className="material-symbols-outlined text-[14px]">{offer.active ? 'toggle_off' : 'toggle_on'}</span>
           {offer.active ? 'Deactivate' : 'Activate'}
         </button>
@@ -300,3 +300,5 @@ function OfferRow({ offer, membershipTypes, onEdit, onToggle }: {
     </div>
   );
 }
+
+

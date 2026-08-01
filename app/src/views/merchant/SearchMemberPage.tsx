@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+﻿import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useToastStore } from '../../store/toastStore';
@@ -89,23 +89,26 @@ export default function SearchMemberPage() {
   };
 
   return (
-    <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-4xl mx-auto">
-      <div className="page-header">
+    <div className="px-4 md:px-10 py-8 max-w-4xl mx-auto">
+      <div className="mb-6">
         <h2 className="page-title">Customer Lookup</h2>
         <p className="page-subtitle">Find a member to manage their benefits or process a redemption.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-md">
-        {/* Search Card */}
-        <div className="md:col-span-8 card overflow-hidden">
-          {/* Tabs */}
-          <div className="flex border-b border-outline-variant/30">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
+        {/* Search Card — white + premium shadow */}
+        <div className="md:col-span-8 bg-white rounded-2xl shadow-card overflow-hidden">
+          {/* Tabs — gold underline active */}
+          <div className="flex border-b border-[#F3F4F6]">
             {TABS.map(t => (
               <button
                 key={t.key}
                 onClick={() => { setTab(t.key); setQuery(''); setResults([]); setNotFound(false); }}
-                className={`flex-1 py-4 text-label-md font-label-md flex items-center justify-center gap-1.5 transition-all border-b-2
-                  ${tab === t.key ? 'text-primary border-primary' : 'text-on-surface-variant border-transparent hover:bg-surface-container'}`}
+                className={`flex-1 py-4 text-sm font-semibold flex items-center justify-center gap-1.5 transition-all border-b-2
+                  ${tab === t.key
+                    ? 'text-[#B8941F] border-[#B8941F] bg-[#FBF7EA]/40'
+                    : 'text-[#6B7280] border-transparent hover:text-[#111111] hover:bg-[#F9FAFB]'
+                  }`}
               >
                 <span className="material-symbols-outlined text-[18px]">{t.icon}</span>
                 <span className="hidden sm:inline">{t.label}</span>
@@ -113,7 +116,7 @@ export default function SearchMemberPage() {
             ))}
           </div>
 
-          <div className="p-lg">
+          <div className="p-6">
             {tab !== 'qr' ? (
               <div className="space-y-4">
                 <div>
@@ -121,7 +124,7 @@ export default function SearchMemberPage() {
                     {tab === 'mobile' ? 'Mobile Number' : tab === 'card' ? '16-Digit Card Number' : 'Membership Number'}
                   </label>
                   {tab === 'card' && (
-                    <p className="text-label-sm text-on-surface-variant mb-2">Enter or scan the number printed on the physical membership card.</p>
+                    <p className="text-xs text-[#9CA3AF] mb-2">Enter or scan the number printed on the physical membership card.</p>
                   )}
                   <div className="flex gap-2">
                     <input
@@ -131,13 +134,13 @@ export default function SearchMemberPage() {
                       onChange={e => { setQuery(e.target.value); setNotFound(false); setResults([]); }}
                       onKeyDown={e => e.key === 'Enter' && performSearch()}
                       placeholder={PLACEHOLDERS[tab]}
-                      className="flex-1 h-14 bg-surface-container-low border border-outline-variant rounded-lg px-md text-headline-md focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                      className="flex-1 h-14 bg-white border border-[#E5E7EB] rounded-xl px-4 text-xl font-semibold text-[#111111] placeholder:text-[#D1D5DB] focus:border-[#B8941F] focus:shadow-input-focus outline-none transition-all"
                       autoFocus
                     />
                     <button
                       onClick={performSearch}
                       disabled={searching || !query.trim()}
-                      className="h-14 px-6 bg-primary text-on-primary rounded-lg font-label-md flex items-center gap-2 hover:bg-primary-container transition-colors disabled:opacity-50 active-scale"
+                      className="h-14 px-6 bg-[#B8941F] text-white rounded-xl font-semibold flex items-center gap-2 hover:bg-[#9A7A18] hover:shadow-[0_4px_12px_rgba(184,148,31,0.3)] transition-all disabled:opacity-50 active:scale-[0.97]"
                     >
                       {searching ? (
                         <span className="material-symbols-outlined animate-spin">progress_activity</span>
@@ -151,12 +154,12 @@ export default function SearchMemberPage() {
 
                 {/* Not Found */}
                 {notFound && (
-                  <div className="flex flex-col items-center py-8 text-center bg-error-container/10 rounded-xl border border-dashed border-error/30 animate-fade-in">
-                    <div className="w-16 h-16 bg-error-container rounded-full flex items-center justify-center mb-3">
-                      <span className="material-symbols-outlined text-on-error-container text-3xl">person_off</span>
+                  <div className="flex flex-col items-center py-8 text-center bg-red-50/50 rounded-xl border border-dashed border-red-200 animate-fade-in">
+                    <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-3">
+                      <span className="material-symbols-outlined text-red-700 text-3xl">person_off</span>
                     </div>
-                    <h3 className="text-headline-md text-on-surface mb-1">Member Not Found</h3>
-                    <p className="text-body-md text-on-surface-variant mb-4">No member found for "{query}"</p>
+                    <h3 className="text-xl text-[#111111] mb-1">Member Not Found</h3>
+                    <p className="text-sm text-[#6B7280] mb-4">No member found for "{query}"</p>
                     <button onClick={() => navigate('/members/new')} className="btn-primary flex items-center gap-2">
                       <span className="material-symbols-outlined text-[18px]">person_add</span>
                       Add as New Member
@@ -167,7 +170,7 @@ export default function SearchMemberPage() {
                 {/* Multiple Results */}
                 {results.length > 1 && (
                   <div className="space-y-2 animate-fade-in">
-                    <p className="text-label-md text-on-surface-variant font-bold">{results.length} members found</p>
+                    <p className="text-sm text-[#6B7280] font-bold">{results.length} members found</p>
                     {results.map(m => (
                       <MemberResultRow key={m.id} member={m} onClick={() => goToMember(m)} />
                     ))}
@@ -211,19 +214,19 @@ export default function SearchMemberPage() {
         </div>
 
         {/* Sidebar */}
-        <div className="md:col-span-4 space-y-md">
+        <div className="md:col-span-4 space-y-5">
           {/* Recent Searches */}
-          <div className="bg-surface-container-high/50 rounded-xl p-md border border-outline-variant/20">
-            <div className="flex items-center justify-between mb-md">
-              <h3 className="text-label-md font-bold text-on-surface-variant uppercase tracking-wider">Recent Searches</h3>
+          <div className="bg-[#F3F4F6]-high/50 rounded-xl p-4 border border-[#E5E7EB]/20">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-bold text-[#6B7280] uppercase tracking-wider">Recent Searches</h3>
               {recent.length > 0 && (
-                <button onClick={() => { localStorage.removeItem(RECENT_KEY); setRecent([]); }} className="text-label-sm text-primary hover:underline">
+                <button onClick={() => { localStorage.removeItem(RECENT_KEY); setRecent([]); }} className="text-xs text-[#B8941F] hover:underline">
                   Clear
                 </button>
               )}
             </div>
             {recent.length === 0 ? (
-              <p className="text-body-md text-on-surface-variant text-center py-4">No recent searches</p>
+              <p className="text-sm text-[#6B7280] text-center py-4">No recent searches</p>
             ) : (
               <div className="space-y-1">
                 {recent.map(m => (
@@ -232,14 +235,14 @@ export default function SearchMemberPage() {
                     onClick={() => goToMember(m)}
                     className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-white transition-all group text-left"
                   >
-                    <div className="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center font-bold text-on-secondary-container">
+                    <div className="w-10 h-10 rounded-full bg-[#F3F4F6] flex items-center justify-center font-bold text-[#374151]">
                       {m.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-label-md font-bold text-on-surface truncate">{m.name}</p>
-                      <p className="text-label-sm text-on-surface-variant truncate">{m.phone}</p>
+                      <p className="text-sm font-bold text-[#111111] truncate">{m.name}</p>
+                      <p className="text-xs text-[#6B7280] truncate">{m.phone}</p>
                     </div>
-                    <span className="material-symbols-outlined text-outline group-hover:text-primary transition-colors">chevron_right</span>
+                    <span className="material-symbols-outlined text-outline group-hover:text-[#B8941F] transition-colors">chevron_right</span>
                   </button>
                 ))}
               </div>
@@ -247,13 +250,13 @@ export default function SearchMemberPage() {
           </div>
 
           {/* Quick Add */}
-          <div className="bg-primary p-lg rounded-xl text-white relative overflow-hidden">
+          <div className="bg-[#B8941F] p-6 rounded-xl text-white relative overflow-hidden">
             <div className="relative z-10">
-              <h4 className="text-headline-md font-bold mb-1">New Member?</h4>
-              <p className="text-label-sm opacity-80 mb-md">Enroll a customer and generate their membership card in seconds.</p>
+              <h4 className="text-xl font-bold mb-1">New Member?</h4>
+              <p className="text-xs opacity-80 mb-4">Enroll a customer and generate their membership card in seconds.</p>
               <button
                 onClick={() => navigate('/members/new')}
-                className="text-label-md bg-white text-primary px-4 py-2 rounded-lg font-bold hover:bg-primary-fixed transition-colors"
+                className="text-sm bg-white text-[#B8941F] px-4 py-2 rounded-lg font-bold hover:bg-[#B8941F]-fixed transition-colors"
               >
                 + Add Member
               </button>
@@ -265,11 +268,11 @@ export default function SearchMemberPage() {
 
       {/* FAB */}
       <button
-        className="fixed right-6 bottom-24 md:bottom-10 md:right-10 w-14 h-14 bg-primary text-white rounded-2xl shadow-elevated flex items-center justify-center group active-scale transition-all z-40"
+        className="fixed right-6 bottom-24 md:bottom-10 md:right-10 w-14 h-14 bg-[#B8941F] text-white rounded-2xl shadow-card flex items-center justify-center group active-scale transition-all z-40"
         onClick={() => navigate('/members/new')}
       >
         <span className="material-symbols-outlined text-3xl">person_add</span>
-        <span className="absolute right-full mr-4 bg-primary px-3 py-1.5 rounded-lg text-label-md font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+        <span className="absolute right-full mr-4 bg-[#B8941F] px-3 py-1.5 rounded-lg text-sm font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
           New Member
         </span>
       </button>
@@ -281,17 +284,17 @@ function MemberResultRow({ member, onClick }: { member: Member; onClick: () => v
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-surface-container-low transition-all text-left border border-outline-variant/30"
+      className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-[#F9FAFB] transition-all text-left border border-[#F3F4F6]"
     >
-      <div className="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center font-bold text-on-secondary-container">
+      <div className="w-10 h-10 rounded-xl bg-[#F5EDD0] flex items-center justify-center font-bold text-[#B8941F]">
         {member.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
-          <p className="font-bold text-on-surface">{member.name}</p>
+          <p className="font-bold text-[#111111]">{member.name}</p>
           {member.membership_type && <MembershipBadge name={member.membership_type.name} />}
         </div>
-        <p className="text-label-sm text-on-surface-variant">{member.phone} · #{member.member_code}</p>
+        <p className="text-xs text-[#6B7280]">{member.phone} · #{member.member_code}</p>
       </div>
       <StatusBadge status={member.status} />
     </button>
@@ -490,7 +493,7 @@ function QrScannerView({ onScan }: { onScan: (token: string) => void }) {
 
       {/* ── Non-HTTPS warning ─── */}
       {!isHTTPS && (
-        <div className="w-full px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2 text-amber-800 text-label-sm">
+        <div className="w-full px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2 text-amber-800 text-xs">
           <span className="material-symbols-outlined text-[16px] shrink-0 mt-0.5">warning</span>
           Camera scanning requires HTTPS. This page is on HTTP — live scanning may not work.
         </div>
@@ -503,11 +506,11 @@ function QrScannerView({ onScan }: { onScan: (token: string) => void }) {
       <div className={`w-full flex flex-col items-center gap-3 ${!showVideoPanel ? 'hidden' : ''}`}>
         {status === 'requesting' && (
           <div className="flex flex-col items-center gap-3 py-4 animate-fade-in">
-            <div className="w-14 h-14 rounded-full bg-primary-container/30 flex items-center justify-center relative">
-              <span className="material-symbols-outlined text-primary text-[28px]">camera_alt</span>
-              <span className="absolute inset-0 rounded-full border-2 border-primary/30 animate-ping" />
+            <div className="w-14 h-14 rounded-full bg-[#F5EDD0]/30 flex items-center justify-center relative">
+              <span className="material-symbols-outlined text-[#B8941F] text-[28px]">camera_alt</span>
+              <span className="absolute inset-0 rounded-full border-2 border-[#B8941F]/30 animate-ping" />
             </div>
-            <p className="text-sm text-on-surface-variant text-center max-w-xs">
+            <p className="text-sm text-[#6B7280] text-center max-w-xs">
               Starting camera… allow access when prompted.
             </p>
           </div>
@@ -521,10 +524,10 @@ function QrScannerView({ onScan }: { onScan: (token: string) => void }) {
           />
           {status === 'active' && (
             <div className="absolute inset-0 pointer-events-none rounded-2xl">
-              <div className="absolute top-3 left-3 w-7 h-7 border-t-2 border-l-2 border-primary rounded-tl-lg" />
-              <div className="absolute top-3 right-3 w-7 h-7 border-t-2 border-r-2 border-primary rounded-tr-lg" />
-              <div className="absolute bottom-3 left-3 w-7 h-7 border-b-2 border-l-2 border-primary rounded-bl-lg" />
-              <div className="absolute bottom-3 right-3 w-7 h-7 border-b-2 border-r-2 border-primary rounded-br-lg" />
+              <div className="absolute top-3 left-3 w-7 h-7 border-t-2 border-l-2 border-[#B8941F] rounded-tl-lg" />
+              <div className="absolute top-3 right-3 w-7 h-7 border-t-2 border-r-2 border-[#B8941F] rounded-tr-lg" />
+              <div className="absolute bottom-3 left-3 w-7 h-7 border-b-2 border-l-2 border-[#B8941F] rounded-bl-lg" />
+              <div className="absolute bottom-3 right-3 w-7 h-7 border-b-2 border-r-2 border-[#B8941F] rounded-br-lg" />
               <div className="scanner-line" />
             </div>
           )}
@@ -534,7 +537,7 @@ function QrScannerView({ onScan }: { onScan: (token: string) => void }) {
         {status === 'active' && (
           <div className="flex items-center gap-2 flex-wrap justify-center animate-fade-in">
             {cameras.length > 1 && (
-              <button onClick={switchCamera} className="btn-secondary text-label-sm py-1.5 px-3 flex items-center gap-1.5">
+              <button onClick={switchCamera} className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-[18px]">cameraswitch</span>
                 Switch Camera
               </button>
@@ -542,7 +545,7 @@ function QrScannerView({ onScan }: { onScan: (token: string) => void }) {
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={fileScanning}
-              className="btn-outline text-label-sm py-1.5 px-3 flex items-center gap-1.5"
+              className="btn-outline text-xs py-1.5 px-3 flex items-center gap-1.5"
             >
               <span className="material-symbols-outlined text-[18px]">image</span>
               {fileScanning ? 'Reading…' : 'Upload QR Image'}
@@ -552,12 +555,12 @@ function QrScannerView({ onScan }: { onScan: (token: string) => void }) {
 
         {status === 'active' && (
           lastScanned ? (
-            <div className="flex items-center gap-2 text-label-sm text-secondary bg-secondary/10 px-3 py-1.5 rounded-full animate-fade-in">
+            <div className="flex items-center gap-2 text-xs text-[#6B7280] bg-secondary/10 px-3 py-1.5 rounded-full animate-fade-in">
               <span className="material-symbols-outlined text-[14px]">qr_code</span>
               QR detected — looking up member…
             </div>
           ) : (
-            <p className="text-sm text-on-surface-variant text-center max-w-xs">
+            <p className="text-sm text-[#6B7280] text-center max-w-xs">
               Point camera at the QR code on the member's card.
             </p>
           )
@@ -567,12 +570,12 @@ function QrScannerView({ onScan }: { onScan: (token: string) => void }) {
       {/* ── Permission denied ─── */}
       {status === 'denied' && (
         <div className="flex flex-col items-center gap-4 py-4 animate-fade-in w-full">
-          <div className="w-14 h-14 rounded-full bg-error-container flex items-center justify-center">
-            <span className="material-symbols-outlined text-on-error-container text-[28px]">no_photography</span>
+          <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center">
+            <span className="material-symbols-outlined text-red-700 text-[28px]">no_photography</span>
           </div>
           <div className="text-center">
-            <p className="font-bold text-on-surface mb-1">Camera Access Denied</p>
-            <p className="text-sm text-on-surface-variant max-w-xs">
+            <p className="font-bold text-[#111111] mb-1">Camera Access Denied</p>
+            <p className="text-sm text-[#6B7280] max-w-xs">
               Your browser blocked the camera. Upload a QR photo, or allow camera access.
             </p>
           </div>
@@ -586,9 +589,9 @@ function QrScannerView({ onScan }: { onScan: (token: string) => void }) {
               Try Camera
             </button>
           </div>
-          <div className="w-full max-w-sm bg-surface-container-low rounded-xl p-3 text-xs text-on-surface-variant text-left space-y-1">
-            <p className="font-bold text-on-surface flex items-center gap-1 mb-1">
-              <span className="material-symbols-outlined text-[14px] text-primary">help_outline</span>
+          <div className="w-full max-w-sm bg-[#F9FAFB] rounded-xl p-3 text-xs text-[#6B7280] text-left space-y-1">
+            <p className="font-bold text-[#111111] flex items-center gap-1 mb-1">
+              <span className="material-symbols-outlined text-[14px] text-[#B8941F]">help_outline</span>
               Allow camera in Chrome:
             </p>
             <p>① Click the 🔒 icon in the address bar</p>
@@ -601,12 +604,12 @@ function QrScannerView({ onScan }: { onScan: (token: string) => void }) {
       {/* ── Camera error — offer image upload ─── */}
       {status === 'error' && (
         <div className="flex flex-col items-center gap-4 py-4 animate-fade-in w-full">
-          <div className="w-14 h-14 rounded-full bg-surface-container flex items-center justify-center">
-            <span className="material-symbols-outlined text-on-surface-variant text-[28px]">videocam_off</span>
+          <div className="w-14 h-14 rounded-full bg-[#F3F4F6] flex items-center justify-center">
+            <span className="material-symbols-outlined text-[#6B7280] text-[28px]">videocam_off</span>
           </div>
           <div className="text-center">
-            <p className="font-bold text-on-surface mb-1">Live Camera Unavailable</p>
-            <p className="text-sm text-on-surface-variant max-w-xs">
+            <p className="font-bold text-[#111111] mb-1">Live Camera Unavailable</p>
+            <p className="text-sm text-[#6B7280] max-w-xs">
               Could not start the camera stream. Take a photo of the QR code and upload it below — it works the same way!
             </p>
           </div>
@@ -637,3 +640,5 @@ function QrScannerView({ onScan }: { onScan: (token: string) => void }) {
     </div>
   );
 }
+
+
