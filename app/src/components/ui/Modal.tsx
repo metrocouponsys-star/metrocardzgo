@@ -28,16 +28,16 @@ export function Modal({ isOpen, onClose, title, children, maxWidth = 'max-w-md' 
         onClick={onClose}
       />
       {/* Modal */}
-      <div className={`relative w-full ${maxWidth} bg-surface-container-lowest rounded-2xl shadow-2xl animate-scale-in`}>
+      <div className={`relative w-full ${maxWidth} max-h-[85vh] md:max-h-[90vh] bg-surface-container-lowest rounded-2xl shadow-2xl animate-scale-in flex flex-col my-auto overflow-hidden`}>
         {title && (
-          <div className="flex items-center justify-between px-lg py-md border-b border-outline-variant/30">
+          <div className="flex items-center justify-between px-lg py-md border-b border-outline-variant/30 shrink-0">
             <h3 className="text-headline-md font-headline-md text-on-surface">{title}</h3>
             <button onClick={onClose} className="p-1 rounded-full hover:bg-surface-container transition-colors">
               <span className="material-symbols-outlined text-on-surface-variant">close</span>
             </button>
           </div>
         )}
-        <div className="p-lg">{children}</div>
+        <div className="p-lg overflow-y-auto custom-scrollbar flex-1 max-h-[calc(85vh-70px)]">{children}</div>
       </div>
     </div>
   );

@@ -1294,7 +1294,7 @@ export default function MemberProfilePage() {
             />
           </div>
 
-          <div className="flex gap-3 justify-end pt-4 border-t border-outline-variant/30">
+          <div className="flex gap-3 justify-end pt-4 border-t border-outline-variant/30 sticky bottom-0 bg-surface-container-lowest -mx-lg px-lg pb-1 z-10">
             <button
               type="button"
               onClick={() => {
