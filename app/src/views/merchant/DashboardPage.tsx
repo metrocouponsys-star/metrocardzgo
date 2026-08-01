@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { StatCard } from '../../components/ui/StatCard';
@@ -92,56 +92,46 @@ export default function DashboardPage() {
     : null;
 
   return (
-    <div className="px-4 md:px-10 py-8 max-w-5xl mx-auto space-y-8">
+    <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-5xl mx-auto space-y-xl">
 
-      {/* ── PREMIUM Hero CTA — Option A: white card with gold left border ──── */}
+      {/* ── Hero CTA ─── */}
       <section
-        className="relative overflow-hidden bg-white rounded-2xl shadow-card flex flex-col md:flex-row md:items-center justify-between gap-6 cursor-pointer group transition-all hover:shadow-card-hover hover:-translate-y-0.5 active:scale-[0.99]"
-        style={{ borderLeft: '4px solid #B8941F' }}
+        className="relative overflow-hidden rounded-2xl hero-shimmer shadow-elevated p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 cursor-pointer active-scale group"
         onClick={() => navigate('/members/search?tab=qr')}
       >
-        {/* Subtle gold tint gradient wash on right side */}
-        <div className="absolute right-0 top-0 bottom-0 w-40 pointer-events-none"
-          style={{ background: 'linear-gradient(to left, rgba(251,247,234,0.6) 0%, transparent 100%)' }} />
+        {/* Animated blobs */}
+        <div className="absolute -right-12 -top-12 w-48 h-48 bg-white/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute left-1/3 bottom-0 w-32 h-32 bg-white/5 rounded-full blur-2xl pointer-events-none" />
 
-        <div className="relative z-10 p-6 md:p-8">
-          <p className="text-[11px] font-bold tracking-widest uppercase text-[#B8941F] mb-2">Quick Action</p>
-          <h2 className="text-2xl md:text-3xl font-bold text-[#111111] mb-1 leading-tight">
+        <div className="relative z-10">
+          <h2 className="text-headline-lg-mobile md:text-headline-lg font-headline-lg text-white mb-1">
             Scan / Search Customer
           </h2>
-          <p className="text-[#6B7280] text-sm">
+          <p className="text-white/70 text-body-md">
             Instantly redeem offers or check member status.
           </p>
         </div>
-
-        {/* Icon section */}
-        <div className="relative z-10 p-6 md:p-8 flex items-center gap-4 md:flex-col md:items-end shrink-0">
-          <div className="w-16 h-16 rounded-2xl bg-[#FBF7EA] flex items-center justify-center group-hover:scale-110 group-hover:bg-[#F5EDD0] transition-all">
-            <span
-              className="material-symbols-outlined text-[36px] text-[#B8941F] animate-float"
-              style={{ fontVariationSettings: "'FILL' 1" }}
-            >
-              qr_code_scanner
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5 text-[#B8941F] text-sm font-semibold md:hidden">
-            <span>Open Scanner</span>
-            <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-          </div>
+        <div className="relative z-10 bg-white/15 p-4 rounded-2xl group-hover:scale-110 group-hover:bg-white/25 transition-all self-start md:self-auto backdrop-blur-sm border border-white/20">
+          <span
+            className="material-symbols-outlined text-[48px] text-white animate-float"
+            style={{ fontVariationSettings: "'FILL' 1" }}
+          >
+            qr_code_scanner
+          </span>
         </div>
       </section>
 
-      {/* ── Stats Grid ────────────────────────────────────────────────────── */}
+      {/* ── Stats Grid ─── */}
       <section>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-3">
           <h3 className="section-title">Overview</h3>
           {/* Refresh badge */}
           <div className="flex items-center gap-2">
             {updatedLabel && !loading && (
-              <span className="text-[11px] text-[#9CA3AF] flex items-center gap-1 animate-fade-in">
+              <span className="text-label-sm text-on-surface-variant flex items-center gap-1 animate-fade-in">
                 {refreshing
-                  ? <span className="material-symbols-outlined text-[13px] animate-spin-slow text-[#B8941F]">refresh</span>
-                  : <span className="material-symbols-outlined text-[13px] text-emerald-500">check_circle</span>
+                  ? <span className="material-symbols-outlined text-[14px] animate-spin-slow text-primary">refresh</span>
+                  : <span className="material-symbols-outlined text-[14px] text-secondary">check_circle</span>
                 }
                 {refreshing ? 'Refreshing…' : updatedLabel}
               </span>
@@ -150,24 +140,22 @@ export default function DashboardPage() {
               onClick={() => fetchStats(true)}
               disabled={refreshing || loading}
               title="Refresh stats"
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-[#9CA3AF] hover:bg-[#F3F4F6] hover:text-[#6B7280] transition-colors disabled:opacity-40"
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors disabled:opacity-40"
             >
               <span className={`material-symbols-outlined text-[18px] ${refreshing ? 'animate-spin-slow' : ''}`}>refresh</span>
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-gutter">
           {loading ? (
             Array.from({ length: 4 }).map((_, i) => <StatCardSkeleton key={i} />)
           ) : error ? (
-            <div className="col-span-full flex flex-col items-center gap-3 py-12 text-center">
-              <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center">
-                <span className="material-symbols-outlined text-[32px] text-red-400">cloud_off</span>
-              </div>
-              <p className="text-sm text-[#6B7280]">Failed to load stats.</p>
+            <div className="col-span-full flex flex-col items-center gap-3 py-8 text-center">
+              <span className="material-symbols-outlined text-[40px] text-error">cloud_off</span>
+              <p className="text-body-md text-on-surface-variant">Failed to load stats.</p>
               <button onClick={() => fetchStats()} className="btn-outline flex items-center gap-2">
-                <span className="material-symbols-outlined text-[16px]">refresh</span>
+                <span className="material-symbols-outlined text-[18px]">refresh</span>
                 Retry
               </button>
             </div>
@@ -176,8 +164,7 @@ export default function DashboardPage() {
               <StatCard
                 label="Total Active Members"
                 value={`${stats.total_active_members} / ${stats.total_cards_assigned || stats.total_active_members}`}
-                trend={`${stats.total_active_members} Active`}
-                trendUp={true}
+                trend={`${stats.total_active_members} Active / ${stats.total_cards_assigned || stats.total_active_members} Cards Assigned`}
                 icon="groups"
                 className="stagger-item"
                 onClick={() => navigate('/members')}
@@ -186,7 +173,6 @@ export default function DashboardPage() {
                 label="Redemptions Today"
                 value={stats.redemptions_today}
                 trend="All handled"
-                trendUp={true}
                 icon="check_circle"
                 className="stagger-item"
                 onClick={() => navigate('/reports')}
@@ -197,7 +183,7 @@ export default function DashboardPage() {
                 trendUp={false}
                 trend="Action needed"
                 icon="notification_important"
-                iconColor="text-red-400"
+                iconColor="text-error"
                 className="stagger-item"
                 onClick={() => navigate('/members')}
               />
@@ -205,9 +191,7 @@ export default function DashboardPage() {
                 label="Points Issued (Month)"
                 value={stats.wallet_points_issued_month}
                 trend="High engagement"
-                trendUp={true}
                 icon="stars"
-                iconColor="text-[#B8941F]"
                 className="stagger-item"
                 onClick={() => navigate('/rewards')}
               />
@@ -216,24 +200,21 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* ── Recent Activity ───────────────────────────────────────────────── */}
-      <section className="space-y-4">
+      {/* ── Recent Activity ─── */}
+      <section className="space-y-md">
         <div className="flex justify-between items-center">
           <h3 className="section-title">Recent Activity</h3>
-          <button
-            onClick={() => navigate('/reports')}
-            className="text-[#B8941F] text-sm font-semibold hover:text-[#9A7A18] flex items-center gap-1 transition-colors"
-          >
+          <button onClick={() => navigate('/reports')} className="text-primary text-label-md font-bold hover:underline flex items-center gap-1">
             View All
-            <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
+            <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
           </button>
         </div>
 
         {loading ? (
-          <div className="bg-white rounded-2xl shadow-card overflow-hidden divide-y divide-[#F3F4F6]">
+          <div className="card divide-y divide-outline-variant">
             {Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="flex items-center gap-4 p-4" style={{ animationDelay: `${i * 60}ms` }}>
-                <div className="w-10 h-10 rounded-xl skeleton shrink-0" />
+                <div className="w-10 h-10 rounded-full skeleton shrink-0" />
                 <div className="flex-1 space-y-2">
                   <div className="h-4 skeleton rounded w-1/3" />
                   <div className="h-3 skeleton rounded w-1/2" />
@@ -243,33 +224,33 @@ export default function DashboardPage() {
             ))}
           </div>
         ) : stats && stats.recent_redemptions.length > 0 ? (
-          <div className="bg-white rounded-2xl shadow-card overflow-hidden divide-y divide-[#F3F4F6]">
+          <div className="bg-white rounded-2xl shadow-sm border border-[#e7eefe] overflow-hidden divide-y divide-gray-100">
             {stats.recent_redemptions.map((r, idx) => (
               <div
                 key={r.id}
-                className="flex items-center justify-between px-5 py-4 hover:bg-[#F9FAFB] transition-colors cursor-pointer group animate-slide-up"
+                className="flex items-center justify-between px-4 py-3.5 hover:bg-[#f9f9ff] transition-colors cursor-pointer group animate-slide-up"
                 style={{ animationDelay: `${idx * 50}ms` }}
                 onClick={() => navigate(`/members/${r.member_id}`)}
               >
-                <div className="flex items-center gap-3.5">
-                  {/* Offer type icon — gold tint container */}
-                  <div className="w-10 h-10 rounded-xl bg-[#FBF7EA] flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-[#B8941F] text-[18px]">
+                <div className="flex items-center gap-3">
+                  {/* Left accent dot */}
+                  <div className="w-1 h-8 rounded-full bg-secondary/30 group-hover:bg-secondary transition-colors" />
+                  <div className="w-10 h-10 rounded-xl bg-[#e7eefe] flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-[#00236f] text-[18px]">
                       {OFFER_ICONS[r.offer?.offer_type || 'unknown']}
                     </span>
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-[#111111]">{r.member?.name}</p>
-                    <p className="text-xs text-[#9CA3AF] mt-0.5">{r.offer?.title}</p>
+                    <p className="text-body-md font-bold text-on-surface">{r.member?.name}</p>
+                    <p className="text-body-md text-on-surface-variant text-sm">{r.offer?.title}</p>
                   </div>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-xs text-[#9CA3AF] mb-1">
+                  <p className="text-label-sm text-on-surface-variant">
                     {formatDistanceToNow(new Date(r.created_at), { addSuffix: true })}
                   </p>
-                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full">
-                    <span className="material-symbols-outlined text-[10px]">check_circle</span>
-                    Success
+                  <span className="text-label-sm bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-medium">
+                    ✓ Success
                   </span>
                 </div>
               </div>
@@ -286,19 +267,18 @@ export default function DashboardPage() {
         )}
       </section>
 
-      {/* ── FAB — gold accent ─────────────────────────────────────────────── */}
+      {/* ── FAB ─── */}
       <button
-        className="fixed bottom-24 right-4 md:right-12 md:bottom-8 w-14 h-14 bg-[#B8941F] text-white rounded-full shadow-[0_4px_16px_rgba(184,148,31,0.4)] flex items-center justify-center hover:scale-105 hover:shadow-[0_6px_24px_rgba(184,148,31,0.5)] active:scale-95 z-40 transition-all group"
+        className="fixed bottom-24 right-4 md:right-12 md:bottom-8 w-14 h-14 bg-primary text-on-primary rounded-full shadow-elevated flex items-center justify-center active-scale hover:scale-105 z-40 transition-transform group"
         onClick={() => navigate('/members/new')}
         title="Add new member"
       >
         <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>add</span>
         {/* Tooltip */}
-        <span className="absolute right-full mr-3 bg-[#111111] text-white text-xs font-medium px-2.5 py-1.5 rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+        <span className="absolute right-full mr-3 bg-gray-900 text-white text-xs font-medium px-2.5 py-1.5 rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
           Add Member
         </span>
       </button>
     </div>
   );
 }
-

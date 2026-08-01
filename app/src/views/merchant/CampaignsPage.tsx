@@ -13,10 +13,10 @@ const TRIGGER_LABELS: Record<string, string> = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  draft: 'bg-[#F3F4F6] text-[#6B7280]',
+  draft: 'bg-surface-container text-on-surface-variant',
   scheduled: 'bg-amber-100 text-amber-600',
-  sending: 'bg-[#F5EDD0]/10 text-[#B8941F]',
-  sent: 'bg-[#F3F4F6] text-[#6B7280]',
+  sending: 'bg-primary-container/10 text-primary',
+  sent: 'bg-secondary-container text-secondary',
 };
 
 export default function CampaignsPage() {
@@ -252,7 +252,7 @@ export default function CampaignsPage() {
 
 
   return (
-    <div className="px-4 md:px-10 py-8 max-w-4xl mx-auto space-y-8 animate-fade-in">
+    <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-4xl mx-auto space-y-xl animate-fade-in">
       <div className="page-header">
         <h2 className="page-title">Campaigns & Messaging</h2>
         <p className="page-subtitle">Automate birthday reminders and send one-off campaigns to your members.</p>
@@ -260,7 +260,7 @@ export default function CampaignsPage() {
 
       {/* Automated Reminders */}
       <section>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-md">
           <h3 className="section-title">Automated Reminders</h3>
           <button onClick={() => setShowNewReminder(true)} className="btn-primary flex items-center gap-2">
             <span className="material-symbols-outlined text-[18px]">add</span>
@@ -269,22 +269,22 @@ export default function CampaignsPage() {
         </div>
 
         {/* Quick Auto-Reminders Toggle Card */}
-        <div className="bg-[#FBF7EA] border border-[#B8941F]/30 rounded-2xl p-5 mb-4 shadow-sm">
+        <div className="card p-md mb-md bg-primary-container/20 border border-primary-container">
           <div className="flex items-center gap-2 mb-3">
-            <span className="material-symbols-outlined text-[#B8941F] text-[22px]">notifications_active</span>
-            <h4 className="text-base font-bold text-[#111111]">Quick Reminder Toggles</h4>
+            <span className="material-symbols-outlined text-primary text-[22px]">notifications_active</span>
+            <h4 className="text-body-lg font-bold text-on-surface">Quick Reminder Toggles</h4>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-md">
             {/* Birthday Toggle */}
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-[#E5E7EB] flex items-center justify-between">
+            <div className="bg-surface rounded-xl p-3 shadow-sm border border-outline-variant flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center font-bold text-lg">
+                <div className="w-10 h-10 rounded-xl bg-pink-100 text-pink-700 flex items-center justify-center font-bold text-lg">
                   🎂
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-[#111111]">Birthday Reminder</p>
-                  <p className="text-xs text-[#6B7280]">
+                  <p className="text-body-md font-bold text-on-surface">Birthday Reminder</p>
+                  <p className="text-label-sm text-on-surface-variant">
                     {birthdayRule ? (birthdayRule.active ? 'Active · Sends on DOB' : 'Disabled') : 'Tap toggle to enable'}
                   </p>
                 </div>
@@ -293,22 +293,22 @@ export default function CampaignsPage() {
                 type="button"
                 onClick={handleQuickToggleBirthday}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${
-                  birthdayRule?.active ? 'bg-[#B8941F]' : 'bg-gray-300'
+                  birthdayRule?.active ? 'bg-primary' : 'bg-surface-container-high'
                 }`}
               >
-                <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${birthdayRule?.active ? 'translate-x-6' : 'translate-x-1'}`} />
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-surface shadow transition-transform ${birthdayRule?.active ? 'translate-x-6' : 'translate-x-1'}`} />
               </button>
             </div>
 
             {/* Anniversary Toggle */}
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-[#E5E7EB] flex items-center justify-between">
+            <div className="bg-surface rounded-xl p-3 shadow-sm border border-outline-variant flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-lg">
+                <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-lg">
                   💍
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-[#111111]">Anniversary Reminder</p>
-                  <p className="text-xs text-[#6B7280]">
+                  <p className="text-body-md font-bold text-on-surface">Anniversary Reminder</p>
+                  <p className="text-label-sm text-on-surface-variant">
                     {anniversaryRule ? (anniversaryRule.active ? 'Active · Sends on Anniversary' : 'Disabled') : 'Tap toggle to enable'}
                   </p>
                 </div>
@@ -317,10 +317,10 @@ export default function CampaignsPage() {
                 type="button"
                 onClick={handleQuickToggleAnniversary}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${
-                  anniversaryRule?.active ? 'bg-[#B8941F]' : 'bg-gray-300'
+                  anniversaryRule?.active ? 'bg-primary' : 'bg-surface-container-high'
                 }`}
               >
-                <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${anniversaryRule?.active ? 'translate-x-6' : 'translate-x-1'}`} />
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-surface shadow transition-transform ${anniversaryRule?.active ? 'translate-x-6' : 'translate-x-1'}`} />
               </button>
             </div>
           </div>
@@ -330,31 +330,31 @@ export default function CampaignsPage() {
             Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="p-4 flex items-center justify-between animate-pulse">
                 <div className="space-y-2">
-                  <div className="h-4 w-48 bg-[#F3F4F6] rounded" />
-                  <div className="h-3 w-32 bg-[#F3F4F6] rounded" />
+                  <div className="h-4 w-48 bg-surface-container rounded" />
+                  <div className="h-3 w-32 bg-surface-container rounded" />
                 </div>
-                <div className="w-12 h-6 bg-[#F3F4F6] rounded-full" />
+                <div className="w-12 h-6 bg-surface-container rounded-full" />
               </div>
             ))
           ) : reminders.map(rule => (
-            <div key={rule.id} className="p-4 border-b border-[#E5E7EB]/20 last:border-0">
+            <div key={rule.id} className="p-4 border-b border-outline-variant/20 last:border-0">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <h4 className="text-base font-bold">{TRIGGER_LABELS[rule.trigger_type]}</h4>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${rule.channel === 'whatsapp' ? 'bg-[#F3F4F6] text-[#6B7280]' : 'bg-[#B8941F]-fixed/30 text-[#B8941F]'}`}>
+                    <h4 className="text-body-lg font-bold">{TRIGGER_LABELS[rule.trigger_type]}</h4>
+                    <span className={`text-label-sm px-2 py-0.5 rounded-full ${rule.channel === 'whatsapp' ? 'bg-secondary-container text-secondary' : 'bg-primary-fixed/30 text-primary'}`}>
                       {rule.channel.toUpperCase()}
                     </span>
                   </div>
-                  <p className="text-sm text-[#6B7280] line-clamp-1">{rule.template_text}</p>
+                  <p className="text-body-md text-on-surface-variant line-clamp-1">{rule.template_text}</p>
                   {/* Feature 2: show current timing */}
-                  <p className="text-xs text-[#6B7280] mt-1 flex items-center gap-1">
+                  <p className="text-label-sm text-on-surface-variant mt-1 flex items-center gap-1">
                     <span className="material-symbols-outlined text-[13px]">schedule</span>
                     Sends at {rule.send_time ? rule.send_time.slice(0, 5) : '09:00'}
                     {rule.days_before != null && rule.days_before > 0 ? ` · ${rule.days_before} days before` : ' · on the day'}
                     <button
                       onClick={() => toggleTimingExpand(rule)}
-                      className="ml-1 text-[#B8941F] text-xs underline-offset-2 hover:underline"
+                      className="ml-1 text-primary text-label-sm underline-offset-2 hover:underline"
                     >
                       {expandedRuleId === rule.id ? 'Cancel' : 'Edit timing'}
                     </button>
@@ -364,7 +364,7 @@ export default function CampaignsPage() {
                 <div className="flex items-center gap-2 shrink-0">
                   <button
                     onClick={() => deleteReminder(rule)}
-                    className="flex items-center justify-center w-7 h-7 rounded-full border border-red-200 text-red-600 hover:bg-red-600/10"
+                    className="flex items-center justify-center w-7 h-7 rounded-full border border-error/30 text-error hover:bg-error/10"
                     title="Delete reminder"
                   >
                     <span className="material-symbols-outlined text-[16px]">delete</span>
@@ -372,7 +372,7 @@ export default function CampaignsPage() {
                   <button
                     onClick={() => toggleReminder(rule)}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0
-                      ${rule.active ? 'bg-[#6B7280]' : 'bg-[#F3F4F6]-high'}`}
+                      ${rule.active ? 'bg-secondary' : 'bg-surface-container-high'}`}
                   >
                     <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${rule.active ? 'translate-x-6' : 'translate-x-1'}`} />
                   </button>
@@ -380,8 +380,8 @@ export default function CampaignsPage() {
               </div>
               {/* Feature 2: expandable timing controls */}
               {expandedRuleId === rule.id && (
-                <div className="mt-3 pt-3 border-t border-[#E5E7EB]/20 bg-[#F3F4F6]/40 rounded-xl p-3 space-y-3">
-                  <p className="text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Timing Configuration</p>
+                <div className="mt-3 pt-3 border-t border-outline-variant/20 bg-surface-container/40 rounded-xl p-3 space-y-3">
+                  <p className="text-label-sm font-semibold text-on-surface-variant uppercase tracking-wider">Timing Configuration</p>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="form-label">Send at (time of day)</label>
@@ -391,7 +391,7 @@ export default function CampaignsPage() {
                         value={timingForm[rule.id]?.send_time || '09:00'}
                         onChange={e => setTimingForm(prev => ({ ...prev, [rule.id]: { ...prev[rule.id], send_time: e.target.value } }))}
                       />
-                      <p className="text-xs text-[#6B7280] mt-1">IST · Applied hourly by the worker</p>
+                      <p className="text-label-sm text-on-surface-variant mt-1">IST · Applied hourly by the worker</p>
                     </div>
                     <div>
                       <label className="form-label">
@@ -405,19 +405,19 @@ export default function CampaignsPage() {
                         value={timingForm[rule.id]?.days_before ?? 0}
                         onChange={e => setTimingForm(prev => ({ ...prev, [rule.id]: { ...prev[rule.id], days_before: parseInt(e.target.value) || 0 } }))}
                       />
-                      <p className="text-xs text-[#6B7280] mt-1">
+                      <p className="text-label-sm text-on-surface-variant mt-1">
                         {(timingForm[rule.id]?.days_before || 0) === 0 ? 'Sends on the day of the event' : `Sends ${timingForm[rule.id]?.days_before} day(s) before`}
                       </p>
                     </div>
                   </div>
                   <div className="flex gap-2 justify-end">
-                    <button onClick={() => setExpandedRuleId(null)} className="btn-secondary text-sm px-4 py-2">Cancel</button>
-                    <button onClick={() => saveTiming(rule)} className="btn-primary text-sm px-4 py-2 flex items-center gap-1">
+                    <button onClick={() => setExpandedRuleId(null)} className="btn-secondary text-label-md px-4 py-2">Cancel</button>
+                    <button onClick={() => saveTiming(rule)} className="btn-primary text-label-md px-4 py-2 flex items-center gap-1">
                       <span className="material-symbols-outlined text-[16px]">save</span>
                       Save Timing
                     </button>
                   </div>
-                  <p className="text-xs text-[#6B7280]">
+                  <p className="text-label-sm text-on-surface-variant">
                     ⚠️ Changes apply from the next hourly scan — already-queued messages for today are not affected.
                   </p>
                 </div>
@@ -429,7 +429,7 @@ export default function CampaignsPage() {
 
       {/* One-Time Campaigns */}
       <section>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-md">
           <h3 className="section-title">One-Time Campaigns</h3>
           <button onClick={() => setShowNewCampaign(true)} className="btn-primary flex items-center gap-2">
             <span className="material-symbols-outlined text-[18px]">add</span>
@@ -441,31 +441,31 @@ export default function CampaignsPage() {
           <div className="space-y-3">
             {Array.from({ length: 2 }).map((_, i) => (
               <div key={i} className="card p-4 animate-pulse space-y-2">
-                <div className="h-5 w-48 bg-[#F3F4F6] rounded" />
-                <div className="h-4 w-64 bg-[#F3F4F6] rounded" />
-                <div className="h-3 w-32 bg-[#F3F4F6] rounded" />
+                <div className="h-5 w-48 bg-surface-container rounded" />
+                <div className="h-4 w-64 bg-surface-container rounded" />
+                <div className="h-3 w-32 bg-surface-container rounded" />
               </div>
             ))}
           </div>
         ) : campaigns.length === 0 ? (
-          <div className="card p-8 text-center text-[#6B7280]">
+          <div className="card p-8 text-center text-on-surface-variant">
             <span className="material-symbols-outlined text-[48px] mb-2">campaign</span>
             <p>No campaigns yet. Create your first one!</p>
           </div>
         ) : (
           <div className="space-y-3">
             {campaigns.map(c => (
-              <div key={c.id} className="card p-4 flex items-center justify-between gap-4">
+              <div key={c.id} className="card p-md flex items-center justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <h4 className="text-base font-bold">{c.name}</h4>
-                    <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${STATUS_COLORS[c.status]}`}>{c.status}</span>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${c.channel === 'whatsapp' ? 'bg-[#F3F4F6] text-[#6B7280]' : 'bg-[#B8941F]-fixed/30 text-[#B8941F]'}`}>
+                    <h4 className="text-body-lg font-bold">{c.name}</h4>
+                    <span className={`text-label-sm px-2 py-0.5 rounded-full capitalize ${STATUS_COLORS[c.status]}`}>{c.status}</span>
+                    <span className={`text-label-sm px-2 py-0.5 rounded-full ${c.channel === 'whatsapp' ? 'bg-secondary-container text-secondary' : 'bg-primary-fixed/30 text-primary'}`}>
                       {c.channel}
                     </span>
                   </div>
-                  <p className="text-sm text-[#6B7280] line-clamp-1 mb-2">{c.template_text}</p>
-                  <div className="flex gap-4 text-xs text-[#6B7280]">
+                  <p className="text-body-md text-on-surface-variant line-clamp-1 mb-2">{c.template_text}</p>
+                  <div className="flex gap-4 text-label-sm text-on-surface-variant">
                     <span>{c.audience_size} recipients</span>
                     {c.sent_count !== undefined && c.sent_count > 0 && <span>✓ {c.sent_count} sent</span>}
                     {c.scheduled_at && <span>📅 {format(new Date(c.scheduled_at), 'dd MMM yyyy, HH:mm')}</span>}
@@ -483,7 +483,7 @@ export default function CampaignsPage() {
                         addToast('error', 'Failed to send campaign');
                       }
                     }}
-                    className="btn-outline py-1 px-3 text-xs shrink-0 whitespace-nowrap"
+                    className="btn-outline py-1 px-3 text-label-sm shrink-0 whitespace-nowrap"
                   >
                     Send Now
                   </button>
@@ -497,7 +497,7 @@ export default function CampaignsPage() {
 
       {/* Lucky Draws Section */}
       <section>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-md">
           <h3 className="section-title">🎰 Lucky Draws</h3>
           <button onClick={() => setShowNewDraw(true)} className="btn-primary flex items-center gap-2">
             <span className="material-symbols-outlined text-[18px]">add_circle</span>
@@ -506,30 +506,30 @@ export default function CampaignsPage() {
         </div>
 
         {luckyDraws.length === 0 ? (
-          <div className="card p-8 text-center text-[#6B7280]">
+          <div className="card p-8 text-center text-on-surface-variant">
             <span className="material-symbols-outlined text-[48px] mb-2 font-variation-fill">casino</span>
             <p>No lucky draws scheduled. Create one to reward your members!</p>
           </div>
         ) : (
           <div className="space-y-3">
             {luckyDraws.map(draw => (
-              <div key={draw.id} className="card p-4 flex items-center justify-between gap-4">
+              <div key={draw.id} className="card p-md flex items-center justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <h4 className="text-base font-bold">{draw.name}</h4>
-                    <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${draw.status === 'drawn' ? 'bg-[#F3F4F6] text-[#6B7280]' : 'bg-amber-100 text-amber-600'}`}>
+                    <h4 className="text-body-lg font-bold">{draw.name}</h4>
+                    <span className={`text-label-sm px-2 py-0.5 rounded-full capitalize ${draw.status === 'drawn' ? 'bg-secondary-container text-secondary' : 'bg-amber-100 text-amber-600'}`}>
                       {draw.status === 'drawn' ? 'Completed' : 'Open'}
                     </span>
                   </div>
-                  <p className="text-sm text-[#6B7280] font-medium">Prize: {draw.prize}</p>
-                  <div className="flex gap-4 text-xs text-[#6B7280] mt-1.5 flex-wrap">
+                  <p className="text-body-md text-on-surface-variant font-medium">Prize: {draw.prize}</p>
+                  <div className="flex gap-4 text-label-sm text-on-surface-variant mt-1.5 flex-wrap">
                     <span>👥 {draw.entry_count} entries</span>
                     <span>⭐ Min {Number(draw.min_points).toFixed(0)} pts</span>
                     <span>📍 Min {draw.min_visits} visits</span>
                     <span>📅 Draw Date: {draw.draw_date}</span>
                   </div>
                   {draw.status === 'drawn' && draw.winner_member_id && (
-                    <div className="mt-2 p-2 bg-green-50 text-green-800 rounded-lg text-xs font-semibold border border-green-200 inline-block">
+                    <div className="mt-2 p-2 bg-green-50 text-green-800 rounded-lg text-body-sm font-semibold border border-green-200 inline-block">
                       🎉 Winner selected!
                     </div>
                   )}
@@ -537,12 +537,12 @@ export default function CampaignsPage() {
                 <div className="flex gap-2">
                   {draw.status === 'open' && (
                     <button onClick={() => handleRunDraw(draw.id)}
-                      className="btn-primary py-1 px-3 text-xs shrink-0 font-bold whitespace-nowrap" style={{ minHeight: 'auto' }}>
+                      className="btn-primary py-1 px-3 text-label-sm shrink-0 font-bold whitespace-nowrap" style={{ minHeight: 'auto' }}>
                       Pick Winner
                     </button>
                   )}
                   <button onClick={() => handleDeleteDraw(draw.id)}
-                    className="flex items-center justify-center w-8 h-8 rounded-full border border-red-200 text-red-600 hover:bg-red-600/10">
+                    className="flex items-center justify-center w-8 h-8 rounded-full border border-error/30 text-error hover:bg-error/10">
                     <span className="material-symbols-outlined text-[18px]">delete</span>
                   </button>
                 </div>
@@ -577,7 +577,7 @@ export default function CampaignsPage() {
             <div>
               <label className="form-label">Points Threshold</label>
               <input type="number" className="input-field" placeholder="e.g. 500" value={reminderForm.threshold_value} onChange={e => setReminderForm(f => ({ ...f, threshold_value: e.target.value }))} />
-              <p className="text-xs text-[#6B7280] mt-1">Reminder fires when member reaches this many points.</p>
+              <p className="text-label-sm text-on-surface-variant mt-1">Reminder fires when member reaches this many points.</p>
             </div>
           )}
           <div className="grid grid-cols-2 gap-3">
@@ -590,7 +590,7 @@ export default function CampaignsPage() {
                 {reminderForm.trigger_type === 'expiry' ? 'Days before expiry' : reminderForm.trigger_type === 'birthday' ? 'Days before birthday' : 'Days before event'}
               </label>
               <input type="number" className="input-field" min={0} max={60} value={reminderForm.days_before} onChange={e => setReminderForm(f => ({ ...f, days_before: parseInt(e.target.value) || 0 }))} />
-              <p className="text-xs text-[#6B7280] mt-1">{reminderForm.days_before === 0 ? 'Sends on the day' : `Sends ${reminderForm.days_before} day(s) before`}</p>
+              <p className="text-label-sm text-on-surface-variant mt-1">{reminderForm.days_before === 0 ? 'Sends on the day' : `Sends ${reminderForm.days_before} day(s) before`}</p>
             </div>
           </div>
           <div>
@@ -602,7 +602,7 @@ export default function CampaignsPage() {
               value={reminderForm.template_text}
               onChange={e => setReminderForm(f => ({ ...f, template_text: e.target.value }))}
             />
-            <p className="text-xs text-[#6B7280] mt-1">Placeholders: &#123;name&#125;, &#123;business_name&#125;, &#123;points&#125;</p>
+            <p className="text-label-sm text-on-surface-variant mt-1">Placeholders: &#123;name&#125;, &#123;business_name&#125;, &#123;points&#125;</p>
           </div>
           <div className="flex gap-3">
             <button onClick={() => setShowNewReminder(false)} className="btn-secondary flex-1">Cancel</button>
@@ -660,7 +660,7 @@ export default function CampaignsPage() {
               value={form.template_text}
               onChange={e => setForm(f => ({ ...f, template_text: e.target.value }))}
             />
-            <p className="text-xs text-[#6B7280] mt-1">Placeholders: &#123;name&#125;, &#123;offer&#125;, &#123;business_name&#125;</p>
+            <p className="text-label-sm text-on-surface-variant mt-1">Placeholders: &#123;name&#125;, &#123;offer&#125;, &#123;business_name&#125;</p>
           </div>
           <div>
             <label className="form-label">Schedule</label>
@@ -670,8 +670,8 @@ export default function CampaignsPage() {
                   key={opt.v}
                   type="button"
                   onClick={() => setForm(f => ({ ...f, schedule: opt.v }))}
-                  className={`flex-1 py-2 rounded-lg text-sm font-semibold border transition-all
-                    ${form.schedule === opt.v ? 'bg-[#B8941F] text-white border-[#B8941F]' : 'border-[#E5E7EB] text-[#6B7280] hover:bg-[#F3F4F6]'}`}
+                  className={`flex-1 py-2 rounded-lg text-label-md font-label-md border transition-all
+                    ${form.schedule === opt.v ? 'bg-primary text-on-primary border-primary' : 'border-outline-variant text-on-surface-variant hover:bg-surface-container'}`}
                 >
                   {opt.l}
                 </button>
@@ -731,5 +731,3 @@ export default function CampaignsPage() {
     </div>
   );
 }
-
-

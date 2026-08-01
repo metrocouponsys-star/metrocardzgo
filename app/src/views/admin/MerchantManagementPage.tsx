@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useToastStore } from '../../store/toastStore';
 import { useAuthStore } from '../../store/authStore';
 import { ConfirmModal, Modal } from '../../components/ui/Modal';
@@ -148,7 +148,7 @@ export default function MerchantManagementPage() {
   });
 
   return (
-    <div className="px-4 md:px-10 py-8 max-w-5xl mx-auto space-y-8 animate-fade-in">
+    <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-5xl mx-auto space-y-xl animate-fade-in">
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div className="page-header mb-0">
           <h2 className="page-title">Merchant Management</h2>
@@ -164,7 +164,7 @@ export default function MerchantManagementPage() {
       </div>
 
       {/* Tabs & Search */}
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between border-b border-[#F3F4F6] pb-2">
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between border-b border-outline-variant/30 pb-2">
         <div className="flex gap-2 w-full md:w-auto overflow-x-auto">
           {([
             { id: 'all', label: 'All Merchants' },
@@ -175,8 +175,8 @@ export default function MerchantManagementPage() {
             <button
               key={t.id}
               onClick={() => setActiveTab(t.id)}
-              className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all whitespace-nowrap
-                ${activeTab === t.id ? 'bg-[#B8941F] text-white font-bold' : 'text-[#6B7280] hover:bg-[#F3F4F6]'}`}
+              className={`px-4 py-2 text-label-md font-label-md rounded-lg transition-all whitespace-nowrap
+                ${activeTab === t.id ? 'bg-primary text-on-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container'}`}
             >
               {t.label}
             </button>
@@ -184,9 +184,9 @@ export default function MerchantManagementPage() {
         </div>
 
         <div className="relative w-full md:w-80">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#6B7280] text-[18px]">search</span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-[18px]">search</span>
           <input
-            className="input-field pl-9 h-10 text-xs"
+            className="input-field pl-9 h-10 text-body-sm"
             placeholder="Search by business name..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
@@ -198,10 +198,10 @@ export default function MerchantManagementPage() {
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-[#F9FAFB]">
+            <thead className="bg-surface-container-low">
               <tr>
                 {['Business Details', 'Category', 'Tier', 'Enrolled Members', 'Approval Status', 'System Status', 'Registered On', 'Actions'].map(h => (
-                  <th key={h} className="text-left px-4 py-3 text-sm font-semibold text-[#6B7280] whitespace-nowrap">{h}</th>
+                  <th key={h} className="text-left px-4 py-3 text-label-md font-label-md text-on-surface-variant whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -210,13 +210,13 @@ export default function MerchantManagementPage() {
                 Array.from({ length: 3 }).map((_, i) => (
                   <tr key={i}>
                     {Array.from({ length: 8 }).map((_, j) => (
-                      <td key={j} className="px-4 py-3"><div className="h-4 bg-[#F3F4F6] rounded animate-pulse" /></td>
+                      <td key={j} className="px-4 py-3"><div className="h-4 bg-surface-container rounded animate-pulse" /></td>
                     ))}
                   </tr>
                 ))
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-8 text-center text-[#6B7280]">
+                  <td colSpan={8} className="px-4 py-8 text-center text-on-surface-variant">
                     No merchants found matching the filter criteria.
                   </td>
                 </tr>
@@ -226,30 +226,30 @@ export default function MerchantManagementPage() {
                 const isActioning = actioningMerchant === m.id;
 
                 return (
-                  <tr key={m.id} className="hover:bg-[#F9FAFB] transition-colors">
+                  <tr key={m.id} className="hover:bg-surface-container-low transition-colors">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-9 h-9 rounded-lg bg-[#F5EDD0] flex items-center justify-center text-[#7A5C12] font-bold text-lg">
+                        <div className="w-9 h-9 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container font-bold text-headline-sm">
                           {m.business_name.charAt(0)}
                         </div>
                         <div>
-                          <p className="font-bold text-sm text-[#111111]">{m.business_name}</p>
-                          <p className="text-xs text-[#6B7280] font-mono">{m.whatsapp_number}</p>
+                          <p className="font-bold text-body-md text-on-surface">{m.business_name}</p>
+                          <p className="text-label-sm text-on-surface-variant font-mono">{m.whatsapp_number}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-sm text-[#6B7280]">{m.category}</td>
+                    <td className="px-4 py-3 text-body-md text-on-surface-variant">{m.category}</td>
                     <td className="px-4 py-3">
-                      <span className="text-xs bg-[#F5EDD0]/30 text-[#B8941F] border border-[#B8941F]/20 px-2 py-0.5 rounded-full">{m.plan_tier}</span>
+                      <span className="text-label-sm bg-primary-container/30 text-primary border border-primary/20 px-2 py-0.5 rounded-full">{m.plan_tier}</span>
                     </td>
-                    <td className="px-4 py-3 text-sm font-semibold">{m.member_count?.toLocaleString() || 0}</td>
+                    <td className="px-4 py-3 text-body-md font-semibold">{m.member_count?.toLocaleString() || 0}</td>
                     <td className="px-4 py-3">
-                      <span className={`text-xs px-2.5 py-0.5 rounded-full border ${approval.cls}`}>{approval.label}</span>
+                      <span className={`text-label-sm px-2.5 py-0.5 rounded-full border ${approval.cls}`}>{approval.label}</span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`text-xs px-2.5 py-0.5 rounded-full border ${status.cls}`}>{status.label}</span>
+                      <span className={`text-label-sm px-2.5 py-0.5 rounded-full border ${status.cls}`}>{status.label}</span>
                     </td>
-                    <td className="px-4 py-3 text-xs text-[#6B7280]">{format(new Date(m.created_at), 'dd MMM yyyy')}</td>
+                    <td className="px-4 py-3 text-label-sm text-on-surface-variant">{format(new Date(m.created_at), 'dd MMM yyyy')}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         {m.approval_status === 'pending' ? (
@@ -257,14 +257,14 @@ export default function MerchantManagementPage() {
                             <button
                               onClick={() => handleApprove(m.id)}
                               disabled={isActioning}
-                              className="text-xs bg-green-600 text-white hover:bg-green-700 px-3 py-1 rounded-lg transition-colors font-bold disabled:opacity-50"
+                              className="text-label-sm bg-green-600 text-white hover:bg-green-700 px-3 py-1 rounded-lg transition-colors font-bold disabled:opacity-50"
                             >
                               Approve
                             </button>
                             <button
                               onClick={() => handleReject(m.id)}
                               disabled={isActioning}
-                              className="text-xs bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 px-3 py-1 rounded-lg transition-colors font-bold disabled:opacity-50"
+                              className="text-label-sm bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 px-3 py-1 rounded-lg transition-colors font-bold disabled:opacity-50"
                             >
                               Reject
                             </button>
@@ -274,7 +274,7 @@ export default function MerchantManagementPage() {
                             <button
                               onClick={() => setSuspendTarget(m)}
                               disabled={isActioning}
-                              className={`text-sm px-3 py-1 rounded-lg transition-colors font-bold border
+                              className={`text-label-md px-3 py-1 rounded-lg transition-colors font-bold border
                                 ${m.status === 'active'
                                   ? 'text-red-600 bg-red-50 hover:bg-red-100 border-red-200'
                                   : 'text-green-600 bg-green-50 hover:bg-green-100 border-green-200'}`}
@@ -284,7 +284,7 @@ export default function MerchantManagementPage() {
                             {m.status === 'active' && (
                               <button
                                 onClick={() => { impersonate(m.id, m.business_name); addToast('success', `Impersonating ${m.business_name}`); }}
-                                className="text-sm bg-[#B8941F] text-white hover:bg-[#B8941F]-dark px-3 py-1 rounded-lg transition-colors font-bold shadow-sm"
+                                className="text-label-md bg-primary text-white hover:bg-primary-dark px-3 py-1 rounded-lg transition-colors font-bold shadow-sm"
                                 style={{ minHeight: 'auto' }}
                               >
                                 Impersonate
@@ -322,39 +322,39 @@ export default function MerchantManagementPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Business Info */}
             <div className="space-y-3 md:col-span-2">
-              <h4 className="text-sm font-bold text-[#B8941F] border-b border-[#F3F4F6] pb-1">Business Details</h4>
+              <h4 className="text-body-md font-bold text-primary border-b border-outline-variant/30 pb-1">Business Details</h4>
             </div>
 
             <div>
-              <label className="block text-xs text-[#6B7280] mb-1 font-medium">Business Name *</label>
+              <label className="block text-label-sm text-on-surface-variant mb-1 font-medium">Business Name *</label>
               <input
                 type="text"
                 required
                 value={businessName}
                 onChange={e => setBusinessName(e.target.value)}
                 placeholder="e.g. Glamour Salon"
-                className="input-field h-10 text-xs"
+                className="input-field h-10 text-body-sm"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-[#6B7280] mb-1 font-medium">Category *</label>
+              <label className="block text-label-sm text-on-surface-variant mb-1 font-medium">Category *</label>
               <input
                 type="text"
                 required
                 value={category}
                 onChange={e => setCategory(e.target.value)}
                 placeholder="e.g. Salon, Groceries"
-                className="input-field h-10 text-xs"
+                className="input-field h-10 text-body-sm"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-[#6B7280] mb-1 font-medium">Plan Tier *</label>
+              <label className="block text-label-sm text-on-surface-variant mb-1 font-medium">Plan Tier *</label>
               <select
                 value={planTier}
                 onChange={e => setPlanTier(e.target.value)}
-                className="input-field h-10 text-xs bg-white"
+                className="input-field h-10 text-body-sm bg-surface"
               >
                 <option value="Starter">Starter</option>
                 <option value="Pro">Pro</option>
@@ -363,70 +363,70 @@ export default function MerchantManagementPage() {
             </div>
 
             <div>
-              <label className="block text-xs text-[#6B7280] mb-1 font-medium">WhatsApp Number *</label>
+              <label className="block text-label-sm text-on-surface-variant mb-1 font-medium">WhatsApp Number *</label>
               <input
                 type="text"
                 required
                 value={whatsappNumber}
                 onChange={e => setWhatsappNumber(e.target.value)}
                 placeholder="e.g. 919876543210"
-                className="input-field h-10 text-xs"
+                className="input-field h-10 text-body-sm"
               />
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-xs text-[#6B7280] mb-1 font-medium">Address</label>
+              <label className="block text-label-sm text-on-surface-variant mb-1 font-medium">Address</label>
               <input
                 type="text"
                 value={address}
                 onChange={e => setAddress(e.target.value)}
                 placeholder="e.g. 123 Main Street"
-                className="input-field h-10 text-xs"
+                className="input-field h-10 text-body-sm"
               />
             </div>
 
             {/* Owner Info */}
             <div className="space-y-3 md:col-span-2 mt-2">
-              <h4 className="text-sm font-bold text-[#B8941F] border-b border-[#F3F4F6] pb-1">Owner Account Details</h4>
+              <h4 className="text-body-md font-bold text-primary border-b border-outline-variant/30 pb-1">Owner Account Details</h4>
             </div>
 
             <div>
-              <label className="block text-xs text-[#6B7280] mb-1 font-medium">Owner Name *</label>
+              <label className="block text-label-sm text-on-surface-variant mb-1 font-medium">Owner Name *</label>
               <input
                 type="text"
                 required
                 value={ownerName}
                 onChange={e => setOwnerName(e.target.value)}
                 placeholder="Owner's full name"
-                className="input-field h-10 text-xs"
+                className="input-field h-10 text-body-sm"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-[#6B7280] mb-1 font-medium">Owner Phone * (For Login)</label>
+              <label className="block text-label-sm text-on-surface-variant mb-1 font-medium">Owner Phone * (For Login)</label>
               <input
                 type="text"
                 required
                 value={ownerPhone}
                 onChange={e => setOwnerPhone(e.target.value)}
                 placeholder="Owner's phone number"
-                className="input-field h-10 text-xs"
+                className="input-field h-10 text-body-sm"
               />
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-xs text-[#6B7280] mb-1 font-medium">Owner Email (For Google/Email Login)</label>
+              <label className="block text-label-sm text-on-surface-variant mb-1 font-medium">Owner Email (For Google/Email Login)</label>
               <input
                 type="email"
                 value={ownerEmail}
                 onChange={e => setOwnerEmail(e.target.value)}
                 placeholder="owner@example.com"
-                className="input-field h-10 text-xs"
+                className="input-field h-10 text-body-sm"
               />
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[#F3F4F6]">
+          <div className="flex justify-end gap-3 pt-4 border-t border-outline-variant/30">
             <button type="button" onClick={() => setCreateOpen(false)} className="btn-secondary h-10 px-4" disabled={createLoading}>
               Cancel
             </button>
@@ -444,5 +444,3 @@ export default function MerchantManagementPage() {
     </div>
   );
 }
-
-

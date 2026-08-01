@@ -865,33 +865,3 @@ def record_member_purchase(
         message=f"Purchase recorded! {points_earned} loyalty points earned.",
     )
 
-
-@router.post("/{member_id}/anonymize")
-def anonymize_member_data(
-    member_id: str,
-    merchant_id: str = Depends(get_merchant_id),
-    db: Session = Depends(get_db),
-    current_user=Depends(get_current_active_user),
-):
-    """
-    DPDP Act Right to Erasure compliance endpoint.
-    Anonymizes customer PII (Name, Phone, Email, DOB) while preserving
-    historical visit & transaction totals for merchant tax compliance audits.
-    """
-    member = db.query(Member).filter(
-        Member.id == member_id, Member.merchant_id == merchant_id
-    ).first()
-    if not member:
-        raise HTTPException(status_code=404, detail="Member not found")
-
-    member.name = "Anonymized Customer"
-    member.phone = f"0000000000_{member.id[:8]}"
-    member.email = None
-    member.date_of_birth = None
-    member.anniversary_date = None
-    member.status = "anonymized"
-
-    db.commit()
-    return {"message": "Customer personal data has been anonymized per DPDP Act right-to-erasure request."}
-
-

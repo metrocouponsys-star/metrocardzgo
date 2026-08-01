@@ -239,18 +239,12 @@ function IndustryNav() {
             <span className="font-poppins font-black text-gold tracking-tight text-base">Cardz</span>
           </div>
         </a>
-        <div className="flex items-center gap-3 md:gap-4">
+        <div className="flex items-center gap-4">
           <a href="/#industries" className="text-warm-white/60 hover:text-gold text-sm hidden md:block transition-colors">Industries</a>
           <a href="/#pricing" className="text-warm-white/60 hover:text-gold text-sm hidden md:block transition-colors">Pricing</a>
           <a
-            href="/login"
-            className="text-gold font-semibold text-xs md:text-sm transition-colors border border-gold/30 px-2.5 py-1.5 rounded-lg bg-gold/10 hover:bg-gold/20"
-          >
-            Merchant Portal
-          </a>
-          <a
             href="/#contact"
-            className="px-4 md:px-5 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-semibold font-poppins text-rich-black transition-all duration-200 hover:scale-105"
+            className="px-5 py-2 rounded-full text-sm font-semibold font-poppins text-rich-black transition-all duration-200 hover:scale-105"
             style={{ background: 'linear-gradient(135deg, #D4AF37, #C9A227)' }}
           >
             Get Free Mockup

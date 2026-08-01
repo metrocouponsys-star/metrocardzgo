@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useToastStore } from '../../store/toastStore';
 import { Modal } from '../../components/ui/Modal';
@@ -130,22 +130,19 @@ export default function SettingsPage() {
   ] as const;
 
   return (
-    <div className="px-4 md:px-10 py-8 max-w-3xl mx-auto space-y-6 animate-fade-in">
-      <div>
+    <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-3xl mx-auto space-y-xl animate-fade-in">
+      <div className="page-header">
         <h2 className="page-title">Settings</h2>
       </div>
 
-      {/* Tab bar — PREMIUM: gold underline */}
-      <div className="flex border-b border-[#E5E7EB] gap-1 overflow-x-auto hide-scrollbar">
+      {/* Tab bar */}
+      <div className="flex border-b border-outline-variant/30 gap-1">
         {TABS.map(t => (
           <button
             key={t.k}
             onClick={() => setTab(t.k)}
-            className={`flex items-center gap-1.5 px-4 py-3.5 text-sm font-semibold border-b-2 transition-all whitespace-nowrap
-              ${tab === t.k
-                ? 'text-[#B8941F] border-[#B8941F]'
-                : 'text-[#6B7280] border-transparent hover:text-[#111111] hover:bg-[#F9FAFB]'
-              }`}
+            className={`flex items-center gap-1.5 px-4 py-3 text-label-md font-label-md border-b-2 transition-all
+              ${tab === t.k ? 'text-primary border-primary' : 'text-on-surface-variant border-transparent hover:bg-surface-container'}`}
           >
             <span className="material-symbols-outlined text-[16px]">{t.icon}</span>
             {t.l}
@@ -155,22 +152,22 @@ export default function SettingsPage() {
 
       {/* Business Profile */}
       {tab === 'profile' && (
-        <div className="bg-white rounded-2xl shadow-card p-6 space-y-5">
+        <div className="card p-lg space-y-md">
 
           {/* Logo Upload */}
-          <div className="pb-5 border-b border-[#F3F4F6]">
+          <div className="pb-md border-b border-outline-variant/30">
             <label className="form-label mb-3">Business Logo</label>
             <div className="flex items-center gap-4">
               {/* Preview */}
-              <div className="w-20 h-20 rounded-2xl bg-[#F3F4F6] border-2 border-[#E5E7EB] flex items-center justify-center overflow-hidden flex-shrink-0">
+              <div className="w-20 h-20 rounded-2xl bg-surface-container border-2 border-outline-variant flex items-center justify-center overflow-hidden flex-shrink-0">
                 {merchant?.logo_url ? (
                   <img src={merchant.logo_url} alt="Logo" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="material-symbols-outlined text-[#9CA3AF] text-[32px]">store</span>
+                  <span className="material-symbols-outlined text-on-surface-variant text-[32px]">store</span>
                 )}
               </div>
               <div className="space-y-2">
-                <p className="text-xs text-[#6B7280]">
+                <p className="text-body-sm text-on-surface-variant">
                   {merchant?.logo_url ? 'Logo uploaded. Click to replace.' : 'Upload your business logo. PNG or JPG, auto-compressed.'}
                 </p>
                 <div className="flex gap-2">
@@ -178,7 +175,7 @@ export default function SettingsPage() {
                     type="button"
                     onClick={() => logoFileRef.current?.click()}
                     disabled={logoUploading}
-                    className="btn-outline flex items-center gap-2 !py-1.5 !px-3 text-xs"
+                    className="btn-outline flex items-center gap-2 !py-1.5 !px-3 text-label-sm"
                     style={{ minHeight: 'auto' }}
                   >
                     {logoUploading
@@ -198,7 +195,7 @@ export default function SettingsPage() {
                           addToast('success', 'Logo removed');
                         } catch { addToast('error', 'Failed to remove logo'); }
                       }}
-                      className="text-red-600 text-xs flex items-center gap-1 hover:underline"
+                      className="text-error text-label-sm flex items-center gap-1 hover:underline"
                     >
                       <span className="material-symbols-outlined text-[14px]">delete</span> Remove
                     </button>
@@ -238,7 +235,7 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
             <div>
               <label className="form-label">Business Name *</label>
               <input className="input-field" value={profileForm.business_name} onChange={e => setProfileForm(f => ({ ...f, business_name: e.target.value }))} />
@@ -260,7 +257,7 @@ export default function SettingsPage() {
             <div>
               <label className="form-label">Referral Bonus (Loyalty Points)</label>
               <input type="number" className="input-field" placeholder="50" value={profileForm.referral_bonus_points} onChange={e => setProfileForm(f => ({ ...f, referral_bonus_points: parseInt(e.target.value) || 0 }))} />
-              <p className="text-xs text-[#6B7280] mt-1">Points credited to a member when their referral code is successfully applied by a new customer.</p>
+              <p className="text-label-sm text-on-surface-variant mt-1">Points credited to a member when their referral code is successfully applied by a new customer.</p>
             </div>
           </div>
 
@@ -273,7 +270,7 @@ export default function SettingsPage() {
 
       {/* Staff */}
       {tab === 'staff' && (
-        <div className="space-y-5">
+        <div className="space-y-md">
           <div className="flex justify-end">
             <button onClick={() => setShowAddStaff(true)} className="btn-primary flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px]">person_add</span>
@@ -282,32 +279,32 @@ export default function SettingsPage() {
           </div>
           <div className="card divide-y divide-outline-variant/30">
             {loading ? (
-              Array.from({ length: 3 }).map((_, i) => <div key={i} className="p-4 h-16 animate-pulse bg-[#F3F4F6]" />)
+              Array.from({ length: 3 }).map((_, i) => <div key={i} className="p-4 h-16 animate-pulse bg-surface-container" />)
             ) : staffList.map(u => (
               <div key={u.id} className="flex items-center justify-between p-4 gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#F5EDD0] flex items-center justify-center text-[#7A5C12] font-bold">
+                  <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold">
                     {u.name.charAt(0)}
                   </div>
                   <div>
-                    <p className="text-base font-bold">{u.name} {u.id === user?.id && <span className="text-xs text-[#6B7280]">(You)</span>}</p>
-                    <p className="text-sm text-[#6B7280]">
+                    <p className="text-body-lg font-bold">{u.name} {u.id === user?.id && <span className="text-label-sm text-on-surface-variant">(You)</span>}</p>
+                    <p className="text-body-md text-on-surface-variant">
                       {u.phone}{u.email ? ` · ${u.email}` : ''}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${u.role === 'owner' ? 'bg-[#B8941F]-fixed text-white-fixed' : 'bg-[#F3F4F6] text-[#6B7280]'}`}>
+                  <span className={`text-label-sm px-2 py-0.5 rounded-full capitalize ${u.role === 'owner' ? 'bg-primary-fixed text-on-primary-fixed' : 'bg-surface-container text-on-surface-variant'}`}>
                     {u.role}
                   </span>
                   {u.id !== user?.id && (
                     <>
                       <button onClick={() => toggleRole(u.id, u.role)}
-                        className="btn-outline !py-1 !px-2.5 text-xs" style={{ minHeight: 'auto' }} title="Change privilege role">
+                        className="btn-outline !py-1 !px-2.5 text-label-sm" style={{ minHeight: 'auto' }} title="Change privilege role">
                         Toggle Role
                       </button>
                       <button onClick={() => removeStaff(u.id)}
-                        className="flex items-center justify-center w-8 h-8 rounded-full border border-red-200 text-red-600 hover:bg-red-600/10" title="Delete staff account">
+                        className="flex items-center justify-center w-8 h-8 rounded-full border border-error/30 text-error hover:bg-error/10" title="Delete staff account">
                         <span className="material-symbols-outlined text-[18px]">delete</span>
                       </button>
                     </>
@@ -321,20 +318,20 @@ export default function SettingsPage() {
 
       {/* Billing */}
       {tab === 'billing' && (
-        <div className="card p-6">
+        <div className="card p-lg">
           <div className="flex items-center gap-4 mb-6">
-            <div className="w-14 h-14 rounded-xl bg-[#B8941F] flex items-center justify-center text-white">
+            <div className="w-14 h-14 rounded-xl bg-primary flex items-center justify-center text-on-primary">
               <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>workspace_premium</span>
             </div>
             <div>
-              <h3 className="text-xl font-headline-md text-[#111111]">{merchant?.plan_tier} Plan</h3>
-              <p className="text-sm text-[#6B7280]">Active · Renews annually</p>
+              <h3 className="text-headline-md font-headline-md text-on-surface">{merchant?.plan_tier} Plan</h3>
+              <p className="text-body-md text-on-surface-variant">Active · Renews annually</p>
             </div>
           </div>
-          <div className="bg-[#F3F4F6] rounded-xl p-4 mb-4 space-y-2">
+          <div className="bg-surface-container rounded-xl p-4 mb-4 space-y-2">
             {['Up to 5,000 members', 'Unlimited redemptions', 'WhatsApp + SMS campaigns', 'Reports & analytics', 'Priority support'].map(f => (
-              <div key={f} className="flex items-center gap-2 text-sm">
-                <span className="material-symbols-outlined text-[#6B7280] text-[18px]">check_circle</span>
+              <div key={f} className="flex items-center gap-2 text-body-md">
+                <span className="material-symbols-outlined text-secondary text-[18px]">check_circle</span>
                 {f}
               </div>
             ))}
@@ -348,35 +345,35 @@ export default function SettingsPage() {
 
       {/* Integrations Tab */}
       {tab === 'integrations' && (
-        <div className="space-y-5">
+        <div className="space-y-md">
           {/* Google Wallet */}
-          <div className="card p-6 space-y-5">
+          <div className="card p-lg space-y-md">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
                 <span className="material-symbols-outlined text-blue-400 text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>add_to_wallet</span>
               </div>
               <div className="flex-1">
-                <h3 className="font-bold text-[#111111]">Google Wallet Integration</h3>
-                <p className="text-xs text-[#6B7280]">Let Android members save their membership to Google Wallet for offline access.</p>
+                <h3 className="font-bold text-on-surface">Google Wallet Integration</h3>
+                <p className="text-body-sm text-on-surface-variant">Let Android members save their membership to Google Wallet for offline access.</p>
               </div>
-              <span className={`text-xs px-2.5 py-1 rounded-full font-bold ${
-                walletClass ? 'bg-green-500/10 text-green-400' : 'bg-[#F3F4F6] text-[#6B7280]'
+              <span className={`text-label-sm px-2.5 py-1 rounded-full font-bold ${
+                walletClass ? 'bg-green-500/10 text-green-400' : 'bg-surface-container text-on-surface-variant'
               }`}>
                 {walletClass ? 'Configured' : 'Not Set Up'}
               </span>
             </div>
 
             {walletClass ? (
-              <div className="bg-[#F3F4F6] rounded-xl p-4 space-y-2">
+              <div className="bg-surface-container rounded-xl p-4 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-[#6B7280]">Google Class ID</span>
-                  <span className="font-mono text-xs text-[#111111]">{walletClass.google_class_id}</span>
+                  <span className="text-label-sm text-on-surface-variant">Google Class ID</span>
+                  <span className="font-mono text-body-sm text-on-surface">{walletClass.google_class_id}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-[#6B7280]">Background Color</span>
+                  <span className="text-label-sm text-on-surface-variant">Background Color</span>
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 rounded" style={{ background: walletClass.background_color || '#1A1A1A' }} />
-                    <span className="font-mono text-xs">{walletClass.background_color || '#1A1A1A'}</span>
+                    <span className="font-mono text-body-sm">{walletClass.background_color || '#1A1A1A'}</span>
                   </div>
                 </div>
                 <button
@@ -400,8 +397,8 @@ export default function SettingsPage() {
                 </button>
               </div>
             ) : (
-              <div className="bg-[#F3F4F6] rounded-xl p-4 space-y-3">
-                <p className="text-sm text-[#6B7280]">
+              <div className="bg-surface-container rounded-xl p-4 space-y-3">
+                <p className="text-body-md text-on-surface-variant">
                   Google Wallet requires a Google Pay & Wallet Console account and Service Account credentials. Contact Metro Cardz support to complete setup.
                 </p>
                 <div className="flex gap-3 flex-wrap">
@@ -419,30 +416,30 @@ export default function SettingsPage() {
           </div>
 
           {/* WhatsApp */}
-          <div className="card p-6">
+          <div className="card p-lg">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center">
                 <span className="material-symbols-outlined text-green-400 text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>chat</span>
               </div>
               <div className="flex-1">
-                <h3 className="font-bold text-[#111111]">WhatsApp Campaigns (AiSensy)</h3>
-                <p className="text-xs text-[#6B7280]">Bulk campaigns and auto-reminders via WhatsApp Business API.</p>
+                <h3 className="font-bold text-on-surface">WhatsApp Campaigns (AiSensy)</h3>
+                <p className="text-body-sm text-on-surface-variant">Bulk campaigns and auto-reminders via WhatsApp Business API.</p>
               </div>
-              <span className="text-xs px-2.5 py-1 rounded-full font-bold bg-green-500/10 text-green-400">Active</span>
+              <span className="text-label-sm px-2.5 py-1 rounded-full font-bold bg-green-500/10 text-green-400">Active</span>
             </div>
           </div>
 
           {/* SMS */}
-          <div className="card p-6">
+          <div className="card p-lg">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
                 <span className="material-symbols-outlined text-blue-400 text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>sms</span>
               </div>
               <div className="flex-1">
-                <h3 className="font-bold text-[#111111]">SMS OTP (Msg91)</h3>
-                <p className="text-xs text-[#6B7280]">One-time password delivery for merchant login via SMS.</p>
+                <h3 className="font-bold text-on-surface">SMS OTP (Msg91)</h3>
+                <p className="text-body-sm text-on-surface-variant">One-time password delivery for merchant login via SMS.</p>
               </div>
-              <span className="text-xs px-2.5 py-1 rounded-full font-bold bg-green-500/10 text-green-400">Active</span>
+              <span className="text-label-sm px-2.5 py-1 rounded-full font-bold bg-green-500/10 text-green-400">Active</span>
             </div>
           </div>
         </div>
@@ -454,16 +451,16 @@ export default function SettingsPage() {
           <div className="space-y-4">
             <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-xl text-center">
               <span className="material-symbols-outlined text-green-600 text-[36px] mb-1">check_circle</span>
-              <h4 className="font-bold text-[#111111] text-xl">Staff Added Successfully!</h4>
-              <p className="text-xs text-[#6B7280] mt-1">
+              <h4 className="font-bold text-on-surface text-headline-md">Staff Added Successfully!</h4>
+              <p className="text-body-sm text-on-surface-variant mt-1">
                 Share these login details with <strong>{createdStaffCreds.name}</strong>:
               </p>
-              <div className="bg-[#F3F4F6] rounded-lg p-3 mt-3 text-left font-mono text-xs space-y-1 border border-[#E5E7EB]/40">
-                <p><span className="text-[#6B7280]">Login URL:</span> <strong className="text-[#B8941F]">metrocardz.in/login</strong></p>
-                <p><span className="text-[#6B7280]">Mobile Number:</span> <strong className="text-[#111111]">{createdStaffCreds.phone}</strong></p>
-                <p><span className="text-[#6B7280]">Default Password:</span> <strong className="text-[#111111]">{createdStaffCreds.phone.replace(/\s/g, '')}</strong></p>
+              <div className="bg-surface-container rounded-lg p-3 mt-3 text-left font-mono text-body-sm space-y-1 border border-outline-variant/40">
+                <p><span className="text-on-surface-variant">Login URL:</span> <strong className="text-primary">metrocardz.in/login</strong></p>
+                <p><span className="text-on-surface-variant">Mobile Number:</span> <strong className="text-on-surface">{createdStaffCreds.phone}</strong></p>
+                <p><span className="text-on-surface-variant">Default Password:</span> <strong className="text-on-surface">{createdStaffCreds.phone.replace(/\s/g, '')}</strong></p>
               </div>
-              <p className="text-xs text-[#6B7280] mt-2">
+              <p className="text-label-sm text-on-surface-variant mt-2">
                 Staff can sign in on the login page using Mobile Number + Default Password.
               </p>
             </div>
@@ -490,7 +487,7 @@ export default function SettingsPage() {
             <div>
               <label className="form-label">Email Address (Optional)</label>
               <input type="email" className="input-field" placeholder="e.g. priya@metrocardz.in" value={staffForm.email} onChange={e => setStaffForm(f => ({ ...f, email: e.target.value }))} />
-              <p className="text-xs text-[#6B7280] mt-1">Allows the staff member to log in using their email address.</p>
+              <p className="text-label-sm text-on-surface-variant mt-1">Allows the staff member to log in using their email address.</p>
             </div>
             <div>
               <label className="form-label">Role</label>
@@ -512,5 +509,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-
-

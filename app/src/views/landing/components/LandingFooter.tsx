@@ -110,7 +110,7 @@ export const LandingFooter: React.FC = () => {
                 { label: 'About Us', href: '/about-us' },
                 { label: 'Company Info', href: '/company-info' },
                 { label: '✦ Check My Balance', href: '/check-membership' },
-                { label: 'Merchant Portal', href: '/login' },
+                { label: 'Merchant Login', href: '/login' },
               ].map(link => (
                 <li key={link.href}>
                   <a href={link.href} className="text-warm-grey hover:text-gold text-sm transition-colors duration-200">

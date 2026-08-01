@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { useToastStore } from '../../store/toastStore';
 import { ConfirmModal } from '../../components/ui/Modal';
 import type { CardInventoryItem, Merchant } from '../../types';
@@ -9,10 +9,10 @@ type FilterStatus = 'all' | 'unassigned' | 'merchant_allocated' | 'member_linked
 type WizardStep = 1 | 2 | 3 | 4;
 
 const STATUS_CONFIG: Record<string, { cls: string; label: string; icon: string }> = {
-  unassigned:         { cls: 'bg-[#F3F4F6] text-[#6B7280]',       label: 'Unassigned',  icon: 'inventory_2' },
-  merchant_allocated: { cls: 'bg-[#F5EDD0]/40 text-[#B8941F]',               label: 'Allocated',   icon: 'store' },
-  member_linked:      { cls: 'bg-[#F3F4F6] text-[#6B7280]',              label: 'Linked',      icon: 'person' },
-  deactivated:        { cls: 'bg-red-50 text-red-700',         label: 'Deactivated', icon: 'block' },
+  unassigned:         { cls: 'bg-surface-container text-on-surface-variant',       label: 'Unassigned',  icon: 'inventory_2' },
+  merchant_allocated: { cls: 'bg-primary-container/40 text-primary',               label: 'Allocated',   icon: 'store' },
+  member_linked:      { cls: 'bg-secondary-container text-secondary',              label: 'Linked',      icon: 'person' },
+  deactivated:        { cls: 'bg-error-container text-on-error-container',         label: 'Deactivated', icon: 'block' },
 };
 
 const PAGE_SIZE = 25;
@@ -66,20 +66,20 @@ function StepIndicator({ current, total }: { current: WizardStep; total: number 
       {steps.map((s, i) => (
         <React.Fragment key={s.n}>
           <div className="flex flex-col items-center gap-1 flex-1">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-all
-              ${current === s.n ? 'bg-[#B8941F] text-white border-[#B8941F] shadow-md scale-110' :
-                current > s.n ? 'bg-[#6B7280] text-white border-[#6B7280]' :
-                'bg-[#F3F4F6] text-[#6B7280] border-[#E5E7EB]'}`}>
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-label-md border-2 transition-all
+              ${current === s.n ? 'bg-primary text-on-primary border-primary shadow-md scale-110' :
+                current > s.n ? 'bg-secondary text-on-secondary border-secondary' :
+                'bg-surface-container text-on-surface-variant border-outline-variant'}`}>
               {current > s.n
                 ? <span className="material-symbols-outlined text-[18px]">check</span>
                 : <span className="material-symbols-outlined text-[18px]">{s.icon}</span>}
             </div>
-            <span className={`text-[10px] font-semibold whitespace-nowrap ${current === s.n ? 'text-[#B8941F]' : current > s.n ? 'text-[#6B7280]' : 'text-[#6B7280]'}`}>
+            <span className={`text-[10px] font-semibold whitespace-nowrap ${current === s.n ? 'text-primary' : current > s.n ? 'text-secondary' : 'text-on-surface-variant'}`}>
               {s.label}
             </span>
           </div>
           {i < steps.length - 1 && (
-            <div className={`h-0.5 flex-1 mx-1 rounded-full transition-all ${current > s.n + 1 || (current === s.n + 1) ? 'bg-[#6B7280]' : current > s.n ? 'bg-[#B8941F]' : 'bg-outline-variant/40'}`} />
+            <div className={`h-0.5 flex-1 mx-1 rounded-full transition-all ${current > s.n + 1 || (current === s.n + 1) ? 'bg-secondary' : current > s.n ? 'bg-primary' : 'bg-outline-variant/40'}`} />
           )}
         </React.Fragment>
       ))}
@@ -304,13 +304,13 @@ export default function CardInventoryPage() {
 
   // ──────────────────────────────────────────────────────────────────────────
   return (
-    <div className="px-4 md:px-10 py-8 max-w-7xl mx-auto space-y-8 animate-fade-in">
+    <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-7xl mx-auto space-y-xl animate-fade-in">
 
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div className="page-header mb-0">
           <h2 className="page-title flex items-center gap-2">
-            <span className="material-symbols-outlined text-[#B8941F]" style={{ fontVariationSettings: "'FILL' 1" }}>credit_card</span>
+            <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>credit_card</span>
             Card Inventory
           </h2>
           <p className="page-subtitle">Manage pre-printed membership cards. Use the wizard to add, QR-export, set design, and allocate to merchants in one flow.</p>
@@ -338,21 +338,21 @@ export default function CardInventoryPage() {
       </div>
 
       {/* Stats Row */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-md">
         {[
-          { label: 'Total Cards',  value: stats.total,       icon: 'credit_card',          cls: 'bg-[#F5EDD0]/20 text-[#B8941F]' },
-          { label: 'Unassigned',   value: stats.unassigned,  icon: 'inventory_2',           cls: 'bg-[#F3F4F6] text-[#6B7280]' },
-          { label: 'Allocated',    value: stats.allocated,   icon: 'store',                 cls: 'bg-[#B8941F]-fixed/20 text-[#B8941F]' },
-          { label: 'Linked',       value: stats.linked,      icon: 'person_check',          cls: 'bg-[#F3F4F6] text-[#6B7280]' },
-          { label: 'Deactivated',  value: stats.deactivated, icon: 'block',                 cls: 'bg-red-50 text-red-700' },
+          { label: 'Total Cards',  value: stats.total,       icon: 'credit_card',          cls: 'bg-primary-container/20 text-primary' },
+          { label: 'Unassigned',   value: stats.unassigned,  icon: 'inventory_2',           cls: 'bg-surface-container text-on-surface-variant' },
+          { label: 'Allocated',    value: stats.allocated,   icon: 'store',                 cls: 'bg-primary-fixed/20 text-primary' },
+          { label: 'Linked',       value: stats.linked,      icon: 'person_check',          cls: 'bg-secondary-container text-secondary' },
+          { label: 'Deactivated',  value: stats.deactivated, icon: 'block',                 cls: 'bg-error-container text-on-error-container' },
         ].map(s => (
-          <div key={s.label} className="card p-4 flex items-center gap-3">
+          <div key={s.label} className="card p-md flex items-center gap-3">
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${s.cls}`}>
               <span className="material-symbols-outlined text-[20px]">{s.icon}</span>
             </div>
             <div>
-              <p className="text-xl font-bold">{loading ? '—' : s.value.toLocaleString()}</p>
-              <p className="text-xs text-[#6B7280]">{s.label}</p>
+              <p className="text-headline-md font-bold">{loading ? '—' : s.value.toLocaleString()}</p>
+              <p className="text-label-sm text-on-surface-variant">{s.label}</p>
             </div>
           </div>
         ))}
@@ -360,19 +360,19 @@ export default function CardInventoryPage() {
 
       {/* ── 4-Step Wizard ─────────────────────────────────────────────────────── */}
       {showWizard && (
-        <div className="card p-6 space-y-6 animate-fade-in border-l-4 border-[#B8941F] relative">
+        <div className="card p-lg space-y-lg animate-fade-in border-l-4 border-primary relative">
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-xl font-bold flex items-center gap-2">
-                <span className="material-symbols-outlined text-[#B8941F]">auto_awesome</span>
+              <h3 className="text-headline-md font-bold flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary">auto_awesome</span>
                 New Card Batch Wizard
               </h3>
-              <p className="text-xs text-[#6B7280] mt-0.5">
+              <p className="text-body-sm text-on-surface-variant mt-0.5">
                 Follow the 4 steps to add cards, export QR sheet, set card design, and allocate to merchant.
               </p>
             </div>
-            <button onClick={closeWizard} className="text-[#6B7280] hover:text-[#111111] p-1 rounded-lg hover:bg-[#F3F4F6] transition-colors">
+            <button onClick={closeWizard} className="text-on-surface-variant hover:text-on-surface p-1 rounded-lg hover:bg-surface-container transition-colors">
               <span className="material-symbols-outlined">close</span>
             </button>
           </div>
@@ -382,20 +382,20 @@ export default function CardInventoryPage() {
 
           {/* ── Step 1: Add / Generate Cards ─────────────────────────────────── */}
           {wizardStep === 1 && (
-            <div className="space-y-5">
+            <div className="space-y-md">
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 rounded-full bg-[#B8941F] text-white flex items-center justify-center font-bold text-sm">1</div>
-                <h4 className="text-lg font-bold">Add Card Numbers to Inventory</h4>
+                <div className="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-label-md">1</div>
+                <h4 className="text-title-md font-bold">Add Card Numbers to Inventory</h4>
               </div>
 
               {/* Mode Toggle */}
-              <div className="flex bg-[#F3F4F6] rounded-xl p-1 gap-1 w-fit">
+              <div className="flex bg-surface-container rounded-xl p-1 gap-1 w-fit">
                 {([['paste', 'Paste / Upload Numbers', 'content_paste'], ['generate', 'Auto Generate', 'auto_awesome']] as const).map(([mode, label, icon]) => (
                   <button
                     key={mode}
                     onClick={() => setAddMode(mode)}
-                    className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm transition-all
-                      ${addMode === mode ? 'bg-[#B8941F] text-white shadow-sm' : 'text-[#6B7280] hover:bg-[#F3F4F6]-high'}`}
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-label-md transition-all
+                      ${addMode === mode ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-high'}`}
                   >
                     <span className="material-symbols-outlined text-[16px]">{icon}</span>
                     {label}
@@ -405,10 +405,10 @@ export default function CardInventoryPage() {
 
               {addMode === 'paste' ? (
                 <>
-                  <p className="text-sm text-[#6B7280]">
+                  <p className="text-body-md text-on-surface-variant">
                     Paste the 16-digit card numbers (one per line or comma-separated). Spaces within numbers are auto-handled.
                   </p>
-                  <div className="bg-[#F3F4F6] rounded-xl p-4 font-mono text-sm text-[#6B7280] leading-7">
+                  <div className="bg-surface-container rounded-xl p-4 font-mono text-sm text-on-surface-variant leading-7">
                     <strong>Example:</strong><br />
                     4821 6739 0012 3841<br />
                     4821 6739 0012 3842<br />
@@ -421,16 +421,16 @@ export default function CardInventoryPage() {
                     rows={8}
                     className="input-field font-mono text-sm resize-none"
                   />
-                  <p className="text-xs text-[#6B7280]">
+                  <p className="text-label-sm text-on-surface-variant">
                     {bulkInput.trim() ? `${bulkInput.split(/[\n,]+/).map(l => l.trim()).filter(Boolean).length} card(s) detected` : 'No cards entered'}
                   </p>
                 </>
               ) : (
                 <>
-                  <p className="text-sm text-[#6B7280]">
+                  <p className="text-body-md text-on-surface-variant">
                     Auto-generate sequential 16-digit card numbers. Set a prefix (first 12 digits) — the last 4 fill incrementally.
                   </p>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-md">
                     <div>
                       <label className="form-label">Card Number Prefix (12 digits) *</label>
                       <input
@@ -440,7 +440,7 @@ export default function CardInventoryPage() {
                         onChange={e => setGenPrefix(e.target.value)}
                         maxLength={14}
                       />
-                      <p className="text-xs text-[#6B7280] mt-1">Last 4 digits auto-filled</p>
+                      <p className="text-label-sm text-on-surface-variant mt-1">Last 4 digits auto-filled</p>
                     </div>
                     <div>
                       <label className="form-label">Starting Number *</label>
@@ -459,23 +459,23 @@ export default function CardInventoryPage() {
                         value={genCount}
                         onChange={e => setGenCount(Math.max(1, Number(e.target.value)))}
                       />
-                      <p className="text-xs text-[#6B7280] mt-1">e.g. 50 or 100</p>
+                      <p className="text-label-sm text-on-surface-variant mt-1">e.g. 50 or 100</p>
                     </div>
                   </div>
                   {/* Preview */}
-                  <div className="bg-[#F3F4F6] rounded-xl p-4">
-                    <p className="text-sm font-bold text-[#6B7280] mb-2">Preview (first 5 of {genCount}):</p>
+                  <div className="bg-surface-container rounded-xl p-4">
+                    <p className="text-label-md font-bold text-on-surface-variant mb-2">Preview (first 5 of {genCount}):</p>
                     <div className="space-y-1">
                       {generatedPreview.map((n, i) => (
-                        <p key={i} className="font-mono text-sm text-[#111111] tracking-widest">{n}</p>
+                        <p key={i} className="font-mono text-sm text-on-surface tracking-widest">{n}</p>
                       ))}
-                      {genCount > 5 && <p className="text-xs text-[#6B7280]">… and {genCount - 5} more</p>}
+                      {genCount > 5 && <p className="text-label-sm text-on-surface-variant">… and {genCount - 5} more</p>}
                     </div>
                   </div>
                 </>
               )}
 
-              <div className="flex justify-end gap-2 pt-2 border-t border-[#E5E7EB]/20">
+              <div className="flex justify-end gap-2 pt-2 border-t border-outline-variant/20">
                 <button onClick={closeWizard} className="btn-secondary">Cancel</button>
                 <button
                   onClick={handleStep1Submit}
@@ -491,19 +491,19 @@ export default function CardInventoryPage() {
 
           {/* ── Step 2: Download QR Excel ─────────────────────────────────────── */}
           {wizardStep === 2 && (
-            <div className="space-y-5">
+            <div className="space-y-md">
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 rounded-full bg-[#B8941F] text-white flex items-center justify-center font-bold text-sm">2</div>
-                <h4 className="text-lg font-bold">Download QR Code List</h4>
+                <div className="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-label-md">2</div>
+                <h4 className="text-title-md font-bold">Download QR Code List</h4>
               </div>
 
-              <div className="bg-[#F5EDD0]/10 border border-[#B8941F]/20 rounded-xl p-5 flex items-start gap-4">
-                <div className="w-14 h-14 rounded-xl bg-[#F5EDD0] flex items-center justify-center flex-shrink-0">
-                  <span className="material-symbols-outlined text-[#B8941F] text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>qr_code_2</span>
+              <div className="bg-primary-container/10 border border-primary/20 rounded-xl p-5 flex items-start gap-4">
+                <div className="w-14 h-14 rounded-xl bg-primary-container flex items-center justify-center flex-shrink-0">
+                  <span className="material-symbols-outlined text-primary text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>qr_code_2</span>
                 </div>
                 <div>
-                  <h5 className="font-bold text-[#111111] mb-1">{wizardCards.length} Cards Ready</h5>
-                  <p className="text-sm text-[#6B7280] mb-3">
+                  <h5 className="font-bold text-on-surface mb-1">{wizardCards.length} Cards Ready</h5>
+                  <p className="text-body-md text-on-surface-variant mb-3">
                     Download the QR code list for this batch. Each row contains the card number and the encoded QR value 
                     that gets printed on the physical card. Send this to your card printer.
                   </p>
@@ -514,19 +514,19 @@ export default function CardInventoryPage() {
                 </div>
               </div>
 
-              <div className="bg-[#F3F4F6] rounded-xl p-4 space-y-2">
-                <p className="text-sm font-bold text-[#6B7280]">Batch Preview (first 5):</p>
+              <div className="bg-surface-container rounded-xl p-4 space-y-2">
+                <p className="text-label-md font-bold text-on-surface-variant">Batch Preview (first 5):</p>
                 {wizardCards.slice(0, 5).map((num, i) => (
                   <div key={i} className="flex items-center gap-3">
-                    <span className="w-6 h-6 rounded-full bg-[#F3F4F6]-high flex items-center justify-center text-[10px] text-[#6B7280] font-bold">{i+1}</span>
-                    <span className="font-mono text-sm text-[#111111] tracking-widest">{num}</span>
-                    <span className="text-[10px] text-[#6B7280]">→ QR: METROCARDZ:{num.replace(/\s/g, '')}</span>
+                    <span className="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center text-label-xs text-on-surface-variant font-bold">{i+1}</span>
+                    <span className="font-mono text-sm text-on-surface tracking-widest">{num}</span>
+                    <span className="text-label-xs text-on-surface-variant">→ QR: METROCARDZ:{num.replace(/\s/g, '')}</span>
                   </div>
                 ))}
-                {wizardCards.length > 5 && <p className="text-xs text-[#6B7280]">… and {wizardCards.length - 5} more</p>}
+                {wizardCards.length > 5 && <p className="text-label-sm text-on-surface-variant">… and {wizardCards.length - 5} more</p>}
               </div>
 
-              <div className="flex justify-between gap-2 pt-2 border-t border-[#E5E7EB]/20">
+              <div className="flex justify-between gap-2 pt-2 border-t border-outline-variant/20">
                 <button onClick={() => setWizardStep(1)} className="btn-secondary flex items-center gap-1">
                   <span className="material-symbols-outlined text-[16px]">arrow_back</span> Back
                 </button>
@@ -545,12 +545,12 @@ export default function CardInventoryPage() {
 
           {/* ── Step 3: Upload Card Image ────────────────────────────────────── */}
           {wizardStep === 3 && (
-            <div className="space-y-5">
+            <div className="space-y-md">
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 rounded-full bg-[#B8941F] text-white flex items-center justify-center font-bold text-sm">3</div>
-                <h4 className="text-lg font-bold">Upload Card Design Image <span className="text-[#6B7280] font-normal text-xs">(Optional)</span></h4>
+                <div className="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-label-md">3</div>
+                <h4 className="text-title-md font-bold">Upload Card Design Image <span className="text-on-surface-variant font-normal text-label-sm">(Optional)</span></h4>
               </div>
-              <p className="text-sm text-[#6B7280]">
+              <p className="text-body-md text-on-surface-variant">
                 Upload the physical card design artwork. This image will be shown on the member's profile card. 
                 Image is automatically compressed.
               </p>
@@ -565,29 +565,29 @@ export default function CardInventoryPage() {
                   if (file && file.type.startsWith('image/')) handleCardImageUpload(file);
                 }}
                 className={`border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all
-                  ${cardImageDataUrl ? 'border-[#6B7280]/40 bg-[#F3F4F6]/10' : 'border-[#E5E7EB] hover:border-[#B8941F] hover:bg-[#F5EDD0]/5'}`}
+                  ${cardImageDataUrl ? 'border-secondary/40 bg-secondary-container/10' : 'border-outline-variant hover:border-primary hover:bg-primary-container/5'}`}
               >
                 {uploadingImage ? (
                   <>
-                    <span className="material-symbols-outlined animate-spin text-[#B8941F] text-[40px]">progress_activity</span>
-                    <p className="text-sm text-[#6B7280]">Compressing image…</p>
+                    <span className="material-symbols-outlined animate-spin text-primary text-[40px]">progress_activity</span>
+                    <p className="text-body-md text-on-surface-variant">Compressing image…</p>
                   </>
                 ) : cardImageDataUrl ? (
                   <>
-                    <img src={cardImageDataUrl} alt="Card design preview" className="max-h-48 rounded-xl shadow-card object-contain" />
-                    <p className="text-xs text-[#6B7280] font-medium flex items-center gap-1">
+                    <img src={cardImageDataUrl} alt="Card design preview" className="max-h-48 rounded-xl shadow-elevated object-contain" />
+                    <p className="text-label-sm text-secondary font-medium flex items-center gap-1">
                       <span className="material-symbols-outlined text-[16px]">check_circle</span>
                       Card design uploaded — click to change
                     </p>
                   </>
                 ) : (
                   <>
-                    <div className="w-16 h-16 rounded-2xl bg-[#F5EDD0]/30 flex items-center justify-center">
-                      <span className="material-symbols-outlined text-[#B8941F] text-[32px]">add_photo_alternate</span>
+                    <div className="w-16 h-16 rounded-2xl bg-primary-container/30 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-primary text-[32px]">add_photo_alternate</span>
                     </div>
                     <div className="text-center">
-                      <p className="text-sm font-bold text-[#111111]">Click to upload or drag & drop</p>
-                      <p className="text-xs text-[#6B7280]">PNG, JPG, WEBP — auto-compressed to ~100KB</p>
+                      <p className="text-body-md font-bold text-on-surface">Click to upload or drag & drop</p>
+                      <p className="text-label-sm text-on-surface-variant">PNG, JPG, WEBP — auto-compressed to ~100KB</p>
                     </div>
                     <button
                       type="button"
@@ -611,14 +611,14 @@ export default function CardInventoryPage() {
               {cardImageDataUrl && (
                 <button
                   onClick={() => { setCardImageDataUrl(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}
-                  className="text-red-600 text-xs flex items-center gap-1 hover:underline"
+                  className="text-error text-label-sm flex items-center gap-1 hover:underline"
                 >
                   <span className="material-symbols-outlined text-[14px]">delete</span>
                   Remove image
                 </button>
               )}
 
-              <div className="flex justify-between gap-2 pt-2 border-t border-[#E5E7EB]/20">
+              <div className="flex justify-between gap-2 pt-2 border-t border-outline-variant/20">
                 <button onClick={() => setWizardStep(2)} className="btn-secondary flex items-center gap-1">
                   <span className="material-symbols-outlined text-[16px]">arrow_back</span> Back
                 </button>
@@ -632,16 +632,16 @@ export default function CardInventoryPage() {
 
           {/* ── Step 4: Allocate to Merchant ─────────────────────────────────── */}
           {wizardStep === 4 && (
-            <div className="space-y-5">
+            <div className="space-y-md">
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 rounded-full bg-[#B8941F] text-white flex items-center justify-center font-bold text-sm">4</div>
-                <h4 className="text-lg font-bold">Allocate Cards to Merchant</h4>
+                <div className="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-label-md">4</div>
+                <h4 className="text-title-md font-bold">Allocate Cards to Merchant</h4>
               </div>
-              <p className="text-sm text-[#6B7280]">
+              <p className="text-body-md text-on-surface-variant">
                 Select a merchant and how many unassigned cards to give them. Cards are pulled from the global pool in order.
               </p>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
                 <div>
                   <label className="form-label">Merchant *</label>
                   <select className="input-field" value={allocateMerchant} onChange={e => setAllocateMerchant(e.target.value)}>
@@ -659,40 +659,40 @@ export default function CardInventoryPage() {
                     onChange={e => setAllocateQty(Number(e.target.value))}
                     className="input-field"
                   />
-                  <p className="text-xs text-[#6B7280] mt-1">{stats.unassigned} unassigned cards available in pool</p>
+                  <p className="text-label-sm text-on-surface-variant mt-1">{stats.unassigned} unassigned cards available in pool</p>
                 </div>
               </div>
 
               {allocateMerchant && allocateQty > 0 && (
-                <div className="rounded-xl p-5 space-y-3 bg-[#F5EDD0]/10 border border-[#B8941F]/20">
-                  <h5 className="font-bold text-[#111111] text-sm">Allocation Summary</h5>
+                <div className="rounded-xl p-5 space-y-3 bg-primary-container/10 border border-primary/20">
+                  <h5 className="font-bold text-on-surface text-label-md">Allocation Summary</h5>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-white rounded-lg p-3 text-center">
-                      <p className="text-xl font-bold text-[#B8941F]">{Math.min(allocateQty, stats.unassigned)}</p>
-                      <p className="text-xs text-[#6B7280]">Cards to allocate</p>
+                    <div className="bg-surface rounded-lg p-3 text-center">
+                      <p className="text-headline-md font-bold text-primary">{Math.min(allocateQty, stats.unassigned)}</p>
+                      <p className="text-label-sm text-on-surface-variant">Cards to allocate</p>
                     </div>
-                    <div className="bg-white rounded-lg p-3 text-center">
-                      <p className="text-xl font-bold text-[#6B7280]">{merchants.find(m => m.id === allocateMerchant)?.business_name}</p>
-                      <p className="text-xs text-[#6B7280]">Merchant</p>
+                    <div className="bg-surface rounded-lg p-3 text-center">
+                      <p className="text-headline-md font-bold text-secondary">{merchants.find(m => m.id === allocateMerchant)?.business_name}</p>
+                      <p className="text-label-sm text-on-surface-variant">Merchant</p>
                     </div>
                   </div>
                   {cardImageDataUrl && (
-                    <div className="flex items-center gap-3 bg-white rounded-lg p-3">
-                      <img src={cardImageDataUrl} alt="Card design" className="w-16 h-10 object-cover rounded-lg border border-[#E5E7EB]" />
+                    <div className="flex items-center gap-3 bg-surface rounded-lg p-3">
+                      <img src={cardImageDataUrl} alt="Card design" className="w-16 h-10 object-cover rounded-lg border border-outline-variant" />
                       <div>
-                        <p className="text-sm font-bold text-[#111111]">Card design included</p>
-                        <p className="text-[10px] text-[#6B7280]">Will be shown on member profiles for this merchant</p>
+                        <p className="text-label-md font-bold text-on-surface">Card design included</p>
+                        <p className="text-label-xs text-on-surface-variant">Will be shown on member profiles for this merchant</p>
                       </div>
-                      <span className="material-symbols-outlined text-[#6B7280] ml-auto">check_circle</span>
+                      <span className="material-symbols-outlined text-secondary ml-auto">check_circle</span>
                     </div>
                   )}
-                  <p className="text-xs text-[#6B7280]">
+                  <p className="text-body-sm text-on-surface-variant">
                     The merchant's staff can then link each card to a member when they visit.
                   </p>
                 </div>
               )}
 
-              <div className="flex justify-between gap-2 pt-2 border-t border-[#E5E7EB]/20">
+              <div className="flex justify-between gap-2 pt-2 border-t border-outline-variant/20">
                 <button onClick={() => setWizardStep(3)} className="btn-secondary flex items-center gap-1">
                   <span className="material-symbols-outlined text-[16px]">arrow_back</span> Back
                 </button>
@@ -712,18 +712,18 @@ export default function CardInventoryPage() {
 
       {/* ── Filters ─────────────────────────────────────────────────────────── */}
       <div className="flex flex-wrap gap-3 items-center">
-        <div className="flex bg-[#F3F4F6] rounded-xl p-1 gap-1 flex-wrap">
+        <div className="flex bg-surface-container rounded-xl p-1 gap-1 flex-wrap">
           {(['all', 'unassigned', 'merchant_allocated', 'member_linked', 'deactivated'] as FilterStatus[]).map(s => (
             <button
               key={s}
               onClick={() => setFilterStatus(s)}
-              className={`px-3 py-1.5 rounded-lg text-sm transition-all whitespace-nowrap
-                ${filterStatus === s ? 'bg-[#B8941F] text-white shadow-sm' : 'text-[#6B7280] hover:bg-[#F3F4F6]-high'}`}
+              className={`px-3 py-1.5 rounded-lg text-label-md transition-all whitespace-nowrap
+                ${filterStatus === s ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-high'}`}
             >
               {FILTER_LABELS[s]}
               {s !== 'all' && (
                 <span className={`ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full font-bold
-                  ${filterStatus === s ? 'bg-white/20 text-white' : 'bg-[#F3F4F6]-high text-[#6B7280]'}`}>
+                  ${filterStatus === s ? 'bg-white/20 text-white' : 'bg-surface-container-high text-on-surface-variant'}`}>
                   {s === 'unassigned' ? stats.unassigned : s === 'merchant_allocated' ? stats.allocated : s === 'member_linked' ? stats.linked : stats.deactivated}
                 </span>
               )}
@@ -735,7 +735,7 @@ export default function CardInventoryPage() {
           {merchants.map(m => <option key={m.id} value={m.id}>{m.business_name}</option>)}
         </select>
         <div className="flex-1 relative min-w-[200px]">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#6B7280] text-[18px]">search</span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-[18px]">search</span>
           <input
             className="input-field pl-10 w-full"
             placeholder="Search card number, member, merchant..."
@@ -743,7 +743,7 @@ export default function CardInventoryPage() {
             onChange={e => setSearchQuery(e.target.value)}
           />
           {searchQuery && (
-            <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B7280] hover:text-[#111111]">
+            <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface">
               <span className="material-symbols-outlined text-[18px]">close</span>
             </button>
           )}
@@ -754,10 +754,10 @@ export default function CardInventoryPage() {
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-[#F9FAFB]">
+            <thead className="bg-surface-container-low">
               <tr>
                 {['Card Number', 'Status', 'Merchant', 'Linked Member', 'Date', 'Actions'].map(h => (
-                  <th key={h} className="text-left px-4 py-3 text-sm font-semibold text-[#6B7280] whitespace-nowrap">{h}</th>
+                  <th key={h} className="text-left px-4 py-3 text-label-md font-label-md text-on-surface-variant whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -765,15 +765,15 @@ export default function CardInventoryPage() {
               {loading ? (
                 Array.from({ length: 8 }).map((_, i) => (
                   <tr key={i}>{Array.from({ length: 6 }).map((_, j) => (
-                    <td key={j} className="px-4 py-3"><div className="h-4 bg-[#F3F4F6] rounded animate-pulse" /></td>
+                    <td key={j} className="px-4 py-3"><div className="h-4 bg-surface-container rounded animate-pulse" /></td>
                   ))}</tr>
                 ))
               ) : paginated.length === 0 ? (
-                <tr><td colSpan={6} className="px-4 py-16 text-center text-[#6B7280]">
+                <tr><td colSpan={6} className="px-4 py-16 text-center text-on-surface-variant">
                   <span className="material-symbols-outlined text-[48px] block mb-2 opacity-40">credit_card_off</span>
-                  <p className="text-sm">No cards match your filters</p>
+                  <p className="text-body-md">No cards match your filters</p>
                   {searchQuery && (
-                    <button onClick={() => setSearchQuery('')} className="mt-2 text-[#B8941F] text-sm hover:underline">Clear search</button>
+                    <button onClick={() => setSearchQuery('')} className="mt-2 text-primary text-label-md hover:underline">Clear search</button>
                   )}
                 </td></tr>
               ) : paginated.map(card => {
@@ -781,37 +781,37 @@ export default function CardInventoryPage() {
                 // Get merchant card design for allocated merchant
                 const cardMerchant = merchants.find(m => m.id === card.allocated_merchant_id);
                 return (
-                  <tr key={card.id} className="hover:bg-[#F9FAFB] transition-colors group">
+                  <tr key={card.id} className="hover:bg-surface-container-low transition-colors group">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         {cardMerchant?.card_design_url ? (
-                          <img src={cardMerchant.card_design_url} alt="Card" className="w-10 h-7 rounded object-cover border border-[#E5E7EB] flex-shrink-0" />
+                          <img src={cardMerchant.card_design_url} alt="Card" className="w-10 h-7 rounded object-cover border border-outline-variant flex-shrink-0" />
                         ) : (
-                          <div className="w-8 h-8 rounded-lg bg-[#F5EDD0]/20 flex items-center justify-center flex-shrink-0">
-                            <span className="material-symbols-outlined text-[#B8941F] text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>credit_card</span>
+                          <div className="w-8 h-8 rounded-lg bg-primary-container/20 flex items-center justify-center flex-shrink-0">
+                            <span className="material-symbols-outlined text-primary text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>credit_card</span>
                           </div>
                         )}
-                        <span className="font-mono font-bold text-sm tracking-widest">{card.card_number}</span>
+                        <span className="font-mono font-bold text-body-md tracking-widest">{card.card_number}</span>
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-medium ${cfg.cls}`}>
+                      <span className={`inline-flex items-center gap-1 text-label-sm px-2.5 py-1 rounded-full font-medium ${cfg.cls}`}>
                         <span className="material-symbols-outlined text-[13px]">{cfg.icon}</span>
                         {cfg.label}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-[#6B7280]">
+                    <td className="px-4 py-3 text-body-md text-on-surface-variant">
                       {card.allocated_merchant_name || <span className="italic text-outline">—</span>}
                     </td>
                     <td className="px-4 py-3">
                       {card.linked_member_name ? (
                         <div>
-                          <p className="text-sm font-bold">{card.linked_member_name}</p>
-                          <p className="text-xs text-[#6B7280]">{card.linked_member_phone}</p>
+                          <p className="text-body-md font-bold">{card.linked_member_name}</p>
+                          <p className="text-label-sm text-on-surface-variant">{card.linked_member_phone}</p>
                         </div>
-                      ) : <span className="italic text-outline text-sm">—</span>}
+                      ) : <span className="italic text-outline text-body-md">—</span>}
                     </td>
-                    <td className="px-4 py-3 text-xs text-[#6B7280] whitespace-nowrap">
+                    <td className="px-4 py-3 text-label-sm text-on-surface-variant whitespace-nowrap">
                       {card.linked_at
                         ? <>Linked<br />{format(new Date(card.linked_at), 'dd MMM yy')}</>
                         : card.allocated_at
@@ -823,7 +823,7 @@ export default function CardInventoryPage() {
                         {card.status === 'merchant_allocated' && (
                           <button
                             onClick={() => setRevokeTarget(card)}
-                            className="text-xs text-[#B8941F] hover:bg-[#F5EDD0]/20 px-2 py-1 rounded-lg transition-colors whitespace-nowrap"
+                            className="text-label-sm text-primary hover:bg-primary-container/20 px-2 py-1 rounded-lg transition-colors whitespace-nowrap"
                           >
                             Revoke
                           </button>
@@ -831,7 +831,7 @@ export default function CardInventoryPage() {
                         {card.status !== 'deactivated' && (
                           <button
                             onClick={() => setDeactivateTarget(card)}
-                            className="text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition-colors"
+                            className="text-error hover:bg-error-container p-1.5 rounded-lg transition-colors"
                             title="Deactivate card"
                           >
                             <span className="material-symbols-outlined text-[16px]">block</span>
@@ -847,8 +847,8 @@ export default function CardInventoryPage() {
         </div>
 
         {/* Pagination Footer */}
-        <div className="px-4 py-3 border-t border-[#E5E7EB]/20 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-xs text-[#6B7280]">
+        <div className="px-4 py-3 border-t border-outline-variant/20 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-label-sm text-on-surface-variant">
             Showing <strong>{filtered.length === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filtered.length)}</strong> of <strong>{filtered.length.toLocaleString()}</strong> cards
             {filterStatus !== 'all' || filterMerchant || searchQuery ? ` (filtered from ${cards.length.toLocaleString()} total)` : ''}
           </p>
@@ -857,7 +857,7 @@ export default function CardInventoryPage() {
               <button
                 disabled={safePage === 1}
                 onClick={() => setPage(1)}
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-[#6B7280] hover:bg-[#F3F4F6] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 title="First page"
               >
                 <span className="material-symbols-outlined text-[18px]">first_page</span>
@@ -865,7 +865,7 @@ export default function CardInventoryPage() {
               <button
                 disabled={safePage === 1}
                 onClick={() => setPage(p => Math.max(1, p - 1))}
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-[#6B7280] hover:bg-[#F3F4F6] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <span className="material-symbols-outlined text-[18px]">chevron_left</span>
               </button>
@@ -877,13 +877,13 @@ export default function CardInventoryPage() {
                   return acc;
                 }, [])
                 .map((p, i) => p === '...' ? (
-                  <span key={`ellipsis-${i}`} className="w-8 text-center text-[#6B7280] text-xs">…</span>
+                  <span key={`ellipsis-${i}`} className="w-8 text-center text-on-surface-variant text-label-sm">…</span>
                 ) : (
                   <button
                     key={p}
                     onClick={() => setPage(p as number)}
-                    className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm transition-colors
-                      ${safePage === p ? 'bg-[#B8941F] text-white font-bold' : 'text-[#6B7280] hover:bg-[#F3F4F6]'}`}
+                    className={`w-8 h-8 flex items-center justify-center rounded-lg text-label-md transition-colors
+                      ${safePage === p ? 'bg-primary text-on-primary font-bold' : 'text-on-surface-variant hover:bg-surface-container'}`}
                   >
                     {p}
                   </button>
@@ -891,14 +891,14 @@ export default function CardInventoryPage() {
               <button
                 disabled={safePage === totalPages}
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-[#6B7280] hover:bg-[#F3F4F6] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <span className="material-symbols-outlined text-[18px]">chevron_right</span>
               </button>
               <button
                 disabled={safePage === totalPages}
                 onClick={() => setPage(totalPages)}
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-[#6B7280] hover:bg-[#F3F4F6] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 title="Last page"
               >
                 <span className="material-symbols-outlined text-[18px]">last_page</span>
@@ -919,8 +919,8 @@ export default function CardInventoryPage() {
         confirmLabel="Deactivate"
         description={
           <div className="space-y-3">
-            <div className="bg-[#F3F4F6] rounded-xl p-4 font-mono text-sm tracking-widest font-bold text-center">{deactivateTarget?.card_number}</div>
-            <p className="text-sm text-[#6B7280]">This card will be permanently deactivated. The member's mobile number will still work for redemption.</p>
+            <div className="bg-surface-container rounded-xl p-4 font-mono text-body-md tracking-widest font-bold text-center">{deactivateTarget?.card_number}</div>
+            <p className="text-body-md text-on-surface-variant">This card will be permanently deactivated. The member's mobile number will still work for redemption.</p>
           </div>
         }
       />
@@ -939,5 +939,3 @@ export default function CardInventoryPage() {
     </div>
   );
 }
-
-

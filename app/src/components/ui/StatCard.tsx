@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 interface StatCardProps {
   label: string;
@@ -35,7 +35,7 @@ function useCountUp(target: number, duration = 800) {
   return current;
 }
 
-export function StatCard({ label, value, trend, trendUp, icon, iconColor = 'text-[#B8941F]', className = '', onClick }: StatCardProps) {
+export function StatCard({ label, value, trend, trendUp, icon, iconColor = 'text-secondary', className = '', onClick }: StatCardProps) {
   // Extract numeric value if value is a string with a number prefix
   const numericMatch = typeof value === 'string' ? value.match(/^([\d.,]+)(.*)$/) : null;
   const rawNumber = typeof value === 'number' ? value : numericMatch ? parseFloat(numericMatch[1].replace(/,/g, '')) : null;
@@ -53,42 +53,33 @@ export function StatCard({ label, value, trend, trendUp, icon, iconColor = 'text
     <div
       onClick={onClick}
       className={`stat-card animate-slide-up group transition-all ${
-        onClick ? 'cursor-pointer hover:shadow-card-hover hover:-translate-y-0.5 active:scale-[0.98]' : 'hover:-translate-y-0.5'
+        onClick ? 'cursor-pointer hover:shadow-lg hover:border-primary/40 hover:-translate-y-0.5 active:scale-[0.98]' : 'hover:shadow-md hover:-translate-y-0.5'
       } ${className}`}
     >
-      {/* Label row with optional icon */}
-      <div className="flex items-start justify-between gap-2 mb-1">
-        <p className="text-xs font-semibold tracking-widest uppercase text-[#9CA3AF] leading-tight">
+      <div className="flex items-start justify-between">
+        <p className="text-label-md font-label-md text-on-surface-variant leading-tight flex items-center gap-1">
           {label}
           {onClick && (
-            <span className="material-symbols-outlined text-[12px] text-[#B8941F] opacity-0 group-hover:opacity-100 transition-opacity ml-1">
+            <span className="material-symbols-outlined text-[14px] text-primary opacity-0 group-hover:opacity-100 transition-opacity">
               arrow_forward
             </span>
           )}
         </p>
         {icon && (
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-primary/10 group-hover:scale-110 transition-transform shrink-0">
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center bg-surface-container group-hover:scale-110 transition-transform ${iconColor.replace('text-', 'bg-').replace(/text-\w+/, '')} `}>
             <span className={`material-symbols-outlined text-[18px] ${iconColor}`}>{icon}</span>
           </div>
         )}
       </div>
-
-      {/* ── The number — DOMINANT visual element ──────────────────────────── */}
-      <p className="text-[40px] leading-[48px] font-extrabold text-[#111111] tabular-nums tracking-tight">
-        {displayValue}
-      </p>
-
-      {/* Trend badge — soft-tint pill */}
+      <p className="text-headline-lg-mobile font-headline-lg text-primary tabular-nums">{displayValue}</p>
       {trend && (
-        <div className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full w-fit mt-1
+        <div className={`inline-flex items-center gap-1 text-label-sm px-2 py-0.5 rounded-full w-fit
           ${trendUp === false
-            ? 'text-red-600 bg-red-50'
-            : trendUp === true
-              ? 'text-emerald-700 bg-emerald-50'
-              : 'text-[#6B7280] bg-[#F3F4F6]'
+            ? 'text-error bg-error/10'
+            : 'text-secondary bg-secondary/10'
           }`}>
-          <span className="material-symbols-outlined text-[12px]">
-            {trendUp === false ? 'trending_down' : trendUp === true ? 'trending_up' : 'info'}
+          <span className="material-symbols-outlined text-[13px]">
+            {trendUp === false ? 'trending_down' : 'trending_up'}
           </span>
           <span>{trend}</span>
         </div>
@@ -96,4 +87,3 @@ export function StatCard({ label, value, trend, trendUp, icon, iconColor = 'text
     </div>
   );
 }
-

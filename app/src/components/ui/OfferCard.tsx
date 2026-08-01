@@ -1,36 +1,34 @@
-﻿import React from 'react';
+import React from 'react';
 import type { OfferTemplate, MemberOfferState } from '../../types';
 
 const OFFER_ICONS: Record<string, string> = {
-  percent_off:       'percent',
-  free_service:      'spa',
-  wallet_points:     'account_balance_wallet',
-  referral:          'people',
-  birthday:          'cake',
+  percent_off: 'percent',
+  free_service: 'spa',
+  wallet_points: 'account_balance_wallet',
+  referral: 'people',
+  birthday: 'cake',
   points_redemption: 'stars',
-  visit_milestone:   'workspace_premium',
+  visit_milestone: 'workspace_premium',
 };
 
-// ── PREMIUM soft-tint icon backgrounds ─────────────────────────────────────
-const OFFER_ICON_COLORS: Record<string, string> = {
-  percent_off:       'bg-emerald-50 text-emerald-600',
-  free_service:      'bg-sky-50 text-sky-600',
-  wallet_points:     'bg-[#FBF7EA] text-[#B8941F]',
-  referral:          'bg-[#F3F4F6] text-[#6B7280]',
-  birthday:          'bg-pink-50 text-pink-600',
-  points_redemption: 'bg-amber-50 text-amber-600',
-  visit_milestone:   'bg-violet-50 text-violet-600',
+const OFFER_COLORS: Record<string, string> = {
+  percent_off: 'bg-secondary-container/20 text-secondary',
+  free_service: 'bg-primary-container/10 text-primary',
+  wallet_points: 'bg-tertiary-fixed/30 text-tertiary-container',
+  referral: 'bg-surface-container text-on-surface-variant',
+  birthday: 'bg-tertiary-fixed/40 text-on-tertiary-fixed-variant',
+  points_redemption: 'bg-amber-500/20 text-amber-600',
+  visit_milestone: 'bg-emerald-500/20 text-emerald-600',
 };
 
-// ── PREMIUM soft-tint type badges ──────────────────────────────────────────
 const OFFER_BADGE: Record<string, { label: string; cls: string }> = {
-  percent_off:       { label: 'DISCOUNT',      cls: 'bg-emerald-50 text-emerald-700' },
-  free_service:      { label: 'REWARD',        cls: 'bg-sky-50 text-sky-700' },
-  wallet_points:     { label: 'POINTS',        cls: 'bg-[#FBF7EA] text-[#9A7A18]' },
-  referral:          { label: 'REFERRAL',      cls: 'bg-[#F3F4F6] text-[#6B7280]' },
-  birthday:          { label: 'BIRTHDAY',      cls: 'bg-pink-50 text-pink-700' },
-  points_redemption: { label: 'POINTS REDEEM', cls: 'bg-amber-50 text-amber-700' },
-  visit_milestone:   { label: 'MILESTONE',     cls: 'bg-violet-50 text-violet-700' },
+  percent_off: { label: 'DISCOUNT', cls: 'bg-secondary-fixed text-on-secondary-fixed' },
+  free_service: { label: 'REWARD', cls: 'bg-tertiary-fixed text-on-tertiary-fixed' },
+  wallet_points: { label: 'POINTS', cls: 'bg-primary-fixed text-on-primary-fixed' },
+  referral: { label: 'REFERRAL', cls: 'bg-surface-container-high text-on-surface-variant' },
+  birthday: { label: 'BIRTHDAY', cls: 'bg-tertiary-fixed text-on-tertiary-fixed' },
+  points_redemption: { label: 'POINTS REDEEM', cls: 'bg-amber-100 text-amber-800' },
+  visit_milestone: { label: 'MILESTONE', cls: 'bg-emerald-100 text-emerald-800' },
 };
 
 interface OfferCardProps {
@@ -42,58 +40,49 @@ interface OfferCardProps {
 
 export function OfferCard({ offer, offerState, onRedeem, readOnly }: OfferCardProps) {
   const icon = OFFER_ICONS[offer.offer_type] || 'star';
-  const iconColor = OFFER_ICON_COLORS[offer.offer_type] || 'bg-[#FBF7EA] text-[#B8941F]';
-  const badge = OFFER_BADGE[offer.offer_type] || { label: 'OFFER', cls: 'bg-[#FBF7EA] text-[#9A7A18]' };
+  const iconColor = OFFER_COLORS[offer.offer_type] || 'bg-primary-container/10 text-primary';
+  const badge = OFFER_BADGE[offer.offer_type] || { label: 'OFFER', cls: 'bg-primary-fixed text-on-primary-fixed' };
 
   const isExhausted = offerState?.status === 'exhausted' || (offerState?.remaining_qty !== undefined && offerState.remaining_qty !== null && offerState.remaining_qty <= 0);
   const hasQty = offerState?.remaining_qty !== null && offerState?.remaining_qty !== undefined;
 
   return (
-    <div className={`bg-white rounded-2xl p-5 flex flex-col justify-between group transition-all
-      ${isExhausted
-        ? 'opacity-60 shadow-card'
-        : 'shadow-card hover:shadow-card-hover hover:-translate-y-0.5'
-      }
+    <div className={`bg-surface-container-lowest rounded-xl p-md shadow-sm border border-outline-variant/30 flex flex-col justify-between group transition-all
+      ${isExhausted ? 'opacity-60' : 'hover:shadow-md'}
     `}>
-      {/* Header row */}
-      <div className="flex justify-between items-start mb-4">
-        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${iconColor}`}>
-          <span className="material-symbols-outlined text-[26px]">{icon}</span>
+      <div className="flex justify-between items-start mb-md">
+        <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${iconColor}`}>
+          <span className="material-symbols-outlined text-[28px]">{icon}</span>
         </div>
-        <span className={`text-[10px] font-bold tracking-wider px-2.5 py-1 rounded-full ${badge.cls}`}>
+        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${badge.cls}`}>
           {badge.label}
         </span>
       </div>
-
-      {/* Content */}
-      <div className="mb-5 flex-1">
-        <h4 className="text-base font-bold text-[#111111] mb-1 leading-snug">{offer.title}</h4>
-        <p className="text-sm text-[#6B7280] line-clamp-2 leading-relaxed">{offer.description}</p>
-
+      <div className="mb-lg flex-1">
+        <h4 className="text-body-lg font-bold text-on-background mb-1">{offer.title}</h4>
+        <p className="text-body-md text-on-surface-variant line-clamp-2">{offer.description}</p>
         {hasQty && offerState && (
-          <div className="mt-3 flex items-center gap-2">
-            <div className="flex-1 bg-[#F3F4F6] h-1.5 rounded-full overflow-hidden">
+          <div className="mt-2 flex items-center gap-1">
+            <div className="flex-1 bg-surface-container h-1.5 rounded-full overflow-hidden">
               <div
-                className={`h-full rounded-full transition-all ${isExhausted ? 'bg-[#D1D5DB]' : 'bg-[#B8941F]'}`}
+                className={`h-full rounded-full transition-all ${isExhausted ? 'bg-outline' : 'bg-secondary'}`}
                 style={{ width: `${offerState.initial_qty ? ((offerState.remaining_qty ?? 0) / offerState.initial_qty) * 100 : 0}%` }}
               />
             </div>
-            <span className="text-[11px] text-[#9CA3AF] font-medium whitespace-nowrap">
+            <span className="text-label-sm text-on-surface-variant ml-1">
               {offerState.remaining_qty}/{offerState.initial_qty} left
             </span>
           </div>
         )}
       </div>
-
-      {/* Redeem button */}
       {!readOnly && (
         <button
           disabled={isExhausted || !onRedeem || !offerState}
           onClick={() => offerState && onRedeem && onRedeem(offerState.id)}
-          className={`w-full py-2.5 rounded-xl font-semibold text-sm transition-all active:scale-[0.97]
+          className={`w-full py-3 rounded-lg font-label-md text-label-md transition-all active:scale-95
             ${isExhausted
-              ? 'bg-[#F3F4F6] text-[#9CA3AF] cursor-not-allowed'
-              : 'bg-[#B8941F] text-white hover:bg-[#9A7A18] hover:shadow-[0_4px_12px_rgba(184,148,31,0.3)]'
+              ? 'bg-surface-container text-on-surface-variant cursor-not-allowed'
+              : 'bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container'
             }
           `}
         >
@@ -103,4 +92,3 @@ export function OfferCard({ offer, offerState, onRedeem, readOnly }: OfferCardPr
     </div>
   );
 }
-

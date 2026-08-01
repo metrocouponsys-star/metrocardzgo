@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { useToastStore } from '../../store/toastStore';
 
 export function ToastContainer() {
@@ -8,16 +8,16 @@ export function ToastContainer() {
       {toasts.map(toast => (
         <div
           key={toast.id}
-          className={`pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl shadow-card min-w-[280px] max-w-sm animate-slide-up
-            ${toast.type === 'success' ? 'bg-[#6B7280] text-white' : ''}
-            ${toast.type === 'error' ? 'bg-red-600 text-on-error' : ''}
-            ${toast.type === 'info' ? 'bg-[#B8941F] text-white' : ''}
+          className={`pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl shadow-elevated min-w-[280px] max-w-sm animate-slide-up
+            ${toast.type === 'success' ? 'bg-secondary text-on-secondary' : ''}
+            ${toast.type === 'error' ? 'bg-error text-on-error' : ''}
+            ${toast.type === 'info' ? 'bg-primary text-on-primary' : ''}
           `}
         >
           <span className="material-symbols-outlined text-xl">
             {toast.type === 'success' ? 'check_circle' : toast.type === 'error' ? 'error' : 'info'}
           </span>
-          <span className="text-sm font-medium flex-1">{toast.message}</span>
+          <span className="text-body-md font-medium flex-1">{toast.message}</span>
           <button onClick={() => removeToast(toast.id)} className="opacity-70 hover:opacity-100">
             <span className="material-symbols-outlined text-sm">close</span>
           </button>
@@ -26,5 +26,3 @@ export function ToastContainer() {
     </div>
   );
 }
-
-

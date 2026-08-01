@@ -1,16 +1,16 @@
-﻿/**
- * Button — canonical typed button component using the Metro Cardz premium design system.
+/**
+ * Button — canonical typed button component using the Metro Cardz design system.
  *
  * Usage:
  *   <Button variant="filled">Save Changes</Button>
  *   <Button variant="outlined" size="sm" loading={saving}>Saving...</Button>
  *   <Button variant="text" icon="delete" onClick={handleDelete}>Delete</Button>
  *
- * Variants:
- *   filled   — high emphasis (gold fill, white text, soft shadow on hover)
- *   tonal    — medium emphasis (soft gold tint bg, dark gold text)
- *   outlined — medium emphasis (white bg, border, charcoal text)
- *   text     — low emphasis (gold text, no bg)
+ * Variants follow Material Design 3 naming:
+ *   filled   — high emphasis (primary action)
+ *   tonal    — medium emphasis (secondary action)
+ *   outlined — medium emphasis (secondary, outlined)
+ *   text     — low emphasis (tertiary action)
  *   danger   — destructive actions (uses error palette)
  */
 import React from 'react';
@@ -30,28 +30,23 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
-  // Gold fill — THE primary action button
-  filled:   'bg-[#B8941F] text-white hover:bg-[#9A7A18] active:bg-[#7A5C12] shadow-sm hover:shadow-[0_4px_12px_rgba(184,148,31,0.3)]',
-  // Soft gold tint — secondary action
-  tonal:    'bg-[#F5EDD0] text-[#7A5C12] hover:bg-[#EDE0B5] active:bg-[#E0D0A0]',
-  // White + border — medium emphasis
-  outlined: 'bg-white border border-[#E5E7EB] text-[#374151] hover:bg-[#F9FAFB] hover:border-[#9CA3AF] active:bg-[#F3F4F6]',
-  // Text only — low emphasis
-  text:     'text-[#B8941F] hover:bg-primary/8 bg-transparent active:bg-primary/12',
-  // Danger — destructive
-  danger:   'bg-red-600 text-white hover:bg-[#9B1313] active:bg-[#7A0F0F] shadow-sm',
+  filled:   'bg-primary text-on-primary hover:bg-primary/90 active:bg-primary/80 shadow-sm',
+  tonal:    'bg-primary-container text-on-primary-container hover:bg-primary-container/80',
+  outlined: 'border border-outline text-primary hover:bg-primary/8 bg-transparent',
+  text:     'text-primary hover:bg-primary/8 bg-transparent',
+  danger:   'bg-error text-on-error hover:bg-error/90 active:bg-error/80 shadow-sm',
 };
 
 const SIZE_CLASSES: Record<ButtonSize, string> = {
-  sm: 'px-3 py-1.5 text-xs gap-1',
-  md: 'px-4 py-2.5 text-sm gap-1.5',
-  lg: 'px-6 py-3 text-sm gap-2',
+  sm: 'px-3 py-1.5 text-label-md gap-1',
+  md: 'px-4 py-2 text-label-md gap-1.5',
+  lg: 'px-6 py-3 text-body-md gap-2',
 };
 
 const ICON_SIZE: Record<ButtonSize, string> = {
-  sm: 'text-[15px]',
-  md: 'text-[17px]',
-  lg: 'text-[19px]',
+  sm: 'text-[16px]',
+  md: 'text-[18px]',
+  lg: 'text-[20px]',
 };
 
 export function Button({
@@ -71,9 +66,9 @@ export function Button({
     <button
       disabled={isDisabled}
       className={[
-        'inline-flex items-center justify-center font-semibold rounded-xl',
-        'transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
-        'disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.97]',
+        'inline-flex items-center justify-center font-medium rounded-lg',
+        'transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
+        'disabled:opacity-50 disabled:cursor-not-allowed',
         VARIANT_CLASSES[variant],
         SIZE_CLASSES[size],
         className,
@@ -101,4 +96,3 @@ export function Button({
     </button>
   );
 }
-

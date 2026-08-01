@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useToastStore } from '../../store/toastStore';
 import type { MembershipType, OfferTemplate } from '../../types';
@@ -146,7 +146,7 @@ export default function MembershipTypesPage() {
   };
 
   return (
-    <div className="px-4 md:px-10 py-8 max-w-4xl mx-auto space-y-8 animate-fade-in">
+    <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-4xl mx-auto space-y-xl animate-fade-in">
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div className="page-header mb-0">
           <h2 className="page-title">Membership Types</h2>
@@ -161,18 +161,18 @@ export default function MembershipTypesPage() {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="card p-4 h-52 animate-pulse bg-[#F3F4F6] rounded-2xl" />
+            <div key={i} className="card p-md h-52 animate-pulse bg-surface-container rounded-2xl" />
           ))}
         </div>
       ) : types.length === 0 ? (
-        <div className="card p-6 flex flex-col items-center text-center py-16">
-          <div className="w-20 h-20 bg-[#F5EDD0]/20 rounded-2xl flex items-center justify-center mb-4">
-            <span className="material-symbols-outlined text-[#B8941F] text-[40px]">card_membership</span>
+        <div className="card p-lg flex flex-col items-center text-center py-16">
+          <div className="w-20 h-20 bg-primary-container/20 rounded-2xl flex items-center justify-center mb-4">
+            <span className="material-symbols-outlined text-primary text-[40px]">card_membership</span>
           </div>
-          <h3 className="text-xl font-bold mb-2">No membership types yet</h3>
-          <p className="text-sm text-[#6B7280] max-w-sm mb-6">
+          <h3 className="text-headline-md font-bold mb-2">No membership types yet</h3>
+          <p className="text-body-md text-on-surface-variant max-w-sm mb-6">
             Create tiers like "Prime" or "Standard" to categorise your members and bundle exclusive offers.
           </p>
           {isOwner && (
@@ -183,34 +183,34 @@ export default function MembershipTypesPage() {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
           {types.map((type, idx) => {
             const color = TIER_COLORS[idx % TIER_COLORS.length];
             const bundledList = type.bundled_offers || type.offers || [];
             return (
               <div
                 key={type.id}
-                className="relative rounded-2xl overflow-hidden shadow-tonal flex flex-col hover:shadow-card transition-all duration-200 group"
+                className="relative rounded-2xl overflow-hidden shadow-tonal flex flex-col hover:shadow-elevated transition-all duration-200 group"
               >
                 {/* Gradient Header */}
                 <div className={`bg-gradient-to-br ${color.bg} p-5 flex items-start justify-between`}>
                   <div>
-                    <p className={`text-xs font-bold uppercase tracking-widest opacity-70 ${color.text}`}>Membership Tier</p>
-                    <h3 className={`text-3xl font-bold mt-1 ${color.text}`}>{type.name}</h3>
+                    <p className={`text-label-sm font-bold uppercase tracking-widest opacity-70 ${color.text}`}>Membership Tier</p>
+                    <h3 className={`text-headline-lg font-bold mt-1 ${color.text}`}>{type.name}</h3>
                   </div>
-                  <div className={`px-2.5 py-1 rounded-full text-xs font-bold ${color.badge}`}>
+                  <div className={`px-2.5 py-1 rounded-full text-label-sm font-bold ${color.badge}`}>
                     {type.member_count ?? 0} members
                   </div>
                 </div>
 
                 {/* Body */}
-                <div className="bg-white p-5 flex-1 flex flex-col gap-4">
-                  <p className="text-sm text-[#6B7280] leading-relaxed">{type.description || 'No description provided.'}</p>
+                <div className="bg-surface p-5 flex-1 flex flex-col gap-4">
+                  <p className="text-body-md text-on-surface-variant leading-relaxed">{type.description || 'No description provided.'}</p>
 
                   {/* Bundled Offers */}
                   {bundledList.length > 0 ? (
                     <div>
-                      <p className="text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-2">
+                      <p className="text-label-sm font-bold text-on-surface-variant uppercase tracking-wider mb-2">
                         Bundled Offers ({bundledList.length})
                       </p>
                       <div className="flex flex-wrap gap-1.5">
@@ -220,7 +220,7 @@ export default function MembershipTypesPage() {
                           const title = o.title || offerObj?.title || 'Offer';
                           const qty = o.default_qty || 1;
                           return (
-                            <span key={offerId} className="text-[11px] px-2.5 py-1 bg-[#F3F4F6]/50 text-[#6B7280] rounded-full font-bold flex items-center gap-1">
+                            <span key={offerId} className="text-[11px] px-2.5 py-1 bg-secondary-container/50 text-secondary rounded-full font-bold flex items-center gap-1">
                               <span className="material-symbols-outlined text-[12px]">local_offer</span>
                               {qty > 1 ? `${qty}x ` : ''}{title}
                             </span>
@@ -229,7 +229,7 @@ export default function MembershipTypesPage() {
                       </div>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-2 text-[#6B7280] text-xs">
+                    <div className="flex items-center gap-2 text-on-surface-variant text-label-sm">
                       <span className="material-symbols-outlined text-[16px]">info</span>
                       No offers bundled into this tier yet.
                     </div>
@@ -237,17 +237,17 @@ export default function MembershipTypesPage() {
 
                   {/* Actions */}
                   {isOwner && (
-                    <div className="mt-auto pt-2 flex items-center gap-2 border-t border-[#F3F4F6]">
+                    <div className="mt-auto pt-2 flex items-center gap-2 border-t border-outline-variant/30">
                       <button
                         onClick={() => openEdit(type)}
-                        className="flex-1 py-2 rounded-xl border border-[#E5E7EB] text-[#6B7280] text-sm hover:bg-[#F3F4F6] hover:border-[#B8941F] hover:text-[#B8941F] transition-all flex items-center justify-center gap-1.5"
+                        className="flex-1 py-2 rounded-xl border border-outline-variant text-on-surface-variant text-label-md hover:bg-surface-container hover:border-primary hover:text-primary transition-all flex items-center justify-center gap-1.5"
                       >
                         <span className="material-symbols-outlined text-[16px]">edit</span>
                         Edit
                       </button>
                       <button
                         onClick={() => setDeleteTarget(type)}
-                        className="p-2 rounded-xl border border-[#E5E7EB] text-[#6B7280] hover:bg-red-50/30 hover:border-error hover:text-red-600 transition-all"
+                        className="p-2 rounded-xl border border-outline-variant text-on-surface-variant hover:bg-error-container/30 hover:border-error hover:text-error transition-all"
                         title="Delete Tier"
                       >
                         <span className="material-symbols-outlined text-[18px]">delete</span>
@@ -263,12 +263,12 @@ export default function MembershipTypesPage() {
           {isOwner && (
             <button
               onClick={openCreate}
-              className="card border-dashed border-2 border-[#E5E7EB]/50 flex flex-col items-center justify-center gap-3 text-[#6B7280] hover:bg-[#F9FAFB] hover:border-[#B8941F] hover:text-[#B8941F] transition-all min-h-[240px] rounded-2xl"
+              className="card border-dashed border-2 border-outline-variant/50 flex flex-col items-center justify-center gap-3 text-on-surface-variant hover:bg-surface-container-low hover:border-primary hover:text-primary transition-all min-h-[240px] rounded-2xl"
             >
-              <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-[#B8941F] group-hover:text-white transition-all">
-                <span className="material-symbols-outlined text-[28px] text-[#B8941F]">add_circle</span>
+              <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
+                <span className="material-symbols-outlined text-[28px] text-primary">add_circle</span>
               </div>
-              <span className="text-sm font-bold">Add Membership Type</span>
+              <span className="text-label-md font-bold">Add Membership Type</span>
             </button>
           )}
         </div>
@@ -301,11 +301,11 @@ export default function MembershipTypesPage() {
           {/* Bundled Offers Selector */}
           <div>
             <label className="form-label mb-1">Bundle Offers into this Tier</label>
-            <p className="text-xs text-[#6B7280] mb-3">
+            <p className="text-label-sm text-on-surface-variant mb-3">
               Select offer templates auto-assigned to members who join this tier:
             </p>
             {availableOffers.length === 0 ? (
-              <div className="p-3 bg-[#F3F4F6] rounded-xl text-xs text-[#6B7280]">
+              <div className="p-3 bg-surface-container rounded-xl text-body-sm text-on-surface-variant">
                 No active offer templates available. Create offers on the <strong>Offers</strong> page first.
               </div>
             ) : (
@@ -317,7 +317,7 @@ export default function MembershipTypesPage() {
                     <div
                       key={offer.id}
                       className={`p-3 rounded-xl border flex items-center justify-between transition-all ${
-                        isSelected ? 'border-[#B8941F] bg-primary/5' : 'border-[#E5E7EB]/50 hover:bg-[#F3F4F6]'
+                        isSelected ? 'border-primary bg-primary/5' : 'border-outline-variant/50 hover:bg-surface-container'
                       }`}
                     >
                       <label className="flex items-center gap-3 cursor-pointer flex-1 min-w-0">
@@ -325,23 +325,23 @@ export default function MembershipTypesPage() {
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => toggleOfferBundle(offer.id)}
-                          className="w-4 h-4 rounded text-[#B8941F] border-[#E5E7EB] focus:ring-[#B8941F]"
+                          className="w-4 h-4 rounded text-primary border-outline-variant focus:ring-primary"
                         />
                         <div className="truncate">
-                          <p className="text-xs font-bold text-[#111111] truncate">{offer.title}</p>
-                          <p className="text-[10px] text-[#6B7280] capitalize">{offer.offer_type.replace('_', ' ')} · Value: {offer.value}</p>
+                          <p className="text-body-sm font-bold text-on-surface truncate">{offer.title}</p>
+                          <p className="text-label-xs text-on-surface-variant capitalize">{offer.offer_type.replace('_', ' ')} · Value: {offer.value}</p>
                         </div>
                       </label>
                       {isSelected && (
                         <div className="flex items-center gap-1.5 ml-2">
-                          <span className="text-[10px] text-[#6B7280] font-semibold">Qty:</span>
+                          <span className="text-label-xs text-on-surface-variant font-semibold">Qty:</span>
                           <input
                             type="number"
                             min={1}
                             max={100}
                             value={bundled.default_qty}
                             onChange={e => updateOfferQty(offer.id, parseInt(e.target.value) || 1)}
-                            className="w-16 px-2 py-1 bg-white border border-[#E5E7EB] rounded-lg text-center text-xs font-bold outline-none focus:border-[#B8941F]"
+                            className="w-16 px-2 py-1 bg-surface border border-outline-variant rounded-lg text-center text-body-sm font-bold outline-none focus:border-primary"
                           />
                         </div>
                       )}
@@ -352,7 +352,7 @@ export default function MembershipTypesPage() {
             )}
           </div>
 
-          <div className="flex gap-3 pt-3 border-t border-[#F3F4F6]">
+          <div className="flex gap-3 pt-3 border-t border-outline-variant/30">
             <button onClick={() => { setShowModal(false); setEditTarget(null); }} className="btn-secondary flex-1">Cancel</button>
             <button onClick={save} disabled={saving || !form.name.trim()} className="btn-primary flex-1 flex items-center justify-center gap-2">
               {saving && <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>}
@@ -376,5 +376,3 @@ export default function MembershipTypesPage() {
     </div>
   );
 }
-
-
