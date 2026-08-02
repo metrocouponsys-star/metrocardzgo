@@ -2,7 +2,7 @@
 
 import React, { useRef, useState } from 'react';
 
-type Category = 'All' | 'Retail' | 'Food & Beverage' | 'Wellness' | 'Healthcare' | 'Automotive';
+export type Category = 'All' | 'Retail' | 'Food & Beverage' | 'Wellness' | 'Healthcare' | 'Automotive';
 
 const CATEGORIES: Category[] = ['All', 'Retail', 'Food & Beverage', 'Wellness', 'Healthcare', 'Automotive'];
 
@@ -58,11 +58,19 @@ const CARDS = [
   },
   {
     id: 'restaurant',
-    name: 'Restaurant',
+    name: 'Restaurant Loyalty Card',
     type: 'Dining Loyalty Card',
     category: 'Food & Beverage' as Category,
     image: '/images/cards/restaurant.jpeg',
     desc: 'Save Rs. 3700/- on Dining',
+  },
+  {
+    id: 'restaurant2',
+    name: 'Gourmet Dining Club',
+    type: 'Restaurant Privilege Card',
+    category: 'Food & Beverage' as Category,
+    image: '/images/cards/restaurant2.jpeg',
+    desc: 'Exclusive Discounts & Priority Seating',
   },
   {
     id: 'gift',
@@ -152,8 +160,12 @@ const SampleCard: React.FC<SampleCardProps> = ({ card, active }) => {
   );
 };
 
-export const CardShowcaseSection: React.FC = () => {
-  const [activeCategory, setActiveCategory] = useState<Category>('All');
+interface CardShowcaseSectionProps {
+  defaultCategory?: Category;
+}
+
+export const CardShowcaseSection: React.FC<CardShowcaseSectionProps> = ({ defaultCategory = 'All' }) => {
+  const [activeCategory, setActiveCategory] = useState<Category>(defaultCategory);
   const [activeIdx, setActiveIdx] = useState(0);
   const trackRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);

@@ -344,14 +344,14 @@ const IndustryTile = React.forwardRef<
         <span style={{ fontSize: 14 }}>{ind.icon}</span>
       </div>
 
-      {/* ── Text block ────────────────────────────────────────────── */}
-      <div className="absolute bottom-3 left-4 right-4" style={{ zIndex: 3 }}>
-        <p className="font-poppins font-bold text-warm-white text-sm leading-tight">{ind.label}</p>
+      {/* ── Text block (shifted to right side upper) ────────────────── */}
+      <div className="absolute top-3 right-4 left-12 text-right" style={{ zIndex: 3 }}>
+        <p className="font-poppins font-bold text-warm-white text-sm leading-tight text-right">{ind.label}</p>
 
         {/* "Custom Cards Available" — fades out; "View Cards →" fades in on hover */}
         <div style={{ position: 'relative', height: 16, marginTop: 4, overflow: 'hidden' }}>
           <p
-            className="text-xs tracking-wider absolute inset-0"
+            className="text-xs tracking-wider absolute inset-0 text-right"
             style={{
               color: 'rgba(201,162,39,0.55)',
               opacity: hovered ? 0 : 1,
@@ -361,7 +361,7 @@ const IndustryTile = React.forwardRef<
             Custom Cards Available
           </p>
           <p
-            className="text-xs font-semibold absolute inset-0"
+            className="text-xs font-semibold absolute inset-0 text-right"
             style={{
               color: '#C9A227',
               opacity: hovered ? 1 : 0,

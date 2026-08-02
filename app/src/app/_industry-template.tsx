@@ -5,6 +5,55 @@ import { JsonLd } from '@/components/seo/JsonLd';
 import { FAQSection } from '@/components/seo/FAQSection';
 import { Breadcrumb } from '@/components/seo/Breadcrumb';
 import { IndustryDemoButton } from '@/components/seo/IndustryDemoButton';
+import { CardShowcaseSection, type Category } from '@/views/landing/sections/CardShowcaseSection';
+
+const CATEGORY_BY_SLUG: Record<string, Category> = {
+  'restaurant-loyalty-cards': 'Food & Beverage',
+  'salon-membership-cards': 'Wellness',
+  'gym-membership-cards': 'Wellness',
+  'hospital-health-cards': 'Healthcare',
+  'retail-gift-cards': 'Retail',
+  'supermarket-loyalty-cards': 'Retail',
+  'corporate-id-cards': 'Retail',
+};
+
+const CARD_IMAGES_BY_SLUG: Record<string, { main: string; secondary: string; tag: string }> = {
+  'corporate-id-cards': {
+    main: '/images/cards/vip.jpeg',
+    secondary: '/images/cards/membership.png',
+    tag: 'Corporate VIP Card',
+  },
+  'restaurant-loyalty-cards': {
+    main: '/images/cards/restaurant.jpeg',
+    secondary: '/images/cards/restaurant2.jpeg',
+    tag: 'Dining Privilege Card',
+  },
+  'salon-membership-cards': {
+    main: '/images/cards/salon.jpeg',
+    secondary: '/images/cards/gift.jpeg',
+    tag: 'Salon Luxury Card',
+  },
+  'supermarket-loyalty-cards': {
+    main: '/images/cards/supermarket.jpeg',
+    secondary: '/images/cards/membership.png',
+    tag: 'Supermarket Points Card',
+  },
+  'gym-membership-cards': {
+    main: '/images/cards/gym.jpeg',
+    secondary: '/images/cards/vip.jpeg',
+    tag: 'Fitness VIP Card',
+  },
+  'hospital-health-cards': {
+    main: '/images/cards/healthcare.jpeg',
+    secondary: '/images/cards/membership.png',
+    tag: 'Health Pass Card',
+  },
+  'retail-gift-cards': {
+    main: '/images/cards/membership.png',
+    secondary: '/images/cards/jewellery.jpeg',
+    tag: 'Retail Gift Card',
+  },
+};
 
 interface IndustryPageTemplateProps {
   data: IndustryPage;
@@ -41,6 +90,8 @@ export function IndustryPageTemplate({ data }: IndustryPageTemplateProps) {
     category: data.title,
     url: `${SITE_URL}/${data.slug}/`,
   }]);
+
+  const cardData = CARD_IMAGES_BY_SLUG[data.slug] ?? CARD_IMAGES_BY_SLUG['corporate-id-cards'];
 
   return (
     <>
@@ -79,58 +130,143 @@ export function IndustryPageTemplate({ data }: IndustryPageTemplateProps) {
             }} />
 
             <div className="max-w-7xl mx-auto px-6 lg:px-10 relative">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-6 glass-gold">
-                <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
-                <span className="text-gold text-xs font-semibold tracking-widest uppercase">{data.title}</span>
-              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
 
-              {/* H1 — keyword-natural, server-rendered */}
-              <h1 className="font-poppins font-black text-4xl sm:text-5xl xl:text-6xl leading-tight tracking-tight text-warm-white mb-6 max-w-4xl">
-                {data.h1}
-              </h1>
-
-              {/* Answer-first paragraph (40-60 words) */}
-              <p className="text-warm-white/70 text-lg max-w-2xl mb-4 leading-relaxed">
-                {data.introParagraph}
-              </p>
-              <p className="text-warm-white/50 text-base max-w-2xl mb-10 leading-relaxed">
-                {data.secondParagraph}
-              </p>
-
-              {/* CTA */}
-              <div className="flex flex-col sm:flex-row gap-4">
-                <a
-                  href="/#contact"
-                  className="px-8 py-4 rounded-full font-poppins font-bold text-base text-rich-black inline-flex items-center justify-center transition-all duration-200 hover:scale-105"
-                  style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #C9A227 50%, #7A5C12 100%)', boxShadow: '0 0 30px rgba(201,162,39,0.4)' }}
-                >
-                  ✦ Get Free Design Mockup
-                </a>
-                <a
-                  href="https://wa.me/919876543210?text=Hi%2C%20I%20need%20custom%20membership%20cards"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-8 py-4 rounded-full font-poppins font-semibold text-base text-gold border border-gold/40 hover:border-gold hover:bg-gold/5 transition-all duration-200 inline-flex items-center justify-center"
-                >
-                  WhatsApp Us →
-                </a>
-              </div>
-
-              {/* ⚡ Live Interactive Demo Launcher for this specific merchant category */}
-              <IndustryDemoButton slug={data.slug} industryTitle={data.title} />
-
-              {/* Trust stats */}
-              <div className="mt-10 flex gap-8 flex-wrap">
-                {[
-                  { num: '500+', label: 'Businesses Served' },
-                  { num: '5–7', label: 'Days Delivery' },
-                  { num: '100+', label: 'Min. Order' },
-                ].map(s => (
-                  <div key={s.label}>
-                    <p className="font-poppins font-black text-2xl text-gold">{s.num}</p>
-                    <p className="text-warm-white/50 text-xs tracking-wider uppercase">{s.label}</p>
+                {/* Left Column — Content & CTAs */}
+                <div className="lg:col-span-7">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-6 glass-gold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
+                    <span className="text-gold text-xs font-semibold tracking-widest uppercase">{data.title}</span>
                   </div>
-                ))}
+
+                  {/* H1 — keyword-natural, server-rendered */}
+                  <h1 className="font-poppins font-black text-4xl sm:text-5xl xl:text-6xl leading-tight tracking-tight text-warm-white mb-6">
+                    {data.h1}
+                  </h1>
+
+                  {/* Answer-first paragraph (40-60 words) */}
+                  <p className="text-warm-white/70 text-lg mb-4 leading-relaxed max-w-2xl">
+                    {data.introParagraph}
+                  </p>
+                  <p className="text-warm-white/50 text-base mb-10 leading-relaxed max-w-2xl">
+                    {data.secondParagraph}
+                  </p>
+
+                  {/* CTA */}
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <a
+                      href="/#contact"
+                      className="px-8 py-4 rounded-full font-poppins font-bold text-base text-rich-black inline-flex items-center justify-center transition-all duration-200 hover:scale-105"
+                      style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #C9A227 50%, #7A5C12 100%)', boxShadow: '0 0 30px rgba(201,162,39,0.4)' }}
+                    >
+                      ✦ Get Free Design Mockup
+                    </a>
+                    <a
+                      href="https://wa.me/919876543210?text=Hi%2C%20I%20need%20custom%20membership%20cards"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-8 py-4 rounded-full font-poppins font-semibold text-base text-gold border border-gold/40 hover:border-gold hover:bg-gold/5 transition-all duration-200 inline-flex items-center justify-center"
+                    >
+                      WhatsApp Us →
+                    </a>
+                  </div>
+
+                  {/* ⚡ Live Interactive Demo Launcher for this specific merchant category */}
+                  <IndustryDemoButton slug={data.slug} industryTitle={data.title} />
+
+                  {/* Trust stats */}
+                  <div className="mt-10 flex gap-8 flex-wrap">
+                    {[
+                      { num: '500+', label: 'Businesses Served' },
+                      { num: '5–7', label: 'Days Delivery' },
+                      { num: '100+', label: 'Min. Order' },
+                    ].map(s => (
+                      <div key={s.label}>
+                        <p className="font-poppins font-black text-2xl text-gold">{s.num}</p>
+                        <p className="text-warm-white/50 text-xs tracking-wider uppercase">{s.label}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Right Column — 3D Floating Card Graphic */}
+                <div className="lg:col-span-5 flex justify-center items-center relative py-6">
+                  {/* Gold ambient background glow */}
+                  <div
+                    className="absolute w-72 h-72 rounded-full opacity-30 blur-3xl pointer-events-none"
+                    style={{ background: 'radial-gradient(circle, #D4AF37 0%, transparent 70%)' }}
+                  />
+
+                  {/* Card Display Container */}
+                  <div className="relative w-full max-w-[340px] sm:max-w-[380px] aspect-[1.586/1] select-none group">
+                    {/* Secondary Card (Behind) */}
+                    <div
+                      className="absolute inset-0 rounded-2xl overflow-hidden shadow-2xl transition-all duration-500 group-hover:rotate-[14deg] group-hover:translate-x-3 group-hover:-translate-y-2"
+                      style={{
+                        transform: 'rotate(10deg) translate(16px, -12px) scale(0.92)',
+                        border: '1px solid rgba(201,162,39,0.3)',
+                        boxShadow: '0 15px 35px rgba(0,0,0,0.6)',
+                        filter: 'brightness(0.75)',
+                      }}
+                    >
+                      <img
+                        src={cardData.secondary}
+                        alt={`${data.title} card sample`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+
+                    {/* Main Card (Front) */}
+                    <div
+                      className="absolute inset-0 rounded-2xl overflow-hidden shadow-2xl transition-all duration-500 group-hover:rotate-[-4deg] group-hover:scale-[1.03]"
+                      style={{
+                        transform: 'rotate(-6deg) scale(1)',
+                        border: '1px solid rgba(201,162,39,0.5)',
+                        boxShadow: '0 20px 50px rgba(0,0,0,0.85), 0 0 35px rgba(201,162,39,0.3)',
+                      }}
+                    >
+                      {/* Glossy light reflection sheen */}
+                      <div
+                        className="absolute inset-0 pointer-events-none z-10 opacity-30"
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 50%, rgba(0,0,0,0.4) 100%)',
+                        }}
+                      />
+                      <img
+                        src={cardData.main}
+                        alt={cardData.tag}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+
+                    {/* Floating pill badge 1 (Top-Right) */}
+                    <div
+                      className="absolute -top-4 -right-4 z-20 px-3.5 py-1.5 rounded-full text-xs font-semibold font-poppins text-warm-white flex items-center gap-1.5 shadow-xl"
+                      style={{
+                        background: 'rgba(13,13,13,0.9)',
+                        border: '1px solid rgba(201,162,39,0.4)',
+                        backdropFilter: 'blur(12px)',
+                      }}
+                    >
+                      <span className="text-gold">✦</span>
+                      <span>{cardData.tag}</span>
+                    </div>
+
+                    {/* Floating pill badge 2 (Bottom-Left) */}
+                    <div
+                      className="absolute -bottom-4 -left-4 z-20 px-3.5 py-1.5 rounded-full text-xs font-semibold font-poppins text-warm-white flex items-center gap-1.5 shadow-xl"
+                      style={{
+                        background: 'rgba(13,13,13,0.9)',
+                        border: '1px solid rgba(201,162,39,0.4)',
+                        backdropFilter: 'blur(12px)',
+                      }}
+                    >
+                      <span className="text-gold">◈</span>
+                      <span>CR80 PVC • Gold Foil</span>
+                    </div>
+                  </div>
+                </div>
+
               </div>
             </div>
           </section>
@@ -158,6 +294,9 @@ export function IndustryPageTemplate({ data }: IndustryPageTemplateProps) {
               </div>
             </div>
           </section>
+
+          {/* ─── Sample Card Showcase ─── */}
+          <CardShowcaseSection defaultCategory={CATEGORY_BY_SLUG[data.slug] ?? 'All'} />
 
           {/* ─── Process strip ─── */}
           <section className="py-16" style={{ background: 'linear-gradient(180deg, #0D0D0D 0%, #0f0c00 50%, #0D0D0D 100%)' }}>
