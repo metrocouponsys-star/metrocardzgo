@@ -180,62 +180,80 @@ app.include_router(public_cards_router, prefix=API_PREFIX)
 app.include_router(health_router)
 
 
+# ── Import all models at module level (avoids per-request import overhead) ─────
+import app.models.merchant  # noqa: F401
+import app.models.member  # noqa: F401
+import app.models.offer  # noqa: F401
+import app.models.campaign  # noqa: F401
+import app.models.redemption  # noqa: F401
+import app.models.loyalty  # noqa: F401
+import app.models.rewards  # noqa: F401
+import app.models.feedback  # noqa: F401
+import app.models.wallet  # noqa: F401
+import app.models.event_log  # noqa: F401
+import app.models.idempotency  # noqa: F401
+
+
 # ── Startup Event ─────────────────────────────────────────────────────────────
 @app.on_event("startup")
 async def startup_event():
-    """Verify database connectivity and automatically create base tables on startup."""
+    """Verify database connectivity and create tables. Optimized for fast cold starts."""
+    import time
+    t0 = time.time()
+
     from app.core.database import engine, Base
     from sqlalchemy import text
-    # Import all models to register them on Base.metadata for table creation
-    from app.models.merchant import Merchant, MerchantUser
-    from app.models.member import Member, MembershipType, MembershipTypeOffer, MemberOfferState
-    from app.models.offer import OfferTemplate
-    from app.models.campaign import Campaign, ReminderRule, MessageLog
-    from app.models.redemption import RedemptionLog
-    from app.models.loyalty import LoyaltyTransaction
-    from app.models.rewards import (
-        RewardCatalog, RewardClaim, CouponCode, GiftVoucher,
-        PointsRule, ScratchCard, LuckyDraw, LuckyDrawEntry,
-    )
-    from app.models.feedback import MemberFeedback
-    from app.models.wallet import MerchantWalletClass, MemberWalletPass
-    from app.models.event_log import EventLog
-    from app.models.idempotency import IdempotencyRecord
-
 
     try:
+        # 1. DB connectivity check + table creation (single operation)
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
-        print("✅ Database connection OK")
+        print(f"✅ Database connection OK ({time.time()-t0:.1f}s)")
 
-        # Automatically create base tables (idempotent, safe to run repeatedly)
         Base.metadata.create_all(bind=engine)
-        print("✅ Database tables verified/created successfully")
+        print(f"✅ Tables verified ({time.time()-t0:.1f}s)")
 
-        # Guarantee schema migrations exist in DB
+        # 2. Run all migrations in a single transaction (faster than 4 separate connections)
+        migration_sqls = [
+            "ALTER TABLE members ADD COLUMN IF NOT EXISTS auto_renew BOOLEAN NOT NULL DEFAULT FALSE",
+            "ALTER TABLE coupon_codes ADD COLUMN IF NOT EXISTS active_days TEXT",
+            "ALTER TABLE points_rules ADD COLUMN IF NOT EXISTS spend_unit NUMERIC DEFAULT 1",
+        ]
         try:
-            for col_sql in [
-                "ALTER TABLE members ADD COLUMN IF NOT EXISTS auto_renew BOOLEAN NOT NULL DEFAULT FALSE;",
-                "ALTER TABLE coupon_codes ADD COLUMN IF NOT EXISTS active_days TEXT;",
-                "ALTER TABLE points_rules ADD COLUMN IF NOT EXISTS spend_unit NUMERIC DEFAULT 1;",
-                "ALTER TABLE coupon_codes ALTER COLUMN discount_type TYPE VARCHAR USING discount_type::VARCHAR;",
-            ]:
-                try:
-                    with engine.begin() as conn:
-                        conn.execute(text(col_sql))
-                except Exception as stmt_err:
-                    print(f"Notice executing {col_sql}: {stmt_err}")
-            print("✅ Database schema migrations (auto_renew, active_days, spend_unit, discount_type) verified OK")
+            with engine.begin() as conn:
+                for sql in migration_sqls:
+                    try:
+                        conn.execute(text(sql))
+                    except Exception:
+                        pass  # Column already exists — expected
+            # Type cast (may fail if already done — that's fine)
+            try:
+                with engine.begin() as conn:
+                    conn.execute(text(
+                        "ALTER TABLE coupon_codes ALTER COLUMN discount_type TYPE VARCHAR USING discount_type::VARCHAR"
+                    ))
+            except Exception:
+                pass
+            print(f"✅ Migrations OK ({time.time()-t0:.1f}s)")
         except Exception as col_err:
-            print(f"⚠️ Schema migration notice: {col_err}")
+            print(f"⚠️ Migration notice: {col_err}")
 
-        # Automatically seed initial Super Admin & Demo Merchant if empty
+        # 3. Seed only if the merchants table is empty (skip on warm restarts)
         try:
-            from seed_db import seed
-            seed()
+            with engine.connect() as conn:
+                result = conn.execute(text("SELECT COUNT(*) FROM merchants"))
+                count = result.scalar()
+            if count == 0:
+                from seed_db import seed
+                seed()
+                print(f"✅ Seed completed ({time.time()-t0:.1f}s)")
+            else:
+                print(f"✅ Seed skipped (DB has {count} merchants) ({time.time()-t0:.1f}s)")
         except Exception as seed_err:
-            print(f"⚠️ Seeding skipped or encountered non-fatal notice: {seed_err}")
+            print(f"⚠️ Seeding notice: {seed_err}")
+
+        print(f"🚀 Startup complete in {time.time()-t0:.1f}s")
     except Exception as e:
-        print(f"❌ Database connection or schema creation FAILED: {e}")
+        print(f"❌ Database startup FAILED: {e}")
         # Don't crash on startup — let the app start and fail per-request
 

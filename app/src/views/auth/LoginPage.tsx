@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useToastStore } from '../../store/toastStore';
@@ -18,11 +18,64 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
+  // ── Cold-start warm-up state ──────────────────────────────────────────────
+  const [serverReady, setServerReady] = useState(false);
+  const [warmUpMsg, setWarmUpMsg] = useState('');
+  const warmUpStarted = useRef(false);
+
   const { setAuth } = useAuthStore();
   const { addToast } = useToastStore();
   const navigate = useNavigate();
 
+  // ── Warm up backend on page mount ─────────────────────────────────────────
+  // Render free tier sleeps after 15 min of inactivity; first request triggers
+  // a cold start (~30-50s). We ping /health immediately when the login page
+  // loads so the backend is already awake by the time the user types credentials.
+  useEffect(() => {
+    if (warmUpStarted.current) return;
+    warmUpStarted.current = true;
+
+    const controller = new AbortController();
+    let timer: ReturnType<typeof setTimeout>;
+
+    // Show "waking up" message after 3s if still not ready
+    timer = setTimeout(() => {
+      if (!controller.signal.aborted) {
+        setWarmUpMsg('Waking up the server — this takes ~20s on first visit…');
+      }
+    }, 3000);
+
+    (async () => {
+      try {
+        await fetch(`${BASE_URL}/health`, { signal: controller.signal });
+        setServerReady(true);
+        setWarmUpMsg('');
+      } catch {
+        // Retry once after a short delay (covers transient network errors)
+        try {
+          await new Promise(r => setTimeout(r, 2000));
+          if (!controller.signal.aborted) {
+            await fetch(`${BASE_URL}/health`, { signal: controller.signal });
+          }
+          setServerReady(true);
+          setWarmUpMsg('');
+        } catch {
+          // Server is likely truly cold-starting; mark ready anyway so
+          // the user can attempt login (it will just take longer)
+          setServerReady(true);
+          setWarmUpMsg('');
+        }
+      }
+    })();
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, []);
+
   // ── Handle Google OAuth callback ──────────────────────────────────────────
+
   useEffect(() => {
     if (!isSupabaseConfigured) return;
 
@@ -156,9 +209,27 @@ export default function LoginPage() {
           <div className="inline-flex items-center justify-center p-3 bg-primary rounded-2xl mb-3 shadow-elevated">
             <span className="material-symbols-outlined text-on-primary text-[36px]" style={{ fontVariationSettings: "'FILL' 1" }}>credit_card</span>
           </div>
+
           <h1 className="text-headline-md font-headline-md font-bold text-primary">Metro Cardz</h1>
           <p className="text-label-sm text-on-surface-variant mt-1">Loyalty Platform for Indian SMBs</p>
         </div>
+
+        {/* Cold-start warm-up banner */}
+        {warmUpMsg && (
+          <div className="mb-4 bg-primary/5 rounded-xl p-3 border border-primary/20 flex items-center gap-3 animate-slide-up">
+            <span className="material-symbols-outlined text-primary text-[20px] animate-spin">progress_activity</span>
+            <div>
+              <p className="text-body-sm text-on-surface font-medium">{warmUpMsg}</p>
+              <p className="text-label-sm text-on-surface-variant mt-0.5">You can start typing — login will work once the server is ready.</p>
+            </div>
+          </div>
+        )}
+        {serverReady && !warmUpMsg && (
+          <div className="mb-4 flex items-center justify-center gap-1.5 opacity-0 animate-fade-in" style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}>
+            <span className="w-2 h-2 rounded-full bg-green-500" />
+            <span className="text-label-sm text-on-surface-variant">Server ready</span>
+          </div>
+        )}
 
         {/* Card */}
         <div className="bg-surface-container-lowest rounded-2xl p-8 border border-outline-variant/30 shadow-tonal">

@@ -1,10 +1,10 @@
 name: Keep Render Alive
 
-# Pings the backend /health endpoint every 14 minutes so Render's free tier
+# Pings the backend /health endpoint every 10 minutes so Render's free tier
 # never sleeps. Render sleeps after 15 minutes of inactivity.
 on:
   schedule:
-    - cron: '*/14 * * * *'
+    - cron: '*/10 * * * *'
   workflow_dispatch:   # also allow manual trigger
 
 jobs:

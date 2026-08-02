@@ -11,7 +11,7 @@ services:
     region: singapore           # Closest to India for low latency
     plan: free                  # Render free tier — upgrade to starter ($7/mo) for no sleep
     buildCommand: pip install -r requirements.txt && alembic upgrade head
-    startCommand: gunicorn app.main:app -w 2 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --timeout 120
+    startCommand: gunicorn app.main:app -w 1 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --timeout 120 --preload
     rootDir: backend            # Repo root → backend subdirectory
     healthCheckPath: /health    # Render pings this to verify the service is up
 
