@@ -114,29 +114,34 @@
   /* Card base */
   .card {
     background-color: #ffffff;
-    border-radius: 0.75rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04), 0 12px 24px rgba(0, 0, 0, 0.02);
-    border: 1px solid rgba(197, 197, 211, 0.3);
+    border-radius: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 35, 111, 0.04), 0 8px 24px rgba(0, 35, 111, 0.03);
+    border: 1px solid rgba(0, 35, 111, 0.06);
+    transition: box-shadow 0.25s ease, transform 0.25s ease;
+  }
+  .card:hover {
+    box-shadow: 0 4px 12px rgba(0, 35, 111, 0.06), 0 16px 40px rgba(0, 35, 111, 0.04);
   }
 
   /* Primary button */
   .btn-primary {
-    background-color: #00236f;
+    background: linear-gradient(135deg, #00236f 0%, #1e3a8a 100%);
     color: #ffffff;
     font-size: 14px;
     font-weight: 600;
-    border-radius: 0.5rem;
+    border-radius: 0.75rem;
     padding: 0.75rem 1.5rem;
-    transition: background-color 0.15s;
+    transition: all 0.2s ease;
     cursor: pointer;
     border: none;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 35, 111, 0.2);
   }
-  .btn-primary:hover { background-color: #1e3a8a; }
-  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-  .btn-primary:active { transform: scale(0.95); }
+  .btn-primary:hover { box-shadow: 0 4px 16px rgba(0, 35, 111, 0.3); transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+  .btn-primary:active { transform: scale(0.97) translateY(0); }
 
   /* Secondary button */
   .btn-secondary {
@@ -144,35 +149,35 @@
     color: #151c27;
     font-size: 14px;
     font-weight: 600;
-    border-radius: 0.5rem;
+    border-radius: 0.75rem;
     padding: 0.75rem 1.5rem;
-    transition: background-color 0.15s;
+    transition: all 0.2s ease;
     cursor: pointer;
     border: none;
     display: inline-flex;
     align-items: center;
     justify-content: center;
   }
-  .btn-secondary:hover { background-color: #dce2f3; }
-  .btn-secondary:active { transform: scale(0.95); }
+  .btn-secondary:hover { background-color: #dce2f3; transform: translateY(-1px); }
+  .btn-secondary:active { transform: scale(0.97); }
 
   /* Outline button */
   .btn-outline {
-    border: 1px solid #00236f;
+    border: 1.5px solid rgba(0, 35, 111, 0.2);
     color: #00236f;
     font-size: 14px;
     font-weight: 600;
-    border-radius: 0.5rem;
+    border-radius: 0.75rem;
     padding: 0.75rem 1.5rem;
-    transition: background-color 0.15s;
+    transition: all 0.2s ease;
     cursor: pointer;
     background: transparent;
     display: inline-flex;
     align-items: center;
     justify-content: center;
   }
-  .btn-outline:hover { background-color: rgba(0, 35, 111, 0.05); }
-  .btn-outline:active { transform: scale(0.95); }
+  .btn-outline:hover { background-color: rgba(0, 35, 111, 0.04); border-color: rgba(0, 35, 111, 0.4); transform: translateY(-1px); }
+  .btn-outline:active { transform: scale(0.97); }
 
   /* Outline button specifically for dark-themed landing pages */
   .landing-root .btn-outline {
@@ -184,16 +189,49 @@
     border-color: rgba(201, 162, 39, 0.8);
   }
 
-  /* Stat card */
+  /* Stat card — modern with accent border */
   .stat-card {
     background-color: #ffffff;
-    padding: 1rem;
-    border-radius: 0.75rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04), 0 12px 24px rgba(0, 0, 0, 0.02);
+    padding: 1.25rem;
+    border-radius: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 35, 111, 0.04), 0 8px 24px rgba(0, 35, 111, 0.03);
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-    border: 1px solid #e7eefe;
+    gap: 0.625rem;
+    border: 1px solid rgba(0, 35, 111, 0.06);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #00236f, #3b82f6, #00236f);
+    opacity: 0.7;
+  }
+  .stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 35, 111, 0.08), 0 20px 48px rgba(0, 35, 111, 0.06);
+  }
+
+  /* Glass surface — frosted glass effect for sidebar */
+  .glass-surface {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px) saturate(1.8);
+    -webkit-backdrop-filter: blur(20px) saturate(1.8);
+  }
+
+  /* Card hover lift utility */
+  .card-hover-lift {
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+  }
+  .card-hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0, 35, 111, 0.1);
   }
 
   /* Page layout helpers */
@@ -508,16 +546,50 @@
 .hero-shimmer {
   background: linear-gradient(
     135deg,
-    #00236f 0%,
-    #1e3a8a 35%,
-    #2563eb 60%,
+    #001a54 0%,
+    #00236f 25%,
+    #1e3a8a 50%,
+    #2563eb 75%,
     #1e3a8a 100%
   );
-  background-size: 200% 200%;
-  animation: heroGradient 6s ease infinite;
+  background-size: 300% 300%;
+  animation: heroGradient 8s ease infinite;
+  position: relative;
+}
+.hero-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 50%, rgba(255,255,255,0.02) 100%);
+  pointer-events: none;
 }
 @keyframes heroGradient {
   0%   { background-position: 0% 50%; }
   50%  { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
+
+/* ── Elevated floating nav (mobile) ── */
+.nav-floating {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px) saturate(1.8);
+  -webkit-backdrop-filter: blur(20px) saturate(1.8);
+  box-shadow: 0 -4px 24px rgba(0, 35, 111, 0.08), 0 -1px 4px rgba(0, 0, 0, 0.04);
+  border-top: 1px solid rgba(0, 35, 111, 0.06);
+}
+
+/* ── Gradient icon container ── */
+.icon-container {
+  background: linear-gradient(135deg, rgba(0, 35, 111, 0.08) 0%, rgba(30, 58, 138, 0.04) 100%);
+  border: 1px solid rgba(0, 35, 111, 0.08);
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+.icon-container:hover {
+  background: linear-gradient(135deg, rgba(0, 35, 111, 0.12) 0%, rgba(30, 58, 138, 0.06) 100%);
+}
+

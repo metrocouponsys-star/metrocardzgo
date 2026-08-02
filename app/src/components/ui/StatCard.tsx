@@ -52,33 +52,40 @@ export function StatCard({ label, value, trend, trendUp, icon, iconColor = 'text
   return (
     <div
       onClick={onClick}
-      className={`stat-card animate-slide-up group transition-all ${
-        onClick ? 'cursor-pointer hover:shadow-lg hover:border-primary/40 hover:-translate-y-0.5 active:scale-[0.98]' : 'hover:shadow-md hover:-translate-y-0.5'
+      className={`stat-card animate-slide-up group ${
+        onClick ? 'cursor-pointer active:scale-[0.98]' : ''
       } ${className}`}
     >
+      {/* Header row: label + icon */}
       <div className="flex items-start justify-between">
-        <p className="text-label-md font-label-md text-on-surface-variant leading-tight flex items-center gap-1">
+        <p className="text-label-md font-label-md text-on-surface-variant leading-tight flex items-center gap-1.5">
           {label}
           {onClick && (
-            <span className="material-symbols-outlined text-[14px] text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-              arrow_forward
+            <span className="material-symbols-outlined text-[13px] text-primary/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              arrow_outward
             </span>
           )}
         </p>
         {icon && (
-          <div className={`w-8 h-8 rounded-lg flex items-center justify-center bg-surface-container group-hover:scale-110 transition-transform ${iconColor.replace('text-', 'bg-').replace(/text-\w+/, '')} `}>
-            <span className={`material-symbols-outlined text-[18px] ${iconColor}`}>{icon}</span>
+          <div className="icon-container w-10 h-10 shrink-0 group-hover:scale-105 transition-transform">
+            <span className={`material-symbols-outlined text-[20px] ${iconColor}`} style={{ fontVariationSettings: "'FILL' 1" }}>{icon}</span>
           </div>
         )}
       </div>
-      <p className="text-headline-lg-mobile font-headline-lg text-primary tabular-nums">{displayValue}</p>
+
+      {/* Big number */}
+      <p className="text-[28px] leading-[34px] font-bold text-on-surface tabular-nums tracking-tight">
+        {displayValue}
+      </p>
+
+      {/* Trend badge */}
       {trend && (
-        <div className={`inline-flex items-center gap-1 text-label-sm px-2 py-0.5 rounded-full w-fit
+        <div className={`inline-flex items-center gap-1 text-label-sm px-2.5 py-1 rounded-lg w-fit font-medium
           ${trendUp === false
-            ? 'text-error bg-error/10'
-            : 'text-secondary bg-secondary/10'
+            ? 'text-error bg-error/8'
+            : 'text-secondary bg-secondary/8'
           }`}>
-          <span className="material-symbols-outlined text-[13px]">
+          <span className="material-symbols-outlined text-[13px]" style={{ fontVariationSettings: "'FILL' 1" }}>
             {trendUp === false ? 'trending_down' : 'trending_up'}
           </span>
           <span>{trend}</span>
