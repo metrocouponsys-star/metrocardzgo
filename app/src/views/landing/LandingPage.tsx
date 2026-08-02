@@ -5,13 +5,16 @@ import { LandingNavbar } from './components/LandingNavbar';
 import { LandingFooter } from './components/LandingFooter';
 import { HeroSection } from './sections/HeroSection';
 import { TrustStripSection } from './sections/TrustStripSection';
+import { BenefitsSection } from './sections/BenefitsSection';
 import { CardShowcaseSection } from './sections/CardShowcaseSection';
 import { FlipDemoSection } from './sections/FlipDemoSection';
+import { ProductSuiteSection } from './sections/ProductSuiteSection';
 import { PrintedGallerySection } from './sections/PrintedGallerySection';
 import { IndustriesSection } from './sections/IndustriesSection';
+import { WhyChooseSection } from './sections/WhyChooseSection';
 import { HowItWorksSection } from './sections/HowItWorksSection';
-import { PricingSection } from './sections/PricingSection';
 import { TestimonialsSection } from './sections/TestimonialsSection';
+import { PricingSection } from './sections/PricingSection';
 import { ContactSection } from './sections/ContactSection';
 
 // Initialise IntersectionObserver for .reveal-up elements
@@ -61,10 +64,13 @@ export const LandingPage: React.FC = () => {
       <main>
         <HeroSection />
         <TrustStripSection />
+        <BenefitsSection />
         <CardShowcaseSection />
         <FlipDemoSection />
+        <ProductSuiteSection />
         <PrintedGallerySection />
         <IndustriesSection />
+        <WhyChooseSection />
         <HowItWorksSection />
         <TestimonialsSection />
         <PricingSection />
@@ -77,3 +83,4 @@ export const LandingPage: React.FC = () => {
 };
 
 export default LandingPage;
+
