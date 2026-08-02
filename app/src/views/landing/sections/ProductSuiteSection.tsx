@@ -47,17 +47,30 @@ export const ProductSuiteSection: React.FC = () => {
     <section className="py-24" style={{ background: 'linear-gradient(180deg, #0D0D0D 0%, #0f0c00 50%, #0D0D0D 100%)' }}>
       <div className="max-w-7xl mx-auto px-6 lg:px-10">
         {/* Header */}
-        <div className="text-center mb-16 reveal-up">
+        <div className="text-center mb-12 reveal-up">
           <p className="text-gold text-xs font-semibold tracking-widest uppercase mb-3">Complete Platform</p>
           <h2 className="font-poppins font-black text-4xl sm:text-5xl text-warm-white mb-4">
-            One Platform, <span className="text-gold-gradient">Six Modules</span>
+            End-to-End <span className="text-gold-gradient">Customer Lifecycle Engine</span>
           </h2>
           <p className="text-warm-grey text-base max-w-xl mx-auto">
-            Everything you need to design, print, distribute, and manage a complete membership card program.
+            Acquire, Engage, Reward, Retain, and Repeat — everything you need to grow repeat customer revenue.
           </p>
         </div>
 
-        {/* 3×2 Grid */}
+        {/* Platform Overview Banner Graphic (from okkk.png) */}
+        <div className="mb-16 reveal-up relative rounded-2xl overflow-hidden border border-gold/20 shadow-2xl group" style={{ background: 'rgba(255,255,255,0.02)' }}>
+          <div className="absolute inset-0 bg-gradient-to-tr from-gold/5 via-transparent to-primary/10 opacity-50 pointer-events-none" />
+          <img
+            src="/images/platform-overview.png"
+            alt="Metro Cardz Complete Customer Lifecycle & Platform Overview"
+            className="w-full h-auto object-cover rounded-2xl transition-transform duration-700 group-hover:scale-[1.01]"
+          />
+        </div>
+
+        {/* 3×2 Grid Header */}
+        <div className="text-center mb-10 reveal-up">
+          <h3 className="font-poppins font-bold text-2xl text-warm-white mb-2">Six Power Modules</h3>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {MODULES.map((m) => (
             <div

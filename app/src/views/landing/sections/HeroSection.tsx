@@ -153,35 +153,51 @@ export const HeroSection: React.FC = () => {
           </div>
         </div>
 
-        {/* Right — 3D card */}
+        {/* Right — Hero Dashboard & App Showcase */}
         <div className="relative order-1 lg:order-2 flex items-center justify-center">
           {/* Ambient glow ring */}
-          <div className="absolute w-72 h-72 sm:w-96 sm:h-96 rounded-full opacity-20 animate-glow-pulse" style={{ background: 'radial-gradient(circle, #C9A227, transparent 70%)', filter: 'blur(30px)' }} />
+          <div className="absolute w-72 h-72 sm:w-96 sm:h-96 rounded-full opacity-25 animate-glow-pulse pointer-events-none" style={{ background: 'radial-gradient(circle, #C9A227, transparent 70%)', filter: 'blur(40px)' }} />
 
-          {mounted && (
-            <div className="perspective-card w-72 h-44 sm:w-96 sm:h-56 lg:w-[420px] lg:h-[264px] animate-float" style={{ filter: 'drop-shadow(0 40px 60px rgba(201,162,39,0.25))' }}>
-              <CSSCard3D
-                interactive={true}
-                maxTilt={14}
-                style={{ width: '100%', height: '100%' }}
-                frontContent={<GoldMemberCardFace className="w-full h-full" />}
-              />
-            </div>
-          )}
+          {/* Main Hero Image Showcase */}
+          <div className="relative z-10 w-full max-w-[580px] group transition-transform duration-500 hover:scale-[1.02]">
+            <img
+              src="/images/hero-dashboard.png"
+              alt="Metro Cardz Dashboard and Mobile App"
+              className="w-full h-auto rounded-2xl shadow-2xl border border-gold/20 object-cover backdrop-blur-md"
+              style={{
+                boxShadow: '0 25px 60px -15px rgba(201,162,39,0.25), 0 0 40px rgba(0,0,0,0.8)',
+              }}
+            />
 
-          {/* Floating feature badges */}
-          {[
-            { label: 'Gold Foil Finish', x: '-left-4 top-8', delay: '0s' },
-            { label: 'QR Code Ready', x: '-right-4 bottom-10', delay: '0.8s' },
-          ].map(badge => (
-            <div
-              key={badge.label}
-              className={`absolute ${badge.x} glass-dark px-3 py-2 rounded-lg hidden sm:block`}
-              style={{ animation: `float 5s ease-in-out ${badge.delay} infinite`, border: '1px solid rgba(201,162,39,0.25)' }}
-            >
-              <p className="text-gold text-xs font-semibold">✦ {badge.label}</p>
-            </div>
-          ))}
+            {/* Subtle floating 3D Gold Card Overlay */}
+            {mounted && (
+              <div className="absolute -bottom-6 -left-6 hidden sm:block perspective-card w-48 h-28 lg:w-56 lg:h-32 animate-float" style={{ filter: 'drop-shadow(0 20px 30px rgba(0,0,0,0.6))' }}>
+                <CSSCard3D
+                  interactive={true}
+                  maxTilt={12}
+                  style={{ width: '100%', height: '100%' }}
+                  frontContent={<GoldMemberCardFace className="w-full h-full" />}
+                />
+              </div>
+            )}
+
+            {/* Floating feature badges */}
+            {[
+              { label: 'Real-time Dashboard', x: '-left-4 -top-4', delay: '0s' },
+              { label: 'Customer Mobile App', x: '-right-4 -bottom-4', delay: '0.8s' },
+            ].map(badge => (
+              <div
+                key={badge.label}
+                className={`absolute ${badge.x} glass-dark px-3.5 py-2 rounded-xl hidden sm:block shadow-xl z-20`}
+                style={{ animation: `float 5s ease-in-out ${badge.delay} infinite`, border: '1px solid rgba(201,162,39,0.3)' }}
+              >
+                <p className="text-gold text-xs font-semibold flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-gold animate-pulse" />
+                  {badge.label}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
