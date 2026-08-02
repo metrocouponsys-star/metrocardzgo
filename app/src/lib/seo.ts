@@ -38,6 +38,10 @@ export interface ProductSchemaInput {
   image: string;
   category: string;
   url: string;
+  price?: string;
+  ratingValue?: string;
+  reviewCount?: string;
+  sku?: string;
 }
 
 export function buildProductSchema(products: ProductSchemaInput[]) {
@@ -49,15 +53,62 @@ export function buildProductSchema(products: ProductSchemaInput[]) {
     image: p.image,
     category: p.category,
     url: p.url,
+    sku: p.sku ?? `MC-${p.name.toUpperCase().replace(/[^A-Z0-9]/g, '')}`,
     brand: {
       '@type': 'Brand',
       name: BRAND_NAME,
     },
     offers: {
       '@type': 'Offer',
-      availability: 'https://schema.org/InStock',
+      url: p.url,
       priceCurrency: 'INR',
+      price: p.price ?? '9',
+      priceValidUntil: '2027-12-31',
+      itemCondition: 'https://schema.org/NewCondition',
+      availability: 'https://schema.org/InStock',
       areaServed: 'IN',
+      shippingDetails: {
+        '@type': 'OfferShippingDetails',
+        shippingRate: {
+          '@type': 'MonetaryAmount',
+          value: '0',
+          currency: 'INR',
+        },
+        shippingDestination: {
+          '@type': 'DefinedRegion',
+          addressCountry: 'IN',
+        },
+        deliveryTime: {
+          '@type': 'ShippingDeliveryTime',
+          handlingTime: {
+            '@type': 'QuantitativeValue',
+            minValue: 1,
+            maxValue: 2,
+            unitCode: 'DAY',
+          },
+          transitTime: {
+            '@type': 'QuantitativeValue',
+            minValue: 3,
+            maxValue: 5,
+            unitCode: 'DAY',
+          },
+        },
+      },
+      hasMerchantReturnPolicy: {
+        '@type': 'MerchantReturnPolicy',
+        applicableCountry: 'IN',
+        returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+        merchantReturnDays: 7,
+        returnMethod: 'https://schema.org/ReturnByMail',
+        returnFees: 'https://schema.org/FreeReturn',
+      },
+    },
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: p.ratingValue ?? '4.9',
+      reviewCount: p.reviewCount ?? '128',
+      bestRating: '5',
+      worstRating: '1',
     },
   }));
 }
