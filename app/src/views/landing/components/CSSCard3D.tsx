@@ -144,25 +144,25 @@ export const GoldMemberCardFace: React.FC<{ className?: string }> = ({ className
     </div>
     
     {/* Top left — logo */}
-    <div className="absolute top-4 left-5 flex items-center gap-2">
-      <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #D4AF37, #7A5C12)', boxShadow: '0 2px 6px rgba(0,0,0,0.3)' }}>
-        <span className="text-black text-xs font-bold font-poppins">M</span>
+    <div className="absolute top-3.5 left-4 flex items-center gap-2">
+      <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #D4AF37, #7A5C12)', boxShadow: '0 2px 6px rgba(0,0,0,0.3)' }}>
+        <span className="text-black text-[10px] font-bold font-poppins">M</span>
       </div>
       <div>
-        <span className="text-gold font-poppins font-black text-xs sm:text-sm tracking-widest uppercase drop-shadow-sm">MetroCardz</span>
-        <span className="block text-[7px] text-warm-white/40 tracking-widest uppercase font-semibold leading-none">PREMIUM MEMBERSHIP</span>
+        <span className="text-gold font-poppins font-black text-[10px] sm:text-[11px] tracking-widest uppercase drop-shadow-sm leading-none block">MetroCardz</span>
+        <span className="block text-[6px] text-warm-white/40 tracking-widest uppercase font-semibold leading-none mt-0.5">PREMIUM MEMBERSHIP</span>
       </div>
     </div>
 
     {/* Premium SIM Chip with gold contacts and hologram mix-blend */}
-    <div className="absolute top-14 left-5">
-      <div className="w-10 h-8 rounded-md relative overflow-hidden" style={{
+    <div className="absolute top-12 left-4">
+      <div className="w-8 h-6.5 rounded relative overflow-hidden" style={{
         background: 'linear-gradient(135deg, #ffe082 0%, #ffb300 50%, #c67100 100%)',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.4), inset 0 0.5px 0 rgba(255,255,255,0.4)',
+        boxShadow: '0 2px 6px rgba(0,0,0,0.4), inset 0 0.5px 0 rgba(255,255,255,0.4)',
         border: '0.5px solid rgba(0,0,0,0.2)'
       }}>
         {/* Chip contact lines */}
-        <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 gap-px p-1 opacity-70">
+        <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 gap-px p-0.5 opacity-70">
           <div className="border-r border-b border-black/25" />
           <div className="border-r border-b border-black/25" />
           <div className="border-b border-black/25" />
@@ -179,8 +179,8 @@ export const GoldMemberCardFace: React.FC<{ className?: string }> = ({ className
     </div>
 
     {/* NFC icon */}
-    <div className="absolute top-14 left-18 opacity-40">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+    <div className="absolute top-12 left-15 opacity-40">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
         <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z" stroke="#C9A227" strokeWidth="1.5" fill="none"/>
         <path d="M8 12c0-2.2 1.8-4 4-4" stroke="#C9A227" strokeWidth="1.5" strokeLinecap="round"/>
         <path d="M5 12c0-3.9 3.1-7 7-7" stroke="#C9A227" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/>
@@ -188,21 +188,21 @@ export const GoldMemberCardFace: React.FC<{ className?: string }> = ({ className
     </div>
 
     {/* Card number with letter spacing & depth shadow */}
-    <div className="absolute bottom-12 left-5 right-5">
-      <p className="font-mono-card text-warm-white/95 tracking-[0.24em] text-xs sm:text-sm drop-shadow-md">
+    <div className="absolute bottom-10 left-4 right-4">
+      <p className="font-mono-card text-warm-white/95 tracking-[0.2em] text-[10px] sm:text-[11px] drop-shadow-md">
         1000 0000 0000 1110
       </p>
     </div>
 
     {/* Member name + validity */}
-    <div className="absolute bottom-3 left-5 right-5 flex justify-between items-end">
+    <div className="absolute bottom-2.5 left-4 right-4 flex justify-between items-end">
       <div>
-        <p className="text-[8px] tracking-widest uppercase font-bold text-gold/60 mb-0.5">MEMBER SINCE</p>
-        <p className="font-poppins text-warm-white font-bold text-xs tracking-wide drop-shadow-sm">JOHN DOE</p>
+        <p className="text-[6.5px] tracking-widest uppercase font-bold text-gold/60 mb-0.5">MEMBER SINCE</p>
+        <p className="font-poppins text-warm-white font-bold text-[9px] sm:text-[10px] tracking-wide drop-shadow-sm">JOHN DOE</p>
       </div>
-      <div className="text-right pr-9">
-        <p className="text-[8px] tracking-widest uppercase font-bold text-gold/60 mb-0.5">VALID THRU</p>
-        <p className="font-mono-card text-gold text-xs drop-shadow-sm">12/28</p>
+      <div className="text-right pr-8">
+        <p className="text-[6.5px] tracking-widest uppercase font-bold text-gold/60 mb-0.5">VALID THRU</p>
+        <p className="font-mono-card text-gold text-[9px] sm:text-[10px] drop-shadow-sm">12/28</p>
       </div>
     </div>
 

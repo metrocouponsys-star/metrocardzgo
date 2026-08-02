@@ -9,24 +9,24 @@ const CardFront: React.FC = () => (
     <div className="absolute top-0 left-0 right-0 h-1" style={{ background: 'linear-gradient(90deg, #7A5C12, #D4AF37, #FDF6E3, #D4AF37, #7A5C12)' }} />
 
     {/* Logo area */}
-    <div className="absolute top-6 left-6 flex items-center gap-2">
-      <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #D4AF37, #7A5C12)' }}>
-        <span className="text-black font-poppins font-black text-sm">M</span>
+    <div className="absolute top-5 left-5 flex items-center gap-2">
+      <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #D4AF37, #7A5C12)' }}>
+        <span className="text-black font-poppins font-black text-xs">M</span>
       </div>
       <div>
-        <p className="font-poppins font-black text-gold text-base leading-none">MetroCardz</p>
-        <p className="text-warm-white/40 text-xs tracking-widest uppercase">Membership</p>
+        <p className="font-poppins font-black text-gold text-sm leading-none">MetroCardz</p>
+        <p className="text-warm-white/40 text-[9px] tracking-widest uppercase mt-0.5">Membership</p>
       </div>
     </div>
 
     {/* VIP badge */}
-    <div className="absolute top-5 right-5 px-3 py-1 rounded-full" style={{ background: 'linear-gradient(135deg, #D4AF37, #7A5C12)' }}>
-      <span className="font-poppins font-black text-black text-xs tracking-widest">VIP</span>
+    <div className="absolute top-4.5 right-5 px-2.5 py-0.5 rounded-full" style={{ background: 'linear-gradient(135deg, #D4AF37, #7A5C12)' }}>
+      <span className="font-poppins font-black text-black text-[10px] tracking-widest">VIP</span>
     </div>
 
     {/* Chip */}
-    <div className="absolute top-20 left-6">
-      <div className="w-12 h-9 rounded-md relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #D4AF37, #C9A227, #7A5C12)' }}>
+    <div className="absolute top-16 left-5">
+      <div className="w-10 h-7 rounded-md relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #D4AF37, #C9A227, #7A5C12)' }}>
         <div className="absolute inset-0.5 rounded grid grid-cols-2 gap-px">
           {[...Array(4)].map((_, i) => <div key={i} className="bg-black/20 rounded-sm" />)}
         </div>
@@ -34,19 +34,19 @@ const CardFront: React.FC = () => (
     </div>
 
     {/* Card number */}
-    <div className="absolute bottom-14 left-6 right-6">
-      <p className="font-mono-card text-warm-white/50 tracking-[0.3em] text-sm">1000 •••• •••• 1110</p>
+    <div className="absolute bottom-12 left-5 right-5">
+      <p className="font-mono-card text-warm-white/50 tracking-[0.25em] text-xs">1000 •••• •••• 1110</p>
     </div>
 
     {/* Footer */}
-    <div className="absolute bottom-5 left-6 right-6 flex justify-between items-end">
+    <div className="absolute bottom-4 left-5 right-5 flex justify-between items-end">
       <div>
-        <p className="text-warm-white/40 text-[10px] tracking-widest uppercase">Card Holder</p>
-        <p className="font-poppins text-warm-white font-bold text-sm tracking-wide">JOHN DOE</p>
+        <p className="text-warm-white/40 text-[8px] tracking-widest uppercase">Card Holder</p>
+        <p className="font-poppins text-warm-white font-bold text-xs tracking-wide">JOHN DOE</p>
       </div>
       <div className="text-right">
-        <p className="text-warm-white/40 text-[10px] tracking-widest uppercase">Valid Thru</p>
-        <p className="font-mono-card text-gold text-sm">12/28</p>
+        <p className="text-warm-white/40 text-[8px] tracking-widest uppercase">Valid Thru</p>
+        <p className="font-mono-card text-gold text-xs">12/28</p>
       </div>
     </div>
 
