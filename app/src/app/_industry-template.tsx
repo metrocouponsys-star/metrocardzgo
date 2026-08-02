@@ -19,8 +19,8 @@ const CATEGORY_BY_SLUG: Record<string, Category> = {
 
 const CARD_IMAGES_BY_SLUG: Record<string, { main: string; secondary: string; tag: string }> = {
   'corporate-id-cards': {
-    main: '/images/cards/vip.jpeg',
-    secondary: '/images/cards/membership.png',
+    main: '/images/cards/okhero.jpeg',
+    secondary: '/images/cards/vip.jpeg',
     tag: 'Corporate VIP Card',
   },
   'restaurant-loyalty-cards': {

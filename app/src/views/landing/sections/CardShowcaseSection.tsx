@@ -9,6 +9,14 @@ const CATEGORIES: Category[] = ['All', 'Retail', 'Food & Beverage', 'Wellness', 
 // All cards — mapped to actual images in /public/images/cards/
 const CARDS = [
   {
+    id: 'okhero',
+    name: 'Executive Privilege Card',
+    type: 'Corporate VIP Card',
+    category: 'Retail' as Category,
+    image: '/images/cards/okhero.jpeg',
+    desc: 'Gold Metallic Finish & Contactless Chip',
+  },
+  {
     id: 'membership',
     name: 'Metro Cardz',
     type: 'Universal Loyalty Card',
