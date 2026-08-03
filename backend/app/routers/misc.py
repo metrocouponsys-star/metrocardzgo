@@ -24,7 +24,7 @@ from app.schemas import (
     ReminderRuleCreate, ReminderRuleUpdate, ReminderRuleOut,
     DashboardStats, RedemptionOut, PublicMemberView, MembershipLookupRequest,
     NewMembersDataPoint, TopCustomer, PointsDataPoint, RetentionDataPoint,
-    MerchantUpdate, MerchantOut,
+    MerchantUpdate, MerchantOut, ReportSummary, ReportSummaryOut,
 )
 from app.core.rate_limit import public_rate_limit, membership_lookup_rate_limit
 from fastapi import Request
@@ -549,6 +549,129 @@ def get_dashboard_stats(
 reports_router = APIRouter(prefix="/reports", tags=["reports"])
 
 
+@reports_router.get("/summary", response_model=ReportSummaryOut)
+def report_summary(
+    merchant_id: str = Depends(get_merchant_id),
+    db: Session = Depends(get_db),
+):
+    """Composite endpoint: returns everything the Reports page needs in one call.
+
+    Replaces 5 separate frontend API calls with a single optimized query batch.
+    All stats are computed from live database — no hardcoded zeros.
+    """
+    today = date.today()
+    month_start = datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    thirty_days_ago = datetime.combine(today - timedelta(days=30), datetime.min.time()).replace(tzinfo=timezone.utc)
+    expiry_horizon = today + timedelta(days=30)
+
+    # ── 1. Summary stats (all in fast COUNT/SUM queries) ─────────────────────
+    total_redemptions = db.query(sqlfunc.count(RedemptionLog.id)).join(Member).filter(
+        Member.merchant_id == merchant_id,
+    ).scalar() or 0
+
+    active_members = db.query(sqlfunc.count(Member.id)).filter(
+        Member.merchant_id == merchant_id, Member.status == "active",
+    ).scalar() or 0
+
+    expiring_soon = db.query(sqlfunc.count(Member.id)).filter(
+        Member.merchant_id == merchant_id,
+        Member.expiry_date <= expiry_horizon,
+        Member.expiry_date >= today,
+        Member.status == "active",
+    ).scalar() or 0
+
+    # Points issued this month
+    points_issued = db.query(sqlfunc.sum(LoyaltyTransaction.points)).filter(
+        LoyaltyTransaction.merchant_id == merchant_id,
+        LoyaltyTransaction.type == "earn",
+        LoyaltyTransaction.created_at >= month_start,
+    ).scalar() or Decimal("0")
+
+    # Points redeemed this month
+    points_redeemed = db.query(sqlfunc.sum(sqlfunc.abs(LoyaltyTransaction.points))).filter(
+        LoyaltyTransaction.merchant_id == merchant_id,
+        LoyaltyTransaction.type == "redeem",
+        LoyaltyTransaction.created_at >= month_start,
+    ).scalar() or Decimal("0")
+
+    # ── 2. Redemptions by offer type (GROUP BY) ──────────────────────────────
+    offer_type_rows = (
+        db.query(
+            OfferTemplate.offer_type,
+            sqlfunc.count(RedemptionLog.id).label("count"),
+        )
+        .join(RedemptionLog, RedemptionLog.offer_template_id == OfferTemplate.id)
+        .join(Member, Member.id == RedemptionLog.member_id)
+        .filter(Member.merchant_id == merchant_id)
+        .group_by(OfferTemplate.offer_type)
+        .order_by(desc("count"))
+        .all()
+    )
+    redemptions_by_offer = [{"offer_type": r.offer_type, "count": r.count} for r in offer_type_rows]
+    most_used_offer = offer_type_rows[0].offer_type if offer_type_rows else ""
+
+    # ── 3. Redemptions over time (last 30 days, GROUP BY date) ───────────────
+    time_rows = (
+        db.query(
+            cast(RedemptionLog.created_at, Date).label("day"),
+            sqlfunc.count(RedemptionLog.id).label("count"),
+        )
+        .join(Member)
+        .filter(
+            Member.merchant_id == merchant_id,
+            RedemptionLog.created_at >= thirty_days_ago,
+        )
+        .group_by(cast(RedemptionLog.created_at, Date))
+        .all()
+    )
+    count_by_day = {row.day: row.count for row in time_rows}
+    redemptions_over_time = []
+    for i in range(29, -1, -1):
+        d = today - timedelta(days=i)
+        redemptions_over_time.append({"date": d.isoformat(), "count": count_by_day.get(d, 0)})
+
+    # ── 4. All redemptions (eager-loaded, recent first) ──────────────────────
+    recent_redemptions = (
+        db.query(RedemptionLog)
+        .join(Member)
+        .filter(Member.merchant_id == merchant_id)
+        .options(
+            joinedload(RedemptionLog.staff_user),
+            joinedload(RedemptionLog.member),
+            joinedload(RedemptionLog.offer_template),
+        )
+        .order_by(RedemptionLog.created_at.desc())
+        .limit(200)
+        .all()
+    )
+    all_redemptions = [
+        RedemptionOut(
+            id=r.id, member_id=r.member_id,
+            offer_template_id=r.offer_template_id,
+            merchant_user_id=r.merchant_user_id,
+            staff_name=r.staff_user.name if r.staff_user else None,
+            amount=r.amount, created_at=r.created_at,
+            member={"name": r.member.name, "member_code": r.member.member_code} if r.member else None,
+            offer={"title": r.offer_template.title, "offer_type": r.offer_template.offer_type} if r.offer_template else None,
+        )
+        for r in recent_redemptions
+    ]
+
+    return ReportSummaryOut(
+        summary=ReportSummary(
+            total_redemptions=total_redemptions,
+            active_members=active_members,
+            expiring_soon=expiring_soon,
+            most_used_offer=most_used_offer,
+            points_issued_month=points_issued,
+            points_redeemed_month=points_redeemed,
+        ),
+        redemptions_by_offer=redemptions_by_offer,
+        redemptions_over_time=redemptions_over_time,
+        all_redemptions=all_redemptions,
+    )
+
+
 @reports_router.get("/new-members", response_model=List[NewMembersDataPoint])
 def report_new_members(
     days: int = 30,
@@ -632,29 +755,80 @@ def report_points(
     merchant_id: str = Depends(get_merchant_id),
     db: Session = Depends(get_db),
 ):
-    """Return weekly points earned vs redeemed for the last N weeks."""
-    result = []
-    today = date.today()
-    for i in range(weeks - 1, -1, -1):
-        week_start = datetime.combine(today - timedelta(days=today.weekday() + 7 * i), datetime.min.time()).replace(tzinfo=timezone.utc)
-        week_end = week_start + timedelta(days=7)
-        week_label = week_start.strftime("%Y-W%V")
+    """Return weekly points earned vs redeemed for the last N weeks.
 
-        earned = db.query(sqlfunc.sum(LoyaltyTransaction.points)).filter(
+    FIX: Previously fired 2 queries per week (24 round trips for 12 weeks).
+    Now uses 2 GROUP BY queries covering the entire date range — O(1) DB calls.
+    """
+    today = date.today()
+    range_start = datetime.combine(
+        today - timedelta(days=today.weekday() + 7 * (weeks - 1)),
+        datetime.min.time(),
+    ).replace(tzinfo=timezone.utc)
+
+    # Build week labels lookup
+    week_labels = []
+    for i in range(weeks - 1, -1, -1):
+        ws = datetime.combine(today - timedelta(days=today.weekday() + 7 * i), datetime.min.time()).replace(tzinfo=timezone.utc)
+        week_labels.append((ws, ws.strftime("%Y-W%V")))
+
+    # Single aggregation: earned points grouped by week
+    from sqlalchemy import extract
+    earned_rows = (
+        db.query(
+            cast(LoyaltyTransaction.created_at, Date).label("day"),
+            sqlfunc.sum(LoyaltyTransaction.points).label("total"),
+        )
+        .filter(
             LoyaltyTransaction.merchant_id == merchant_id,
             LoyaltyTransaction.type == "earn",
-            LoyaltyTransaction.created_at >= week_start,
-            LoyaltyTransaction.created_at < week_end,
-        ).scalar() or Decimal("0")
+            LoyaltyTransaction.created_at >= range_start,
+        )
+        .group_by(cast(LoyaltyTransaction.created_at, Date))
+        .all()
+    )
 
-        redeemed = db.query(sqlfunc.sum(sqlfunc.abs(LoyaltyTransaction.points))).filter(
+    redeemed_rows = (
+        db.query(
+            cast(LoyaltyTransaction.created_at, Date).label("day"),
+            sqlfunc.sum(sqlfunc.abs(LoyaltyTransaction.points)).label("total"),
+        )
+        .filter(
             LoyaltyTransaction.merchant_id == merchant_id,
             LoyaltyTransaction.type == "redeem",
-            LoyaltyTransaction.created_at >= week_start,
-            LoyaltyTransaction.created_at < week_end,
-        ).scalar() or Decimal("0")
+            LoyaltyTransaction.created_at >= range_start,
+        )
+        .group_by(cast(LoyaltyTransaction.created_at, Date))
+        .all()
+    )
 
-        result.append(PointsDataPoint(week=week_label, points_earned=earned, points_redeemed=redeemed))
+    # Bucket daily totals into weeks
+    earned_by_week: dict[str, Decimal] = {}
+    redeemed_by_week: dict[str, Decimal] = {}
+
+    def find_week_label(d: date) -> str:
+        for ws, label in week_labels:
+            if ws.date() <= d < (ws + timedelta(days=7)).date():
+                return label
+        return ""
+
+    for row in earned_rows:
+        label = find_week_label(row.day)
+        if label:
+            earned_by_week[label] = earned_by_week.get(label, Decimal("0")) + (row.total or Decimal("0"))
+
+    for row in redeemed_rows:
+        label = find_week_label(row.day)
+        if label:
+            redeemed_by_week[label] = redeemed_by_week.get(label, Decimal("0")) + (row.total or Decimal("0"))
+
+    result = []
+    for _, label in week_labels:
+        result.append(PointsDataPoint(
+            week=label,
+            points_earned=earned_by_week.get(label, Decimal("0")),
+            points_redeemed=redeemed_by_week.get(label, Decimal("0")),
+        ))
     return result
 
 

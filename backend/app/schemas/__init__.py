@@ -500,6 +500,14 @@ class ReportSummary(BaseModel):
     points_redeemed_month: Decimal = Decimal("0")
 
 
+class ReportSummaryOut(BaseModel):
+    """Composite response for /reports/summary — everything the Reports page needs."""
+    summary: ReportSummary
+    redemptions_by_offer: list  # [{ offer_type: str, count: int }]
+    redemptions_over_time: list  # [{ date: str, count: int }]
+    all_redemptions: List[RedemptionOut]
+
+
 class NewMembersDataPoint(BaseModel):
     date: str       # ISO date string "YYYY-MM-DD"
     count: int

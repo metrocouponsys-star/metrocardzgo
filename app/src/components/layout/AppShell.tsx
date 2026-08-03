@@ -105,11 +105,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <aside className="hidden md:flex flex-col h-screen fixed left-0 top-0 z-40 w-[260px] glass-surface border-r border-primary/[0.06]">
         {/* Brand Header */}
         <div className="p-5 flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-on-primary shadow-lg overflow-hidden shrink-0 ring-2 ring-primary/10">
-            {user?.logo_url ? (
-              <img src={user.logo_url} alt="Logo" className="w-full h-full object-cover" />
+          <div className="w-11 h-11 rounded-2xl bg-white flex items-center justify-center shadow-lg overflow-hidden shrink-0 ring-2 ring-primary/10 p-1">
+            {user?.role !== 'super_admin' && user?.logo_url ? (
+              <img src={user.logo_url} alt="Logo" className="w-full h-full object-cover rounded-xl" />
             ) : (
-              <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>credit_card</span>
+              <img src="/logo.png" alt="Metro Cardz" className="w-full h-full object-contain" />
             )}
           </div>
           <div className="min-w-0">

@@ -313,39 +313,10 @@ export async function deleteReminderRule(_merchantId: string, ruleId: string): P
 }
 
 // ── Reports ───────────────────────────────────────────────────────────────────
-// Composes from real /reports/* endpoints instead of calling the dashboard stats endpoint.
+// Single composite call to /reports/summary — returns all stats, redemptions breakdown,
+// timeline, and full redemption logs with live database values.
 export async function getReportData(_merchantId: string, _from?: string, _to?: string): Promise<ReportData> {
-  const [newMembersData, topCustomers, pointsData] = await Promise.all([
-    get<{ date: string; count: number }[]>('/reports/new-members?days=30').catch(() => []),
-    get<any[]>('/reports/top-customers?limit=10').catch(() => []),
-    get<any[]>('/reports/points?weeks=12').catch(() => []),
-  ]);
-
-  // Derive total redemptions from the sum of per-member redemption_count
-  const total_redemptions: number = topCustomers.reduce((sum: number, c: any) => sum + (c.redemption_count || 0), 0);
-
-  // Build offer-type breakdown: top-customers doesn't have per-offer breakdown,
-  // so we show a single "redemptions" entry with the total count
-  const redemptions_by_offer = total_redemptions > 0
-    ? [{ offer_type: 'all_types', count: total_redemptions }]
-    : [];
-
-  // New-members data already has { date, count } — use as "activity over time"
-  const redemptions_over_time = newMembersData.map((d) => ({ date: d.date, count: d.count }));
-
-  const most_used_offer = redemptions_by_offer.sort((a, b) => b.count - a.count)[0]?.offer_type || '';
-
-  return {
-    redemptions_by_offer,
-    redemptions_over_time,
-    all_redemptions: [],
-    summary: {
-      total_redemptions,
-      active_members: 0,  // filled by dashboard stats separately
-      expiring_soon: 0,
-      most_used_offer,
-    },
-  };
+  return get<ReportData>('/reports/summary');
 }
 
 // ── Admin ─────────────────────────────────────────────────────────────────────

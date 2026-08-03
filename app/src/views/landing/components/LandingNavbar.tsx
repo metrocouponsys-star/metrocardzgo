@@ -55,12 +55,7 @@ export const LandingNavbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-6 lg:px-10 flex items-center justify-between h-16">
         {/* Logo */}
         <a href="#hero" onClick={() => handleNav('#hero')} className="flex items-center gap-2.5 group">
-          <div className="relative w-9 h-9">
-            {/* Two overlapping card icons */}
-            <div className="absolute inset-0 rounded-md rotate-6 opacity-60" style={{ background: 'linear-gradient(135deg, #7A5C12, #C9A227)' }} />
-            <div className="absolute inset-0 rounded-md -rotate-3" style={{ background: 'linear-gradient(135deg, #D4AF37, #7A5C12)' }} />
-            <span className="absolute inset-0 flex items-center justify-center font-poppins font-black text-black text-sm">M</span>
-          </div>
+          <img src="/logo.png" alt="Metro Cardz" className="w-9 h-9 object-contain rounded-lg bg-white/10 p-0.5" />
           <div>
             <span className="font-poppins font-black text-warm-white tracking-tight text-base">Metro</span>
             <span className="font-poppins font-black text-gold tracking-tight text-base">Cardz</span>

@@ -99,11 +99,11 @@ function LookupForm({
 
         {/* MetroCardz Platform Brand Header */}
         <div className="text-center space-y-3">
-          <div className="w-16 h-16 rounded-2xl bg-amber-500 flex items-center justify-center mx-auto shadow-md">
-            <span className="material-symbols-outlined text-slate-950 text-[32px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-              credit_card
-            </span>
-          </div>
+          <img
+            src="/logo.png"
+            alt="Metro Cardz"
+            className="w-16 h-16 object-contain mx-auto shadow-md rounded-2xl bg-white p-1"
+          />
           <div>
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">
               Metro <span className="text-amber-600">Cardz</span>

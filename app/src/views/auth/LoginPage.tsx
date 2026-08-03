@@ -206,10 +206,11 @@ export default function LoginPage() {
       <div className="w-full max-w-[420px] animate-slide-up">
         {/* Logo */}
         <div className="mb-8 text-center">
-          <div className="inline-flex items-center justify-center p-3 bg-primary rounded-2xl mb-3 shadow-elevated">
-            <span className="material-symbols-outlined text-on-primary text-[36px]" style={{ fontVariationSettings: "'FILL' 1" }}>credit_card</span>
-          </div>
-
+          <img
+            src="/logo.png"
+            alt="Metro Cardz"
+            className="w-16 h-16 object-contain mx-auto mb-3 drop-shadow-md"
+          />
           <h1 className="text-headline-md font-headline-md font-bold text-primary">Metro Cardz</h1>
           <p className="text-label-sm text-on-surface-variant mt-1">Loyalty Platform for Indian SMBs</p>
         </div>
