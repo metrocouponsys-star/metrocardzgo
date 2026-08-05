@@ -220,6 +220,7 @@ async def startup_event():
             "ALTER TABLE members ADD COLUMN IF NOT EXISTS auto_renew BOOLEAN NOT NULL DEFAULT FALSE",
             "ALTER TABLE coupon_codes ADD COLUMN IF NOT EXISTS active_days TEXT",
             "ALTER TABLE points_rules ADD COLUMN IF NOT EXISTS spend_unit NUMERIC DEFAULT 1",
+            "ALTER TABLE loyalty_transactions ADD COLUMN IF NOT EXISTS note TEXT",
         ]
         try:
             with engine.begin() as conn:
@@ -228,14 +229,18 @@ async def startup_event():
                         conn.execute(text(sql))
                     except Exception:
                         pass  # Column already exists — expected
-            # Type cast (may fail if already done — that's fine)
-            try:
-                with engine.begin() as conn:
-                    conn.execute(text(
-                        "ALTER TABLE coupon_codes ALTER COLUMN discount_type TYPE VARCHAR USING discount_type::VARCHAR"
-                    ))
-            except Exception:
-                pass
+            # Type casts and Enum updates
+            cast_sqls = [
+                "ALTER TABLE coupon_codes ALTER COLUMN discount_type TYPE VARCHAR USING discount_type::VARCHAR",
+                "ALTER TABLE points_rules ALTER COLUMN rule_type TYPE VARCHAR USING rule_type::VARCHAR",
+                "ALTER TYPE loyalty_tx_type ADD VALUE IF NOT EXISTS 'referral_bonus'",
+            ]
+            with engine.begin() as conn:
+                for sql in cast_sqls:
+                    try:
+                        conn.execute(text(sql))
+                    except Exception:
+                        pass
             print(f"✅ Migrations OK ({time.time()-t0:.1f}s)")
         except Exception as col_err:
             print(f"⚠️ Migration notice: {col_err}")
