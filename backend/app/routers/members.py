@@ -843,15 +843,21 @@ def record_member_purchase(
         note=audit_note,
     )
     db.add(txn)
+
+    emit(
+        db,
+        merchant_id,
+        POINTS_EARNED,
+        {
+            "member_id": member_id,
+            "points": float(points_earned),
+            "new_balance": float(member.loyalty_points),
+        },
+        member_id=member_id,
+    )
+
     db.commit()
     db.refresh(member)
-
-    emit(POINTS_EARNED, {
-        "member_id": member_id,
-        "merchant_id": merchant_id,
-        "points": float(points_earned),
-        "new_balance": float(member.loyalty_points),
-    })
 
     return PurchaseResult(
         member_id=member.id,
