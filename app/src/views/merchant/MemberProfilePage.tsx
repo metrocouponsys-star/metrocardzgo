@@ -90,7 +90,7 @@ export default function MemberProfilePage() {
     const cacheKey = `member/${id}`;
     try {
       // Force-bust cache after any mutation so we always get fresh data
-      if (forceRefresh) invalidateContaining(`member/${id}`);
+      if (forceRefresh) invalidateContaining(id || '');
 
       // Run ALL primary calls in parallel — parallelised getMember + extras
       const [m, reds, loyalty, rewards, pRules, cList] = await Promise.all([
@@ -136,7 +136,7 @@ export default function MemberProfilePage() {
     setClaimingRewardId(reward.id);
     try {
       await api.claimReward(reward.id, member.id);
-      invalidateContaining(`member/${id}`);
+      invalidateContaining(id || '');
       invalidateContaining('members');
       invalidateContaining('dashboard');
       addToast('success', `Reward "${reward.name}" claimed successfully!`);
@@ -166,7 +166,7 @@ export default function MemberProfilePage() {
       setTimeout(() => {
         setSuccessAnimation(false);
         setRedeemState(null);
-        invalidateContaining(`member/${id}`);
+        invalidateContaining(id || '');
         invalidateContaining('members');
         invalidateContaining('dashboard');
         fetchMember(true); // refresh — also updates loyalty_points balance
@@ -201,7 +201,7 @@ export default function MemberProfilePage() {
       await api.applyReferral(user.merchant_id || '', member.id, referralInput.trim());
       addToast('success', 'Referral code applied successfully');
       setReferralInput('');
-      invalidateContaining(`member/${id}`);
+      invalidateContaining(id || '');
       invalidateContaining('members');
       invalidateContaining('dashboard');
       fetchMember(true);
@@ -218,7 +218,7 @@ export default function MemberProfilePage() {
     try {
       await api.renewMember(user.merchant_id || '', member.id);
       addToast('success', 'Membership renewed for 1 year!');
-      invalidateContaining(`member/${id}`);
+      invalidateContaining(id || '');
       invalidateContaining('members');
       invalidateContaining('dashboard');
       fetchMember(true);
@@ -237,7 +237,7 @@ export default function MemberProfilePage() {
       const v = await api.redeemVoucher(voucherCodeInput.trim().toUpperCase(), member.id);
       addToast('success', `Voucher ${v.code} (₹${v.value}) redeemed & credited to ${member.name}!`);
       setVoucherCodeInput('');
-      invalidateContaining(`member/${id}`);
+      invalidateContaining(id || '');
       invalidateContaining('members');
       invalidateContaining('dashboard');
       fetchMember(true);
@@ -282,7 +282,7 @@ export default function MemberProfilePage() {
       await api.updateMember(user.merchant_id || '', member.id, editForm);
       addToast('success', 'Member details updated successfully');
       setShowEditModal(false);
-      invalidateContaining(`member/${id}`);
+      invalidateContaining(id || '');
       invalidateContaining('members');
       invalidateContaining('dashboard');
       fetchMember(true);
@@ -312,7 +312,7 @@ export default function MemberProfilePage() {
       addToast('success', res.message || `Purchase recorded! Earned ${res.points_earned} points.`);
       setShowPurchaseModal(false);
       setPurchaseForm({ amount: '', coupon_code: '', offer_state_id: '', note: '' });
-      invalidateContaining(`member/${id}`);
+      invalidateContaining(id || '');
       invalidateContaining('members');
       invalidateContaining('dashboard');
       fetchMember(true);
@@ -615,9 +615,9 @@ export default function MemberProfilePage() {
                       <span className="material-symbols-outlined text-[20px]">check_circle</span>
                     </div>
                     <div className="flex-1">
-                      <p className="text-body-md font-bold">{r.offer?.title}</p>
+                      <p className="text-body-md font-bold">{r.offer?.title || (r as any).title || (r as any).offer_title || 'Offer Redeemed'}</p>
                       <p className="text-label-sm text-on-surface-variant">
-                        {format(new Date(r.created_at), 'dd MMM yyyy, HH:mm')} · Staff: {r.staff_name}
+                        {format(new Date(r.created_at), 'dd MMM yyyy, HH:mm')} · Staff: {r.staff_name || 'Store Staff'}
                       </p>
                     </div>
                   </div>
