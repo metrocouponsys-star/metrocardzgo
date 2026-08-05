@@ -27,51 +27,31 @@ export default function LoginPage() {
   const { addToast } = useToastStore();
   const navigate = useNavigate();
 
-  // ── Warm up backend on page mount ─────────────────────────────────────────
-  // Render free tier sleeps after 15 min of inactivity; first request triggers
-  // a cold start (~30-50s). We ping /health immediately when the login page
-  // loads so the backend is already awake by the time the user types credentials.
+  // ── Warm up backend silently — no message shown unless it takes very long ──
   useEffect(() => {
     if (warmUpStarted.current) return;
     warmUpStarted.current = true;
-
     const controller = new AbortController();
     let timer: ReturnType<typeof setTimeout>;
-
-    // Show "waking up" message after 3s if still not ready
+    // Only show loading overlay after 4s delay (most servers respond faster)
     timer = setTimeout(() => {
-      if (!controller.signal.aborted) {
-        setWarmUpMsg('Waking up the server — this takes ~20s on first visit…');
-      }
-    }, 3000);
-
+      if (!controller.signal.aborted) setWarmUpMsg('load');
+    }, 4000);
     (async () => {
       try {
         await fetch(`${BASE_URL}/health`, { signal: controller.signal });
         setServerReady(true);
         setWarmUpMsg('');
       } catch {
-        // Retry once after a short delay (covers transient network errors)
         try {
           await new Promise(r => setTimeout(r, 2000));
-          if (!controller.signal.aborted) {
-            await fetch(`${BASE_URL}/health`, { signal: controller.signal });
-          }
+          if (!controller.signal.aborted) await fetch(`${BASE_URL}/health`, { signal: controller.signal });
           setServerReady(true);
           setWarmUpMsg('');
-        } catch {
-          // Server is likely truly cold-starting; mark ready anyway so
-          // the user can attempt login (it will just take longer)
-          setServerReady(true);
-          setWarmUpMsg('');
-        }
-      }
+        } catch { setServerReady(true); setWarmUpMsg(''); }
+      } finally { clearTimeout(timer); }
     })();
-
-    return () => {
-      clearTimeout(timer);
-      controller.abort();
-    };
+    return () => { clearTimeout(timer); controller.abort(); };
   }, []);
 
   // ── Handle Google OAuth callback ──────────────────────────────────────────
@@ -131,40 +111,17 @@ export default function LoginPage() {
     }
   }, [setAuth, addToast, navigate]);
 
-  // ── Email / Phone + Password login ─────────────────────────────────────────
+  // ── Email / Phone + Password login — routes through mock-aware api.login() ──
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const val = email.trim();
     if (!val || !password) return;
-
     setEmailLoading(true);
     setEmailError('');
-    const isEmail = val.includes('@');
-
     try {
-      let authResult: { user: any; token: string };
-      if (isEmail) {
-        const res = await fetch(`${BASE_URL}/api/v1/auth/login-email`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: val.toLowerCase(), password }),
-        });
-
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({ detail: 'Login failed' }));
-          throw new Error(err.detail || 'Invalid email or password');
-        }
-
-        const data = await res.json();
-        if (data.refresh_token) {
-          localStorage.setItem('metro-cardz-refresh', data.refresh_token);
-        }
-        authResult = { user: data.user, token: data.access_token };
-      } else {
-        // Use unified api.login — handles both mock and real backend transparently
-        authResult = await api.login(val, password);
-      }
-
+      // Always use api.login() — it handles both mock and real backend transparently
+      // so demo credentials (email or phone) work in all environments
+      const authResult = await api.login(val, password);
       setAuth(authResult.user, authResult.token);
       addToast('success', `Welcome, ${authResult.user.name}! 👋`);
       const targetRoute = authResult.user.role === 'super_admin' ? '/admin' : authResult.user.role === 'staff' ? '/members/search?tab=qr' : '/dashboard';
@@ -215,20 +172,32 @@ export default function LoginPage() {
           <p className="text-label-sm text-on-surface-variant mt-1">Loyalty Platform for Indian SMBs</p>
         </div>
 
-        {/* Cold-start warm-up banner */}
-        {warmUpMsg && (
-          <div className="mb-4 bg-primary/5 rounded-xl p-3 border border-primary/20 flex items-center gap-3 animate-slide-up">
-            <span className="material-symbols-outlined text-primary text-[20px] animate-spin">progress_activity</span>
-            <div>
-              <p className="text-body-sm text-on-surface font-medium">{warmUpMsg}</p>
-              <p className="text-label-sm text-on-surface-variant mt-0.5">You can start typing — login will work once the server is ready.</p>
+        {/* Fancy animated server warm-up overlay */}
+        {warmUpMsg === 'load' && (
+          <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-surface/80 backdrop-blur-md">
+            {/* Animated ring */}
+            <div className="relative w-24 h-24 mb-6">
+              <div className="absolute inset-0 rounded-full border-4 border-primary/20" />
+              <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-primary animate-spin" style={{ animationDuration: '1s' }} />
+              <div className="absolute inset-2 rounded-full border-4 border-transparent border-t-secondary animate-spin" style={{ animationDuration: '1.5s', animationDirection: 'reverse' }} />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <img src="/logo.png" alt="" className="w-10 h-10 object-contain drop-shadow-md" />
+              </div>
             </div>
-          </div>
-        )}
-        {serverReady && !warmUpMsg && (
-          <div className="mb-4 flex items-center justify-center gap-1.5 opacity-0 animate-fade-in" style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}>
-            <span className="w-2 h-2 rounded-full bg-green-500" />
-            <span className="text-label-sm text-on-surface-variant">Server ready</span>
+            <h3 className="text-headline-sm font-bold text-on-surface mb-2">Starting up…</h3>
+            <p className="text-body-sm text-on-surface-variant text-center max-w-[240px]">
+              The server is loading. This takes about 20 seconds on the first visit.
+            </p>
+            {/* Animated progress dots */}
+            <div className="flex gap-1.5 mt-4">
+              {[0, 1, 2, 3].map(i => (
+                <div
+                  key={i}
+                  className="w-2 h-2 rounded-full bg-primary animate-bounce"
+                  style={{ animationDelay: `${i * 0.15}s`, animationDuration: '0.8s' }}
+                />
+              ))}
+            </div>
           </div>
         )}
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect, Component } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import * as api from '../../api';
+import { cached } from '../../api/cache';
 
 // ─── Error Boundary ────────────────────────────────────────────────────────
 // Catches rendering errors inside any page and shows a recovery UI.
@@ -73,6 +74,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         if (m?.logo_url) updateUser({ logo_url: m.logo_url });
       }).catch(() => {});
     }
+  }, [user?.merchant_id]);
+
+  // ── Prefetch warmup: load all common data into cache after login ────────────
+  // Fires silently in the background so first navigation to any page feels instant.
+  useEffect(() => {
+    if (!user?.merchant_id || user?.role === 'super_admin') return;
+    const mId = user.merchant_id;
+    // Use setTimeout(0) so this doesn't block the current critical render
+    const t = setTimeout(() => {
+      // Dashboard stats — most important, shown on /dashboard
+      cached(`dashboard/${mId}`, () => api.getDashboardStats(mId)).catch(() => {});
+      // Config data — offers, membership types, rewards, points rules, coupons
+      cached(`offers/${mId}`, () => api.getOfferTemplates(mId)).catch(() => {});
+      cached(`membership-types/${mId}`, () => api.getMembershipTypes(mId)).catch(() => {});
+      cached(`rewards/${mId}`, () => api.getRewards(mId)).catch(() => {});
+      cached(`points-rules/${mId}`, () => api.getPointsRules(mId)).catch(() => {});
+      cached(`coupons/${mId}`, () => api.getCoupons(mId)).catch(() => {});
+    }, 0);
+    return () => clearTimeout(t);
   }, [user?.merchant_id]);
 
   // ── Global keyboard shortcut: Ctrl+K / ⌘K → go to Members (search/scan) ──
@@ -280,10 +300,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   <>
                     <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-200 ${
                       isActive
-                        ? 'bg-gradient-to-br from-primary to-primary-container text-on-primary scale-105'
-                        : 'bg-gradient-to-br from-primary/90 to-primary-container/90 text-on-primary'
+                        ? 'bg-gradient-to-br from-primary to-primary-container text-on-primary scale-105 shadow-primary/30'
+                        : 'bg-surface-container-high text-on-surface-variant border border-outline-variant/40'
                     }`}>
-                      <span className="material-symbols-outlined text-[26px]" style={{ fontVariationSettings: "'FILL' 1" }}>{item.icon}</span>
+                      <span className="material-symbols-outlined text-[26px]" style={isActive ? { fontVariationSettings: "'FILL' 1" } : undefined}>{item.icon}</span>
                     </div>
                     <span className="text-[10px] font-bold mt-1">{item.label}</span>
                   </>

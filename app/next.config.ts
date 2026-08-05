@@ -11,6 +11,10 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
+  // Disable server file tracing for static exports (prevents Windows nft.json ENOENT lock issue)
+  outputFileTracingExcludes: {
+    '*': ['**/*'],
+  },
 };
 
 export default nextConfig;

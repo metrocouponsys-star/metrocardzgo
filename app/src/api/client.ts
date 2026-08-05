@@ -21,25 +21,38 @@ function delay(ms: number) {
 }
 
 // ---- Auth ----
-export async function login(phone: string, _password: string): Promise<{ user: AuthUser; token: string }> {
+export async function login(phoneOrEmail: string, _password: string): Promise<{ user: AuthUser; token: string }> {
   await delay(FAKE_DELAY);
-  const cleanPhone = phone.replace(/\D/g, '');
-  const last10 = cleanPhone.slice(-10);
-  const user = db.merchantUsers.find(u => {
-    const uClean = u.phone.replace(/\D/g, '');
-    return uClean.includes(last10) || (last10.length >= 7 && uClean.endsWith(last10));
-  }) || db.merchantUsers[0];
-  const merchant = db.merchants.find(m => m.id === user.merchant_id);
+  const val = phoneOrEmail.trim().toLowerCase();
+  const isEmail = val.includes('@');
+
+  let user: MerchantUser | undefined;
+  if (isEmail) {
+    // Match by email (exact, case-insensitive); also accept 'restaurant@metrocardz.in' as cafe alias
+    const emailToMatch = val === 'restaurant@metrocardz.in' ? 'cafe@metrocardz.in' : val;
+    user = db.merchantUsers.find(u => u.email?.toLowerCase() === emailToMatch);
+    // Fallback: if no match, use first merchant (graceful demo)
+    if (!user) user = db.merchantUsers[0];
+  } else {
+    const cleanPhone = val.replace(/\D/g, '');
+    const last10 = cleanPhone.slice(-10);
+    user = db.merchantUsers.find(u => {
+      const uClean = u.phone.replace(/\D/g, '');
+      return uClean.includes(last10) || (last10.length >= 7 && uClean.endsWith(last10));
+    }) || db.merchantUsers[0];
+  }
+
+  const merchant = db.merchants.find(m => m.id === user!.merchant_id);
   return {
     user: {
-      id: user.id,
-      name: user.name,
-      phone: user.phone,
-      role: user.role,
-      merchant_id: user.merchant_id,
+      id: user!.id,
+      name: user!.name,
+      phone: user!.phone,
+      role: user!.role,
+      merchant_id: user!.merchant_id,
       merchant_name: merchant?.business_name,
     },
-    token: `mock-jwt-${user.id}`,
+    token: `mock-jwt-${user!.id}`,
   };
 }
 

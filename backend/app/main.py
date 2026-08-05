@@ -181,19 +181,17 @@ app.include_router(health_router)
 
 
 # ── Import all models at module level (avoids per-request import overhead) ─────
-from app.models import (  # noqa: F401
-    merchant,
-    member,
-    offer,
-    campaign,
-    redemption,
-    loyalty,
-    rewards,
-    feedback,
-    wallet,
-    event_log,
-    idempotency,
-)
+import app.models.merchant  # noqa: F401
+import app.models.member  # noqa: F401
+import app.models.offer  # noqa: F401
+import app.models.campaign  # noqa: F401
+import app.models.redemption  # noqa: F401
+import app.models.loyalty  # noqa: F401
+import app.models.rewards  # noqa: F401
+import app.models.feedback  # noqa: F401
+import app.models.wallet  # noqa: F401
+import app.models.event_log  # noqa: F401
+import app.models.idempotency  # noqa: F401
 
 
 # ── Startup Event ─────────────────────────────────────────────────────────────

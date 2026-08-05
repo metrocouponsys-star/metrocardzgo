@@ -9,7 +9,7 @@ import { format } from 'date-fns';
 
 const STATUS_CFG = {
   merchant_allocated: { cls: 'bg-primary-container/30 text-primary', label: 'Available', icon: 'check_circle' },
-  member_linked:      { cls: 'bg-secondary-container text-secondary', label: 'Linked',    icon: 'person' },
+  member_linked: { cls: 'bg-secondary-container text-secondary', label: 'Linked', icon: 'person' },
 };
 
 export default function CardInventoryMerchantPage() {
@@ -118,7 +118,7 @@ export default function CardInventoryMerchantPage() {
       <div className="grid grid-cols-3 gap-md">
         {[
           { label: 'Total Card', value: stats.total, icon: 'credit_card', cls: 'bg-primary-container/20 text-primary' },
-          { label: 'Balance', value: stats.available, icon: 'check_circle', cls: 'bg-surface-container text-on-surface-variant' },
+          { label: 'Merchant Balance', value: stats.available, icon: 'check_circle', cls: 'bg-surface-container text-on-surface-variant' },
           { label: 'Active Member', value: stats.linked, icon: 'person_check', cls: 'bg-secondary-container text-secondary' },
         ].map(s => (
           <div key={s.label} className="card p-md flex items-center gap-3">

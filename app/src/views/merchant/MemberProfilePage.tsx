@@ -8,7 +8,7 @@ import { Modal, ConfirmModal } from '../../components/ui/Modal';
 import { CardSkeleton, Skeleton } from '../../components/ui/Skeleton';
 import type { Member, MemberOfferState, Redemption, LoyaltyTransaction, MembershipType, MemberStatus } from '../../types';
 import * as api from '../../api';
-import { invalidateContaining } from '../../api/cache';
+import { invalidateContaining, cached } from '../../api/cache';
 import { format, differenceInDays } from 'date-fns';
 
 type Tab = 'offers' | 'history' | 'points' | 'rewards';
@@ -84,19 +84,22 @@ export default function MemberProfilePage() {
   const [updatingMember, setUpdatingMember] = useState(false);
 
 
-  const fetchMember = async () => {
+  const fetchMember = async (forceRefresh = false) => {
     if (!id) return;
     const mId = user?.merchant_id || '';
+    const cacheKey = `member/${id}`;
     try {
-      // FIX: Run ALL primary calls in parallel — eliminates the 2-RTT waterfall
-      // (previously: getMember waited alone, then Promise.all ran = 2× latency)
+      // Force-bust cache after any mutation so we always get fresh data
+      if (forceRefresh) invalidateContaining(`member/${id}`);
+
+      // Run ALL primary calls in parallel — parallelised getMember + extras
       const [m, reds, loyalty, rewards, pRules, cList] = await Promise.all([
-        api.getMember(mId, id),
-        api.getMemberRedemptions(mId, id).catch(() => []),
-        api.getLoyaltyHistory(mId, id).catch(() => []),
-        api.getRewards(mId).catch(() => []),
-        api.getPointsRules(mId).catch(() => []),
-        api.getCoupons(mId).catch(() => []),
+        cached(cacheKey, () => api.getMember(mId, id)),
+        cached(`member-redemptions/${id}`, () => api.getMemberRedemptions(mId, id)).catch(() => [] as any[]),
+        cached(`member-loyalty/${id}`, () => api.getLoyaltyHistory(mId, id)).catch(() => [] as any[]),
+        cached(`rewards/${mId}`, () => api.getRewards(mId)).catch(() => [] as any[]),
+        cached(`points-rules/${mId}`, () => api.getPointsRules(mId)).catch(() => [] as any[]),
+        cached(`coupons/${mId}`, () => api.getCoupons(mId)).catch(() => [] as any[]),
       ]);
 
       setMember(m);
@@ -109,8 +112,8 @@ export default function MemberProfilePage() {
       setCoupons((cList || []).filter((c: any) => c.is_active !== false));
 
       // Non-critical — fire after primary data renders, no spinner needed
-      api.getReferralLink(m.id).then(res => setReferralLink(res.referral_link)).catch(() => {});
-      api.getScratchCards(m.id).then(setScratchCards).catch(() => {});
+      api.getReferralLink(m.id).then(res => setReferralLink(res.referral_link)).catch(() => { });
+      api.getScratchCards(m.id).then(setScratchCards).catch(() => { });
     } catch (e: any) {
       addToast('error', e.message || 'Member not found');
       navigate('/members');
@@ -120,6 +123,7 @@ export default function MemberProfilePage() {
   };
 
   useEffect(() => {
+    setLoading(true);
     fetchMember();
   }, [id, user?.merchant_id]);
 
@@ -132,8 +136,11 @@ export default function MemberProfilePage() {
     setClaimingRewardId(reward.id);
     try {
       await api.claimReward(reward.id, member.id);
+      invalidateContaining(`member/${id}`);
+      invalidateContaining('members');
+      invalidateContaining('dashboard');
       addToast('success', `Reward "${reward.name}" claimed successfully!`);
-      fetchMember();
+      fetchMember(true);
     } catch (e: any) {
       addToast('error', e.message || 'Failed to claim reward');
     } finally {
@@ -142,7 +149,6 @@ export default function MemberProfilePage() {
   };
 
 
-  useEffect(() => { fetchMember(); }, [id]);
 
   const handleRedeem = async () => {
     if (!redeemState || !member || !user) return;
@@ -160,7 +166,10 @@ export default function MemberProfilePage() {
       setTimeout(() => {
         setSuccessAnimation(false);
         setRedeemState(null);
-        fetchMember(); // refresh — also updates loyalty_points balance
+        invalidateContaining(`member/${id}`);
+        invalidateContaining('members');
+        invalidateContaining('dashboard');
+        fetchMember(true); // refresh — also updates loyalty_points balance
         addToast('success', `"${redeemState.offerTitle}" redeemed successfully!`);
       }, 1800);
     } catch (e: any) {
@@ -192,7 +201,10 @@ export default function MemberProfilePage() {
       await api.applyReferral(user.merchant_id || '', member.id, referralInput.trim());
       addToast('success', 'Referral code applied successfully');
       setReferralInput('');
-      fetchMember();
+      invalidateContaining(`member/${id}`);
+      invalidateContaining('members');
+      invalidateContaining('dashboard');
+      fetchMember(true);
     } catch (e: any) {
       addToast('error', e.message || 'Invalid referral code');
     } finally {
@@ -206,7 +218,10 @@ export default function MemberProfilePage() {
     try {
       await api.renewMember(user.merchant_id || '', member.id);
       addToast('success', 'Membership renewed for 1 year!');
-      fetchMember();
+      invalidateContaining(`member/${id}`);
+      invalidateContaining('members');
+      invalidateContaining('dashboard');
+      fetchMember(true);
     } catch (e: any) {
       addToast('error', e.message || 'Renewal failed');
     } finally {
@@ -222,7 +237,10 @@ export default function MemberProfilePage() {
       const v = await api.redeemVoucher(voucherCodeInput.trim().toUpperCase(), member.id);
       addToast('success', `Voucher ${v.code} (₹${v.value}) redeemed & credited to ${member.name}!`);
       setVoucherCodeInput('');
-      fetchMember();
+      invalidateContaining(`member/${id}`);
+      invalidateContaining('members');
+      invalidateContaining('dashboard');
+      fetchMember(true);
     } catch (e: any) {
       addToast('error', e.message || 'Invalid or expired gift voucher code');
     } finally {
@@ -252,7 +270,7 @@ export default function MemberProfilePage() {
       membership_type_id: member.membership_type_id || '',
       status: member.status || 'active',
     });
-    api.getMembershipTypes(user?.merchant_id || '').then(setMembershipTypes).catch(() => {});
+    api.getMembershipTypes(user?.merchant_id || '').then(setMembershipTypes).catch(() => { });
     setShowEditModal(true);
   };
 
@@ -264,7 +282,10 @@ export default function MemberProfilePage() {
       await api.updateMember(user.merchant_id || '', member.id, editForm);
       addToast('success', 'Member details updated successfully');
       setShowEditModal(false);
-      fetchMember();
+      invalidateContaining(`member/${id}`);
+      invalidateContaining('members');
+      invalidateContaining('dashboard');
+      fetchMember(true);
     } catch (err: any) {
       addToast('error', err.message || 'Failed to update member details');
     } finally {
@@ -291,7 +312,10 @@ export default function MemberProfilePage() {
       addToast('success', res.message || `Purchase recorded! Earned ${res.points_earned} points.`);
       setShowPurchaseModal(false);
       setPurchaseForm({ amount: '', coupon_code: '', offer_state_id: '', note: '' });
-      fetchMember();
+      invalidateContaining(`member/${id}`);
+      invalidateContaining('members');
+      invalidateContaining('dashboard');
+      fetchMember(true);
     } catch (err: any) {
       addToast('error', err.message || 'Failed to record purchase');
     } finally {
@@ -497,53 +521,53 @@ export default function MemberProfilePage() {
                 onClick={handleOpenEditModal}
                 className="bg-white/15 hover:bg-white/25 text-white px-4 py-2 rounded-lg text-label-md font-label-md flex items-center gap-1 transition-colors"
               >
-              <span className="material-symbols-outlined text-[16px]">edit</span>
-              Edit
-            </button>
-            <button
-              className="bg-white/15 hover:bg-white/25 text-white px-4 py-2 rounded-lg text-label-md font-label-md flex items-center gap-1 transition-colors"
-              onClick={handleDownloadCard}
-            >
-              <span className="material-symbols-outlined text-[16px]">download</span>
-              Download Card PDF
-            </button>
-            {/* Google Wallet Button */}
-            {walletUrl ? (
-              <a
-                href={walletUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-white/15 hover:bg-white/25 text-white px-4 py-2 rounded-lg text-label-md font-label-md flex items-center gap-1.5 transition-colors"
-              >
-                <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>add_to_wallet</span>
-                Add to Google Wallet
-              </a>
-            ) : (
-              <button
-                disabled={walletLoading}
-                onClick={async () => {
-                  if (!member) return;
-                  setWalletLoading(true);
-                  try {
-                    const res = await api.generateWalletPassUrl(member.id);
-                    setWalletUrl(res.save_url);
-                    // Open immediately
-                    window.open(res.save_url, '_blank', 'noopener,noreferrer');
-                    addToast('success', 'Google Wallet pass generated!');
-                  } catch {
-                    addToast('error', 'Failed to generate Wallet pass — try again');
-                  } finally {
-                    setWalletLoading(false);
-                  }
-                }}
-                className="bg-white/15 hover:bg-white/25 text-white px-4 py-2 rounded-lg text-label-md font-label-md flex items-center gap-1.5 transition-colors disabled:opacity-50"
-              >
-                <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>add_to_wallet</span>
-                {walletLoading ? 'Generating…' : 'Google Wallet Pass'}
+                <span className="material-symbols-outlined text-[16px]">edit</span>
+                Edit
               </button>
-            )}
-          </>
-        )}
+              <button
+                className="bg-white/15 hover:bg-white/25 text-white px-4 py-2 rounded-lg text-label-md font-label-md flex items-center gap-1 transition-colors"
+                onClick={handleDownloadCard}
+              >
+                <span className="material-symbols-outlined text-[16px]">download</span>
+                Download Card PDF
+              </button>
+              {/* Google Wallet Button */}
+              {walletUrl ? (
+                <a
+                  href={walletUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-white/15 hover:bg-white/25 text-white px-4 py-2 rounded-lg text-label-md font-label-md flex items-center gap-1.5 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>add_to_wallet</span>
+                  Add to Google Wallet
+                </a>
+              ) : (
+                <button
+                  disabled={walletLoading}
+                  onClick={async () => {
+                    if (!member) return;
+                    setWalletLoading(true);
+                    try {
+                      const res = await api.generateWalletPassUrl(member.id);
+                      setWalletUrl(res.save_url);
+                      // Open immediately
+                      window.open(res.save_url, '_blank', 'noopener,noreferrer');
+                      addToast('success', 'Google Wallet pass generated!');
+                    } catch {
+                      addToast('error', 'Failed to generate Wallet pass — try again');
+                    } finally {
+                      setWalletLoading(false);
+                    }
+                  }}
+                  className="bg-white/15 hover:bg-white/25 text-white px-4 py-2 rounded-lg text-label-md font-label-md flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                >
+                  <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>add_to_wallet</span>
+                  {walletLoading ? 'Generating…' : 'Google Wallet Pass'}
+                </button>
+              )}
+            </>
+          )}
         </div>
 
         {/* Physical Card Row */}

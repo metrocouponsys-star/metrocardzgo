@@ -88,10 +88,19 @@ const patch = <T>(path: string, body?: unknown) => request<T>('PATCH', path, bod
 const del = <T>(path: string) => request<T>('DELETE', path);
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
-export async function login(phone: string, password: string): Promise<{ user: AuthUser; token: string }> {
-  const res = await post<{ user: AuthUser; access_token: string; refresh_token: string }>(
-    '/auth/login', { phone, password }, true,
-  );
+export async function login(phoneOrEmail: string, password: string): Promise<{ user: AuthUser; token: string }> {
+  const val = phoneOrEmail.trim();
+  const isEmail = val.includes('@');
+  let res: { user: AuthUser; access_token: string; refresh_token: string };
+  if (isEmail) {
+    res = await post<{ user: AuthUser; access_token: string; refresh_token: string }>(
+      '/auth/login-email', { email: val.toLowerCase(), password }, true,
+    );
+  } else {
+    res = await post<{ user: AuthUser; access_token: string; refresh_token: string }>(
+      '/auth/login', { phone: val, password }, true,
+    );
+  }
   if (typeof window !== 'undefined') {
     sessionStorage.setItem('metro-cardz-refresh', res.refresh_token);
     localStorage.setItem('metro-cardz-refresh', res.refresh_token);
@@ -144,53 +153,47 @@ export async function searchMembers(_merchantId: string, query: string): Promise
 }
 
 export async function getMember(_merchantId: string, memberId: string): Promise<Member & { offer_states: MemberOfferState[] }> {
-  const res = await get<Member & { offer_states: MemberOfferState[] }>(`/members/${memberId}`);
+  // Parallelize member + offers fetch — eliminates 2-RTT waterfall
+  const [res, templates] = await Promise.all([
+    get<Member & { offer_states: MemberOfferState[] }>(`/members/${memberId}`),
+    get<OfferTemplate[]>('/offers').catch(() => [] as OfferTemplate[]),
+  ]);
+
   if (!res.offer_states || res.offer_states.length === 0) {
-    try {
-      const templates = await get<OfferTemplate[]>('/offers');
-      let applicableTemplates = (templates || []).filter(tmpl => {
-        if (res.membership_type?.bundled_offers?.some(b => b.offer_template_id === tmpl.id)) return true;
-        return !tmpl.applicable_membership_type_ids || 
-          tmpl.applicable_membership_type_ids.length === 0 || 
-          tmpl.applicable_membership_type_ids.includes(res.membership_type_id);
-      });
-      if (applicableTemplates.length === 0 && (!res.membership_type?.bundled_offers || res.membership_type.bundled_offers.length === 0)) {
-        applicableTemplates = templates || [];
-      }
-      res.offer_states = applicableTemplates.map((tmpl, idx) => {
-        const bundledQty = res.membership_type?.bundled_offers?.find(b => b.offer_template_id === tmpl.id)?.default_qty;
-        return {
-          id: `mos-real-${res.id}-${idx}`,
-          member_id: res.id,
-          offer_template_id: tmpl.id,
-          remaining_qty: tmpl.offer_type === 'percent_off' ? null : (bundledQty ?? 3),
-          initial_qty: tmpl.offer_type === 'percent_off' ? null : (bundledQty ?? 5),
-          status: 'active' as const,
-          offer: tmpl,
-        };
-      });
-    } catch {
-      res.offer_states = [];
+    let applicableTemplates = (templates || []).filter(tmpl => {
+      if (res.membership_type?.bundled_offers?.some(b => b.offer_template_id === tmpl.id)) return true;
+      return !tmpl.applicable_membership_type_ids ||
+        tmpl.applicable_membership_type_ids.length === 0 ||
+        tmpl.applicable_membership_type_ids.includes(res.membership_type_id);
+    });
+    if (applicableTemplates.length === 0 && (!res.membership_type?.bundled_offers || res.membership_type.bundled_offers.length === 0)) {
+      applicableTemplates = templates || [];
     }
+    res.offer_states = applicableTemplates.map((tmpl, idx) => {
+      const bundledQty = res.membership_type?.bundled_offers?.find(b => b.offer_template_id === tmpl.id)?.default_qty;
+      return {
+        id: `mos-real-${res.id}-${idx}`,
+        member_id: res.id,
+        offer_template_id: tmpl.id,
+        remaining_qty: tmpl.offer_type === 'percent_off' ? null : (bundledQty ?? 3),
+        initial_qty: tmpl.offer_type === 'percent_off' ? null : (bundledQty ?? 5),
+        status: 'active' as const,
+        offer: tmpl,
+      };
+    });
   } else {
-    try {
-      const templates = await get<OfferTemplate[]>('/offers');
-      res.offer_states = res.offer_states.map(s => ({
-        ...s,
-        offer: s.offer || (templates || []).find(t => t.id === s.offer_template_id) || {
-          // Fallback placeholder so the card always renders
-          id: s.offer_template_id,
-          merchant_id: '',
-          title: 'Member Offer',
-          description: 'Contact staff to redeem this offer.',
-          offer_type: 'free_service' as const,
-          value: 1,
-          active: true,
-        },
-      }));
-    } catch {
-      // keep existing
-    }
+    res.offer_states = res.offer_states.map(s => ({
+      ...s,
+      offer: s.offer || (templates || []).find(t => t.id === s.offer_template_id) || {
+        id: s.offer_template_id,
+        merchant_id: '',
+        title: 'Member Offer',
+        description: 'Contact staff to redeem this offer.',
+        offer_type: 'free_service' as const,
+        value: 1,
+        active: true,
+      },
+    }));
   }
   return res;
 }

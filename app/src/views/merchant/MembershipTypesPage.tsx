@@ -3,6 +3,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useToastStore } from '../../store/toastStore';
 import type { MembershipType, OfferTemplate } from '../../types';
 import * as api from '../../api';
+import { invalidateContaining } from '../../api/cache';
 import { Modal, ConfirmModal } from '../../components/ui/Modal';
 
 const TIER_COLORS = [
@@ -120,6 +121,10 @@ export default function MembershipTypesPage() {
         await api.createMembershipType(user?.merchant_id || '', payload as any);
         addToast('success', `Membership type "${form.name}" created`);
       }
+      // Bust all related caches so member profiles and offer pages see the new tier
+      invalidateContaining('membership-types');
+      invalidateContaining('member');
+      invalidateContaining('offers');
       setShowModal(false);
       setEditTarget(null);
       fetchData();
@@ -136,6 +141,9 @@ export default function MembershipTypesPage() {
     try {
       await api.deleteMembershipType(user?.merchant_id || '', deleteTarget.id);
       addToast('success', `Membership type "${deleteTarget.name}" deleted`);
+      invalidateContaining('membership-types');
+      invalidateContaining('member');
+      invalidateContaining('offers');
       setDeleteTarget(null);
       fetchData();
     } catch (err: any) {

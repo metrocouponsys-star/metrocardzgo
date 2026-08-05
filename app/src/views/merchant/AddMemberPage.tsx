@@ -18,6 +18,7 @@ interface FormData {
   family_dob_3?: string;
   membership_type_id: string;
   card_id: string;
+  initial_points?: string;
   consent_received: boolean;
 }
 
@@ -43,7 +44,11 @@ export default function AddMemberPage() {
     setLoading(true);
     setDuplicateId(null);
     try {
-      const newMember = await api.createMember(user?.merchant_id || '', data);
+      const createPayload = {
+        ...data,
+        initial_points: data.initial_points ? Number(data.initial_points) : undefined,
+      };
+      const newMember = await api.createMember(user?.merchant_id || '', createPayload as any);
       invalidateContaining('members');
       invalidateContaining('dashboard');
       // If a card was selected, link it immediately
@@ -304,7 +309,25 @@ export default function AddMemberPage() {
           </div>
         )}
 
-        {/* Info */}
+        {/* Initial Loyalty Points (optional) */}
+        <div className="bg-surface-container-low border border-outline-variant rounded-xl p-md space-y-sm">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="material-symbols-outlined text-amber-500 text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
+            <p className="text-label-md font-bold text-on-surface">Add Points <span className="text-body-sm font-normal text-on-surface-variant">(optional — welcome bonus)</span></p>
+          </div>
+          <input
+            id="initial_points"
+            type="number"
+            min={0}
+            className="input-field"
+            placeholder="e.g. 50 — leave blank for 0 points"
+            {...register('initial_points', {
+              min: { value: 0, message: 'Points cannot be negative' },
+            })}
+          />
+          {errors.initial_points && <p className="text-error text-label-sm mt-1">{errors.initial_points.message}</p>}
+          <p className="text-label-sm text-on-surface-variant">Award an initial points balance when enrolling this member (e.g. as a welcome bonus).</p>
+        </div>
         <div className="bg-surface-container rounded-xl p-4 flex items-start gap-3">
           <span className="material-symbols-outlined text-primary text-[20px]">info</span>
           <div className="text-body-md text-on-surface-variant">

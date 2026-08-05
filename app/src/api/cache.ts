@@ -33,20 +33,22 @@ const store = new Map<string, CacheEntry<unknown>>();
 /** Default TTL by key pattern (ms). Falls back to 60 000 if no pattern matches. */
 const TTL_MAP: { pattern: RegExp; ttl: number }[] = [
   { pattern: /dashboard/, ttl: 30_000 },
-  { pattern: /member\/[^/]+$/, ttl: 30_000 },  // single member profile
-  { pattern: /members$/, ttl: 60_000 },          // full member list
-  { pattern: /membership-types/, ttl: 120_000 },
-  { pattern: /offers/, ttl: 120_000 },
-  { pattern: /rewards/, ttl: 5_000 },
-  { pattern: /coupons/, ttl: 5_000 },
-  { pattern: /reports/, ttl: 60_000 },
+  { pattern: /member\/[^/]+$/, ttl: 60_000 },   // single member profile
+  { pattern: /members$/, ttl: 60_000 },            // full member list
+  { pattern: /membership-types/, ttl: 180_000 },
+  { pattern: /offers/, ttl: 180_000 },
+  { pattern: /rewards/, ttl: 120_000 },
+  { pattern: /coupons/, ttl: 120_000 },
+  { pattern: /points.rules/, ttl: 180_000 },
+  { pattern: /cards/, ttl: 60_000 },
+  { pattern: /reports/, ttl: 120_000 },
 ];
 
 function ttlFor(key: string): number {
   for (const { pattern, ttl } of TTL_MAP) {
     if (pattern.test(key)) return ttl;
   }
-  return 60_000;
+  return 90_000; // default: 90 s for unmatched keys
 }
 
 /**

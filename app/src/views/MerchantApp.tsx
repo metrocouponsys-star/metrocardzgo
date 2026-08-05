@@ -59,14 +59,6 @@ function AuthRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-function MemberDetailRoute() {
-  const { isAuthenticated } = useAuthStore();
-  if (isAuthenticated) {
-    return <ProtectedRoute roles={['owner', 'staff']}><AppShell><MemberProfilePage /></AppShell></ProtectedRoute>;
-  }
-  return <PublicMemberPage />;
-}
-
 export default function MerchantApp() {
   const { isAuthenticated, user } = useAuthStore();
   return (
@@ -83,7 +75,7 @@ export default function MerchantApp() {
         <Route path="/members" element={<ProtectedRoute roles={['owner', 'staff']}><AppShell><MembersListPage /></AppShell></ProtectedRoute>} />
         <Route path="/members/search" element={<ProtectedRoute roles={['owner', 'staff']}><AppShell><SearchMemberPage /></AppShell></ProtectedRoute>} />
         <Route path="/members/new" element={<ProtectedRoute roles={['owner', 'staff']}><AppShell><AddMemberPage /></AppShell></ProtectedRoute>} />
-        <Route path="/members/:id" element={<MemberDetailRoute />} />
+        <Route path="/members/:id" element={<ProtectedRoute roles={['owner', 'staff']}><AppShell><MemberProfilePage /></AppShell></ProtectedRoute>} />
         <Route path="/offers" element={<ProtectedRoute roles={['owner']}><AppShell><OffersPage /></AppShell></ProtectedRoute>} />
         <Route path="/membership-types" element={<ProtectedRoute roles={['owner']}><AppShell><MembershipTypesPage /></AppShell></ProtectedRoute>} />
         <Route path="/reports" element={<ProtectedRoute roles={['owner']}><AppShell><ReportsPage /></AppShell></ProtectedRoute>} />
