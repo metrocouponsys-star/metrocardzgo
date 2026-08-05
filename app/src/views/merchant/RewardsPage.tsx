@@ -830,8 +830,11 @@ function PointsRulesTab() {
       setEditTarget(null);
       setForm({ rule_type: 'per_rupee', points_value: '1', spend_unit: '1' });
       load();
-    } catch { addToast('error', editTarget ? 'Failed to update rule' : 'Failed to create rule'); }
-    finally { setSaving(false); }
+    } catch (err: any) {
+      addToast('error', err?.message || err?.detail || (editTarget ? 'Failed to update rule' : 'Failed to create rule'));
+    } finally {
+      setSaving(false);
+    }
   };
 
   const RULE_META: Record<string, { icon: string; desc: string; color: string }> = {

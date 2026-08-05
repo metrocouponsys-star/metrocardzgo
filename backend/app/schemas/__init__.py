@@ -445,12 +445,6 @@ class DashboardStats(BaseModel):
     wallet_points_issued_month: Decimal
     recent_redemptions: List[RedemptionOut]
 
-# ── Points Rules ──────────────────────────────────────────────────────────────
-class PointsRuleCreate(BaseModel):
-    rule_type: Literal["per_visit", "per_rupee"]
-    points_value: Decimal
-    spend_unit: Optional[Decimal] = Decimal("1")
-
 
 # ── Purchase & Loyalty Integration ───────────────────────────────────────────
 class PurchaseRequest(BaseModel):
@@ -723,10 +717,12 @@ class GiftVoucherRedeemRequest(BaseModel):
 class PointsRuleCreate(BaseModel):
     rule_type: Literal["per_visit", "per_rupee"]
     points_value: Decimal
+    spend_unit: Optional[Decimal] = Decimal("1")
 
 
 class PointsRuleUpdate(BaseModel):
     points_value: Optional[Decimal] = None
+    spend_unit: Optional[Decimal] = None
     is_active: Optional[bool] = None
 
 
@@ -735,6 +731,7 @@ class PointsRuleOut(BaseModel):
     merchant_id: str
     rule_type: str
     points_value: Decimal
+    spend_unit: Optional[Decimal] = Decimal("1")
     is_active: bool
     created_at: datetime
     model_config = {"from_attributes": True}

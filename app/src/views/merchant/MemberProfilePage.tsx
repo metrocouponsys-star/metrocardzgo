@@ -398,253 +398,140 @@ export default function MemberProfilePage() {
     ? offerStateBefore.remaining_qty - 1 : null;
 
   return (
-    <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-5xl mx-auto space-y-xl animate-fade-in">
+    <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-5xl mx-auto space-y-6 animate-fade-in">
       {/* Back */}
-      <button onClick={() => navigate('/members')} className="flex items-center gap-1 text-on-surface-variant hover:text-on-surface text-body-md transition-colors">
+      <button onClick={() => navigate('/members')} className="flex items-center gap-1 text-on-surface-variant hover:text-on-surface text-body-md transition-colors mb-1">
         <span className="material-symbols-outlined text-[18px]">arrow_back</span>
         Back to Search
       </button>
 
-      {/* Header Card */}
-      <section className="prime-gradient rounded-2xl p-lg text-white shadow-elevated relative overflow-hidden">
-        <div className="absolute -right-16 -top-16 w-56 h-56 bg-primary-container/20 rounded-full blur-3xl" />
+      {/* Main Grid: 2-Column on Desktop (lg:grid-cols-12), 1-Column on Mobile */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        {/* Left Column: Credit Card, Primary CTA, Pill Tabs, Tab Content */}
+        <div className="lg:col-span-7 space-y-5">
+          
+          {/* Credit Card Profile Header */}
+          <section className="prime-gradient rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
+            <div className="absolute -right-16 -top-16 w-56 h-56 bg-white/10 rounded-full blur-3xl" />
 
-        {/* Expiry warning */}
-        {member.status === 'expiring_soon' && (
-          <div className="relative z-10 mb-4 bg-amber-500/20 border border-amber-400/30 rounded-xl px-4 py-2 flex items-center gap-2">
-            <span className="material-symbols-outlined text-amber-300 text-[18px]">warning</span>
-            <span className="text-sm text-amber-100">Membership expires in {daysToExpiry} days — renew to continue</span>
-          </div>
-        )}
-        {member.status === 'expired' && (
-          <div className="relative z-10 mb-4 bg-error/20 border border-error/30 rounded-xl px-4 py-2 flex items-center gap-2">
-            <span className="material-symbols-outlined text-red-300 text-[18px]">cancel</span>
-            <span className="text-sm text-red-100">Membership expired — renew to enable redemptions</span>
-          </div>
-        )}
-
-        <div className="relative z-10 flex flex-col md:flex-row gap-lg items-start md:items-center">
-          {/* Avatar */}
-          <div className="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-white/20 overflow-hidden shadow-xl bg-primary-container flex items-center justify-center text-on-primary-container text-headline-lg font-bold">
-            {member.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-          </div>
-
-          {/* Info */}
-          <div className="flex-1">
-            <div className="flex flex-wrap items-center gap-2 mb-1">
-              <h2 className="text-headline-lg-mobile md:text-headline-lg font-headline-lg-mobile">{member.name}</h2>
-              {member.membership_type && <MembershipBadge name={member.membership_type.name} />}
-              <StatusBadge status={member.status} />
-            </div>
-            <p className="text-body-md opacity-90 mb-1">#{member.member_code}</p>
-            <div className="flex flex-wrap gap-4 text-label-sm opacity-80">
-              <span className="flex items-center gap-1">
-                <span className="material-symbols-outlined text-[14px]">phone</span>
-                {member.phone}
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="material-symbols-outlined text-[14px]">calendar_today</span>
-                Expires: {format(new Date(member.expiry_date), 'dd MMM yyyy')}
-              </span>
-            </div>
-          </div>
-
-          {/* Feature 1: Loyalty Points & Stats */}
-          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-            {/* Loyalty Points */}
-            <div className="bg-white/10 backdrop-blur-md rounded-xl p-md border border-white/10 min-w-[140px]">
-              <p className="text-label-sm font-label-md uppercase opacity-70 mb-1 flex items-center gap-1">
-                <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
-                Loyalty Points
-              </p>
-              <p className="text-title-lg font-bold">
-                {member.loyalty_points.toLocaleString()} <span className="text-body-sm font-normal opacity-70">pts</span>
-              </p>
-              {loyaltyHistory.length > 0 && (
-                <p className="text-label-xs opacity-60 mt-1">
-                  {loyaltyHistory.filter(t => t.type === 'earn').length} earn events
-                </p>
-              )}
-            </div>
-
-            {/* Visits & Referral Code */}
-            <div className="bg-white/10 backdrop-blur-md rounded-xl p-md border border-white/10 min-w-[160px]">
-              <div className="flex justify-between gap-6">
-                <div>
-                  <p className="text-label-sm uppercase opacity-70 mb-0.5 flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[14px]">local_activity</span>
-                    Visits
-                  </p>
-                  <p className="text-title-lg font-bold">{member.total_visits || 0}</p>
-                </div>
-                <div>
-                  <p className="text-label-sm uppercase opacity-70 mb-0.5 flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[14px]">share</span>
-                    Invite Code
-                  </p>
-                  <div className="flex items-center gap-1">
-                    <p className="font-mono font-bold text-title-md">{member.referral_code || 'N/A'}</p>
-                    {member.referral_code && (
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(member.referral_code || '');
-                          addToast('success', 'Referral code copied!');
-                        }}
-                        className="hover:bg-white/20 p-1 rounded transition-colors"
-                        title="Copy Referral Code"
-                      >
-                        <span className="material-symbols-outlined text-[14px]">content_copy</span>
-                      </button>
-                    )}
+            {/* Merchant / Restaurant Branding Header Row */}
+            <div className="relative z-10 flex items-center justify-between border-b border-white/15 pb-3 mb-4">
+              <div className="flex items-center gap-2.5">
+                {user?.logo_url ? (
+                  <img src={user.logo_url} alt="Merchant logo" className="w-8 h-8 rounded-lg object-cover border border-white/30 shadow-xs" />
+                ) : (
+                  <div className="w-8 h-8 rounded-lg bg-white/15 backdrop-blur-md flex items-center justify-center border border-white/20">
+                    <span className="material-symbols-outlined text-amber-300 text-[18px]">storefront</span>
                   </div>
+                )}
+                <div>
+                  <h3 className="font-serif italic font-bold text-headline-sm tracking-wide text-white drop-shadow-xs leading-none">
+                    {user?.merchant_name || 'Restaurant & Hospitality VIP'}
+                  </h3>
+                  <p className="text-[10px] text-white/70 uppercase tracking-widest mt-0.5 font-mono">Loyalty Pass</p>
                 </div>
               </div>
+              {member.membership_type && <MembershipBadge name={member.membership_type.name} />}
             </div>
-          </div>
 
-        </div>
+            {/* Expiry warnings if any */}
+            {member.status === 'expiring_soon' && (
+              <div className="relative z-10 mb-3 bg-amber-500/25 border border-amber-400/40 rounded-xl px-3 py-1.5 flex items-center gap-2">
+                <span className="material-symbols-outlined text-amber-300 text-[16px]">warning</span>
+                <span className="text-xs text-amber-100 font-medium">Expires in {daysToExpiry} days — renew soon</span>
+              </div>
+            )}
+            {member.status === 'expired' && (
+              <div className="relative z-10 mb-3 bg-error/30 border border-error/40 rounded-xl px-3 py-1.5 flex items-center gap-2">
+                <span className="material-symbols-outlined text-red-200 text-[16px]">cancel</span>
+                <span className="text-xs text-red-100 font-medium">Expired — redemptions disabled</span>
+              </div>
+            )}
 
-        {/* Actions Bar */}
-        <div className="relative z-10 flex gap-2 mt-4 flex-wrap items-center">
+            {/* Member Card Details */}
+            <div className="relative z-10 flex items-center gap-4">
+              {user?.logo_url ? (
+                <img src={user.logo_url} alt="Logo" className="w-14 h-14 rounded-2xl border-2 border-white/30 object-cover shadow-inner flex-shrink-0" />
+              ) : (
+                <div className="w-14 h-14 rounded-2xl border-2 border-white/30 bg-white/15 flex items-center justify-center shadow-inner flex-shrink-0">
+                  <span className="material-symbols-outlined text-amber-300 text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>loyalty</span>
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-xl font-bold tracking-tight text-white truncate">{member.name}</h2>
+                  <StatusBadge status={member.status} />
+                </div>
+                <p className="text-white/70 font-mono text-xs tracking-widest uppercase mt-0.5">#{member.member_code}</p>
+                <p className="text-white/80 text-xs flex items-center gap-1 mt-0.5">
+                  <span className="material-symbols-outlined text-[13px]">phone</span>
+                  {member.phone}
+                </p>
+              </div>
+            </div>
+
+            {/* Card Stats Footer */}
+            <div className="relative z-10 mt-5 pt-3 border-t border-white/15 flex justify-between items-end">
+              <div>
+                <p className="text-white/60 text-[11px] uppercase tracking-wider font-semibold mb-0.5">Valid Until</p>
+                <p className="font-semibold text-sm">{format(new Date(member.expiry_date), 'MMM dd, yyyy')}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-white/60 text-[11px] uppercase tracking-wider font-semibold mb-0.5">Total Visits</p>
+                <p className="font-bold text-base">{member.total_visits || 0}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-white/60 text-[11px] uppercase tracking-wider font-semibold mb-0.5">Loyalty Points</p>
+                <p className="text-2xl font-extrabold text-amber-300 drop-shadow-xs">{member.loyalty_points.toLocaleString()}</p>
+              </div>
+            </div>
+          </section>
+
+          {/* Record Purchase — single full-width CTA */}
           <button
             id="record-purchase-btn"
             onClick={() => setShowPurchaseModal(true)}
-            className="bg-secondary hover:bg-secondary/90 text-on-secondary px-4 py-2 rounded-lg text-label-md font-bold flex items-center gap-1.5 shadow-md transition-all"
+            className="w-full btn-primary flex items-center justify-center gap-2 py-3 rounded-xl text-body-md font-semibold shadow-md active:scale-98 transition-transform"
           >
-            <span className="material-symbols-outlined text-[18px]">shopping_cart_checkout</span>
+            <span className="material-symbols-outlined text-[20px]">shopping_cart_checkout</span>
             Record Purchase
           </button>
 
-          {isOwner && (
-            <>
+          {/* Pill Tabs */}
+          <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+            {([
+              { key: 'offers', label: 'Active Offers', icon: 'local_offer' },
+              { key: 'history', label: 'Redemptions', icon: 'history' },
+              { key: 'points', label: 'Points History', icon: 'stars' },
+              { key: 'rewards', label: 'Rewards', icon: 'card_giftcard' },
+            ] as const).map(({ key, label, icon }) => (
               <button
-                onClick={handleOpenEditModal}
-                className="bg-white/15 hover:bg-white/25 text-white px-4 py-2 rounded-lg text-label-md font-label-md flex items-center gap-1 transition-colors"
+                key={key}
+                onClick={() => setTab(key as Tab)}
+                className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-label-md font-medium transition-all ${
+                  tab === key
+                    ? 'bg-primary text-on-primary shadow-sm font-semibold'
+                    : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high border border-outline-variant/40'
+                }`}
               >
-                <span className="material-symbols-outlined text-[16px]">edit</span>
-                Edit
-              </button>
-              <button
-                className="bg-white/15 hover:bg-white/25 text-white px-4 py-2 rounded-lg text-label-md font-label-md flex items-center gap-1 transition-colors"
-                onClick={handleDownloadCard}
-              >
-                <span className="material-symbols-outlined text-[16px]">download</span>
-                Download Card PDF
-              </button>
-              {/* Google Wallet Button */}
-              {walletUrl ? (
-                <a
-                  href={walletUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-white/15 hover:bg-white/25 text-white px-4 py-2 rounded-lg text-label-md font-label-md flex items-center gap-1.5 transition-colors"
-                >
-                  <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>add_to_wallet</span>
-                  Add to Google Wallet
-                </a>
-              ) : (
-                <button
-                  disabled={walletLoading}
-                  onClick={async () => {
-                    if (!member) return;
-                    setWalletLoading(true);
-                    try {
-                      const res = await api.generateWalletPassUrl(member.id);
-                      setWalletUrl(res.save_url);
-                      // Open immediately
-                      window.open(res.save_url, '_blank', 'noopener,noreferrer');
-                      addToast('success', 'Google Wallet pass generated!');
-                    } catch {
-                      addToast('error', 'Failed to generate Wallet pass — try again');
-                    } finally {
-                      setWalletLoading(false);
-                    }
-                  }}
-                  className="bg-white/15 hover:bg-white/25 text-white px-4 py-2 rounded-lg text-label-md font-label-md flex items-center gap-1.5 transition-colors disabled:opacity-50"
-                >
-                  <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>add_to_wallet</span>
-                  {walletLoading ? 'Generating…' : 'Google Wallet Pass'}
-                </button>
-              )}
-            </>
-          )}
-        </div>
-
-        {/* Physical Card Row */}
-        <div className="relative z-10 mt-4 border-t border-white/10 pt-4">
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <div className="flex items-center gap-3">
-              {/* Card design image or default icon */}
-              {(member as any).card_design_url ? (
-                <img
-                  src={(member as any).card_design_url}
-                  alt="Physical card"
-                  className="h-10 w-16 object-cover rounded-lg border border-white/20 shadow"
-                />
-              ) : (
-                <span className="material-symbols-outlined text-white/60 text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>credit_card</span>
-              )}
-              {member.physical_card_number ? (
-                <span className="font-mono text-white font-bold tracking-widest text-body-md">{member.physical_card_number}</span>
-              ) : (
-                <span className="text-white/50 text-label-md italic">No physical card linked</span>
-              )}
-            </div>
-            {isOwner && (
-              member.physical_card_number ? (
-                <button
-                  onClick={() => navigate('/cards')}
-                  className="bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-lg text-label-sm transition-colors"
-                >
-                  Manage Card
-                </button>
-              ) : (
-                <button
-                  onClick={() => navigate('/cards')}
-                  className="bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-lg text-label-sm flex items-center gap-1 transition-colors"
-                >
-                  <span className="material-symbols-outlined text-[14px]">add_card</span>
-                  Assign Card
-                </button>
-              )
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* Two Column Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-lg items-start">
-        {/* Left Column: Tabs and content */}
-        <div className="lg:col-span-8 space-y-md">
-          {/* Tabs */}
-          <div className="flex border-b border-outline-variant/30 flex-wrap">
-            {(['offers', 'history', 'points', 'rewards'] as Tab[]).map(t => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={`px-5 py-3 text-label-md font-label-md border-b-2 transition-all capitalize flex items-center gap-1.5
-                  ${tab === t ? 'text-primary border-primary' : 'text-on-surface-variant border-transparent hover:bg-surface-container'}`}
-              >
-                {t === 'offers' && <span className="material-symbols-outlined text-[16px]">local_offer</span>}
-                {t === 'history' && <span className="material-symbols-outlined text-[16px]">history</span>}
-                {t === 'points' && <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>}
-                {t === 'rewards' && <span className="material-symbols-outlined text-[16px]">card_giftcard</span>}
-                {t === 'offers' ? 'Active Offers' : t === 'history' ? 'Redemption History' : t === 'points' ? 'Points History' : 'Reward Catalog'}
+                <span className="material-symbols-outlined text-[15px]" style={tab === key ? { fontVariationSettings: "'FILL' 1" } : {}}>{icon}</span>
+                {label}
               </button>
             ))}
           </div>
 
           {/* Tab: Active Offers */}
           {tab === 'offers' && (
-            <div>
+            <div className="space-y-3">
               {member.status === 'expired' && (
-                <div className="mb-4 p-4 bg-error-container rounded-xl border border-error/20 text-on-error-container flex items-center gap-2">
+                <div className="p-4 bg-error-container rounded-xl border border-error/20 text-on-error-container flex items-center gap-2">
                   <span className="material-symbols-outlined">block</span>
                   Redemptions are disabled — membership expired
                 </div>
               )}
               {member.offer_states && member.offer_states.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
+                <div className="space-y-3">
                   {member.offer_states.map(state => {
                     const offer = state.offer || {
                       id: state.offer_template_id,
@@ -655,44 +542,59 @@ export default function MemberProfilePage() {
                       value: 1,
                       active: true,
                     };
+                    const remainingVal = state.remaining_qty ?? 0;
+                    const initialVal = state.initial_qty ?? remainingVal;
                     return (
-                      <div key={state.id} className="relative">
-                        {/* Feature 1: points redemption badge */}
-                        {offer.is_points_redemption && (
-                          <div className="absolute top-2 right-2 z-10 bg-amber-100 text-amber-700 border border-amber-200 rounded-full px-2 py-0.5 text-label-sm flex items-center gap-1">
-                            <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
-                            {offer.loyalty_points_cost} pts
+                      <div key={state.id} className="card p-4 space-y-3 border border-outline-variant/30 hover:border-primary/40 transition-all shadow-xs">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-body-md text-on-surface leading-snug">{offer.title}</p>
+                            {offer.description && (
+                              <p className="text-label-sm text-on-surface-variant mt-0.5 line-clamp-2">{offer.description}</p>
+                            )}
+                            {offer.is_points_redemption && (
+                              <span className="inline-flex items-center gap-1 mt-1.5 bg-amber-100 text-amber-800 font-bold text-label-xs px-2.5 py-0.5 rounded-full border border-amber-200">
+                                <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
+                                {offer.loyalty_points_cost} pts to redeem
+                              </span>
+                            )}
+                            {offer.loyalty_points_earn && !offer.is_points_redemption && (
+                              <span className="inline-flex items-center gap-1 mt-1.5 bg-green-100 text-green-800 font-bold text-label-xs px-2.5 py-0.5 rounded-full border border-green-200">
+                                <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>add_circle</span>
+                                +{offer.loyalty_points_earn} pts earn
+                              </span>
+                            )}
                           </div>
-                        )}
-                        {/* Feature 1: earn badge */}
-                        {offer.loyalty_points_earn && !offer.is_points_redemption && (
-                          <div className="absolute top-2 right-2 z-10 bg-green-100 text-green-700 border border-green-200 rounded-full px-2 py-0.5 text-label-sm flex items-center gap-1">
-                            <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>add_circle</span>
-                            +{offer.loyalty_points_earn} pts
-                          </div>
-                        )}
-                        <OfferCard
-                          offer={offer}
-                          offerState={state}
-                          readOnly={member.status === 'expired'}
-                          onRedeem={(offerStateId) => {
-                            setRedeemState({
-                              offerStateId,
-                              offerTitle: offer?.title || '',
-                              remainingBefore: state.remaining_qty,
-                              isPointsRedemption: offer?.is_points_redemption,
-                              pointsCost: offer?.loyalty_points_cost ?? undefined,
-                            });
-                          }}
-                        />
+                          {/* High-visibility Remaining Quantity Badge */}
+                          {state.remaining_qty !== null && state.remaining_qty !== undefined && (
+                            <span className="flex-shrink-0 bg-primary text-on-primary font-bold text-xs px-3 py-1 rounded-full shadow-xs flex items-center gap-1">
+                              <span className="material-symbols-outlined text-[13px]">confirmation_number</span>
+                              {remainingVal}/{initialVal} left
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          disabled={member.status === 'expired'}
+                          onClick={() => setRedeemState({
+                            offerStateId: state.id,
+                            offerTitle: offer?.title || '',
+                            remainingBefore: state.remaining_qty,
+                            isPointsRedemption: offer?.is_points_redemption,
+                            pointsCost: offer?.loyalty_points_cost ?? undefined,
+                          })}
+                          className="w-full btn-primary py-2 text-label-md flex items-center justify-center gap-1.5 disabled:opacity-50 active:scale-98 transition-transform"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">redeem</span>
+                          Redeem Now
+                        </button>
                       </div>
                     );
                   })}
                 </div>
               ) : (
-                <div className="text-center py-12 text-on-surface-variant">
-                  <span className="material-symbols-outlined text-[48px] mb-2">local_offer</span>
-                  <p>No active offers for this member.</p>
+                <div className="text-center py-12 text-on-surface-variant card">
+                  <span className="material-symbols-outlined text-[48px] mb-2 text-primary/60">local_offer</span>
+                  <p className="font-medium">No active offers for this member.</p>
                 </div>
               )}
             </div>
@@ -702,14 +604,14 @@ export default function MemberProfilePage() {
           {tab === 'history' && (
             <div className="space-y-2">
               {redemptions.length === 0 ? (
-                <div className="text-center py-12 text-on-surface-variant">
-                  <span className="material-symbols-outlined text-[48px] mb-2">history</span>
-                  <p>No redemptions yet</p>
+                <div className="text-center py-12 text-on-surface-variant card">
+                  <span className="material-symbols-outlined text-[48px] mb-2 text-primary/60">history</span>
+                  <p className="font-medium">No redemptions yet</p>
                 </div>
               ) : (
                 redemptions.map(r => (
                   <div key={r.id} className="card p-md flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-secondary-container/30 flex items-center justify-center text-secondary">
+                    <div className="w-10 h-10 rounded-full bg-secondary-container/40 flex items-center justify-center text-secondary">
                       <span className="material-symbols-outlined text-[20px]">check_circle</span>
                     </div>
                     <div className="flex-1">
@@ -724,10 +626,9 @@ export default function MemberProfilePage() {
             </div>
           )}
 
-          {/* Tab: Points History — Feature 1 */}
+          {/* Tab: Points History */}
           {tab === 'points' && (
             <div className="space-y-3">
-              {/* Balance summary bar */}
               <div className="card p-md flex items-center gap-4 bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200">
                 <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
                   <span className="material-symbols-outlined text-amber-600 text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
@@ -743,12 +644,11 @@ export default function MemberProfilePage() {
                   </p>
                 </div>
               </div>
-
               {loyaltyHistory.length === 0 ? (
-                <div className="text-center py-12 text-on-surface-variant">
-                  <span className="material-symbols-outlined text-[48px] mb-2">stars</span>
-                  <p>No loyalty points earned yet.</p>
-                  <p className="text-label-sm mt-1">Points are earned when offers with point rewards are redeemed.</p>
+                <div className="text-center py-12 text-on-surface-variant card">
+                  <span className="material-symbols-outlined text-[48px] mb-2 text-amber-500">stars</span>
+                  <p className="font-medium">No loyalty points earned yet.</p>
+                  <p className="text-label-sm mt-1">Points are earned when purchases are recorded or reward offers are redeemed.</p>
                 </div>
               ) : (
                 loyaltyHistory.map(tx => (
@@ -774,43 +674,49 @@ export default function MemberProfilePage() {
             </div>
           )}
 
-          {/* Tab: Reward Catalog */}
+          {/* Tab: Reward Catalog — Interactive 2x2 Grid with Glow */}
           {tab === 'rewards' && (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {rewardCatalog.length === 0 ? (
-                <div className="text-center py-12 text-on-surface-variant">
-                  <span className="material-symbols-outlined text-[48px] mb-2">card_giftcard</span>
-                  <p>No rewards available in the catalog yet.</p>
-                  <p className="text-label-sm mt-1">Configure reward catalog items from Settings / Rewards page.</p>
+                <div className="text-center py-12 text-on-surface-variant card">
+                  <span className="material-symbols-outlined text-[48px] mb-2 text-primary/60">card_giftcard</span>
+                  <p className="font-medium">No rewards available in the catalog yet.</p>
+                  <p className="text-label-sm mt-1">Configure reward catalog items from Rewards page.</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+                /* 2x2 Responsive Grid */
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {rewardCatalog.map((rew: any) => {
                     const canAfford = member.loyalty_points >= rew.points_cost;
                     return (
-                      <div key={rew.id} className="card p-md flex flex-col justify-between space-y-3 border border-outline-variant">
+                      <div
+                        key={rew.id}
+                        className={`card p-4 flex flex-col justify-between border border-outline-variant/40 transition-all duration-200 hover:shadow-lg hover:border-primary/50 hover:ring-2 hover:ring-primary/20 active:scale-[0.98] ${
+                          !canAfford ? 'opacity-75' : ''
+                        }`}
+                      >
                         <div>
-                          <div className="flex justify-between items-start">
-                            <h4 className="font-bold text-body-lg text-on-surface">{rew.name}</h4>
-                            <span className="bg-amber-100 text-amber-800 text-label-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <div className="flex justify-between items-start gap-2 mb-2">
+                            <h4 className="font-bold text-body-md text-on-surface leading-snug flex-1">{rew.name}</h4>
+                            <span className="bg-amber-100 text-amber-900 text-label-xs font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 flex-shrink-0 border border-amber-200">
                               <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
                               {rew.points_cost} pts
                             </span>
                           </div>
                           {rew.description && (
-                            <p className="text-body-sm text-on-surface-variant mt-1">{rew.description}</p>
+                            <p className="text-label-sm text-on-surface-variant line-clamp-2 mb-3">{rew.description}</p>
                           )}
                         </div>
-                        <div className="pt-2 border-t border-outline-variant/30 flex items-center justify-between">
-                          <span className="text-label-xs text-on-surface-variant">
-                            {rew.quantity_available !== null ? `${rew.quantity_available} left` : 'Unlimited'}
+                        <div className="pt-2 border-t border-outline-variant/30 flex items-center justify-between mt-auto">
+                          <span className="text-label-xs font-medium text-on-surface-variant">
+                            {rew.quantity_available !== null && rew.quantity_available !== undefined ? `${rew.quantity_available} left` : 'Unlimited'}
                           </span>
                           <button
                             disabled={!canAfford || claimingRewardId === rew.id || member.status === 'expired'}
                             onClick={() => handleClaimReward(rew)}
-                            className="btn-primary !py-1.5 !px-3 text-label-sm disabled:opacity-50"
+                            className="btn-primary !py-1.5 !px-3 text-label-sm disabled:opacity-50 shadow-xs"
                           >
-                            {claimingRewardId === rew.id ? 'Claiming...' : canAfford ? 'Claim Reward' : 'Needs More Points'}
+                            {claimingRewardId === rew.id ? 'Claiming...' : canAfford ? 'Claim Reward' : 'Needs Points'}
                           </button>
                         </div>
                       </div>
@@ -819,86 +725,74 @@ export default function MemberProfilePage() {
                 </div>
               )}
 
-              {/* Active Coupons Section */}
-              <div className="mt-6 pt-4 border-t border-outline-variant">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-bold text-body-md text-on-surface flex items-center gap-1.5">
+              {/* Active Coupons */}
+              {coupons.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-outline-variant/40">
+                  <h4 className="font-bold text-body-md text-on-surface flex items-center gap-1.5 mb-3">
                     <span className="material-symbols-outlined text-secondary text-[20px]">confirmation_number</span>
-                    Active Store Coupons & Promos ({coupons.length})
+                    Active Store Coupons ({coupons.length})
                   </h4>
-                </div>
-                {coupons.length === 0 ? (
-                  <p className="text-body-sm text-on-surface-variant italic">No active coupon codes right now.</p>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {coupons.map((c: any) => (
                       <div key={c.id} className="card p-3 flex items-center justify-between border border-secondary-container/50 bg-secondary-container/10">
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="font-mono font-bold text-secondary text-body-md tracking-wider bg-secondary-container/40 px-2 py-0.5 rounded">
-                              {c.code}
-                            </span>
+                            <span className="font-mono font-bold text-secondary text-body-md tracking-wider bg-secondary-container/40 px-2 py-0.5 rounded">{c.code}</span>
                             <span className="text-label-xs font-semibold px-2 py-0.5 rounded-full bg-surface-container text-on-surface">
                               {c.discount_type === 'percent' ? `${c.value}% OFF` : `₹${c.value} OFF`}
                             </span>
                           </div>
                           <p className="text-label-xs text-on-surface-variant mt-1">
-                            Min purchase: ₹{c.min_purchase} {c.active_days ? `· Active: ${c.active_days}` : ''}
+                            Min purchase: ₹{c.min_purchase}
                           </p>
                         </div>
                         <button
-                          onClick={() => {
-                            setPurchaseForm(f => ({ ...f, coupon_code: c.code }));
-                            setShowPurchaseModal(true);
-                          }}
+                          onClick={() => { setPurchaseForm(f => ({ ...f, coupon_code: c.code })); setShowPurchaseModal(true); }}
                           className="btn-outline !py-1 !px-2.5 text-label-xs flex items-center gap-1"
                         >
                           <span className="material-symbols-outlined text-[14px]">shopping_cart</span>
-                          Use in Purchase
+                          Use
                         </button>
                       </div>
                     ))}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           )}
+
         </div>
 
-        {/* Right Column: Actions / Notes / Referrals */}
-        <div className="lg:col-span-4 space-y-md">
-          {/* Renewal CTA if expired/expiring */}
+        {/* Right Column: Accordions & Auxiliary Controls */}
+        <div className="lg:col-span-5 space-y-4">
+          
+          {/* Renewal CTA (if expiring / expired) */}
           {(member.status === 'expired' || member.status === 'expiring_soon' || daysToExpiry <= 30) && (
-            <div className="card p-md border border-amber-200 bg-amber-50/30 space-y-3">
+            <div className="card p-md border border-amber-200 bg-amber-50/40 space-y-3">
               <div className="flex items-center gap-2 text-amber-800 font-bold text-label-md">
                 <span className="material-symbols-outlined">autorenew</span>
                 Renew Membership
               </div>
-              <p className="text-body-sm text-on-surface-variant">
-                Extend membership validity by 1 year from today.
-              </p>
-              <button
-                onClick={handleRenew}
-                disabled={renewing}
-                className="btn-primary w-full py-2.5 flex items-center justify-center gap-2"
-              >
+              <p className="text-body-sm text-on-surface-variant">Extend validity for another 1 year.</p>
+              <button onClick={handleRenew} disabled={renewing} className="btn-primary w-full py-2.5 flex items-center justify-center gap-2">
                 {renewing && <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>}
                 Renew Validity
               </button>
             </div>
           )}
 
-          {/* Redeem Gift Voucher Card */}
-          <div className="card p-md space-y-md">
-            <h4 className="text-label-md font-bold text-on-surface flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px]">confirmation_number</span>
-              Redeem Gift Voucher / Card
-            </h4>
-            <form onSubmit={handleRedeemVoucher} className="space-y-3">
-              <p className="text-body-sm text-on-surface-variant">
-                Enter gift voucher or card code to link & credit value to member:
-              </p>
-              <div className="flex gap-2">
+          {/* Accordion: Redeem Gift Voucher */}
+          <details className="card p-0 overflow-hidden border border-outline-variant/30 group">
+            <summary className="flex items-center justify-between px-4 py-3.5 cursor-pointer list-none font-semibold text-body-md text-on-surface select-none">
+              <span className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px] text-primary">confirmation_number</span>
+                Redeem Gift Voucher
+              </span>
+              <span className="material-symbols-outlined text-[20px] text-on-surface-variant transition-transform group-open:rotate-180">expand_more</span>
+            </summary>
+            <div className="px-4 pb-4 space-y-3 border-t border-outline-variant/20">
+              <p className="text-body-sm text-on-surface-variant pt-3">Enter gift voucher code to link & credit value:</p>
+              <form onSubmit={handleRedeemVoucher} className="flex gap-2">
                 <input
                   type="text"
                   value={voucherCodeInput}
@@ -906,106 +800,106 @@ export default function MemberProfilePage() {
                   placeholder="VOUCHER CODE"
                   className="flex-1 px-3 py-2 bg-surface-container-low border border-outline-variant rounded-lg font-mono text-body-md text-center outline-none focus:border-primary transition-all uppercase"
                 />
-                <button
-                  type="submit"
-                  disabled={redeemingVoucher || !voucherCodeInput.trim()}
-                  className="btn-primary py-2 px-4 flex items-center gap-1"
-                >
+                <button type="submit" disabled={redeemingVoucher || !voucherCodeInput.trim()} className="btn-primary py-2 px-4 flex items-center gap-1">
                   {redeemingVoucher ? '...' : 'Redeem'}
                 </button>
-              </div>
-            </form>
-          </div>
-
-          {/* Customer Notes */}
-          <div className="card p-md space-y-md">
-            <h4 className="text-label-md font-bold text-on-surface flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px]">sticky_note_2</span>
-              Customer Notes
-            </h4>
-            <textarea
-              value={notes}
-              onChange={e => setNotes(e.target.value)}
-              onBlur={handleSaveNotes}
-              placeholder="Add internal notes about this customer (e.g. preferences, allergies, VIP status)..."
-              className="w-full h-32 p-3 bg-surface-container-low border border-outline-variant rounded-lg text-body-md outline-none focus:border-primary transition-all resize-none"
-            />
-            <div className="flex justify-between items-center text-label-xs text-on-surface-variant">
-              <span>Saves automatically on blur</span>
-              {savingNotes && (
-                <span className="text-primary flex items-center gap-1">
-                  <span className="material-symbols-outlined animate-spin text-[12px]">progress_activity</span>
-                  Saving...
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Referral Engine */}
-          <div className="card p-md space-y-md">
-            <h4 className="text-label-md font-bold text-on-surface flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px]">group_add</span>
-              Referrals & Invites
-            </h4>
-            {member.referred_by_member_id ? (
-              <div className="p-3 bg-secondary-container/20 border border-secondary-container rounded-lg text-body-sm flex items-center gap-2">
-                <span className="material-symbols-outlined text-secondary text-[18px]">check_circle</span>
-                <span>Referred by another member</span>
-              </div>
-            ) : (
-              <form onSubmit={handleApplyReferral} className="space-y-3">
-                <p className="text-body-sm text-on-surface-variant">
-                  If referred by an existing member, apply their code here:
-                </p>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={referralInput}
-                    onChange={e => setReferralInput(e.target.value.toUpperCase())}
-                    placeholder="ENTER CODE"
-                    className="flex-1 px-3 py-2 bg-surface-container-low border border-outline-variant rounded-lg font-mono text-body-md text-center outline-none focus:border-primary transition-all"
-                  />
-                  <button
-                    type="submit"
-                    disabled={applyingReferral || !referralInput.trim()}
-                    className="btn-primary py-2 px-4"
-                  >
-                    {applyingReferral ? '...' : 'Apply'}
-                  </button>
-                </div>
               </form>
-            )}
-            <div className="pt-3 border-t border-outline-variant/30 space-y-1">
-              <p className="text-label-sm text-on-surface-variant font-medium">Customer Shareable Referral Link:</p>
-              <div className="flex items-center gap-1.5 bg-surface-container-low p-2 rounded-lg border border-outline-variant/50">
-                <input readOnly value={referralLink || 'Generating link...'} className="flex-1 bg-transparent text-body-sm font-mono outline-none" />
-                <button type="button" onClick={() => { navigator.clipboard.writeText(referralLink); addToast('success', 'Referral link copied!'); }}
-                  className="p-1 hover:bg-surface-container rounded" title="Copy Link">
-                  <span className="material-symbols-outlined text-[16px]">content_copy</span>
-                </button>
-                <a
-                  href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Join ${user?.merchant_name || 'our store'} membership using my code ${member.referral_code || ''}: ${referralLink}`)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-1 hover:bg-surface-container rounded text-green-600 font-bold"
-                  title="Share on WhatsApp"
-                >
-                  <span className="material-symbols-outlined text-[16px]">share</span>
-                </a>
+            </div>
+          </details>
+
+          {/* Accordion: Referrals & Invites */}
+          <details className="card p-0 overflow-hidden border border-outline-variant/30 group">
+            <summary className="flex items-center justify-between px-4 py-3.5 cursor-pointer list-none font-semibold text-body-md text-on-surface select-none">
+              <span className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px] text-primary">group_add</span>
+                Referrals &amp; Invites
+              </span>
+              <span className="material-symbols-outlined text-[20px] text-on-surface-variant transition-transform group-open:rotate-180">expand_more</span>
+            </summary>
+            <div className="px-4 pb-4 space-y-3 border-t border-outline-variant/20">
+              {member.referred_by_member_id ? (
+                <div className="mt-3 p-3 bg-secondary-container/20 border border-secondary-container rounded-lg text-body-sm flex items-center gap-2">
+                  <span className="material-symbols-outlined text-secondary text-[18px]">check_circle</span>
+                  Referred by another member
+                </div>
+              ) : (
+                <form onSubmit={handleApplyReferral} className="space-y-2 pt-3">
+                  <p className="text-body-sm text-on-surface-variant">If referred by an existing member, apply their code here:</p>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={referralInput}
+                      onChange={e => setReferralInput(e.target.value.toUpperCase())}
+                      placeholder="ENTER CODE"
+                      className="flex-1 px-3 py-2 bg-surface-container-low border border-outline-variant rounded-lg font-mono text-body-md text-center outline-none focus:border-primary transition-all"
+                    />
+                    <button type="submit" disabled={applyingReferral || !referralInput.trim()} className="btn-primary py-2 px-4">
+                      {applyingReferral ? '...' : 'Apply'}
+                    </button>
+                  </div>
+                </form>
+              )}
+              <div className="pt-3 border-t border-outline-variant/30 space-y-1">
+                <p className="text-label-sm text-on-surface-variant font-medium">Customer Shareable Referral Link:</p>
+                <div className="flex items-center gap-1.5 bg-surface-container-low p-2 rounded-lg border border-outline-variant/50">
+                  <input readOnly value={referralLink || 'Generating link...'} className="flex-1 bg-transparent text-body-sm font-mono outline-none" />
+                  <button type="button" onClick={() => { navigator.clipboard.writeText(referralLink); addToast('success', 'Referral link copied!'); }}
+                    className="p-1 hover:bg-surface-container rounded" title="Copy Link">
+                    <span className="material-symbols-outlined text-[16px]">content_copy</span>
+                  </button>
+                  <a
+                    href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Join ${user?.merchant_name || 'our store'} membership using my code ${member.referral_code || ''}: ${referralLink}`)}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="p-1 hover:bg-surface-container rounded text-green-600 font-bold" title="Share on WhatsApp"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">share</span>
+                  </a>
+                </div>
               </div>
             </div>
-          </div>
+          </details>
 
-          {/* Scratch & Win */}
-          <div className="card p-md space-y-md">
-            <h4 className="text-label-md font-bold text-on-surface flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px]">card_giftcard</span>
-              Scratch & Win Rewards
-            </h4>
-            {scratchCards.length === 0 ? (
-              <p className="text-body-sm text-on-surface-variant">No scratch cards available yet.</p>
-            ) : (
-              <div className="space-y-2">
+          {/* Accordion: Customer Notes */}
+          <details className="card p-0 overflow-hidden border border-outline-variant/30 group">
+            <summary className="flex items-center justify-between px-4 py-3.5 cursor-pointer list-none font-semibold text-body-md text-on-surface select-none">
+              <span className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px] text-primary">sticky_note_2</span>
+                Customer Notes
+              </span>
+              <span className="material-symbols-outlined text-[20px] text-on-surface-variant transition-transform group-open:rotate-180">expand_more</span>
+            </summary>
+            <div className="px-4 pb-4 pt-3 border-t border-outline-variant/20">
+              <textarea
+                value={notes}
+                onChange={e => setNotes(e.target.value)}
+                onBlur={handleSaveNotes}
+                placeholder="Add internal notes about this customer..."
+                className="w-full h-24 p-3 bg-surface-container-low border border-outline-variant rounded-lg text-body-md outline-none focus:border-primary transition-all resize-none"
+              />
+              <div className="flex justify-between items-center text-label-xs text-on-surface-variant mt-1">
+                <span>Saves automatically on blur</span>
+                {savingNotes && (
+                  <span className="text-primary flex items-center gap-1">
+                    <span className="material-symbols-outlined animate-spin text-[12px]">progress_activity</span>
+                    Saving...
+                  </span>
+                )}
+              </div>
+            </div>
+          </details>
+
+          {/* Accordion: Scratch & Win (only if cards exist) */}
+          {scratchCards.length > 0 && (
+            <details className="card p-0 overflow-hidden border border-outline-variant/30 group">
+              <summary className="flex items-center justify-between px-4 py-3.5 cursor-pointer list-none font-semibold text-body-md text-on-surface select-none">
+                <span className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[18px] text-primary">card_giftcard</span>
+                  Scratch &amp; Win Rewards
+                  <span className="bg-primary text-on-primary text-label-xs px-1.5 py-0.5 rounded-full">{scratchCards.length}</span>
+                </span>
+                <span className="material-symbols-outlined text-[20px] text-on-surface-variant transition-transform group-open:rotate-180">expand_more</span>
+              </summary>
+              <div className="px-4 pb-4 pt-3 border-t border-outline-variant/20 space-y-2">
                 {scratchCards.map(c => (
                   <div key={c.id} className="p-3 bg-surface-container border border-outline-variant rounded-xl flex items-center justify-between">
                     <div>
@@ -1022,29 +916,88 @@ export default function MemberProfilePage() {
                   </div>
                 ))}
               </div>
-            )}
+            </details>
+          )}
+
+          {/* Auto-Renewal Toggle */}
+          <div className="card p-4 flex items-center justify-between border border-outline-variant/30">
+            <div>
+              <p className="text-body-md font-semibold text-on-surface">Auto-renew membership</p>
+              <p className="text-label-sm text-on-surface-variant mt-0.5">Renews automatically upon expiry.</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" checked={autoRenew} onChange={handleToggleAutoRenew} className="sr-only peer" />
+              <div className="w-11 h-6 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-outline-variant after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+            </label>
           </div>
 
-          {/* Auto-Renewal Setting */}
-          <div className="card p-md space-y-md">
-            <h4 className="text-label-md font-bold text-on-surface flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px]">sync</span>
-              Auto-Renewal Setting
-            </h4>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-body-sm font-medium">Automatic Membership Renewal</p>
-                <p className="text-label-xs text-on-surface-variant font-normal">If enabled, membership renews automatically upon expiration.</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" checked={autoRenew} onChange={handleToggleAutoRenew} className="sr-only peer" />
-                <div className="w-9 h-5 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-outline-variant after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
-              </label>
+          {/* Bottom Actions Row: Edit / PDF / Wallet */}
+          {isOwner && (
+            <div className="flex gap-2">
+              <button
+                onClick={handleOpenEditModal}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-outline-variant text-on-surface-variant hover:bg-surface-container text-label-md transition-colors font-medium"
+              >
+                <span className="material-symbols-outlined text-[18px]">edit</span>
+                Edit
+              </button>
+              <button
+                onClick={handleDownloadCard}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-outline-variant text-on-surface-variant hover:bg-surface-container text-label-md transition-colors font-medium"
+              >
+                <span className="material-symbols-outlined text-[18px]">download</span>
+                PDF
+              </button>
+              {walletUrl ? (
+                <a
+                  href={walletUrl} target="_blank" rel="noopener noreferrer"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-outline-variant text-on-surface-variant hover:bg-surface-container text-label-md transition-colors no-underline font-medium"
+                >
+                  <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>add_to_wallet</span>
+                  Wallet
+                </a>
+              ) : (
+                <button
+                  disabled={walletLoading}
+                  onClick={async () => {
+                    if (!member) return;
+                    setWalletLoading(true);
+                    try {
+                      const res = await api.generateWalletPassUrl(member.id);
+                      setWalletUrl(res.save_url);
+                      window.open(res.save_url, '_blank', 'noopener,noreferrer');
+                      addToast('success', 'Google Wallet pass generated!');
+                    } catch {
+                      addToast('error', 'Failed to generate Wallet pass — try again');
+                    } finally {
+                      setWalletLoading(false);
+                    }
+                  }}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-outline-variant text-on-surface-variant hover:bg-surface-container text-label-md transition-colors disabled:opacity-50 font-medium"
+                >
+                  <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>add_to_wallet</span>
+                  {walletLoading ? '...' : 'Wallet'}
+                </button>
+              )}
             </div>
-          </div>
+          )}
+
+          {/* Invite Code Footer */}
+          {member.referral_code && (
+            <div className="flex items-center justify-center gap-2 text-on-surface-variant pt-1">
+              <span className="material-symbols-outlined text-[15px]">qr_code</span>
+              <span className="text-label-sm font-mono">Invite code: {member.referral_code}</span>
+              <button
+                onClick={() => { navigator.clipboard.writeText(member.referral_code || ''); addToast('success', 'Referral code copied!'); }}
+                className="hover:bg-surface-container p-1 rounded transition-colors" title="Copy Referral Code"
+              >
+                <span className="material-symbols-outlined text-[15px]">content_copy</span>
+              </button>
+            </div>
+          )}
+
         </div>
       </div>
-
 
       {/* Redemption Confirm Modal */}
       <ConfirmModal
