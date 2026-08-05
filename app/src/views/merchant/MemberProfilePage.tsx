@@ -450,22 +450,15 @@ export default function MemberProfilePage() {
             )}
 
             {/* Member Card Details */}
-            <div className="relative z-10 flex items-center gap-4">
-              {user?.logo_url ? (
-                <img src={user.logo_url} alt="Logo" className="w-14 h-14 rounded-2xl border-2 border-white/30 object-cover shadow-inner flex-shrink-0" />
-              ) : (
-                <div className="w-14 h-14 rounded-2xl border-2 border-white/30 bg-white/15 flex items-center justify-center shadow-inner flex-shrink-0">
-                  <span className="material-symbols-outlined text-amber-300 text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>loyalty</span>
-                </div>
-              )}
+            <div className="relative z-10">
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="text-xl font-bold tracking-tight text-white truncate">{member.name}</h2>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white leading-tight">{member.name}</h2>
                   <StatusBadge status={member.status} />
                 </div>
-                <p className="text-white/70 font-mono text-xs tracking-widest uppercase mt-0.5">#{member.member_code}</p>
-                <p className="text-white/80 text-xs flex items-center gap-1 mt-0.5">
-                  <span className="material-symbols-outlined text-[13px]">phone</span>
+                <p className="text-white/80 font-mono text-sm font-semibold tracking-widest uppercase mt-1">#{member.member_code}</p>
+                <p className="text-white text-base sm:text-lg font-mono font-bold flex items-center gap-2 mt-1.5">
+                  <span className="material-symbols-outlined text-[20px]">phone</span>
                   {member.phone}
                 </p>
               </div>
