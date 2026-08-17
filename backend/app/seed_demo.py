@@ -323,14 +323,25 @@ def seed_database(override_url=None):
             "phone": "9876500016",
             "email": "mobile@metrocardz.in",
             "tiers": [
-                {"name": "Tech Elite", "description": "1-year free tempered glass replacement + 10% off accessories"},
-                {"name": "Gadget Pro", "description": "Express screen repair priority"}
+                {"name": "Tech Elite", "description": "1-year free tempered glass replacement + 10% off accessories + Express queue"},
+                {"name": "Gadget Pro", "description": "Express screen repair priority + Free data backup service"},
+                {"name": "Smart Starter", "description": "Standard membership — earn TechCoins on purchases & repairs"}
             ],
             "offers": [
                 {"title": "Free 11D Tempered Glass Guard Installation", "type": "free_service", "value": 1},
-                {"title": "₹500 Off Smartphone Repair", "type": "percent_off", "value": 500}
+                {"title": "Complimentary Handset Health Diagnostic", "type": "free_service", "value": 1},
+                {"title": "₹500 Off Smartphone Screen Repair", "type": "percent_off", "value": 500},
+                {"title": "10% Off All Accessories", "type": "percent_off", "value": 10},
+                {"title": "Double TechCoins Wednesday", "type": "wallet_points", "value": 2},
+                {"title": "500 TechCoins = ₹50 Instant Discount", "type": "points_redemption", "value": 50}
             ],
-            "member": {"code": "MOB001", "name": "Sanjay Sharma", "phone": "9867890123", "points": 1280}
+            "members": [
+                {"code": "MOB001", "name": "Sanjay Sharma", "phone": "9867890123", "points": 1280},
+                {"code": "MOB002", "name": "Neha Kapoor", "phone": "9711234567", "points": 3750},
+                {"code": "MOB003", "name": "Amit Bhatia", "phone": "9911122233", "points": 580},
+                {"code": "MOB004", "name": "Kavya Reddy", "phone": "9833344455", "points": 2100},
+                {"code": "MOB005", "name": "Rahul Tiwari", "phone": "9755566677", "points": 860}
+            ]
         }
     ]
 
@@ -377,6 +388,12 @@ def seed_database(override_url=None):
             db.add(u)
             db.commit()
             print(f"     -> Created Owner: {item['user_name']} ({item['phone']}) / demo123")
+        else:
+            # Update email if it was previously seeded with a typo
+            if u.email != item["email"]:
+                u.email = item["email"]
+                db.commit()
+                print(f"     -> Fixed email for {item['user_name']}: {u.email} -> {item['email']}")
 
         # Create Tiers
         first_tier_id = None

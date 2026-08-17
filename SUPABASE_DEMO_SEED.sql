@@ -107,7 +107,7 @@ ON CONFLICT (id) DO UPDATE SET
 -- ── 3. CLEAN UP EXISTING DEMO USERS TO AVOID EMAIL/PHONE UNIQUE CONSTRAINTS ──
 DELETE FROM merchant_users 
 WHERE phone IN ('9876500001','9876500002','9876500003','9876500004','9876500005','9876500006','9876543210','9876500007','9876500008','9876500009','9876500010','9876500011','9876500012','9876500013','9876500014','9876500015','9876500016','9000000000')
-   OR email IN ('insurance@metrocardz.in','realestate@metrocardz.in','travels@metrocardz.in','acservices@metrocardz.in','supermarket@metrocardz.in','gym@metrocardz.in','salon@metrocardz.in','automobile@metrocardz.in','cafe@metrocardz.in','restaurant@metrocardz.in','jewellery@metrocardz.in','garments@metrocardz.in','boutique@metrocardz.in','optician@metrocardz.in','footwear@metrocardz.in','dental@metrocardz.in','mobile@metrocardz.in','admin@metrocardz.in');
+   OR email IN ('insurance@metrocardz.in','realestate@metrocardz.in','travels@metrocardz.in','acservices@metrocardz.in','supermarket@metrocardz.in','gym@metrocardz.in','salon@metrocardz.in','automobile@metrocardz.in','cafe@metrocardz.in','restaurant@metrocardz.in','jewellery@metrocardz.in','garments@metrocardz.in','boutique@metrocardz.in','optician@metrocardz.in','footwear@metrocardz.in','dental@metrocardz.in','mobile@metrocard.in','mobile@metrocardz.in','admin@metrocardz.in');
 
 
 -- ── 4. INSERT MERCHANT USERS (PASSWORD = "demo123") ──
@@ -128,7 +128,7 @@ VALUES
   ('usr-opt',  'mer-opt', 'Dr. Alok Verma (Optometrist)',   '9876500013', 'optician@metrocardz.in',   'owner',       '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW'),
   ('usr-ftw',  'mer-ftw', 'Deepak Chhabra (Lounge Mgr)',    '9876500014', 'footwear@metrocardz.in',   'owner',       '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW'),
   ('usr-dnt',  'mer-dnt', 'Dr. Kavita Rao (Chief Dentist)', '9876500015', 'dental@metrocardz.in',     'owner',       '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW'),
-  ('usr-mob',  'mer-mob', 'Sanjay Sharma (Tech Director)',  '9876500016', 'mobile@metrocardz.in',     'owner',       '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW'),
+  ('usr-mob',  'mer-mob', 'Sanjay Sharma (Tech Director)',  '9876500016', 'mobile@metrocard.in',      'owner',       '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW'),
   ('usr-admin', NULL,      'Super Admin Platform',           '9000000000', 'admin@metrocardz.in',      'super_admin', '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW');
 
 

@@ -121,7 +121,25 @@ export default function SettingsPage() {
     }
   };
 
-  const CATEGORIES = ['Salon', 'Kirana', 'Restaurant', 'Jewellery', 'Boutique', 'Optician', 'Other'];
+  const CATEGORIES = [
+    'Mobile & Electronics',
+    'Salon & Spa',
+    'Restaurant',
+    'Cafe',
+    'Boutique',
+    'Readymade Garments',
+    'Dental / Skin Clinic',
+    'Supermarket & Kirana',
+    'Travel & Tourism',
+    'Gym & Fitness',
+    'Optician & Eyewear',
+    'Footwear & Leather',
+    'Jewellery',
+    'Automobile',
+    'Insurance',
+    'Real Estate',
+    'Other',
+  ];
   const TABS = [
     { k: 'profile', l: 'Business Profile', icon: 'store' },
     { k: 'staff', l: 'Staff Accounts', icon: 'manage_accounts' },

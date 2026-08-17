@@ -94,40 +94,34 @@ export default function DashboardPage() {
   return (
     <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-5xl mx-auto space-y-6">
 
-      {/* ── Welcome + Hero CTA ─── */}
+      {/* ── Scan / Search CTA ─── */}
       <section
-        className="relative overflow-hidden rounded-2xl hero-shimmer shadow-elevated cursor-pointer active-scale group"
+        className="flex items-center gap-4 p-4 bg-white rounded-2xl border border-primary/[0.08] shadow-sm cursor-pointer active:opacity-80 md:hidden"
         onClick={() => navigate('/members/search?tab=qr')}
       >
-        {/* Decorative layers */}
-        <div className="absolute -right-16 -top-16 w-56 h-56 bg-white/[0.04] rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute left-1/4 -bottom-8 w-40 h-40 bg-white/[0.03] rounded-full blur-2xl pointer-events-none" />
-        <div className="absolute right-1/3 top-1/2 w-24 h-24 bg-blue-400/[0.06] rounded-full blur-xl pointer-events-none" />
-
-        <div className="relative z-10 p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-5">
-          <div>
-            <p className="text-white/60 text-[13px] font-medium mb-1">
-              {user?.merchant_name ? `${user.merchant_name}` : 'Welcome back'}
-            </p>
-            <h2 className="text-[22px] md:text-[28px] font-bold text-white leading-tight mb-2">
-              Scan / Search Customer
-            </h2>
-            <p className="text-white/50 text-[14px] max-w-sm">
-              Instantly redeem offers, add points, or check member status with one tap.
-            </p>
-          </div>
-
-          <div className="relative z-10 w-16 h-16 rounded-2xl bg-white/[0.12] flex items-center justify-center group-hover:scale-110 group-hover:bg-white/[0.2] transition-all duration-300 self-start md:self-auto backdrop-blur-sm border border-white/[0.15] shadow-lg">
-            <span
-              className="material-symbols-outlined text-[36px] text-white"
-              style={{ fontVariationSettings: "'FILL' 1" }}
-            >
-              qr_code_scanner
-            </span>
-            {/* Glow ring */}
-            <div className="absolute inset-0 rounded-2xl ring-2 ring-white/10 group-hover:ring-white/25 transition-all" />
-          </div>
+        <div className="w-11 h-11 rounded-xl bg-primary/[0.08] flex items-center justify-center shrink-0">
+          <span className="material-symbols-outlined text-primary text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>qr_code_scanner</span>
         </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[14px] font-semibold text-on-surface">Scan / Search Customer</p>
+          <p className="text-[12px] text-on-surface-variant truncate">Redeem offers, add points, check member status</p>
+        </div>
+        <span className="material-symbols-outlined text-on-surface-variant text-[20px]">chevron_right</span>
+      </section>
+
+      {/* Desktop scan card */}
+      <section
+        className="hidden md:flex items-center gap-4 p-5 bg-white rounded-2xl border border-primary/[0.08] shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+        onClick={() => navigate('/members/search?tab=qr')}
+      >
+        <div className="w-12 h-12 rounded-xl bg-primary/[0.08] flex items-center justify-center shrink-0">
+          <span className="material-symbols-outlined text-primary text-[26px]" style={{ fontVariationSettings: "'FILL' 1" }}>qr_code_scanner</span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[16px] font-semibold text-on-surface">Scan / Search Customer</p>
+          <p className="text-[13px] text-on-surface-variant">Redeem offers, add points, or check member status</p>
+        </div>
+        <span className="material-symbols-outlined text-on-surface-variant text-[22px]">chevron_right</span>
       </section>
 
       {/* ── Quick Actions ─── */}
