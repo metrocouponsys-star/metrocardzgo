@@ -4,10 +4,10 @@ import { useAuthStore } from '../../store/authStore';
 import { StatCard } from '../../components/ui/StatCard';
 import { StatCardSkeleton } from '../../components/ui/Skeleton';
 import { EmptyState } from '../../components/ui/EmptyState';
-import type { DashboardStats } from '../../types';
+import type { DashboardStats, CelebrationMember } from '../../types';
 import * as api from '../../api';
 import { cached } from '../../api/cache';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, format } from 'date-fns';
 
 const OFFER_ICONS: Record<string, string> = {
   percent_off: 'percent', free_service: 'spa', wallet_points: 'account_balance_wallet',
@@ -27,6 +27,9 @@ export default function DashboardPage() {
   const [error, setError] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Celebrations
+  const [celebrations, setCelebrations] = useState<CelebrationMember[]>([]);
+  const [celebrationsLoading, setCelebrationsLoading] = useState(true);
 
   const fetchStats = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
@@ -57,6 +60,9 @@ export default function DashboardPage() {
   // Initial load
   useEffect(() => {
     fetchStats();
+    // Load celebrations (birthday/anniversary) on mount
+    api.getCelebrations(7).then(setCelebrations).catch(() => setCelebrations([]))
+      .finally(() => setCelebrationsLoading(false));
   }, [fetchStats]);
 
   // Auto-refresh — pauses when tab is hidden (visibility API)
@@ -143,6 +149,124 @@ export default function DashboardPage() {
           </button>
         ))}
       </section>
+
+      {/* ── 🎉 Birthday & Anniversary Notifications ─── */}
+      {(() => {
+        const todayBirthdays = celebrations.filter(c => c.event_type === 'birthday' && c.days_until === 0);
+        const todayAnniversaries = celebrations.filter(c => c.event_type === 'anniversary' && c.days_until === 0);
+        const upcomingBirthdays = celebrations.filter(c => c.event_type === 'birthday' && c.days_until > 0);
+        const upcomingAnniversaries = celebrations.filter(c => c.event_type === 'anniversary' && c.days_until > 0);
+        const todayCount = todayBirthdays.length + todayAnniversaries.length;
+
+        if (celebrationsLoading) return (
+          <section className="bg-white rounded-2xl border border-primary/[0.06] shadow-sm p-4 animate-pulse">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-6 h-6 rounded-lg skeleton" />
+              <div className="h-4 w-48 skeleton rounded-lg" />
+            </div>
+            <div className="space-y-2">
+              {[1, 2].map(i => <div key={i} className="h-10 skeleton rounded-xl" />)}
+            </div>
+          </section>
+        );
+
+        return (
+          <section className="bg-white rounded-2xl border border-primary/[0.06] shadow-sm overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-primary/[0.04]">
+              <div className="flex items-center gap-2">
+                <span className="text-[18px]">🎉</span>
+                <h3 className="text-[15px] font-bold text-on-surface">Celebrations Today</h3>
+                {todayCount > 0 && (
+                  <span className="flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse inline-block" />
+                    <span className="text-[11px] font-bold text-secondary bg-secondary/[0.1] px-1.5 py-0.5 rounded-full">
+                      {todayCount} today
+                    </span>
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={() => navigate('/campaigns')}
+                className="text-primary text-[12px] font-bold hover:underline flex items-center gap-0.5"
+              >
+                Reminders
+                <span className="material-symbols-outlined text-[13px]">arrow_forward</span>
+              </button>
+            </div>
+
+            {/* Today's celebrations */}
+            {todayCount === 0 && upcomingBirthdays.length === 0 && upcomingAnniversaries.length === 0 ? (
+              <div className="px-4 py-5 text-center">
+                <p className="text-[13px] text-on-surface-variant">No celebrations in the next 7 days</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-primary/[0.04]">
+                {/* Today's Birthdays */}
+                {todayBirthdays.map(m => (
+                  <div
+                    key={`bd-${m.member_id}`}
+                    onClick={() => navigate(`/members/${m.member_id}`)}
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-pink-50 cursor-pointer transition-colors group"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-pink-100 flex items-center justify-center shrink-0 text-[18px]">
+                      🎂
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-bold text-on-surface group-hover:text-pink-700 transition-colors">{m.name}</p>
+                      <p className="text-[11px] text-on-surface-variant">{m.member_code} · Birthday Today!</p>
+                    </div>
+                    <span className="text-[11px] font-bold text-pink-600 bg-pink-50 border border-pink-200 px-2 py-0.5 rounded-full shrink-0">
+                      🎁 Give Gift
+                    </span>
+                  </div>
+                ))}
+                {/* Today's Anniversaries */}
+                {todayAnniversaries.map(m => (
+                  <div
+                    key={`ann-${m.member_id}`}
+                    onClick={() => navigate(`/members/${m.member_id}`)}
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-purple-50 cursor-pointer transition-colors group"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-purple-100 flex items-center justify-center shrink-0 text-[18px]">
+                      💍
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-bold text-on-surface group-hover:text-purple-700 transition-colors">{m.name}</p>
+                      <p className="text-[11px] text-on-surface-variant">{m.member_code} · Anniversary Today!</p>
+                    </div>
+                    <span className="text-[11px] font-bold text-purple-600 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-full shrink-0">
+                      🎁 Give Gift
+                    </span>
+                  </div>
+                ))}
+                {/* Upcoming section (collapsed, only show if no today or after today rows) */}
+                {(upcomingBirthdays.length > 0 || upcomingAnniversaries.length > 0) && (
+                  <div className="px-4 py-2 bg-surface-container/30">
+                    <p className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wide mb-1.5">Upcoming — Next 7 Days</p>
+                    <div className="flex flex-wrap gap-2">
+                      {[...upcomingBirthdays, ...upcomingAnniversaries]
+                        .sort((a, b) => a.days_until - b.days_until)
+                        .slice(0, 6)
+                        .map(m => (
+                          <button
+                            key={`up-${m.event_type}-${m.member_id}`}
+                            onClick={() => navigate(`/members/${m.member_id}`)}
+                            className="flex items-center gap-1.5 text-[11px] font-semibold text-on-surface-variant bg-white border border-primary/[0.08] px-2.5 py-1 rounded-full hover:border-primary/30 hover:text-primary transition-all"
+                          >
+                            <span>{m.event_type === 'birthday' ? '🎂' : '💍'}</span>
+                            <span>{m.name}</span>
+                            <span className="text-on-surface-variant/60">in {m.days_until}d</span>
+                          </button>
+                        ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+        );
+      })()}
 
       {/* ── Stats Grid ─── */}
       <section>

@@ -536,8 +536,41 @@ def reveal_scratch_card(
     return card
 
 
-# ── Lucky Draw Router ──────────────────────────────────────────────────────────
+# ── Lucky Draw Router ───────────────────────────────────────────────────────────────
 lucky_draw_router = APIRouter(prefix="/lucky-draws", tags=["lucky-draws"])
+
+
+def _serialize_draw(draw: LuckyDraw, entry_count: int, db: Session) -> LuckyDrawOut:
+    """Serialize a LuckyDraw ORM object into LuckyDrawOut, populating prizes and winner names."""
+    prizes = list(draw.prizes) if draw.prizes else ([draw.prize] if draw.prize else [])
+    winner_ids = list(draw.winner_member_ids) if draw.winner_member_ids else (
+        [draw.winner_member_id] if draw.winner_member_id else []
+    )
+    # Fetch winner names in bulk
+    winner_names: List[str] = []
+    if winner_ids:
+        members_map = {
+            m.id: m.name
+            for m in db.query(Member).filter(Member.id.in_(winner_ids)).all()
+        }
+        winner_names = [members_map.get(mid, "Unknown") for mid in winner_ids]
+
+    return LuckyDrawOut(
+        id=draw.id,
+        merchant_id=draw.merchant_id,
+        name=draw.name,
+        prize=prizes[0] if prizes else (draw.prize or ""),
+        prizes=prizes,
+        draw_date=draw.draw_date,
+        min_points=draw.min_points or Decimal("0"),
+        min_visits=draw.min_visits or 0,
+        status=draw.status,
+        winner_member_id=winner_ids[0] if winner_ids else None,
+        winner_member_ids=winner_ids,
+        winner_names=winner_names,
+        entry_count=entry_count,
+        created_at=draw.created_at,
+    )
 
 
 @lucky_draw_router.get("", response_model=List[LuckyDrawOut])
@@ -546,9 +579,11 @@ def list_lucky_draws(
     db: Session = Depends(get_db),
 ):
     draws = db.query(LuckyDraw).filter(LuckyDraw.merchant_id == merchant_id).order_by(LuckyDraw.draw_date.desc()).all()
+    result = []
     for draw in draws:
-        draw.entry_count = db.query(LuckyDrawEntry).filter(LuckyDrawEntry.draw_id == draw.id).count()
-    return draws
+        count = db.query(LuckyDrawEntry).filter(LuckyDrawEntry.draw_id == draw.id).count()
+        result.append(_serialize_draw(draw, count, db))
+    return result
 
 
 @lucky_draw_router.post("", response_model=LuckyDrawOut, status_code=201)
@@ -557,12 +592,28 @@ def create_lucky_draw(
     merchant_id: str = Depends(get_merchant_id),
     db: Session = Depends(get_db),
 ):
-    draw = LuckyDraw(merchant_id=merchant_id, **payload.model_dump())
+    # Resolve prizes list: use `prizes` if provided, else promote single `prize` to a list
+    prizes = payload.prizes if payload.prizes else ([payload.prize] if payload.prize else [])
+    if not prizes:
+        raise HTTPException(400, "At least one prize is required")
+    # Limit to 10
+    prizes = prizes[:10]
+
+    draw = LuckyDraw(
+        merchant_id=merchant_id,
+        name=payload.name,
+        prize=prizes[0],          # legacy field = 1st prize
+        prizes=prizes,             # new JSON field
+        draw_date=payload.draw_date,
+        min_points=payload.min_points,
+        min_visits=payload.min_visits,
+        status="open",
+        winner_member_ids=[],
+    )
     db.add(draw)
     db.commit()
     db.refresh(draw)
-    draw.entry_count = 0
-    return draw
+    return _serialize_draw(draw, 0, db)
 
 
 @lucky_draw_router.patch("/{draw_id}", response_model=LuckyDrawOut)
@@ -625,6 +676,10 @@ def run_lucky_draw(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_active_user),
 ):
+    """Pick winners for all prize tiers in a single draw action.
+
+    Returns a ranked list of winners: [{rank, prize, winner_member_id, winner_name}]
+    """
     draw = db.query(LuckyDraw).filter(LuckyDraw.id == draw_id, LuckyDraw.merchant_id == merchant_id).first()
     if not draw:
         raise HTTPException(404, "Draw not found")
@@ -635,16 +690,46 @@ def run_lucky_draw(
     if not entries:
         raise HTTPException(400, "No entries in this draw")
 
-    winner_entry = random.choice(entries)
-    draw.winner_member_id = winner_entry.member_id
+    # Resolve prizes list
+    prizes = list(draw.prizes) if draw.prizes else ([draw.prize] if draw.prize else ["Prize"])
+    num_prizes = len(prizes)
+    num_entries = len(entries)
+
+    # Pick unique winners (one per prize rank) using random.sample
+    # If fewer entries than prizes, award as many prizes as there are entries
+    num_winners = min(num_prizes, num_entries)
+    winner_entries = random.sample(entries, num_winners)
+
+    winner_ids = [e.member_id for e in winner_entries]
+    winner_members = {
+        m.id: m
+        for m in db.query(Member).filter(Member.id.in_(winner_ids)).all()
+    }
+
+    # Persist results
+    draw.winner_member_id = winner_ids[0] if winner_ids else None  # legacy
+    draw.winner_member_ids = winner_ids
     draw.status = "drawn"
     db.commit()
 
-    winner = db.query(Member).filter(Member.id == winner_entry.member_id).first()
+    from app.schemas import RANK_LABELS
+    winners_out = [
+        {
+            "rank": RANK_LABELS[i] if i < len(RANK_LABELS) else f"{i+1}th",
+            "prize": prizes[i],
+            "winner_member_id": winner_ids[i],
+            "winner_name": winner_members[winner_ids[i]].name if winner_ids[i] in winner_members else "Unknown",
+        }
+        for i in range(num_winners)
+    ]
+
     return {
-        "winner_member_id": winner_entry.member_id,
-        "winner_name": winner.name if winner else "Unknown",
-        "prize": draw.prize,
+        # Legacy single-winner fields for backward compat
+        "winner_member_id": winner_ids[0] if winner_ids else None,
+        "winner_name": winner_members[winner_ids[0]].name if winner_ids and winner_ids[0] in winner_members else "Unknown",
+        "prize": prizes[0] if prizes else "",
+        # New multi-winner fields
+        "winners": winners_out,
     }
 
 

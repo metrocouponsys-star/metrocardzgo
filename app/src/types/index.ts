@@ -210,6 +210,17 @@ export interface DashboardStats {
   expiring_this_week?: number;
   wallet_points_issued_month: number;
   recent_redemptions: Redemption[];
+  today_celebrations?: number;  // count of members with birthday/anniversary today
+}
+
+export interface CelebrationMember {
+  member_id: string;
+  name: string;
+  phone: string;
+  member_code: string;
+  event_type: 'birthday' | 'anniversary';
+  event_date: string;   // ISO date string (this year's event)
+  days_until: number;   // 0 = today, 1 = tomorrow, etc.
 }
 
 export interface PointsRule {

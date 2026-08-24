@@ -25,6 +25,7 @@ from app.schemas import (
     DashboardStats, RedemptionOut, PublicMemberView, MembershipLookupRequest,
     NewMembersDataPoint, TopCustomer, PointsDataPoint, RetentionDataPoint,
     MerchantUpdate, MerchantOut, ReportSummary, ReportSummaryOut,
+    CelebrationMember,
 )
 from app.core.rate_limit import public_rate_limit, membership_lookup_rate_limit
 from fastapi import Request
@@ -523,6 +524,24 @@ def get_dashboard_stats(
         .all()
     )
 
+    # Count today's birthday + anniversary members for the notification badge
+
+    today = date.today()
+    today_celebrations_count = db.query(Member).filter(
+        Member.merchant_id == merchant_id,
+        Member.status != "deactivated",
+        sqlfunc.or_(
+            sqlfunc.and_(
+                Member.date_of_birth.isnot(None),
+                sqlfunc.strftime('%m-%d', Member.date_of_birth) == today.strftime('%m-%d'),
+            ),
+            sqlfunc.and_(
+                Member.anniversary_date.isnot(None),
+                sqlfunc.strftime('%m-%d', Member.anniversary_date) == today.strftime('%m-%d'),
+            ),
+        ),
+    ).count()
+
     return DashboardStats(
         total_active_members=active_members,
         total_cards_assigned=total_cards_assigned,
@@ -530,6 +549,7 @@ def get_dashboard_stats(
         expiring_this_month=expiring_this_month,
         expiring_this_week=expiring_this_week,
         wallet_points_issued_month=wallet_points_issued_month,
+        today_celebrations=today_celebrations_count,
         recent_redemptions=[
             RedemptionOut(
                 id=r.id, member_id=r.member_id,
@@ -543,6 +563,73 @@ def get_dashboard_stats(
             for r in recent
         ],
     )
+
+
+@dashboard_router.get("/celebrations", response_model=List[CelebrationMember])
+def get_dashboard_celebrations(
+    days_ahead: int = 7,
+    merchant_id: str = Depends(get_merchant_id),
+    db: Session = Depends(get_db),
+):
+    """Return members whose birthday or anniversary falls today or within the next N days.
+
+    Returns a list of CelebrationMember objects sorted by days_until (today first).
+    - days_ahead: how many days ahead to look (default 7, max 30)
+    - event_type: 'birthday' or 'anniversary'
+    - days_until: 0 = today, 1 = tomorrow, etc.
+    """
+    days_ahead = min(days_ahead, 30)
+    today = date.today()
+    results: List[CelebrationMember] = []
+
+    members = db.query(Member).filter(
+        Member.merchant_id == merchant_id,
+        Member.status != "deactivated",
+        sqlfunc.or_(
+            Member.date_of_birth.isnot(None),
+            Member.anniversary_date.isnot(None),
+        ),
+    ).all()
+
+    for m in members:
+        for event_type, event_field in [("birthday", m.date_of_birth), ("anniversary", m.anniversary_date)]:
+            if event_field is None:
+                continue
+            # Compute the event date for the current year
+            try:
+                event_this_year = event_field.replace(year=today.year)
+            except ValueError:
+                # Feb 29 on non-leap year — skip or use Mar 1
+                try:
+                    event_this_year = event_field.replace(year=today.year, day=28)
+                except ValueError:
+                    continue
+
+            # If event already passed this year, check next year's occurrence
+            if event_this_year < today:
+                try:
+                    event_this_year = event_field.replace(year=today.year + 1)
+                except ValueError:
+                    try:
+                        event_this_year = event_field.replace(year=today.year + 1, day=28)
+                    except ValueError:
+                        continue
+
+            days_until = (event_this_year - today).days
+            if 0 <= days_until <= days_ahead:
+                results.append(CelebrationMember(
+                    member_id=m.id,
+                    name=m.name,
+                    phone=m.phone,
+                    member_code=m.member_code,
+                    event_type=event_type,
+                    event_date=event_this_year,
+                    days_until=days_until,
+                ))
+
+    # Sort: today first, then by days_until ascending
+    results.sort(key=lambda x: x.days_until)
+    return results
 
 
 # ── Reports Router ────────────────────────────────────────────────────────────

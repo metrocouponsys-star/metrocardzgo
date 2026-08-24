@@ -580,13 +580,43 @@ export async function issueScratchCard(memberId: string): Promise<ScratchCard> {
 export async function revealScratchCard(cardId: string): Promise<ScratchCard> { return post(`/scratch-cards/${cardId}/reveal`); }
 
 // ── Lucky Draws ───────────────────────────────────────────────────────────────
-export interface LuckyDraw { id: string; merchant_id: string; name: string; prize: string; draw_date: string; min_points: number; min_visits: number; status: string; winner_member_id: string | null; entry_count: number; created_at: string; }
+export interface LuckyDraw {
+  id: string;
+  merchant_id: string;
+  name: string;
+  prize: string;                   // 1st prize (legacy/display)
+  prizes: string[];                // ranked list: ["1st Prize item", "2nd Prize item", ...]
+  draw_date: string;
+  min_points: number;
+  min_visits: number;
+  status: string;
+  winner_member_id: string | null;  // legacy single winner
+  winner_member_ids: string[];      // ranked list of winner member IDs
+  winner_names: string[];           // winner names in rank order
+  entry_count: number;
+  created_at: string;
+}
+
+export interface LuckyDrawWinner {
+  rank: string;              // "1st", "2nd", "3rd", ...
+  prize: string;
+  winner_member_id: string;
+  winner_name: string;
+}
+
+export interface RunLuckyDrawResult {
+  winner_member_id: string | null;  // legacy (1st place)
+  winner_name: string;              // legacy (1st place)
+  prize: string;                    // legacy (1st prize)
+  winners: LuckyDrawWinner[];       // full ranked results
+}
+
 export async function getLuckyDraws(): Promise<LuckyDraw[]> { return get<LuckyDraw[]>('/lucky-draws'); }
 export async function createLuckyDraw(data: Partial<LuckyDraw>): Promise<LuckyDraw> { return post<LuckyDraw>('/lucky-draws', data); }
 export async function updateLuckyDraw(id: string, data: Partial<LuckyDraw>): Promise<LuckyDraw> { return patch<LuckyDraw>(`/lucky-draws/${id}`, data); }
 export async function enterLuckyDraw(drawId: string, memberId: string): Promise<any> { return post(`/lucky-draws/${drawId}/enter?member_id=${memberId}`); }
 export async function publicEnterLuckyDraw(drawId: string, token: string): Promise<any> { return post(`/public/lucky-draws/${drawId}/enter?token=${token}`, {}, true); }
-export async function runLuckyDraw(drawId: string): Promise<any> { return post(`/lucky-draws/${drawId}/run`); }
+export async function runLuckyDraw(drawId: string): Promise<RunLuckyDrawResult> { return post<RunLuckyDrawResult>(`/lucky-draws/${drawId}/run`); }
 export async function deleteLuckyDraw(id: string): Promise<void> { return del(`/lucky-draws/${id}`); }
 
 // ── Admin Members & Reports ───────────────────────────────────────────────────
@@ -618,6 +648,11 @@ export async function submitFeedback(memberId: string, rating: number, comment?:
   return post('/public/feedback', { member_id: memberId, rating, comment });
 }
 export async function getMerchantFeedback(): Promise<any[]> { return get('/public/feedback/merchant'); }
+
+// ── Dashboard Celebrations ───────────────────────────────────────────────
+export async function getCelebrations(daysAhead = 7): Promise<import('../types').CelebrationMember[]> {
+  return get(`/dashboard/celebrations?days_ahead=${daysAhead}`);
+}
 
 // ── Google Wallet ─────────────────────────────────────────────────────────────
 export async function generateWalletPassUrl(memberId: string): Promise<{ save_url: string; google_object_id: string; status: string }> {

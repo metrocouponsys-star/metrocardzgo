@@ -45,7 +45,14 @@ export default function CampaignsPage() {
   // Lucky Draw states
   const [luckyDraws, setLuckyDraws] = useState<any[]>([]);
   const [showNewDraw, setShowNewDraw] = useState(false);
-  const [drawForm, setDrawForm] = useState({ name: '', prize: '', min_points: '0', min_visits: '0', draw_date: '' });
+  // Multi-prize draw form: prizes is a ranked list
+  const [drawForm, setDrawForm] = useState({
+    name: '',
+    prizes: [''],  // start with one prize slot (1st Prize)
+    min_points: '0',
+    min_visits: '0',
+    draw_date: '',
+  });
 
   const [form, setForm] = useState({
     name: '', target_audience: 'all' as Campaign['target_audience'],
@@ -189,27 +196,40 @@ export default function CampaignsPage() {
   };
 
   const createDraw = async () => {
+    const prizes = drawForm.prizes.map(p => p.trim()).filter(Boolean);
+    if (!prizes.length) return;
     try {
       const newDraw = await api.createLuckyDraw({
         name: drawForm.name,
-        prize: drawForm.prize,
+        prizes,
+        prize: prizes[0],  // legacy compat
         min_points: Number(drawForm.min_points),
         min_visits: Number(drawForm.min_visits),
         draw_date: drawForm.draw_date,
       });
       setLuckyDraws(prev => [newDraw, ...prev]);
       setShowNewDraw(false);
-      setDrawForm({ name: '', prize: '', min_points: '0', min_visits: '0', draw_date: '' });
+      setDrawForm({ name: '', prizes: [''], min_points: '0', min_visits: '0', draw_date: '' });
       addToast('success', 'Lucky draw created!');
     } catch {
       addToast('error', 'Failed to create lucky draw');
     }
   };
 
+  const RANK_LABELS = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th'];
+
   const handleRunDraw = async (drawId: string) => {
     try {
       const res = await api.runLuckyDraw(drawId);
-      addToast('success', `🎉 Winner Selected: ${res.winner_name} won "${res.prize}"!`);
+      // Show all winners
+      if (res.winners && res.winners.length > 0) {
+        const winnerLines = res.winners.map(
+          (w: any) => `${w.rank} Place: ${w.winner_name} — ${w.prize}`
+        ).join(' | ');
+        addToast('success', `🎉 Winners Selected! ${winnerLines}`);
+      } else {
+        addToast('success', `🎉 Winner: ${res.winner_name} won "${res.prize}"!`);
+      }
       api.getLuckyDraws().then(setLuckyDraws).catch(() => {});
     } catch (e: any) {
       addToast('error', e.message || 'Failed to select winner');
@@ -498,22 +518,56 @@ export default function CampaignsPage() {
       {/* Lucky Draws Section */}
       <section>
         <div className="flex items-center justify-between mb-md">
-          <h3 className="section-title">🎰 Lucky Draws</h3>
-          <button onClick={() => setShowNewDraw(true)} className="btn-primary flex items-center gap-2">
+          <div className="flex items-center gap-2">
+            <h3 className="section-title">🎰 Lucky Draws</h3>
+            {/* Count badge */}
+            <span className={`text-label-sm font-bold px-2.5 py-0.5 rounded-full ${
+              luckyDraws.length >= 10 ? 'bg-error-container text-error' :
+              luckyDraws.length >= 3 ? 'bg-secondary-container text-secondary' :
+              'bg-amber-100 text-amber-700'
+            }`}>
+              {luckyDraws.length}/10
+            </span>
+          </div>
+          <button
+            onClick={() => setShowNewDraw(true)}
+            disabled={luckyDraws.length >= 10}
+            className="btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            title={luckyDraws.length >= 10 ? 'Maximum 10 lucky draws allowed' : 'Create a new lucky draw'}
+          >
             <span className="material-symbols-outlined text-[18px]">add_circle</span>
             New Lucky Draw
           </button>
         </div>
 
+        {/* Status info bar */}
+        {luckyDraws.length < 3 && luckyDraws.length > 0 && (
+          <div className="mb-md p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-2 text-amber-800 text-body-sm">
+            <span className="material-symbols-outlined text-[18px]">info</span>
+            Recommended: Create at least <strong>3 lucky draws</strong> to keep members engaged. ({3 - luckyDraws.length} more needed)
+          </div>
+        )}
+        {luckyDraws.length >= 10 && (
+          <div className="mb-md p-3 bg-error-container border border-error/20 rounded-xl flex items-center gap-2 text-on-error-container text-body-sm">
+            <span className="material-symbols-outlined text-[18px]">block</span>
+            Maximum of <strong>10 lucky draws</strong> reached. Delete an existing draw to create a new one.
+          </div>
+        )}
+
         {luckyDraws.length === 0 ? (
           <div className="card p-8 text-center text-on-surface-variant">
             <span className="material-symbols-outlined text-[48px] mb-2 font-variation-fill">casino</span>
-            <p>No lucky draws scheduled. Create one to reward your members!</p>
+            <p className="font-semibold mb-1">No lucky draws scheduled yet.</p>
+            <p className="text-body-sm mb-4">Create 3–10 lucky draws to reward your members and boost engagement!</p>
+            <button onClick={() => setShowNewDraw(true)} className="btn-primary flex items-center gap-2 mx-auto">
+              <span className="material-symbols-outlined text-[18px]">add_circle</span>
+              Create First Lucky Draw
+            </button>
           </div>
         ) : (
           <div className="space-y-3">
             {luckyDraws.map(draw => (
-              <div key={draw.id} className="card p-md flex items-center justify-between gap-4">
+              <div key={draw.id} className="card p-md flex items-start justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <h4 className="text-body-lg font-bold">{draw.name}</h4>
@@ -521,24 +575,53 @@ export default function CampaignsPage() {
                       {draw.status === 'drawn' ? 'Completed' : 'Open'}
                     </span>
                   </div>
-                  <p className="text-body-md text-on-surface-variant font-medium">Prize: {draw.prize}</p>
-                  <div className="flex gap-4 text-label-sm text-on-surface-variant mt-1.5 flex-wrap">
+
+                  {/* Prizes list */}
+                  <div className="mt-1.5 space-y-1">
+                    {(draw.prizes && draw.prizes.length > 0 ? draw.prizes : [draw.prize]).map((prize: string, idx: number) => {
+                      const winnerId = draw.winner_member_ids?.[idx];
+                      const winnerName = draw.winner_names?.[idx];
+                      const rankLabel = RANK_LABELS[idx] || `${idx + 1}th`;
+                      return (
+                        <div key={idx} className="flex items-center gap-2">
+                          <span className={`text-label-sm font-bold px-2 py-0.5 rounded-lg ${
+                            idx === 0 ? 'bg-amber-100 text-amber-700' :
+                            idx === 1 ? 'bg-slate-100 text-slate-600' :
+                            idx === 2 ? 'bg-orange-100 text-orange-700' :
+                            'bg-surface-container text-on-surface-variant'
+                          }`}>
+                            {rankLabel}
+                          </span>
+                          <span className="text-body-md text-on-surface font-medium">{prize}</span>
+                          {winnerId && winnerName && (
+                            <span className="text-label-sm text-secondary font-semibold flex items-center gap-0.5">
+                              <span className="material-symbols-outlined text-[13px]" style={{ fontVariationSettings: "'FILL' 1" }}>emoji_events</span>
+                              {winnerName}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="flex gap-4 text-label-sm text-on-surface-variant mt-2 flex-wrap">
                     <span>👥 {draw.entry_count} entries</span>
                     <span>⭐ Min {Number(draw.min_points).toFixed(0)} pts</span>
                     <span>📍 Min {draw.min_visits} visits</span>
                     <span>📅 Draw Date: {draw.draw_date}</span>
                   </div>
-                  {draw.status === 'drawn' && draw.winner_member_id && (
+
+                  {draw.status === 'drawn' && draw.winner_member_ids?.length > 0 && (
                     <div className="mt-2 p-2 bg-green-50 text-green-800 rounded-lg text-body-sm font-semibold border border-green-200 inline-block">
-                      🎉 Winner selected!
+                      🎉 {draw.winner_member_ids.length} winner{draw.winner_member_ids.length > 1 ? 's' : ''} selected!
                     </div>
                   )}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 shrink-0">
                   {draw.status === 'open' && (
                     <button onClick={() => handleRunDraw(draw.id)}
                       className="btn-primary py-1 px-3 text-label-sm shrink-0 font-bold whitespace-nowrap" style={{ minHeight: 'auto' }}>
-                      Pick Winner
+                      Pick Winners
                     </button>
                   )}
                   <button onClick={() => handleDeleteDraw(draw.id)}
@@ -695,17 +778,64 @@ export default function CampaignsPage() {
         </div>
       </Modal>
 
-      {/* New Lucky Draw Modal */}
-      <Modal isOpen={showNewDraw} onClose={() => setShowNewDraw(false)} title="New Lucky Draw" maxWidth="max-w-lg">
+      <Modal isOpen={showNewDraw} onClose={() => setShowNewDraw(false)} title="🎰 New Lucky Draw" maxWidth="max-w-lg">
         <div className="space-y-4">
           <div>
             <label className="form-label">Draw Name *</label>
             <input className="input-field" placeholder="e.g. Monthly Mega Giveaway" value={drawForm.name} onChange={e => setDrawForm(f => ({ ...f, name: e.target.value }))} />
           </div>
+
+          {/* Multi-Prize List */}
           <div>
-            <label className="form-label">Prize *</label>
-            <input className="input-field" placeholder="e.g. ₹5,000 Gift Voucher" value={drawForm.prize} onChange={e => setDrawForm(f => ({ ...f, prize: e.target.value }))} />
+            <div className="flex items-center justify-between mb-2">
+              <label className="form-label mb-0">Prizes (Ranked) *</label>
+              <span className="text-label-sm text-on-surface-variant">{drawForm.prizes.length}/10 prizes</span>
+            </div>
+            <div className="space-y-2">
+              {drawForm.prizes.map((prize, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <span className={`text-label-sm font-bold w-9 text-center py-1 rounded-lg shrink-0 ${
+                    idx === 0 ? 'bg-amber-100 text-amber-700' :
+                    idx === 1 ? 'bg-slate-100 text-slate-600' :
+                    idx === 2 ? 'bg-orange-100 text-orange-700' :
+                    'bg-surface-container text-on-surface-variant'
+                  }`}>
+                    {RANK_LABELS[idx]}
+                  </span>
+                  <input
+                    className="input-field flex-1"
+                    placeholder={`${RANK_LABELS[idx]} Prize (e.g. ₹5,000 Gift Voucher)`}
+                    value={prize}
+                    onChange={e => {
+                      const newPrizes = [...drawForm.prizes];
+                      newPrizes[idx] = e.target.value;
+                      setDrawForm(f => ({ ...f, prizes: newPrizes }));
+                    }}
+                  />
+                  {drawForm.prizes.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setDrawForm(f => ({ ...f, prizes: f.prizes.filter((_, i) => i !== idx) }))}
+                      className="w-7 h-7 flex items-center justify-center rounded-full border border-error/30 text-error hover:bg-error/10 shrink-0"
+                    >
+                      <span className="material-symbols-outlined text-[15px]">close</span>
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+            {drawForm.prizes.length < 10 && (
+              <button
+                type="button"
+                onClick={() => setDrawForm(f => ({ ...f, prizes: [...f.prizes, ''] }))}
+                className="mt-2 flex items-center gap-1 text-primary text-label-sm font-bold hover:underline"
+              >
+                <span className="material-symbols-outlined text-[16px]">add_circle</span>
+                Add {RANK_LABELS[drawForm.prizes.length]} Prize
+              </button>
+            )}
           </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="form-label">Min Points Requirement</label>
@@ -722,7 +852,11 @@ export default function CampaignsPage() {
           </div>
           <div className="flex gap-3">
             <button onClick={() => setShowNewDraw(false)} className="btn-secondary flex-1">Cancel</button>
-            <button onClick={createDraw} disabled={!drawForm.name || !drawForm.prize || !drawForm.draw_date} className="btn-primary flex-1">
+            <button
+              onClick={createDraw}
+              disabled={!drawForm.name || drawForm.prizes.every(p => !p.trim()) || !drawForm.draw_date}
+              className="btn-primary flex-1"
+            >
               Schedule Draw
             </button>
           </div>

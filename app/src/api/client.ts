@@ -1503,6 +1503,14 @@ export async function changeAdminPassword(currentPassword: string, newPassword: 
   // No-op: mock doesn't persist state
 }
 
+// ── Dashboard Celebrations (mock) ─────────────────────────────────────────────
+export async function getCelebrations(_daysAhead = 7): Promise<import('../types').CelebrationMember[]> {
+  await delay(FAKE_DELAY);
+  // Mock: return empty list — real data comes from the backend
+  return [];
+}
+
+
 
 
 

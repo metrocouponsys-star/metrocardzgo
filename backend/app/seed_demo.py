@@ -434,7 +434,7 @@ def seed_database(override_url=None):
                 db.commit()
 
         # Create Members
-        members_to_create = item.get("members", [item["member"]]) if "member" in item or "members" in item else []
+        members_to_create = item.get("members") or ([item["member"]] if "member" in item else [])
         for mem_info in members_to_create:
             existing_mem = db.query(Member).filter(
                 Member.merchant_id == m.id,

@@ -116,6 +116,7 @@ export const updateStaffRole = api.updateStaffRole;
 export const deleteStaff = api.deleteStaff;
 export const submitFeedback = api.submitFeedback;
 export const getMerchantFeedback = api.getMerchantFeedback;
+export const getCelebrations = api.getCelebrations;
 
 // ── Google Wallet ────────────────────────────────────────────────────────────
 export const generateWalletPassUrl = api.generateWalletPassUrl;

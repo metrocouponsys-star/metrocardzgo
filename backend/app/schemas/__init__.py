@@ -435,6 +435,19 @@ class PublicMemberView(BaseModel):
     loyalty_history: Optional[List[dict]] = []
 
 
+# ── Dashboard Celebrations ────────────────────────────────────────────────────
+class CelebrationMember(BaseModel):
+    """A member who has a birthday or anniversary today or within the next N days."""
+    member_id: str
+    name: str
+    phone: str
+    member_code: str
+    event_type: Literal["birthday", "anniversary"]  # which event is upcoming
+    event_date: date                                 # the actual date (this year)
+    days_until: int                                  # 0 = today, 1 = tomorrow, etc.
+    model_config = {"from_attributes": True}
+
+
 # ── Dashboard Stats ───────────────────────────────────────────────────────────
 class DashboardStats(BaseModel):
     total_active_members: int
@@ -444,6 +457,7 @@ class DashboardStats(BaseModel):
     expiring_this_week: Optional[int] = 0
     wallet_points_issued_month: Decimal
     recent_redemptions: List[RedemptionOut]
+    today_celebrations: Optional[int] = 0  # count of members with birthday/anniversary today
 
 
 # ── Purchase & Loyalty Integration ───────────────────────────────────────────
@@ -752,16 +766,34 @@ class ScratchCardOut(BaseModel):
 
 
 # ── Lucky Draws ───────────────────────────────────────────────────────────────
+RANK_LABELS = ["1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th"]
+
+
 class LuckyDrawCreate(BaseModel):
     name: str
-    prize: str
+    # Multi-prize support: prizes is a ranked list (1st, 2nd, 3rd...)
+    # If only a single prize string is provided via the legacy field, it is promoted to prizes[0]
+    prizes: Optional[List[str]] = None   # preferred: list of up to 10 prizes
+    prize: str = ""                      # legacy/fallback: first prize text
     draw_date: date
     min_points: Decimal = Decimal("0")
     min_visits: int = 0
 
+    @field_validator("prizes")
+    @classmethod
+    def validate_prizes(cls, v):
+        if v is not None:
+            if len(v) < 1 or len(v) > 10:
+                raise ValueError("prizes must have between 1 and 10 entries")
+            for p in v:
+                if not p.strip():
+                    raise ValueError("each prize must be a non-empty string")
+        return v
+
 
 class LuckyDrawUpdate(BaseModel):
     name: Optional[str] = None
+    prizes: Optional[List[str]] = None
     prize: Optional[str] = None
     draw_date: Optional[date] = None
     min_points: Optional[Decimal] = None
@@ -773,12 +805,15 @@ class LuckyDrawOut(BaseModel):
     id: str
     merchant_id: str
     name: str
-    prize: str
+    prize: str                           # legacy/first prize text for display
+    prizes: List[str] = []              # ranked list of prizes (1st, 2nd, ...)
     draw_date: date
     min_points: Decimal
     min_visits: int
     status: str
-    winner_member_id: Optional[str] = None
+    winner_member_id: Optional[str] = None  # legacy
+    winner_member_ids: List[str] = []   # ranked list of winner IDs
+    winner_names: List[str] = []        # populated at serialization time
     entry_count: int = 0
     created_at: datetime
     model_config = {"from_attributes": True}

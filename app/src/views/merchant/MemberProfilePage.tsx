@@ -461,6 +461,54 @@ export default function MemberProfilePage() {
                   <span className="material-symbols-outlined text-[20px]">phone</span>
                   {member.phone}
                 </p>
+
+                {/* Birthday / Anniversary — always visible to merchant */}
+                {(member.date_of_birth || member.anniversary_date) && (() => {
+                  const today = new Date();
+                  const todayMD = `${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+                  const dobMD = member.date_of_birth ? member.date_of_birth.slice(5) : null;
+                  const annMD = member.anniversary_date ? member.anniversary_date.slice(5) : null;
+                  const isBirthday = dobMD === todayMD;
+                  const isAnniversary = annMD === todayMD;
+                  return (
+                    <div className="mt-3 flex flex-col gap-1.5">
+                      {isBirthday && (
+                        <div className="flex items-center gap-2 bg-pink-400/30 border border-pink-300/50 rounded-xl px-3 py-2 animate-pulse">
+                          <span className="text-lg">🎂</span>
+                          <div>
+                            <p className="text-white font-extrabold text-sm leading-tight">TODAY IS {member.name.split(' ')[0]}'s BIRTHDAY! 🎉</p>
+                            <p className="text-white/80 text-xs">Give the special birthday gift/discount now</p>
+                          </div>
+                        </div>
+                      )}
+                      {isAnniversary && (
+                        <div className="flex items-center gap-2 bg-purple-400/30 border border-purple-300/50 rounded-xl px-3 py-2 animate-pulse">
+                          <span className="text-lg">💍</span>
+                          <div>
+                            <p className="text-white font-extrabold text-sm leading-tight">TODAY IS THEIR ANNIVERSARY! 🥂</p>
+                            <p className="text-white/80 text-xs">Give the special anniversary treat now</p>
+                          </div>
+                        </div>
+                      )}
+                      {!isBirthday && !isAnniversary && (
+                        <div className="flex items-center gap-3 mt-1 flex-wrap">
+                          {member.date_of_birth && (
+                            <span className="flex items-center gap-1 text-white/75 text-xs font-medium bg-white/10 rounded-lg px-2.5 py-1">
+                              <span>🎂</span>
+                              {new Date(member.date_of_birth).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                            </span>
+                          )}
+                          {member.anniversary_date && (
+                            <span className="flex items-center gap-1 text-white/75 text-xs font-medium bg-white/10 rounded-lg px-2.5 py-1">
+                              <span>💍</span>
+                              {new Date(member.anniversary_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             </div>
 

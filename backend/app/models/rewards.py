@@ -1,6 +1,6 @@
 """Rewards, Coupons, Gift Vouchers, Points Rules, Scratch Cards, Lucky Draws ORM models."""
 import uuid
-from sqlalchemy import Column, String, Text, Numeric, Integer, Boolean, DateTime, Date, ForeignKey, func, Enum
+from sqlalchemy import Column, String, Text, Numeric, Integer, Boolean, DateTime, Date, ForeignKey, func, Enum, JSON
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 
@@ -109,18 +109,26 @@ class ScratchCard(Base):
 
 
 class LuckyDraw(Base):
-    """Merchant-run lucky draws with eligibility criteria."""
+    """Merchant-run lucky draws with eligibility criteria.
+
+    Supports multi-prize draws (1st Place, 2nd Place, ... Nth Place).
+    - prizes: JSON list of prize strings in rank order (1st, 2nd, ...)
+    - winner_member_ids: JSON list of winner member IDs in rank order (populated after draw is run)
+    - prize / winner_member_id: kept for backward compatibility with older rows
+    """
     __tablename__ = "lucky_draws"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     merchant_id = Column(String, ForeignKey("merchants.id", ondelete="CASCADE"), nullable=False)
     name = Column(Text, nullable=False)
-    prize = Column(Text, nullable=False)
+    prize = Column(Text, nullable=False, server_default="")  # legacy single-prize field
+    prizes = Column(JSON, nullable=True)                     # NEW: list of prize strings ranked 1st–Nth
     draw_date = Column(Date, nullable=False)
     min_points = Column(Numeric, default=0)          # minimum loyalty points to enter
     min_visits = Column(Integer, default=0)          # minimum visits to enter
     status = Column(String, default="open", nullable=False)
-    winner_member_id = Column(String, ForeignKey("members.id", ondelete="SET NULL"), nullable=True)
+    winner_member_id = Column(String, ForeignKey("members.id", ondelete="SET NULL"), nullable=True)  # legacy
+    winner_member_ids = Column(JSON, nullable=True)  # NEW: list of winner member IDs in rank order
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     merchant = relationship("Merchant")
