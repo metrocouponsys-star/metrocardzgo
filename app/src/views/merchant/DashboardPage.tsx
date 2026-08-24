@@ -160,12 +160,24 @@ export default function DashboardPage() {
 
         if (celebrationsLoading) return (
           <section className="bg-white rounded-2xl border border-primary/[0.06] shadow-sm p-4 animate-pulse">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-6 h-6 rounded-lg skeleton" />
-              <div className="h-4 w-48 skeleton rounded-lg" />
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-lg bg-surface-container-high" />
+                <div className="h-4 w-40 bg-surface-container-high rounded-lg" />
+              </div>
+              <div className="h-3 w-16 bg-surface-container-high rounded-lg" />
             </div>
             <div className="space-y-2">
-              {[1, 2].map(i => <div key={i} className="h-10 skeleton rounded-xl" />)}
+              {[1, 2].map(i => (
+                <div key={i} className="flex items-center gap-3 p-2 bg-surface-container/30 rounded-xl">
+                  <div className="w-8 h-8 rounded-lg bg-surface-container-high shrink-0" />
+                  <div className="flex-1 space-y-1">
+                    <div className="h-3 w-28 bg-surface-container-high rounded" />
+                    <div className="h-2 w-20 bg-surface-container-high rounded" />
+                  </div>
+                  <div className="h-6 w-16 bg-surface-container-high rounded-full" />
+                </div>
+              ))}
             </div>
           </section>
         );

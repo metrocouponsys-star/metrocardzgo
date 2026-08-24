@@ -248,6 +248,9 @@ class MemberOut(BaseModel):
     email: Optional[str] = None
     date_of_birth: Optional[date] = None
     anniversary_date: Optional[date] = None
+    family_dob_1: Optional[date] = None
+    family_dob_2: Optional[date] = None
+    family_dob_3: Optional[date] = None
     membership_type_id: str
     membership_type: Optional[MembershipTypeOut] = None
     joined_date: date
@@ -273,6 +276,9 @@ class MemberCreate(BaseModel):
     membership_type_id: str
     date_of_birth: Optional[date] = None
     anniversary_date: Optional[date] = None
+    family_dob_1: Optional[date] = None
+    family_dob_2: Optional[date] = None
+    family_dob_3: Optional[date] = None
     referral_code: Optional[str] = None   # referral code of the person who referred this new member
 
 
@@ -282,6 +288,9 @@ class MemberUpdate(BaseModel):
     email: Optional[str] = None
     date_of_birth: Optional[date] = None
     anniversary_date: Optional[date] = None
+    family_dob_1: Optional[date] = None
+    family_dob_2: Optional[date] = None
+    family_dob_3: Optional[date] = None
     membership_type_id: Optional[str] = None
     status: Optional[str] = None
     notes: Optional[str] = None           # merchant can save notes about the customer

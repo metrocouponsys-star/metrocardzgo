@@ -39,6 +39,8 @@ export default function CardInventoryMerchantPage() {
     try {
       const data = await api.getMerchantCards(merchantId);
       setCards(data);
+    } catch {
+      addToast('error', 'Failed to load physical cards');
     } finally { setLoading(false); }
   };
 

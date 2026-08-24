@@ -342,7 +342,30 @@ function CouponsTab({ active }: { active?: boolean }) {
   };
 
   const copyCode = (code: string) => {
-    navigator.clipboard.writeText(code).then(() => addToast('success', `Code "${code}" copied`)).catch(() => {});
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(code)
+        .then(() => addToast('success', `Code "${code}" copied`))
+        .catch(() => fallbackCopy(code));
+    } else {
+      fallbackCopy(code);
+    }
+  };
+
+  const fallbackCopy = (code: string) => {
+    try {
+      const textarea = document.createElement('textarea');
+      textarea.value = code;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      addToast('success', `Code "${code}" copied`);
+    } catch {
+      addToast('info', `Code: ${code}`);
+    }
   };
 
   return (
@@ -547,7 +570,10 @@ function VouchersTab() {
   const [memberSearching, setMemberSearching] = useState(false);
   const [linking, setLinking] = useState(false);
 
-  const load = () => api.getVouchers().then(setVouchers).catch(() => {}).finally(() => setLoading(false));
+  const load = () => {
+    invalidateContaining('vouchers');
+    api.getVouchers().then(setVouchers).catch(() => {}).finally(() => setLoading(false));
+  };
   useEffect(() => { load(); }, []);
 
   const generate = async () => {
@@ -565,7 +591,30 @@ function VouchersTab() {
   };
 
   const copyCode = (code: string) => {
-    navigator.clipboard.writeText(code).then(() => addToast('success', `Code "${code}" copied`)).catch(() => {});
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(code)
+        .then(() => addToast('success', `Voucher Code "${code}" copied`))
+        .catch(() => fallbackCopy(code));
+    } else {
+      fallbackCopy(code);
+    }
+  };
+
+  const fallbackCopy = (code: string) => {
+    try {
+      const textarea = document.createElement('textarea');
+      textarea.value = code;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      addToast('success', `Voucher Code "${code}" copied`);
+    } catch {
+      addToast('info', `Voucher Code: ${code}`);
+    }
   };
 
   const handleMemberSearch = async (q: string) => {
@@ -791,7 +840,10 @@ function PointsRulesTab() {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ rule_type: 'per_rupee', points_value: '', spend_unit: '1' });
 
-  const load = () => api.getPointsRules().then(setRules).catch(() => {}).finally(() => setLoading(false));
+  const load = () => {
+    invalidateContaining('points-rules');
+    api.getPointsRules().then(setRules).catch(() => {}).finally(() => setLoading(false));
+  };
   useEffect(() => { load(); }, []);
 
   const openCreate = () => {

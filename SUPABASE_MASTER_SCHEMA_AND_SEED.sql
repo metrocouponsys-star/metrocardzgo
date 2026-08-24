@@ -1,4 +1,4 @@
-﻿-- =============================================================================
+-- =============================================================================
 -- METRO CARDZ — MASTER SUPABASE PRODUCTION SCHEMA & SEED SCRIPT
 -- =============================================================================
 -- Copy & paste this ENTIRE script into your Supabase SQL Editor and click RUN.
@@ -139,6 +139,9 @@ CREATE TABLE IF NOT EXISTS members (
     email TEXT,
     date_of_birth DATE,
     anniversary_date DATE,
+    family_dob_1 DATE,
+    family_dob_2 DATE,
+    family_dob_3 DATE,
     membership_type_id TEXT NOT NULL REFERENCES membership_types(id),
     joined_date DATE NOT NULL,
     expiry_date DATE NOT NULL,
@@ -418,6 +421,9 @@ ALTER TABLE lucky_draws ADD COLUMN IF NOT EXISTS winner_member_ids JSON;
 
 ALTER TABLE members ADD COLUMN IF NOT EXISTS date_of_birth DATE;
 ALTER TABLE members ADD COLUMN IF NOT EXISTS anniversary_date DATE;
+ALTER TABLE members ADD COLUMN IF NOT EXISTS family_dob_1 DATE;
+ALTER TABLE members ADD COLUMN IF NOT EXISTS family_dob_2 DATE;
+ALTER TABLE members ADD COLUMN IF NOT EXISTS family_dob_3 DATE;
 ALTER TABLE members ADD COLUMN IF NOT EXISTS notes TEXT;
 ALTER TABLE members ADD COLUMN IF NOT EXISTS total_visits INT DEFAULT 0;
 ALTER TABLE members ADD COLUMN IF NOT EXISTS auto_renew BOOLEAN DEFAULT false;

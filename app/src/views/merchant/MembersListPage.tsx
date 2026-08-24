@@ -109,6 +109,15 @@ export default function MembersListPage() {
         </div>
         <div className="flex items-center gap-3">
           <button
+            onClick={() => { invalidateContaining('members'); fetchMembers(); }}
+            disabled={loading}
+            className="btn-outline flex items-center gap-2"
+            title="Refresh member list"
+          >
+            <span className={`material-symbols-outlined text-[18px] ${loading ? 'animate-spin' : ''}`}>refresh</span>
+            Refresh
+          </button>
+          <button
             onClick={exportCsv}
             disabled={loading || members.length === 0}
             className="btn-outline flex items-center gap-2"

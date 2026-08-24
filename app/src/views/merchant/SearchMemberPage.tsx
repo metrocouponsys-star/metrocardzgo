@@ -41,10 +41,13 @@ export default function SearchMemberPage() {
 
   useEffect(() => { inputRef.current?.focus(); }, [tab]);
 
+  const [searchError, setSearchError] = useState(false);
+
   const performSearch = async () => {
     if (!query.trim()) return;
     setSearching(true);
     setNotFound(false);
+    setSearchError(false);
     setResults([]);
     try {
       let found: Member[];
@@ -63,7 +66,7 @@ export default function SearchMemberPage() {
         setResults(found);
       }
     } catch {
-      setNotFound(true);
+      setSearchError(true);
     } finally {
       setSearching(false);
     }
@@ -148,6 +151,21 @@ export default function SearchMemberPage() {
                     </button>
                   </div>
                 </div>
+
+                {/* Search Error */}
+                {searchError && (
+                  <div className="flex flex-col items-center py-8 text-center bg-error/10 rounded-xl border border-error/30 animate-fade-in">
+                    <div className="w-16 h-16 bg-error/20 rounded-full flex items-center justify-center mb-3">
+                      <span className="material-symbols-outlined text-error text-3xl">wifi_off</span>
+                    </div>
+                    <h3 className="text-headline-md text-on-surface mb-1">Search Failed</h3>
+                    <p className="text-body-md text-on-surface-variant mb-4">Could not connect to server. Please check connection & retry.</p>
+                    <button onClick={performSearch} className="btn-outline flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[18px]">refresh</span>
+                      Try Again
+                    </button>
+                  </div>
+                )}
 
                 {/* Not Found */}
                 {notFound && (

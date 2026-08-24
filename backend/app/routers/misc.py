@@ -527,20 +527,20 @@ def get_dashboard_stats(
     # Count today's birthday + anniversary members for the notification badge
 
     today = date.today()
-    today_celebrations_count = db.query(Member).filter(
+    today_md = (today.month, today.day)
+    celebration_candidates = db.query(Member.date_of_birth, Member.anniversary_date).filter(
         Member.merchant_id == merchant_id,
         Member.status != "deactivated",
         sqlfunc.or_(
-            sqlfunc.and_(
-                Member.date_of_birth.isnot(None),
-                sqlfunc.strftime('%m-%d', Member.date_of_birth) == today.strftime('%m-%d'),
-            ),
-            sqlfunc.and_(
-                Member.anniversary_date.isnot(None),
-                sqlfunc.strftime('%m-%d', Member.anniversary_date) == today.strftime('%m-%d'),
-            ),
+            Member.date_of_birth.isnot(None),
+            Member.anniversary_date.isnot(None),
         ),
-    ).count()
+    ).all()
+
+    today_celebrations_count = sum(
+        1 for dob, anniv in celebration_candidates
+        if (dob and (dob.month, dob.day) == today_md) or (anniv and (anniv.month, anniv.day) == today_md)
+    )
 
     return DashboardStats(
         total_active_members=active_members,

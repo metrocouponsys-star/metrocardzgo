@@ -630,8 +630,8 @@ def update_lucky_draw(
         setattr(draw, k, v)
     db.commit()
     db.refresh(draw)
-    draw.entry_count = db.query(LuckyDrawEntry).filter(LuckyDrawEntry.draw_id == draw_id).count()
-    return draw
+    count = db.query(LuckyDrawEntry).filter(LuckyDrawEntry.draw_id == draw_id).count()
+    return _serialize_draw(draw, count, db)
 
 
 @lucky_draw_router.post("/{draw_id}/enter")

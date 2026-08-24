@@ -103,7 +103,7 @@ export default function MemberProfilePage() {
       ]);
 
       setMember(m);
-      setNotes(m.notes || '');
+      setNotes(m.notes && m.notes !== 'null' ? m.notes : '');
       setAutoRenew((m as any).auto_renew || false);
       setRedemptions(reds);
       setLoyaltyHistory(loyalty);
@@ -186,6 +186,9 @@ export default function MemberProfilePage() {
     try {
       await api.updateMember(user.merchant_id || '', member.id, { notes });
       addToast('success', 'Customer notes updated');
+      invalidateContaining(id || '');
+      invalidateContaining('members');
+      fetchMember(true);
     } catch (e: any) {
       addToast('error', e.message || 'Failed to update notes');
     } finally {
@@ -254,6 +257,9 @@ export default function MemberProfilePage() {
       await api.updateMember(user.merchant_id || '', member.id, { auto_renew: !autoRenew } as Partial<Member>);
       setAutoRenew(!autoRenew);
       addToast('success', `Auto-renewal turned ${!autoRenew ? 'ON' : 'OFF'}`);
+      invalidateContaining(id || '');
+      invalidateContaining('members');
+      fetchMember(true);
     } catch {
       addToast('error', 'Failed to toggle auto-renewal');
     }

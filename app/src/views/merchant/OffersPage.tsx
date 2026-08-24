@@ -94,12 +94,25 @@ export default function OffersPage() {
   const active = offers.filter(o => o.active);
   const inactive = offers.filter(o => !o.active);
 
+  const handleDelete = async (offer: OfferTemplate) => {
+    if (!window.confirm(`Delete offer "${offer.title}"?`)) return;
+    try {
+      await api.deleteOfferTemplate(user?.merchant_id || '', offer.id);
+      addToast('success', 'Offer deleted');
+      invalidateContaining('offers');
+      setOffers(prev => prev.filter(o => o.id !== offer.id));
+    } catch {
+      addToast('error', 'Failed to delete offer');
+    }
+  };
+
   return (
-    <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-4xl mx-auto space-y-xl animate-fade-in">
-      <div className="flex items-start justify-between">
-        <div className="page-header mb-0">
-          <h2 className="page-title">Offer Management</h2>
-          <p className="page-subtitle">Create and manage the benefits bundled into your membership types.</p>
+    <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-5xl mx-auto space-y-md animate-fade-in">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="page-title">Offers & Loyalty Points</h2>
+          <p className="page-subtitle">Configure promotional offers and define points rules for your members.</p>
         </div>
         {tab === 'offers' && (
           <button onClick={openCreate} className="btn-primary flex items-center gap-2">
@@ -145,7 +158,7 @@ export default function OffersPage() {
             <div>
               <h3 className="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider mb-3">Active Offers ({active.length})</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
-                {active.map(offer => <OfferRow key={offer.id} offer={offer} membershipTypes={membershipTypes} onEdit={openEdit} onToggle={toggleActive} />)}
+                {active.map(offer => <OfferRow key={offer.id} offer={offer} membershipTypes={membershipTypes} onEdit={openEdit} onToggle={toggleActive} onDelete={handleDelete} />)}
               </div>
             </div>
           )}
@@ -153,7 +166,7 @@ export default function OffersPage() {
             <div>
               <h3 className="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider mb-3">Inactive Offers ({inactive.length})</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-md opacity-60">
-                {inactive.map(offer => <OfferRow key={offer.id} offer={offer} membershipTypes={membershipTypes} onEdit={openEdit} onToggle={toggleActive} />)}
+                {inactive.map(offer => <OfferRow key={offer.id} offer={offer} membershipTypes={membershipTypes} onEdit={openEdit} onToggle={toggleActive} onDelete={handleDelete} />)}
               </div>
             </div>
           )}
@@ -273,9 +286,10 @@ export default function OffersPage() {
   );
 }
 
-function OfferRow({ offer, membershipTypes, onEdit, onToggle }: {
+function OfferRow({ offer, membershipTypes, onEdit, onToggle, onDelete }: {
   offer: OfferTemplate; membershipTypes: MembershipType[];
   onEdit: (o: OfferTemplate) => void; onToggle: (o: OfferTemplate) => void;
+  onDelete: (o: OfferTemplate) => void;
 }) {
   const icon = TYPE_ICONS[offer.offer_type] || 'star';
   const applicableNames = membershipTypes.filter(mt => offer.applicable_membership_type_ids?.includes(mt.id)).map(mt => mt.name);
@@ -323,6 +337,9 @@ function OfferRow({ offer, membershipTypes, onEdit, onToggle }: {
           <span className="material-symbols-outlined text-[14px]">{offer.active ? 'toggle_off' : 'toggle_on'}</span>
           {offer.active ? 'Deactivate' : 'Activate'}
         </button>
+        <button onClick={() => onDelete(offer)} className="px-3 py-2 rounded-lg border border-error/30 text-error hover:bg-error-container transition-colors flex items-center justify-center" title="Delete offer">
+          <span className="material-symbols-outlined text-[16px]">delete</span>
+        </button>
       </div>
     </div>
   );
@@ -340,7 +357,10 @@ function SetPointsTab() {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ rule_type: 'per_rupee', points_value: '', spend_unit: '1' });
 
-  const load = () => api.getPointsRules().then(setRules as any).catch(() => {}).finally(() => setLoading(false));
+  const load = () => {
+    invalidateContaining('points-rules');
+    api.getPointsRules().then(setRules as any).catch(() => {}).finally(() => setLoading(false));
+  };
   useEffect(() => { load(); }, []);
 
   const openCreate = () => { setEditTarget(null); setForm({ rule_type: 'per_rupee', points_value: '1', spend_unit: '1' }); setShowModal(true); };

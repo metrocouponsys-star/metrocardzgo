@@ -195,9 +195,13 @@ export default function CampaignsPage() {
     }
   };
 
+  const [runningDrawId, setRunningDrawId] = useState<string | null>(null);
+
   const createDraw = async () => {
+    if (!drawForm.name.trim()) { addToast('error', 'Lucky draw name is required'); return; }
+    if (!drawForm.draw_date) { addToast('error', 'Draw date is required'); return; }
     const prizes = drawForm.prizes.map(p => p.trim()).filter(Boolean);
-    if (!prizes.length) return;
+    if (!prizes.length) { addToast('error', 'At least one prize is required'); return; }
     try {
       const newDraw = await api.createLuckyDraw({
         name: drawForm.name,
@@ -219,6 +223,8 @@ export default function CampaignsPage() {
   const RANK_LABELS = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th'];
 
   const handleRunDraw = async (drawId: string) => {
+    if (runningDrawId) return;
+    setRunningDrawId(drawId);
     try {
       const res = await api.runLuckyDraw(drawId);
       // Show all winners
@@ -233,6 +239,8 @@ export default function CampaignsPage() {
       api.getLuckyDraws().then(setLuckyDraws).catch(() => {});
     } catch (e: any) {
       addToast('error', e.message || 'Failed to select winner');
+    } finally {
+      setRunningDrawId(null);
     }
   };
 
@@ -619,9 +627,9 @@ export default function CampaignsPage() {
                 </div>
                 <div className="flex gap-2 shrink-0">
                   {draw.status === 'open' && (
-                    <button onClick={() => handleRunDraw(draw.id)}
-                      className="btn-primary py-1 px-3 text-label-sm shrink-0 font-bold whitespace-nowrap" style={{ minHeight: 'auto' }}>
-                      Pick Winners
+                    <button onClick={() => handleRunDraw(draw.id)} disabled={runningDrawId === draw.id}
+                      className="btn-primary py-1 px-3 text-label-sm shrink-0 font-bold whitespace-nowrap disabled:opacity-50" style={{ minHeight: 'auto' }}>
+                      {runningDrawId === draw.id ? 'Picking...' : 'Pick Winners'}
                     </button>
                   )}
                   <button onClick={() => handleDeleteDraw(draw.id)}
@@ -848,7 +856,7 @@ export default function CampaignsPage() {
           </div>
           <div>
             <label className="form-label">Draw Date *</label>
-            <input type="date" className="input-field" value={drawForm.draw_date} onChange={e => setDrawForm(f => ({ ...f, draw_date: e.target.value }))} />
+            <input type="date" min={new Date().toISOString().split('T')[0]} className="input-field" value={drawForm.draw_date} onChange={e => setDrawForm(f => ({ ...f, draw_date: e.target.value }))} />
           </div>
           <div className="flex gap-3">
             <button onClick={() => setShowNewDraw(false)} className="btn-secondary flex-1">Cancel</button>

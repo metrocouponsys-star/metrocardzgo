@@ -49,6 +49,9 @@ class Member(Base):
     email = Column(Text, nullable=True)                  # optional customer email
     date_of_birth = Column(Date, nullable=True)
     anniversary_date = Column(Date, nullable=True)
+    family_dob_1 = Column(Date, nullable=True)
+    family_dob_2 = Column(Date, nullable=True)
+    family_dob_3 = Column(Date, nullable=True)
     membership_type_id = Column(String, ForeignKey("membership_types.id"), nullable=False)
     joined_date = Column(Date, nullable=False)
     expiry_date = Column(Date, nullable=False)

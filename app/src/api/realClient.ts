@@ -18,16 +18,61 @@ const BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000
 const API = `${BASE_URL}/api/v1`;
 
 import { useAuthStore } from '../store/authStore';
+import { invalidateContaining } from './cache';
 
 function getToken(): string | null {
   try {
-    const stored = typeof window !== 'undefined' 
-      ? (sessionStorage.getItem('metro-cardz-auth') || localStorage.getItem('metro-cardz-auth')) 
+    const stored = typeof window !== 'undefined'
+      ? (sessionStorage.getItem('metro-cardz-auth') || localStorage.getItem('metro-cardz-auth'))
       : null;
     if (!stored) return null;
     return JSON.parse(stored)?.state?.token || null;
   } catch {
     return null;
+  }
+}
+
+function autoInvalidateCache(method: string, path: string) {
+  if (method === 'GET') return;
+  const p = path.toLowerCase();
+  if (p.includes('member')) {
+    invalidateContaining('members');
+    invalidateContaining('member/');
+    invalidateContaining('dashboard');
+    invalidateContaining('reports');
+  }
+  if (p.includes('reward') || p.includes('claim')) {
+    invalidateContaining('rewards');
+    invalidateContaining('dashboard');
+    invalidateContaining('member/');
+  }
+  if (p.includes('coupon')) {
+    invalidateContaining('coupons');
+  }
+  if (p.includes('voucher')) {
+    invalidateContaining('vouchers');
+  }
+  if (p.includes('points-rule') || p.includes('points_rule')) {
+    invalidateContaining('points-rules');
+    invalidateContaining('points_rules');
+  }
+  if (p.includes('lucky-draw') || p.includes('lucky_draw')) {
+    invalidateContaining('lucky-draws');
+    invalidateContaining('lucky_draws');
+  }
+  if (p.includes('campaign')) {
+    invalidateContaining('campaigns');
+  }
+  if (p.includes('reminder')) {
+    invalidateContaining('reminders');
+  }
+  if (p.includes('offer')) {
+    invalidateContaining('offers');
+    invalidateContaining('membership-types');
+  }
+  if (p.includes('card')) {
+    invalidateContaining('cards');
+    invalidateContaining('members');
   }
 }
 
@@ -77,6 +122,8 @@ async function request<T>(
     const errBody = await res.json().catch(() => ({ detail: res.statusText }));
     throw new Error(errBody.detail || `HTTP ${res.status}`);
   }
+
+  autoInvalidateCache(method, path);
 
   if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;
