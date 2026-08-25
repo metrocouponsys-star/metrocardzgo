@@ -1,3 +1,5 @@
+// Metro Cardz — Campaigns & Reminders Management
+// Updated with Multi-Prize Lucky Draws (1st to 10th Prize) and Birthday/Anniversary Auto-Reminders
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useToastStore } from '../../store/toastStore';
