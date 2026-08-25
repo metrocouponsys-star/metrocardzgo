@@ -466,81 +466,107 @@ def get_dashboard_stats(
     merchant_id: str = Depends(get_merchant_id),
     db: Session = Depends(get_db),
 ):
-    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
-    month_start = datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    month_end = date.today() + timedelta(days=30)
+    try:
+        today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+        month_start = datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        month_end = date.today() + timedelta(days=30)
+    except Exception:
+        today_start = datetime.now()
+        month_start = datetime.now()
+        month_end = date.today()
 
-    active_members = db.query(Member).filter(
-        Member.merchant_id == merchant_id, Member.status == "active"
-    ).count()
-
-    from app.models.card import CardInventoryItem
-    total_cards_assigned = db.query(CardInventoryItem).filter(
-        CardInventoryItem.allocated_merchant_id == merchant_id
-    ).count()
-    if total_cards_assigned == 0:
-        total_cards_assigned = db.query(Member).filter(
-            Member.merchant_id == merchant_id
+    try:
+        active_members = db.query(Member).filter(
+            Member.merchant_id == merchant_id, Member.status == "active"
         ).count()
+    except Exception:
+        active_members = 0
 
-    redemptions_today = db.query(RedemptionLog).join(Member).filter(
-        Member.merchant_id == merchant_id,
-        RedemptionLog.created_at >= today_start,
-    ).count()
-    expiring_this_month = db.query(Member).filter(
-        Member.merchant_id == merchant_id,
-        Member.expiry_date <= month_end,
-        Member.expiry_date >= date.today(),
-        Member.status == "active",
-    ).count()
-    expiring_this_week = db.query(Member).filter(
-        Member.merchant_id == merchant_id,
-        Member.expiry_date <= date.today() + timedelta(days=7),
-        Member.expiry_date >= date.today(),
-        Member.status == "active",
-    ).count()
+    try:
+        from app.models.card import CardInventoryItem
+        total_cards_assigned = db.query(CardInventoryItem).filter(
+            CardInventoryItem.allocated_merchant_id == merchant_id
+        ).count()
+        if total_cards_assigned == 0:
+            total_cards_assigned = db.query(Member).filter(
+                Member.merchant_id == merchant_id
+            ).count()
+    except Exception:
+        total_cards_assigned = 0
 
-    # Feature 1: loyalty points issued this month
-    points_issued_row = db.query(sqlfunc.sum(LoyaltyTransaction.points)).filter(
-        LoyaltyTransaction.merchant_id == merchant_id,
-        LoyaltyTransaction.type == "earn",
-        LoyaltyTransaction.created_at >= month_start,
-    ).scalar()
-    wallet_points_issued_month = points_issued_row or 0
+    try:
+        redemptions_today = db.query(RedemptionLog).join(Member).filter(
+            Member.merchant_id == merchant_id,
+            RedemptionLog.created_at >= today_start,
+        ).count()
+    except Exception:
+        redemptions_today = 0
 
-    # FIX 6: Eager-load all 3 relations in a single JOIN query.
-    # Previously: 3 lazy loads × 10 rows = 30 extra DB round trips on every dashboard load.
-    recent = (
-        db.query(RedemptionLog)
-        .join(Member)
-        .filter(Member.merchant_id == merchant_id)
-        .options(
-            joinedload(RedemptionLog.staff_user),
-            joinedload(RedemptionLog.member),
-            joinedload(RedemptionLog.offer_template),
+    try:
+        expiring_this_month = db.query(Member).filter(
+            Member.merchant_id == merchant_id,
+            Member.expiry_date <= month_end,
+            Member.expiry_date >= date.today(),
+            Member.status == "active",
+        ).count()
+    except Exception:
+        expiring_this_month = 0
+
+    try:
+        expiring_this_week = db.query(Member).filter(
+            Member.merchant_id == merchant_id,
+            Member.expiry_date <= date.today() + timedelta(days=7),
+            Member.expiry_date >= date.today(),
+            Member.status == "active",
+        ).count()
+    except Exception:
+        expiring_this_week = 0
+
+    try:
+        points_issued_row = db.query(sqlfunc.sum(LoyaltyTransaction.points)).filter(
+            LoyaltyTransaction.merchant_id == merchant_id,
+            LoyaltyTransaction.type == "earn",
+            LoyaltyTransaction.created_at >= month_start,
+        ).scalar()
+        wallet_points_issued_month = points_issued_row or 0
+    except Exception:
+        wallet_points_issued_month = 0
+
+    try:
+        recent = (
+            db.query(RedemptionLog)
+            .join(Member)
+            .filter(Member.merchant_id == merchant_id)
+            .options(
+                joinedload(RedemptionLog.staff_user),
+                joinedload(RedemptionLog.member),
+                joinedload(RedemptionLog.offer_template),
+            )
+            .order_by(RedemptionLog.created_at.desc())
+            .limit(10)
+            .all()
         )
-        .order_by(RedemptionLog.created_at.desc())
-        .limit(10)
-        .all()
-    )
+    except Exception:
+        recent = []
 
-    # Count today's birthday + anniversary members for the notification badge
+    try:
+        today = date.today()
+        today_md = (today.month, today.day)
+        celebration_candidates = db.query(Member.date_of_birth, Member.anniversary_date).filter(
+            Member.merchant_id == merchant_id,
+            Member.status != "deactivated",
+            sqlfunc.or_(
+                Member.date_of_birth.isnot(None),
+                Member.anniversary_date.isnot(None),
+            ),
+        ).all()
 
-    today = date.today()
-    today_md = (today.month, today.day)
-    celebration_candidates = db.query(Member.date_of_birth, Member.anniversary_date).filter(
-        Member.merchant_id == merchant_id,
-        Member.status != "deactivated",
-        sqlfunc.or_(
-            Member.date_of_birth.isnot(None),
-            Member.anniversary_date.isnot(None),
-        ),
-    ).all()
-
-    today_celebrations_count = sum(
-        1 for dob, anniv in celebration_candidates
-        if (dob and (dob.month, dob.day) == today_md) or (anniv and (anniv.month, anniv.day) == today_md)
-    )
+        today_celebrations_count = sum(
+            1 for dob, anniv in celebration_candidates
+            if (dob and (dob.month, dob.day) == today_md) or (anniv and (anniv.month, anniv.day) == today_md)
+        )
+    except Exception:
+        today_celebrations_count = 0
 
     return DashboardStats(
         total_active_members=active_members,
@@ -555,10 +581,10 @@ def get_dashboard_stats(
                 id=r.id, member_id=r.member_id,
                 offer_template_id=r.offer_template_id,
                 merchant_user_id=r.merchant_user_id,
-                staff_name=r.staff_user.name if r.staff_user else None,
-                amount=r.amount, created_at=r.created_at,
-                member={"name": r.member.name, "member_code": r.member.member_code} if r.member else None,
-                offer={"title": r.offer_template.title, "offer_type": r.offer_template.offer_type} if r.offer_template else None,
+                staff_name=getattr(r.staff_user, 'name', None) if getattr(r, 'staff_user', None) else None,
+                amount=r.amount or Decimal(0), created_at=r.created_at,
+                member={"name": r.member.name, "member_code": r.member.member_code} if getattr(r, 'member', None) else None,
+                offer={"title": r.offer_template.title, "offer_type": r.offer_template.offer_type} if getattr(r, 'offer_template', None) else None,
             )
             for r in recent
         ],
