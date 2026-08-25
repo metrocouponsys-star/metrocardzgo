@@ -11,10 +11,10 @@ class ReminderRule(Base):
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     merchant_id = Column(String, ForeignKey("merchants.id", ondelete="CASCADE"), nullable=False)
     trigger_type = Column(
-        Enum("birthday", "anniversary", "loyalty_threshold", "expiry", name="reminder_trigger"),
+        Enum("birthday", "anniversary", "loyalty_threshold", "expiry", name="reminder_trigger", native_enum=False),
         nullable=False,
     )
-    channel = Column(Enum("sms", "whatsapp", name="message_channel"), nullable=False)
+    channel = Column(Enum("sms", "whatsapp", name="message_channel", native_enum=False), nullable=False)
     template_text = Column(Text, nullable=False)
     threshold_value = Column(Numeric, nullable=True)  # For loyalty_threshold type
     active = Column(Boolean, default=True)
@@ -34,15 +34,15 @@ class Campaign(Base):
     merchant_id = Column(String, ForeignKey("merchants.id", ondelete="CASCADE"), nullable=False)
     name = Column(Text, nullable=False)
     target_audience = Column(
-        Enum("all", "by_membership_type", "expiring_soon", name="campaign_audience"),
+        Enum("all", "by_membership_type", "expiring_soon", name="campaign_audience", native_enum=False),
         nullable=False,
     )
     target_membership_type_id = Column(String, ForeignKey("membership_types.id"), nullable=True)
-    channel = Column(Enum("sms", "whatsapp", name="campaign_channel"), nullable=False)
+    channel = Column(Enum("sms", "whatsapp", name="campaign_channel", native_enum=False), nullable=False)
     template_text = Column(Text, nullable=False)
     scheduled_at = Column(DateTime(timezone=True), nullable=True)
     status = Column(
-        Enum("draft", "scheduled", "sending", "sent", name="campaign_status"),
+        Enum("draft", "scheduled", "sending", "sent", name="campaign_status", native_enum=False),
         default="draft",
         nullable=False,
     )
@@ -63,7 +63,7 @@ class MessageLog(Base):
     reminder_rule_id = Column(String, ForeignKey("reminder_rules.id"), nullable=True)
     channel = Column(Text, nullable=False)
     status = Column(
-        Enum("sent", "failed", "delivered", name="message_delivery_status"),
+        Enum("sent", "failed", "delivered", name="message_delivery_status", native_enum=False),
         default="sent",
         nullable=False,
     )

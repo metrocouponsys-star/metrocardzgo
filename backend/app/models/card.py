@@ -13,7 +13,7 @@ class CardInventoryItem(Base):
     # 16-digit printed on the physical card, e.g. "4821 6739 0012 3847"
     card_number = Column(Text, nullable=False, unique=True)
     status = Column(
-        Enum("unassigned", "merchant_allocated", "member_linked", "deactivated", name="card_status"),
+        Enum("unassigned", "merchant_allocated", "member_linked", "deactivated", name="card_status", native_enum=False),
         default="unassigned",
         nullable=False,
     )

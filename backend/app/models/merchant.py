@@ -17,12 +17,12 @@ class Merchant(Base):
     address = Column(Text)
     secret_salt = Column(Text, nullable=False, default=lambda: str(uuid.uuid4()))
     status = Column(
-        Enum("active", "suspended", name="merchant_status"),
+        Enum("active", "suspended", name="merchant_status", native_enum=False),
         default="active",
         nullable=False,
     )
     approval_status = Column(
-        Enum("pending", "approved", "rejected", name="merchant_approval_status"),
+        Enum("pending", "approved", "rejected", name="merchant_approval_status", native_enum=False),
         default="approved",   # existing and new merchants default to approved (Super Admin controls)
         nullable=False,
         server_default="approved",
@@ -50,7 +50,7 @@ class MerchantUser(Base):
     phone = Column(Text, nullable=False, unique=True)
     email = Column(Text, unique=True, nullable=True)   # Used for Google OAuth login
     role = Column(
-        Enum("super_admin", "owner", "staff", name="user_role"),
+        Enum("super_admin", "owner", "staff", name="user_role", native_enum=False),
         default="staff",
         nullable=False,
     )

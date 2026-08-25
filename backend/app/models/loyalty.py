@@ -20,7 +20,7 @@ class LoyaltyTransaction(Base):
     member_id = Column(String, ForeignKey("members.id", ondelete="CASCADE"), nullable=False)
     merchant_id = Column(String, ForeignKey("merchants.id", ondelete="CASCADE"), nullable=False)
     type = Column(
-        Enum("earn", "redeem", "referral_bonus", name="loyalty_tx_type"),
+        Enum("earn", "redeem", "referral_bonus", name="loyalty_tx_type", native_enum=False),
         nullable=False,
     )
     points = Column(Numeric, nullable=False)        # positive for earn, negative for redeem

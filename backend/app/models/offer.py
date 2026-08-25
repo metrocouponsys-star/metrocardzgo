@@ -17,6 +17,7 @@ class OfferTemplate(Base):
             "percent_off", "free_service", "wallet_points", "referral", "birthday",
             "points_redemption", "visit_milestone",
             name="offer_type",
+            native_enum=False,
         ),
         nullable=False,
     )

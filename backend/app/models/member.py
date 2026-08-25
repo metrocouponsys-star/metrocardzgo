@@ -57,7 +57,7 @@ class Member(Base):
     expiry_date = Column(Date, nullable=False)
     loyalty_points = Column(Numeric, default=0)   # loyalty points balance
     status = Column(
-        Enum("active", "expiring_soon", "expired", "deactivated", name="member_status"),
+        Enum("active", "expiring_soon", "expired", "deactivated", name="member_status", native_enum=False),
         default="active",
         nullable=False,
     )
@@ -92,7 +92,7 @@ class MemberOfferState(Base):
     remaining_qty = Column(Numeric, nullable=True)    # null = unlimited (e.g. % discounts)
     initial_qty = Column(Numeric, nullable=True)
     status = Column(
-        Enum("active", "exhausted", name="offer_state_status"),
+        Enum("active", "exhausted", name="offer_state_status", native_enum=False),
         default="active",
         nullable=False,
     )
