@@ -3,6 +3,8 @@ import type { OfferTemplate, MemberOfferState } from '../../types';
 
 const OFFER_ICONS: Record<string, string> = {
   percent_off: 'percent',
+  flat_off: 'sell',
+  buy_1_get_1: 'card_giftcard',
   free_service: 'spa',
   wallet_points: 'account_balance_wallet',
   referral: 'people',
@@ -13,6 +15,8 @@ const OFFER_ICONS: Record<string, string> = {
 
 const OFFER_COLORS: Record<string, string> = {
   percent_off: 'bg-secondary-container/20 text-secondary',
+  flat_off: 'bg-emerald-500/20 text-emerald-600',
+  buy_1_get_1: 'bg-purple-500/20 text-purple-600',
   free_service: 'bg-primary-container/10 text-primary',
   wallet_points: 'bg-tertiary-fixed/30 text-tertiary-container',
   referral: 'bg-surface-container text-on-surface-variant',
@@ -23,6 +27,8 @@ const OFFER_COLORS: Record<string, string> = {
 
 const OFFER_BADGE: Record<string, { label: string; cls: string }> = {
   percent_off: { label: 'DISCOUNT', cls: 'bg-secondary-fixed text-on-secondary-fixed' },
+  flat_off: { label: 'FLAT OFF', cls: 'bg-emerald-100 text-emerald-800' },
+  buy_1_get_1: { label: 'BOGO', cls: 'bg-purple-100 text-purple-800' },
   free_service: { label: 'REWARD', cls: 'bg-tertiary-fixed text-on-tertiary-fixed' },
   wallet_points: { label: 'POINTS', cls: 'bg-primary-fixed text-on-primary-fixed' },
   referral: { label: 'REFERRAL', cls: 'bg-surface-container-high text-on-surface-variant' },

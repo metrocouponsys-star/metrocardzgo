@@ -195,30 +195,54 @@ export default function SearchMemberPage() {
             ) : (
               <QrScannerView onScan={async (scannedValue) => {
                 try {
-                  // QR encodes: https://metrocardz.in/m/{public_token}
-                  // Extract the token from the URL; fall back to treating the
-                  // raw value as a card number if it doesn't look like our URL.
+                  // ── Path 1: URL-based QR (https://metrocardz.in/m/{token}) ──────
                   const urlMatch = scannedValue.match(/\/m\/([^/?#]+)/);
                   const publicToken = urlMatch ? urlMatch[1] : null;
 
                   if (publicToken) {
-                    // Primary path: resolve by public token
                     const byToken = await api.getMemberByToken(publicToken);
                     if (byToken) {
                       navigate(`/members/${byToken.member_id}`);
                       return;
                     }
-                  } else {
-                    // Fallback: treat raw value as a card number
-                    const byCard = await api.searchMemberByCard(user?.merchant_id || '', scannedValue);
-                    if (byCard) {
-                      addRecentSearch(byCard);
-                      navigate(`/members/${byCard.id}`);
-                      return;
-                    }
+                    addToast('error', 'QR token not found — member may have been removed');
+                    return;
                   }
 
-                  addToast('error', 'No member found for this QR code');
+                  // ── Path 2: METROCARDZ card QR ──────────────────────────────────
+                  // Strip the "METROCARDZ:" prefix printed by the card wizard,
+                  // e.g. "METROCARDZ:4899673900000100" → "4899673900000100"
+                  const cardNumber = scannedValue.replace(/^METROCARDZ:/i, '').trim();
+
+                  // First try the authenticated merchant lookup (fast path)
+                  const byCard = await api.searchMemberByCard(user?.merchant_id || '', cardNumber);
+                  if (byCard) {
+                    addRecentSearch(byCard);
+                    navigate(`/members/${byCard.id}`);
+                    return;
+                  }
+
+                  // ── Diagnostic fallback: use the public resolver to explain WHY ──
+                  // This tells us whether the card: doesn't exist / not allocated
+                  // to this merchant / exists but has no member linked yet.
+                  try {
+                    const resolved = await api.resolveCardNumber(cardNumber);
+                    if (!resolved) {
+                      addToast('error', `Card ${cardNumber} is not registered in the system. Add it via Admin → Card Inventory.`);
+                    } else if (!resolved.merchant_id) {
+                      addToast('error', `Card ${cardNumber} exists but has not been allocated to any merchant yet.`);
+                    } else if (resolved.merchant_id !== user?.merchant_id) {
+                      addToast('error', `Card ${cardNumber} belongs to a different merchant and cannot be used here.`);
+                    } else if (!resolved.member_id) {
+                      // Card is in this merchant's inventory but not linked to anyone
+                      addToast('error', `Card ${cardNumber} is in your inventory but not assigned to a member yet. Open the member's profile and assign this card.`);
+                    } else {
+                      addToast('error', 'No member found for this QR code');
+                    }
+                  } catch {
+                    // Public resolve also failed — card truly not in system
+                    addToast('error', `Card ${cardNumber} not found. Make sure it was added via Admin → Card Inventory → Card Wizard.`);
+                  }
                 } catch {
                   addToast('error', 'QR scan failed — please try manual search');
                 }

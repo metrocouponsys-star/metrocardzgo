@@ -176,7 +176,7 @@ class OfferTemplateCreate(BaseModel):
     title: str
     description: str = ""
     offer_type: Literal[
-        "percent_off", "free_service", "wallet_points", "referral", "birthday",
+        "percent_off", "flat_off", "buy_1_get_1", "free_service", "wallet_points", "referral", "birthday",
         "points_redemption", "visit_milestone"
     ]
     value: Decimal = Decimal("0")

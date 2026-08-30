@@ -14,7 +14,7 @@ class OfferTemplate(Base):
     description = Column(Text, default="")
     offer_type = Column(
         Enum(
-            "percent_off", "free_service", "wallet_points", "referral", "birthday",
+            "percent_off", "flat_off", "buy_1_get_1", "free_service", "wallet_points", "referral", "birthday",
             "points_redemption", "visit_milestone",
             name="offer_type",
             native_enum=False,

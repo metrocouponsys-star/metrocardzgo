@@ -4,8 +4,7 @@
 
 export type MerchantStatus = 'active' | 'suspended';
 export type MemberStatus = 'active' | 'expiring_soon' | 'expired' | 'deactivated';
-// Feature 1: added 'points_redemption' offer type
-export type OfferType = 'percent_off' | 'free_service' | 'wallet_points' | 'referral' | 'birthday' | 'points_redemption';
+export type OfferType = 'percent_off' | 'flat_off' | 'buy_1_get_1' | 'free_service' | 'wallet_points' | 'referral' | 'birthday' | 'points_redemption';
 export type MessageChannel = 'sms' | 'whatsapp';
 export type CampaignStatus = 'draft' | 'scheduled' | 'sending' | 'sent';
 export type UserRole = 'super_admin' | 'owner' | 'staff';

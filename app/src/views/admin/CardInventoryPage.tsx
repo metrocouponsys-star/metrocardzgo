@@ -121,6 +121,7 @@ export default function CardInventoryPage() {
   const [allocateMerchant, setAllocateMerchant] = useState('');
   const [allocateQty, setAllocateQty] = useState(50);
   const [allocateLoading, setAllocateLoading] = useState(false);
+  const [allocateMerchantSearch, setAllocateMerchantSearch] = useState('');
 
   // ─── Legacy panel state (for non-wizard flows) ─────────────────────────────
   const [deactivateTarget, setDeactivateTarget] = useState<CardInventoryItem | null>(null);
@@ -176,12 +177,25 @@ export default function CardInventoryPage() {
     [genPrefix, genStart, genCount]
   );
 
+  const filteredAllocateMerchants = useMemo(() => {
+    const activeMerchants = merchants.filter(m => m.status === 'active');
+    if (!allocateMerchantSearch.trim()) return activeMerchants;
+    const q = allocateMerchantSearch.toLowerCase();
+    return activeMerchants.filter(m =>
+      (m.business_name || '').toLowerCase().includes(q) ||
+      (m.category || '').toLowerCase().includes(q) ||
+      (m.whatsapp_number || '').includes(q) ||
+      (m.address || '').toLowerCase().includes(q)
+    );
+  }, [merchants, allocateMerchantSearch]);
+
   // ─── Wizard Handlers ──────────────────────────────────────────────────────
   const openWizard = () => {
     setWizardStep(1);
     setWizardCards([]);
     setCardImageDataUrl(null);
     setAllocateMerchant('');
+    setAllocateMerchantSearch('');
     setAllocateQty(50);
     setBulkInput('');
     setShowWizard(true);
@@ -644,12 +658,74 @@ export default function CardInventoryPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
                 <div>
                   <label className="form-label">Merchant *</label>
-                  <select className="input-field" value={allocateMerchant} onChange={e => setAllocateMerchant(e.target.value)}>
-                    <option value="">Select merchant...</option>
-                    {merchants.filter(m => m.status === 'active').map(m => (
-                      <option key={m.id} value={m.id}>{m.business_name}</option>
-                    ))}
-                  </select>
+                  <div className="space-y-1.5">
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-[18px]">search</span>
+                      <input
+                        type="text"
+                        placeholder="Search merchant name, phone, city..."
+                        className="input-field pl-10 pr-8 !py-2 text-body-sm"
+                        value={allocateMerchantSearch}
+                        onChange={e => setAllocateMerchantSearch(e.target.value)}
+                      />
+                      {allocateMerchantSearch && (
+                        <button
+                          type="button"
+                          onClick={() => setAllocateMerchantSearch('')}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">close</span>
+                        </button>
+                      )}
+                    </div>
+                    <div className="max-h-48 overflow-y-auto border border-outline-variant/60 rounded-xl bg-surface divide-y divide-outline-variant/20 shadow-xs">
+                      {filteredAllocateMerchants.length === 0 ? (
+                        <div className="p-3 text-center text-body-sm text-on-surface-variant">
+                          No matching active merchants found.
+                        </div>
+                      ) : (
+                        filteredAllocateMerchants.map(m => {
+                          const isSelected = allocateMerchant === m.id;
+                          return (
+                            <button
+                              type="button"
+                              key={m.id}
+                              onClick={() => {
+                                setAllocateMerchant(m.id);
+                              }}
+                              className={`w-full text-left p-2.5 flex items-center justify-between hover:bg-surface-container-low transition-colors ${
+                                isSelected ? 'bg-primary-container/25 text-primary font-bold' : 'text-on-surface'
+                              }`}
+                            >
+                              <div className="min-w-0 pr-2">
+                                <p className="text-body-sm font-semibold truncate">{m.business_name}</p>
+                                <p className="text-label-xs text-on-surface-variant truncate">
+                                  {m.category || 'General'} {m.whatsapp_number ? `· ${m.whatsapp_number}` : ''}
+                                </p>
+                              </div>
+                              {isSelected ? (
+                                <span className="material-symbols-outlined text-primary text-[20px] shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                              ) : (
+                                <span className="material-symbols-outlined text-on-surface-variant/40 text-[18px] shrink-0">radio_button_unchecked</span>
+                              )}
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+                    {allocateMerchant && (
+                      <div className="flex items-center justify-between text-label-xs text-primary font-medium px-1">
+                        <span>Selected: <strong>{merchants.find(m => m.id === allocateMerchant)?.business_name}</strong></span>
+                        <button
+                          type="button"
+                          onClick={() => setAllocateMerchant('')}
+                          className="text-error hover:underline text-label-xs"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <label className="form-label">Number of Cards *</label>

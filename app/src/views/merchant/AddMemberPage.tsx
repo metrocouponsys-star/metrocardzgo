@@ -36,7 +36,11 @@ export default function AddMemberPage() {
   useEffect(() => {
     api.getMembershipTypes(user?.merchant_id || '').then(setMembershipTypes);
     api.getMerchantCards(user?.merchant_id || '').then(cards =>
-      setAvailableCards(cards.filter(c => c.status === 'merchant_allocated'))
+      setAvailableCards(
+        cards
+          .filter(c => c.status === 'merchant_allocated')
+          .sort((a, b) => a.card_number.localeCompare(b.card_number, undefined, { numeric: true, sensitivity: 'base' }))
+      )
     );
   }, []);
 

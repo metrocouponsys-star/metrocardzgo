@@ -471,11 +471,39 @@ export default function MemberProfilePage() {
                 {/* Birthday / Anniversary — always visible to merchant */}
                 {(member.date_of_birth || member.anniversary_date) && (() => {
                   const today = new Date();
-                  const todayMD = `${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
-                  const dobMD = member.date_of_birth ? member.date_of_birth.slice(5) : null;
-                  const annMD = member.anniversary_date ? member.anniversary_date.slice(5) : null;
-                  const isBirthday = dobMD === todayMD;
-                  const isAnniversary = annMD === todayMD;
+                  today.setHours(0, 0, 0, 0);
+
+                  const getDaysUntil = (dateStr?: string | null) => {
+                    if (!dateStr) return null;
+                    try {
+                      const parts = dateStr.slice(5).split('-');
+                      const m = parseInt(parts[0], 10) - 1;
+                      const d = parseInt(parts[1], 10);
+                      let target = new Date(today.getFullYear(), m, d);
+                      if (target < today) {
+                        target = new Date(today.getFullYear() + 1, m, d);
+                      }
+                      const diffMs = target.getTime() - today.getTime();
+                      return Math.round(diffMs / (1000 * 60 * 60 * 24));
+                    } catch {
+                      return null;
+                    }
+                  };
+
+                  const dobDays = getDaysUntil(member.date_of_birth);
+                  const annDays = getDaysUntil(member.anniversary_date);
+                  const isBirthday = dobDays === 0;
+                  const isAnniversary = annDays === 0;
+
+                  const formatBadgeText = (dateStr: string, days: number | null, prefix: string) => {
+                    const formattedDate = new Date(dateStr).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+                    if (days === 0) return `${prefix} Today! (${formattedDate})`;
+                    if (days === 1) return `${prefix} Tomorrow · ${formattedDate} (in 1 day)`;
+                    if (days != null && days <= 7) return `${prefix} ${formattedDate} (in ${days} days)`;
+                    if (days != null && days <= 30) return `${prefix} ${formattedDate} (in ${days} days · 1 mo)`;
+                    return `${prefix} ${formattedDate}`;
+                  };
+
                   return (
                     <div className="mt-3 flex flex-col gap-1.5">
                       {isBirthday && (
@@ -496,18 +524,22 @@ export default function MemberProfilePage() {
                           </div>
                         </div>
                       )}
-                      {!isBirthday && !isAnniversary && (
-                        <div className="flex items-center gap-3 mt-1 flex-wrap">
-                          {member.date_of_birth && (
-                            <span className="flex items-center gap-1 text-white/75 text-xs font-medium bg-white/10 rounded-lg px-2.5 py-1">
+                      {(!isBirthday || !isAnniversary) && (
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          {!isBirthday && member.date_of_birth && (
+                            <span className={`flex items-center gap-1.5 text-xs font-medium rounded-lg px-2.5 py-1 ${
+                              dobDays != null && dobDays <= 7 ? 'bg-pink-500/30 text-white border border-pink-300/40' : 'bg-white/10 text-white/85'
+                            }`}>
                               <span>🎂</span>
-                              {new Date(member.date_of_birth).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                              {formatBadgeText(member.date_of_birth, dobDays, 'Birthday:')}
                             </span>
                           )}
-                          {member.anniversary_date && (
-                            <span className="flex items-center gap-1 text-white/75 text-xs font-medium bg-white/10 rounded-lg px-2.5 py-1">
+                          {!isAnniversary && member.anniversary_date && (
+                            <span className={`flex items-center gap-1.5 text-xs font-medium rounded-lg px-2.5 py-1 ${
+                              annDays != null && annDays <= 7 ? 'bg-purple-500/30 text-white border border-purple-300/40' : 'bg-white/10 text-white/85'
+                            }`}>
                               <span>💍</span>
-                              {new Date(member.anniversary_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                              {formatBadgeText(member.anniversary_date, annDays, 'Anniversary:')}
                             </span>
                           )}
                         </div>

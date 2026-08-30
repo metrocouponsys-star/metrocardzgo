@@ -142,7 +142,7 @@ export default function MembersListPage() {
             <span className="material-symbols-outlined text-[22px]">groups</span>
           </div>
           <div>
-            <p className="text-label-sm text-on-surface-variant">Total Members</p>
+            <p className="text-label-sm text-on-surface-variant">Register Member</p>
             <p className="text-headline-md font-bold text-on-surface">{counts.total}</p>
           </div>
         </div>

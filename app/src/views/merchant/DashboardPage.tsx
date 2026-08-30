@@ -10,11 +10,21 @@ import { cached } from '../../api/cache';
 import { formatDistanceToNow, format } from 'date-fns';
 
 const OFFER_ICONS: Record<string, string> = {
-  percent_off: 'percent', free_service: 'spa', wallet_points: 'account_balance_wallet',
+  percent_off: 'percent', flat_off: 'sell', buy_1_get_1: 'card_giftcard', free_service: 'spa', wallet_points: 'account_balance_wallet',
   referral: 'people', birthday: 'cake', unknown: 'star',
 };
 
 const REFRESH_INTERVAL_MS = 60_000; // auto-refresh every 60 s
+
+function formatCelebrationDate(isoDateStr?: string) {
+  if (!isoDateStr) return '';
+  try {
+    const d = new Date(isoDateStr.includes('T') ? isoDateStr : `${isoDateStr}T00:00:00`);
+    return format(d, 'dd MMM yyyy');
+  } catch {
+    return isoDateStr;
+  }
+}
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
@@ -30,6 +40,7 @@ export default function DashboardPage() {
   // Celebrations
   const [celebrations, setCelebrations] = useState<CelebrationMember[]>([]);
   const [celebrationsLoading, setCelebrationsLoading] = useState(true);
+  const [celebrationFilter, setCelebrationFilter] = useState<'all' | 'today' | '1day' | '7days' | '1month'>('all');
 
   const fetchStats = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
@@ -60,8 +71,8 @@ export default function DashboardPage() {
   // Initial load
   useEffect(() => {
     fetchStats();
-    // Load celebrations (birthday/anniversary) on mount
-    api.getCelebrations(7).then(setCelebrations).catch(() => setCelebrations([]))
+    // Load celebrations (birthday/anniversary up to 30 days) on mount
+    api.getCelebrations(30).then(setCelebrations).catch(() => setCelebrations([]))
       .finally(() => setCelebrationsLoading(false));
   }, [fetchStats]);
 
@@ -150,137 +161,7 @@ export default function DashboardPage() {
         ))}
       </section>
 
-      {/* ── 🎉 Birthday & Anniversary Notifications ─── */}
-      {(() => {
-        const todayBirthdays = celebrations.filter(c => c.event_type === 'birthday' && c.days_until === 0);
-        const todayAnniversaries = celebrations.filter(c => c.event_type === 'anniversary' && c.days_until === 0);
-        const upcomingBirthdays = celebrations.filter(c => c.event_type === 'birthday' && c.days_until > 0);
-        const upcomingAnniversaries = celebrations.filter(c => c.event_type === 'anniversary' && c.days_until > 0);
-        const todayCount = todayBirthdays.length + todayAnniversaries.length;
-
-        if (celebrationsLoading) return (
-          <section className="bg-white rounded-2xl border border-primary/[0.06] shadow-sm p-4 animate-pulse">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-surface-container-high" />
-                <div className="h-4 w-40 bg-surface-container-high rounded-lg" />
-              </div>
-              <div className="h-3 w-16 bg-surface-container-high rounded-lg" />
-            </div>
-            <div className="space-y-2">
-              {[1, 2].map(i => (
-                <div key={i} className="flex items-center gap-3 p-2 bg-surface-container/30 rounded-xl">
-                  <div className="w-8 h-8 rounded-lg bg-surface-container-high shrink-0" />
-                  <div className="flex-1 space-y-1">
-                    <div className="h-3 w-28 bg-surface-container-high rounded" />
-                    <div className="h-2 w-20 bg-surface-container-high rounded" />
-                  </div>
-                  <div className="h-6 w-16 bg-surface-container-high rounded-full" />
-                </div>
-              ))}
-            </div>
-          </section>
-        );
-
-        return (
-          <section className="bg-white rounded-2xl border border-primary/[0.06] shadow-sm overflow-hidden">
-            {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-primary/[0.04]">
-              <div className="flex items-center gap-2">
-                <span className="text-[18px]">🎉</span>
-                <h3 className="text-[15px] font-bold text-on-surface">Celebrations Today</h3>
-                {todayCount > 0 && (
-                  <span className="flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse inline-block" />
-                    <span className="text-[11px] font-bold text-secondary bg-secondary/[0.1] px-1.5 py-0.5 rounded-full">
-                      {todayCount} today
-                    </span>
-                  </span>
-                )}
-              </div>
-              <button
-                onClick={() => navigate('/campaigns')}
-                className="text-primary text-[12px] font-bold hover:underline flex items-center gap-0.5"
-              >
-                Reminders
-                <span className="material-symbols-outlined text-[13px]">arrow_forward</span>
-              </button>
-            </div>
-
-            {/* Today's celebrations */}
-            {todayCount === 0 && upcomingBirthdays.length === 0 && upcomingAnniversaries.length === 0 ? (
-              <div className="px-4 py-5 text-center">
-                <p className="text-[13px] text-on-surface-variant">No celebrations in the next 7 days</p>
-              </div>
-            ) : (
-              <div className="divide-y divide-primary/[0.04]">
-                {/* Today's Birthdays */}
-                {todayBirthdays.map(m => (
-                  <div
-                    key={`bd-${m.member_id}`}
-                    onClick={() => navigate(`/members/${m.member_id}`)}
-                    className="flex items-center gap-3 px-4 py-3 hover:bg-pink-50 cursor-pointer transition-colors group"
-                  >
-                    <div className="w-9 h-9 rounded-xl bg-pink-100 flex items-center justify-center shrink-0 text-[18px]">
-                      🎂
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-bold text-on-surface group-hover:text-pink-700 transition-colors">{m.name}</p>
-                      <p className="text-[11px] text-on-surface-variant">{m.member_code} · Birthday Today!</p>
-                    </div>
-                    <span className="text-[11px] font-bold text-pink-600 bg-pink-50 border border-pink-200 px-2 py-0.5 rounded-full shrink-0">
-                      🎁 Give Gift
-                    </span>
-                  </div>
-                ))}
-                {/* Today's Anniversaries */}
-                {todayAnniversaries.map(m => (
-                  <div
-                    key={`ann-${m.member_id}`}
-                    onClick={() => navigate(`/members/${m.member_id}`)}
-                    className="flex items-center gap-3 px-4 py-3 hover:bg-purple-50 cursor-pointer transition-colors group"
-                  >
-                    <div className="w-9 h-9 rounded-xl bg-purple-100 flex items-center justify-center shrink-0 text-[18px]">
-                      💍
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-bold text-on-surface group-hover:text-purple-700 transition-colors">{m.name}</p>
-                      <p className="text-[11px] text-on-surface-variant">{m.member_code} · Anniversary Today!</p>
-                    </div>
-                    <span className="text-[11px] font-bold text-purple-600 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-full shrink-0">
-                      🎁 Give Gift
-                    </span>
-                  </div>
-                ))}
-                {/* Upcoming section (collapsed, only show if no today or after today rows) */}
-                {(upcomingBirthdays.length > 0 || upcomingAnniversaries.length > 0) && (
-                  <div className="px-4 py-2 bg-surface-container/30">
-                    <p className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wide mb-1.5">Upcoming — Next 7 Days</p>
-                    <div className="flex flex-wrap gap-2">
-                      {[...upcomingBirthdays, ...upcomingAnniversaries]
-                        .sort((a, b) => a.days_until - b.days_until)
-                        .slice(0, 6)
-                        .map(m => (
-                          <button
-                            key={`up-${m.event_type}-${m.member_id}`}
-                            onClick={() => navigate(`/members/${m.member_id}`)}
-                            className="flex items-center gap-1.5 text-[11px] font-semibold text-on-surface-variant bg-white border border-primary/[0.08] px-2.5 py-1 rounded-full hover:border-primary/30 hover:text-primary transition-all"
-                          >
-                            <span>{m.event_type === 'birthday' ? '🎂' : '💍'}</span>
-                            <span>{m.name}</span>
-                            <span className="text-on-surface-variant/60">in {m.days_until}d</span>
-                          </button>
-                        ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </section>
-        );
-      })()}
-
-      {/* ── Stats Grid ─── */}
+      {/* ── Stats Grid (Expiring this month removed) ─── */}
       <section>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-[17px] font-bold text-on-surface">Overview</h3>
@@ -306,9 +187,9 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
           {loading ? (
-            Array.from({ length: 4 }).map((_, i) => <StatCardSkeleton key={i} />)
+            Array.from({ length: 3 }).map((_, i) => <StatCardSkeleton key={i} />)
           ) : error ? (
             <div className="col-span-full flex flex-col items-center gap-3 py-8 text-center">
               <div className="w-14 h-14 rounded-2xl bg-error/5 flex items-center justify-center">
@@ -337,16 +218,6 @@ export default function DashboardPage() {
                 icon="check_circle"
                 className="stagger-item"
                 onClick={() => navigate('/reports')}
-              />
-              <StatCard
-                label="Expiring This Month"
-                value={stats.expiring_this_month ?? stats.expiring_this_week}
-                trendUp={false}
-                trend="Action needed"
-                icon="notification_important"
-                iconColor="text-error"
-                className="stagger-item"
-                onClick={() => navigate('/members')}
               />
               <StatCard
                 label="Points Issued (Month)"
@@ -398,7 +269,7 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-3">
                   <div className="icon-container w-10 h-10 shrink-0">
                     <span className="material-symbols-outlined text-primary text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                      {OFFER_ICONS[r.offer?.offer_type || 'unknown']}
+                      {OFFER_ICONS[r.offer?.offer_type || 'unknown'] || 'star'}
                     </span>
                   </div>
                   <div>
@@ -428,6 +299,199 @@ export default function DashboardPage() {
           />
         )}
       </section>
+
+      {/* ── 🎉 Birthday & Anniversary Celebrations (At Very Bottom) ─── */}
+      {(() => {
+        const todayCelebrations = celebrations.filter(c => c.days_until === 0);
+        const in1DayCelebrations = celebrations.filter(c => c.days_until === 1);
+        const in7DaysCelebrations = celebrations.filter(c => c.days_until >= 1 && c.days_until <= 7);
+        const in1MonthCelebrations = celebrations.filter(c => c.days_until >= 8 && c.days_until <= 30);
+        const allUpcoming = celebrations.filter(c => c.days_until >= 0);
+
+        const displayedCelebrations = celebrationFilter === 'today'
+          ? todayCelebrations
+          : celebrationFilter === '1day'
+          ? in1DayCelebrations
+          : celebrationFilter === '7days'
+          ? in7DaysCelebrations
+          : celebrationFilter === '1month'
+          ? in1MonthCelebrations
+          : allUpcoming;
+
+        if (celebrationsLoading) {
+          return (
+            <section className="bg-white rounded-2xl border border-primary/[0.06] shadow-sm p-4 animate-pulse">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-lg bg-surface-container-high" />
+                  <div className="h-4 w-48 bg-surface-container-high rounded-lg" />
+                </div>
+                <div className="h-3 w-16 bg-surface-container-high rounded-lg" />
+              </div>
+              <div className="space-y-2">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="flex items-center gap-3 p-3 bg-surface-container/30 rounded-xl">
+                    <div className="w-9 h-9 rounded-lg bg-surface-container-high shrink-0" />
+                    <div className="flex-1 space-y-1">
+                      <div className="h-3 w-32 bg-surface-container-high rounded" />
+                      <div className="h-2 w-24 bg-surface-container-high rounded" />
+                    </div>
+                    <div className="h-6 w-20 bg-surface-container-high rounded-full" />
+                  </div>
+                ))}
+              </div>
+            </section>
+          );
+        }
+
+        return (
+          <section className="bg-white rounded-2xl border border-primary/[0.08] shadow-sm overflow-hidden space-y-0">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 border-b border-primary/[0.06] bg-surface-container-low/40">
+              <div className="flex items-center gap-2.5">
+                <span className="text-[22px]">🎉</span>
+                <div>
+                  <h3 className="text-[16px] font-bold text-on-surface flex items-center gap-2">
+                    Birthday & Anniversary Celebrations
+                    {todayCelebrations.length > 0 && (
+                      <span className="text-[11px] font-extrabold text-pink-700 bg-pink-100 px-2 py-0.5 rounded-full animate-pulse">
+                        {todayCelebrations.length} Today!
+                      </span>
+                    )}
+                  </h3>
+                  <p className="text-[12px] text-on-surface-variant">
+                    Upcoming birthdays & anniversaries with dates for the next 30 days
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => navigate('/campaigns')}
+                className="text-primary text-[12px] font-bold hover:underline flex items-center gap-1 self-start sm:self-auto"
+              >
+                <span className="material-symbols-outlined text-[16px]">campaign</span>
+                Manage Auto-Reminders
+              </button>
+            </div>
+
+            {/* Filter Tabs */}
+            <div className="flex items-center gap-1.5 p-3 overflow-x-auto border-b border-primary/[0.04] bg-surface">
+              {[
+                { key: 'all', label: 'All Upcoming', count: allUpcoming.length },
+                { key: 'today', label: 'Today', count: todayCelebrations.length },
+                { key: '1day', label: 'In 1 Day', count: in1DayCelebrations.length },
+                { key: '7days', label: 'In 7 Days', count: in7DaysCelebrations.length },
+                { key: '1month', label: 'In 1 Month', count: in1MonthCelebrations.length },
+              ].map(t => (
+                <button
+                  key={t.key}
+                  onClick={() => setCelebrationFilter(t.key as any)}
+                  className={`px-3 py-1.5 rounded-xl text-[12px] font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                    celebrationFilter === t.key
+                      ? 'bg-primary text-on-primary shadow-xs'
+                      : 'bg-surface-container/60 text-on-surface-variant hover:bg-surface-container'
+                  }`}
+                >
+                  <span>{t.label}</span>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                    celebrationFilter === t.key ? 'bg-white/25 text-white' : 'bg-surface-container-high text-on-surface'
+                  }`}>
+                    {t.count}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {/* Content List */}
+            {displayedCelebrations.length === 0 ? (
+              <div className="py-10 px-4 text-center">
+                <div className="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center mx-auto mb-2 text-on-surface-variant text-[22px]">
+                  🎂
+                </div>
+                <p className="text-[14px] font-semibold text-on-surface">No celebrations found</p>
+                <p className="text-[12px] text-on-surface-variant max-w-sm mx-auto mt-0.5">
+                  {celebrationFilter === 'today'
+                    ? 'No member birthdays or anniversaries today.'
+                    : celebrationFilter === '1day'
+                    ? 'No celebrations tomorrow.'
+                    : celebrationFilter === '7days'
+                    ? 'No celebrations in the next 7 days.'
+                    : celebrationFilter === '1month'
+                    ? 'No celebrations in the next 30 days.'
+                    : 'No member birthdays or anniversaries registered.'}
+                </p>
+              </div>
+            ) : (
+              <div className="divide-y divide-primary/[0.04]">
+                {displayedCelebrations.map(m => {
+                  const isToday = m.days_until === 0;
+                  const isTomorrow = m.days_until === 1;
+                  const isBirthday = m.event_type === 'birthday';
+
+                  return (
+                    <div
+                      key={`${m.event_type}-${m.member_id}`}
+                      onClick={() => navigate(`/members/${m.member_id}`)}
+                      className={`flex items-center justify-between gap-3 px-4 py-3.5 hover:bg-primary/[0.02] cursor-pointer transition-colors group ${
+                        isToday ? (isBirthday ? 'bg-pink-50/40' : 'bg-purple-50/40') : ''
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-[20px] ${
+                          isBirthday ? 'bg-pink-100 text-pink-700' : 'bg-purple-100 text-purple-700'
+                        }`}>
+                          {isBirthday ? '🎂' : '💍'}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-[13px] font-bold text-on-surface group-hover:text-primary transition-colors truncate">
+                              {m.name}
+                            </p>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full capitalize ${
+                              isBirthday ? 'bg-pink-100 text-pink-700' : 'bg-purple-100 text-purple-700'
+                            }`}>
+                              {isBirthday ? 'Birthday' : 'Anniversary'}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-on-surface-variant mt-0.5 flex items-center gap-2 flex-wrap">
+                            <span>#{m.member_code}</span>
+                            {m.phone && <span>· {m.phone}</span>}
+                            <span className="font-semibold text-primary">
+                              · 📅 {formatCelebrationDate(m.event_date)}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="text-right shrink-0 flex flex-col items-end gap-1">
+                        {isToday ? (
+                          <span className="text-[11px] font-extrabold text-pink-700 bg-pink-100 border border-pink-300 px-2.5 py-1 rounded-full animate-bounce inline-flex items-center gap-1">
+                            🎁 Give Gift Today!
+                          </span>
+                        ) : isTomorrow ? (
+                          <span className="text-[11px] font-bold text-amber-700 bg-amber-100 border border-amber-200 px-2.5 py-0.5 rounded-full">
+                            In 1 Day (Tomorrow)
+                          </span>
+                        ) : m.days_until <= 7 ? (
+                          <span className="text-[11px] font-semibold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full">
+                            In {m.days_until} days
+                          </span>
+                        ) : (
+                          <span className="text-[11px] font-medium text-on-surface-variant bg-surface-container px-2.5 py-0.5 rounded-full">
+                            In {m.days_until} days (1 mo)
+                          </span>
+                        )}
+                        <span className="text-[10px] text-on-surface-variant group-hover:text-primary transition-colors flex items-center gap-0.5">
+                          View profile <span className="material-symbols-outlined text-[12px]">chevron_right</span>
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        );
+      })()}
 
       {/* ── FAB ─── */}
       <button

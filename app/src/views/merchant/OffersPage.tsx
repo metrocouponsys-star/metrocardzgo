@@ -7,7 +7,9 @@ import * as api from '../../api';
 import { invalidateContaining } from '../../api/cache';
 
 const OFFER_TYPES = [
-  { value: 'percent_off', label: '% Off (Discount)' },
+  { value: 'percent_off', label: '% Off (Percentage Discount)' },
+  { value: 'flat_off', label: '₹ Flat Off (Cash Discount)' },
+  { value: 'buy_1_get_1', label: '🎁 Buy 1 Get 1 Free (BOGO)' },
   { value: 'free_service', label: 'Free Service / Reward' },
   { value: 'wallet_points', label: 'Wallet Points Cashback' },
   { value: 'referral', label: 'Referral Bonus' },
@@ -16,7 +18,7 @@ const OFFER_TYPES = [
 ];
 
 const TYPE_ICONS: Record<string, string> = {
-  percent_off: 'percent', free_service: 'spa', wallet_points: 'account_balance_wallet',
+  percent_off: 'percent', flat_off: 'sell', buy_1_get_1: 'card_giftcard', free_service: 'spa', wallet_points: 'account_balance_wallet',
   referral: 'people', birthday: 'cake', points_redemption: 'stars',
 };
 
