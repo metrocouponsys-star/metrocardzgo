@@ -24,7 +24,7 @@ BEGIN
         CREATE TYPE user_role AS ENUM ('super_admin', 'owner', 'staff');
     END IF;
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'offer_type') THEN
-        CREATE TYPE offer_type AS ENUM ('percent_off', 'free_service', 'wallet_points', 'referral', 'birthday', 'points_redemption', 'visit_milestone');
+        CREATE TYPE offer_type AS ENUM ('percent_off', 'flat_off', 'buy_1_get_1', 'free_service', 'wallet_points', 'referral', 'birthday', 'points_redemption', 'visit_milestone');
     END IF;
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'member_status') THEN
         CREATE TYPE member_status AS ENUM ('active', 'expiring_soon', 'expired', 'deactivated');
