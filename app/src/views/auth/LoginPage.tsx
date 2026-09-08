@@ -161,15 +161,13 @@ export default function LoginPage() {
       </div>
 
       <div className="w-full max-w-[420px] animate-slide-up">
-        {/* Logo */}
+        {/* Login Header (Metro Cardz Logo image removed) */}
         <div className="mb-8 text-center">
-          <img
-            src="/logo.png"
-            alt="Metro Cardz"
-            className="w-16 h-16 object-contain mx-auto mb-3 drop-shadow-md"
-          />
-          <h1 className="text-headline-md font-headline-md font-bold text-primary">Metro Cardz</h1>
-          <p className="text-label-sm text-on-surface-variant mt-1">Loyalty Platform for Indian SMBs</p>
+          <div className="w-14 h-14 rounded-2xl bg-primary text-on-primary flex items-center justify-center mx-auto mb-3 shadow-md">
+            <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
+          </div>
+          <h1 className="text-headline-md font-headline-md font-bold text-primary">Member & Partner Login</h1>
+          <p className="text-label-sm text-on-surface-variant mt-1">Merchant Loyalty & Rewards Platform</p>
         </div>
 
         {/* Fancy animated server warm-up overlay */}
@@ -181,7 +179,7 @@ export default function LoginPage() {
               <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-primary animate-spin" style={{ animationDuration: '1s' }} />
               <div className="absolute inset-2 rounded-full border-4 border-transparent border-t-secondary animate-spin" style={{ animationDuration: '1.5s', animationDirection: 'reverse' }} />
               <div className="absolute inset-0 flex items-center justify-center">
-                <img src="/logo.png" alt="" className="w-10 h-10 object-contain drop-shadow-md" />
+                <span className="material-symbols-outlined text-primary text-[28px]">lock</span>
               </div>
             </div>
             <h3 className="text-headline-sm font-bold text-on-surface mb-2">Starting up…</h3>

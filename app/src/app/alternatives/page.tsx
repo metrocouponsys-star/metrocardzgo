@@ -156,7 +156,7 @@ export default function AlternativesPage() {
           <h2 className="text-2xl font-poppins font-black text-warm-white">Switch Today — First 25 Members Free</h2>
           <div className="flex items-center justify-center gap-4 flex-wrap">
             <a href="/login" className="btn-primary">Start Free</a>
-            <a href="/pricing" className="btn-outline">See Full Pricing</a>
+            <a href="/contact" className="btn-outline">Contact Us</a>
           </div>
         </section>
       </main>

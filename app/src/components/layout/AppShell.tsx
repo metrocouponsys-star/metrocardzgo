@@ -46,6 +46,7 @@ const MERCHANT_NAV = [
   { to: '/members',          icon: 'groups',          label: 'Members',     roles: ['owner', 'staff'] },
   { to: '/members/search?tab=qr', icon: 'qr_code_scanner', label: 'Scan',   roles: ['owner', 'staff'] },
   { to: '/cards',            icon: 'credit_card',     label: 'Cards',       roles: ['owner'] },
+  { to: '/celebrations',     icon: 'cake',            label: 'Celebrations',roles: ['owner', 'staff'] },
   { to: '/offers',           icon: 'local_offer',     label: 'Offers',      roles: ['owner'] },
   { to: '/membership-types', icon: 'card_membership', label: 'Memberships', roles: ['owner'] },
   { to: '/rewards',          icon: 'workspace_premium', label: 'Rewards',   roles: ['owner'] },

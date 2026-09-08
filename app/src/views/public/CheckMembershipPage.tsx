@@ -97,16 +97,14 @@ function LookupForm({
 
       <div className="w-full max-w-md space-y-6 relative z-10 animate-fade-in">
 
-        {/* MetroCardz Platform Brand Header */}
+        {/* Customer Membership Portal Header (Metro Cardz Logo Removed) */}
         <div className="text-center space-y-3">
-          <img
-            src="/logo.png"
-            alt="Metro Cardz"
-            className="w-16 h-16 object-contain mx-auto shadow-md rounded-2xl bg-white p-1"
-          />
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center mx-auto shadow-md text-white">
+            <span className="material-symbols-outlined text-[30px]" style={{ fontVariationSettings: "'FILL' 1" }}>credit_card</span>
+          </div>
           <div>
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-              Metro <span className="text-amber-600">Cardz</span>
+              Customer <span className="text-amber-600">Points & Membership</span>
             </h1>
             <p className="text-xs font-bold text-slate-400 mt-0.5">Digital Membership & Rewards Portal</p>
           </div>
@@ -139,6 +137,9 @@ function LookupForm({
                   autoComplete="off"
                   disabled={loading}
                 />
+                <p className="text-[10px] text-slate-400 mt-1 font-medium">
+                  Example: #MC0004, SAL001, 4821..., or your 10-digit mobile number
+                </p>
               </div>
             </div>
 
@@ -166,6 +167,11 @@ function LookupForm({
               <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
                 Must match the last 4 digits of the member's registered phone number.
               </p>
+            </div>
+
+            <div className="p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-[11px] text-amber-900 flex items-center gap-2">
+              <span className="material-symbols-outlined text-[15px] text-amber-600 shrink-0">info</span>
+              <span><strong>Multiple stores?</strong> Enter your registered mobile number to access and switch between all your store memberships.</span>
             </div>
 
             {error && (
@@ -260,6 +266,31 @@ function MembershipResult({
             <span className="material-symbols-outlined text-[16px] text-amber-600">verified</span>
             {data.merchant_name}
           </span>
+
+          {/* Multi-Store Switcher Banner */}
+          {data.other_memberships && data.other_memberships.length > 0 && (
+            <div className="mt-4 p-3 bg-slate-50 border border-slate-200 rounded-2xl text-left space-y-2">
+              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[15px] text-amber-600">storefront</span>
+                Switch to your other store memberships:
+              </p>
+              <div className="space-y-1.5">
+                {data.other_memberships.map(other => (
+                  <a
+                    key={other.member_id}
+                    href={`/m/${other.member_id}`}
+                    className="p-2.5 rounded-xl bg-white border border-slate-200 hover:border-amber-400 flex items-center justify-between transition-all group shadow-xs"
+                  >
+                    <div className="min-w-0 pr-2">
+                      <p className="text-xs font-bold text-slate-900 truncate group-hover:text-amber-700">{other.merchant_name}</p>
+                      <p className="text-[10px] text-slate-500">{other.membership_type_name} · ★ {other.loyalty_points} pts</p>
+                    </div>
+                    <span className="material-symbols-outlined text-slate-400 group-hover:text-amber-600 text-[16px] shrink-0">open_in_new</span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
           <h1 className="text-xl font-black text-slate-900">{data.merchant_name}</h1>
           <p className="text-xs text-slate-500 font-semibold">Digital Loyalty Member Pass</p>
         </div>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { useToastStore } from '../../store/toastStore';
-import { ConfirmModal } from '../../components/ui/Modal';
+import { ConfirmModal, Modal } from '../../components/ui/Modal';
 import type { CardInventoryItem, Merchant } from '../../types';
 import * as api from '../../api';
 import { format } from 'date-fns';
@@ -122,12 +122,24 @@ export default function CardInventoryPage() {
   const [allocateQty, setAllocateQty] = useState(50);
   const [allocateLoading, setAllocateLoading] = useState(false);
   const [allocateMerchantSearch, setAllocateMerchantSearch] = useState('');
+  const [showDirectAllocateModal, setShowDirectAllocateModal] = useState(false);
 
   // ─── Legacy panel state (for non-wizard flows) ─────────────────────────────
   const [deactivateTarget, setDeactivateTarget] = useState<CardInventoryItem | null>(null);
   const [deactivating, setDeactivating] = useState(false);
   const [revokeTarget, setRevokeTarget] = useState<CardInventoryItem | null>(null);
   const [revoking, setRevoking] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<CardInventoryItem | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [selectedCardIds, setSelectedCardIds] = useState<Set<string>>(new Set());
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
+
+  // ─── Batch Actions Modal State ─────────────────────────────────────────────
+  const [showBatchModal, setShowBatchModal] = useState(false);
+  const [batchMerchant, setBatchMerchant] = useState('');
+  const [batchAction, setBatchAction] = useState<'revoke' | 'delete'>('revoke');
+  const [batchCount, setBatchCount] = useState(500);
+  const [batchLoading, setBatchLoading] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -282,6 +294,7 @@ export default function CardInventoryPage() {
       addToast('success', `🎉 ${unassigned.length} cards allocated to ${merchantName}!`);
       await fetchData();
       closeWizard();
+      setShowDirectAllocateModal(false);
     } catch (e: any) { addToast('error', e.message || 'Allocation failed'); }
     finally { setAllocateLoading(false); }
   };
@@ -311,6 +324,80 @@ export default function CardInventoryPage() {
     finally { setRevoking(false); }
   };
 
+  const handleDeleteCard = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await api.deleteCard(deleteTarget.id);
+      addToast('success', `Card ${deleteTarget.card_number} deleted from inventory`);
+      setDeleteTarget(null);
+      setSelectedCardIds(prev => {
+        const next = new Set(prev);
+        next.delete(deleteTarget.id);
+        return next;
+      });
+      fetchData();
+    } catch (e: any) {
+      addToast('error', e.message || 'Failed to delete card');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleBulkRevokeSelected = async () => {
+    if (selectedCardIds.size === 0) return;
+    setBulkActionLoading(true);
+    try {
+      const res = await api.bulkRevokeCards(Array.from(selectedCardIds));
+      addToast('success', `Returned ${res.revoked} card(s) to unassigned pool`);
+      setSelectedCardIds(new Set());
+      fetchData();
+    } catch {
+      addToast('error', 'Bulk revoke failed');
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
+  const handleBulkDeleteSelected = async () => {
+    if (selectedCardIds.size === 0) return;
+    setBulkActionLoading(true);
+    try {
+      const res = await api.bulkDeleteCards(Array.from(selectedCardIds));
+      addToast('success', `Deleted ${res.deleted} card(s) permanently`);
+      setSelectedCardIds(new Set());
+      fetchData();
+    } catch {
+      addToast('error', 'Bulk delete failed');
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
+  const handleBatchManageSubmit = async () => {
+    if (batchCount <= 0) return;
+    setBatchLoading(true);
+    try {
+      const res = await api.batchManageCards({
+        action: batchAction,
+        merchant_id: batchMerchant || undefined,
+        count: Number(batchCount),
+      });
+      if (batchAction === 'revoke') {
+        addToast('success', `🎉 Successfully revoked ${res.processed} cards back to pool!`);
+      } else {
+        addToast('success', `🗑️ Successfully deleted ${res.processed} cards from database!`);
+      }
+      setShowBatchModal(false);
+      setSelectedCardIds(new Set());
+      fetchData();
+    } catch (e: any) {
+      addToast('error', e.message || 'Batch operation failed');
+    } finally {
+      setBatchLoading(false);
+    }
+  };
+
   const FILTER_LABELS: Record<FilterStatus, string> = {
     all: 'All', unassigned: 'Unassigned', merchant_allocated: 'Allocated',
     member_linked: 'Linked', deactivated: 'Deactivated',
@@ -331,6 +418,31 @@ export default function CardInventoryPage() {
         </div>
         <div className="flex gap-2 flex-wrap">
           <button
+            onClick={() => {
+              setAllocateMerchant('');
+              setAllocateMerchantSearch('');
+              setAllocateQty(Math.min(50, stats.unassigned || 50));
+              setShowDirectAllocateModal(true);
+            }}
+            className="btn-primary flex items-center gap-2"
+          >
+            <span className="material-symbols-outlined text-[18px]">storefront</span>
+            Allocate Cards
+          </button>
+          <button
+            onClick={() => {
+              setBatchMerchant(filterMerchant || '');
+              setBatchCount(500);
+              setBatchAction('revoke');
+              setShowBatchModal(true);
+            }}
+            className="btn-outline border-primary/50 text-primary hover:bg-primary-container/20 flex items-center gap-2 font-bold"
+            title="Batch revoke or delete cards (e.g. 500 cards in 1 click)"
+          >
+            <span className="material-symbols-outlined text-[18px]">bolt</span>
+            ⚡ Batch Actions
+          </button>
+          <button
             onClick={async () => {
               try {
                 await api.exportCardInventoryCsv(filterMerchant || undefined);
@@ -344,7 +456,7 @@ export default function CardInventoryPage() {
             <span className="material-symbols-outlined text-[18px]">download</span>
             Export CSV
           </button>
-          <button onClick={openWizard} className="btn-primary flex items-center gap-2">
+          <button onClick={openWizard} className="btn-outline flex items-center gap-2">
             <span className="material-symbols-outlined text-[18px]">auto_awesome</span>
             New Card Batch Wizard
           </button>
@@ -832,6 +944,25 @@ export default function CardInventoryPage() {
           <table className="w-full">
             <thead className="bg-surface-container-low">
               <tr>
+                <th className="px-4 py-3 w-10">
+                  <input
+                    type="checkbox"
+                    checked={paginated.length > 0 && paginated.every(c => selectedCardIds.has(c.id))}
+                    onChange={e => {
+                      if (e.target.checked) {
+                        setSelectedCardIds(new Set([...Array.from(selectedCardIds), ...paginated.map(c => c.id)]));
+                      } else {
+                        setSelectedCardIds(prev => {
+                          const next = new Set(prev);
+                          paginated.forEach(c => next.delete(c.id));
+                          return next;
+                        });
+                      }
+                    }}
+                    className="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4 cursor-pointer"
+                    title="Select all on this page"
+                  />
+                </th>
                 {['Card Number', 'Status', 'Merchant', 'Linked Member', 'Date', 'Actions'].map(h => (
                   <th key={h} className="text-left px-4 py-3 text-label-md font-label-md text-on-surface-variant whitespace-nowrap">{h}</th>
                 ))}
@@ -840,12 +971,12 @@ export default function CardInventoryPage() {
             <tbody className="divide-y divide-outline-variant/20">
               {loading ? (
                 Array.from({ length: 8 }).map((_, i) => (
-                  <tr key={i}>{Array.from({ length: 6 }).map((_, j) => (
+                  <tr key={i}>{Array.from({ length: 7 }).map((_, j) => (
                     <td key={j} className="px-4 py-3"><div className="h-4 bg-surface-container rounded animate-pulse" /></td>
                   ))}</tr>
                 ))
               ) : paginated.length === 0 ? (
-                <tr><td colSpan={6} className="px-4 py-16 text-center text-on-surface-variant">
+                <tr><td colSpan={7} className="px-4 py-16 text-center text-on-surface-variant">
                   <span className="material-symbols-outlined text-[48px] block mb-2 opacity-40">credit_card_off</span>
                   <p className="text-body-md">No cards match your filters</p>
                   {searchQuery && (
@@ -856,8 +987,24 @@ export default function CardInventoryPage() {
                 const cfg = STATUS_CONFIG[card.status];
                 // Get merchant card design for allocated merchant
                 const cardMerchant = merchants.find(m => m.id === card.allocated_merchant_id);
+                const isSelected = selectedCardIds.has(card.id);
                 return (
-                  <tr key={card.id} className="hover:bg-surface-container-low transition-colors group">
+                  <tr key={card.id} className={`hover:bg-surface-container-low transition-colors group ${isSelected ? 'bg-primary-container/10' : ''}`}>
+                    <td className="px-4 py-3 w-10">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => {
+                          setSelectedCardIds(prev => {
+                            const next = new Set(prev);
+                            if (next.has(card.id)) next.delete(card.id);
+                            else next.add(card.id);
+                            return next;
+                          });
+                        }}
+                        className="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4 cursor-pointer"
+                      />
+                    </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         {cardMerchant?.card_design_url ? (
@@ -900,14 +1047,24 @@ export default function CardInventoryPage() {
                           <button
                             onClick={() => setRevokeTarget(card)}
                             className="text-label-sm text-primary hover:bg-primary-container/20 px-2 py-1 rounded-lg transition-colors whitespace-nowrap"
+                            title="Return to unassigned pool"
                           >
                             Revoke
+                          </button>
+                        )}
+                        {!card.linked_member_id && (
+                          <button
+                            onClick={() => setDeleteTarget(card)}
+                            className="text-error hover:bg-error-container p-1.5 rounded-lg transition-colors"
+                            title="Delete card permanently from database"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">delete</span>
                           </button>
                         )}
                         {card.status !== 'deactivated' && (
                           <button
                             onClick={() => setDeactivateTarget(card)}
-                            className="text-error hover:bg-error-container p-1.5 rounded-lg transition-colors"
+                            className="text-outline hover:bg-surface-container p-1.5 rounded-lg transition-colors"
                             title="Deactivate card"
                           >
                             <span className="material-symbols-outlined text-[16px]">block</span>
@@ -1012,6 +1169,333 @@ export default function CardInventoryPage() {
         confirmLabel="Revoke Allocation"
         description={`Return card "${revokeTarget?.card_number}" from "${revokeTarget?.allocated_merchant_name}" back to the unassigned pool. Only possible if the card is not yet linked to any member.`}
       />
+
+      {/* Direct Allocate Modal */}
+      <Modal
+        isOpen={showDirectAllocateModal}
+        onClose={() => setShowDirectAllocateModal(false)}
+        title="Allocate Cards to Merchant"
+      >
+        <div className="space-y-4">
+          <div className="p-3 bg-surface-container rounded-xl flex items-center justify-between">
+            <span className="text-body-sm text-on-surface-variant">Available unassigned cards:</span>
+            <span className="text-body-md font-bold text-primary">{stats.unassigned} cards</span>
+          </div>
+
+          <div>
+            <label className="form-label">Search Merchant *</label>
+            <div className="relative mb-2">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-[18px]">search</span>
+              <input
+                type="text"
+                placeholder="Search merchant name, phone, category, city..."
+                className="input-field pl-10 pr-8 !py-2 text-body-sm"
+                value={allocateMerchantSearch}
+                onChange={e => setAllocateMerchantSearch(e.target.value)}
+              />
+              {allocateMerchantSearch && (
+                <button
+                  type="button"
+                  onClick={() => setAllocateMerchantSearch('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface"
+                >
+                  <span className="material-symbols-outlined text-[16px]">close</span>
+                </button>
+              )}
+            </div>
+
+            <div className="max-h-48 overflow-y-auto border border-outline-variant/60 rounded-xl bg-surface divide-y divide-outline-variant/20 shadow-xs">
+              {filteredAllocateMerchants.length === 0 ? (
+                <div className="p-3 text-center text-body-sm text-on-surface-variant">
+                  No matching active merchants found.
+                </div>
+              ) : (
+                filteredAllocateMerchants.map(m => {
+                  const isSelected = allocateMerchant === m.id;
+                  return (
+                    <button
+                      type="button"
+                      key={m.id}
+                      onClick={() => setAllocateMerchant(m.id)}
+                      className={`w-full text-left p-2.5 flex items-center justify-between hover:bg-surface-container-low transition-colors ${
+                        isSelected ? 'bg-primary-container/25 text-primary font-bold' : 'text-on-surface'
+                      }`}
+                    >
+                      <div className="min-w-0 pr-2">
+                        <p className="text-body-sm font-semibold truncate">{m.business_name}</p>
+                        <p className="text-label-xs text-on-surface-variant truncate">
+                          {m.category || 'General'} {m.whatsapp_number ? `· ${m.whatsapp_number}` : ''} {m.address ? `· ${m.address}` : ''}
+                        </p>
+                      </div>
+                      {isSelected ? (
+                        <span className="material-symbols-outlined text-primary text-[20px] shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                      ) : (
+                        <span className="material-symbols-outlined text-on-surface-variant/40 text-[18px] shrink-0">radio_button_unchecked</span>
+                      )}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+
+            {allocateMerchant && (
+              <div className="flex items-center justify-between text-label-xs text-primary font-medium px-1 mt-1.5">
+                <span>Selected: <strong>{merchants.find(m => m.id === allocateMerchant)?.business_name}</strong></span>
+                <button
+                  type="button"
+                  onClick={() => setAllocateMerchant('')}
+                  className="text-error hover:underline text-label-xs"
+                >
+                  Clear
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label className="form-label">Number of Cards to Allocate *</label>
+            <div className="flex items-center gap-3">
+              <input
+                type="number"
+                min={1}
+                max={stats.unassigned || 1}
+                value={allocateQty}
+                onChange={e => setAllocateQty(Math.max(1, parseInt(e.target.value) || 1))}
+                className="input-field w-32 font-bold text-center"
+              />
+              <div className="flex gap-1.5 flex-wrap">
+                {[10, 25, 50, 100, 250].map(q => (
+                  <button
+                    key={q}
+                    type="button"
+                    onClick={() => setAllocateQty(Math.min(q, stats.unassigned || q))}
+                    className={`px-2.5 py-1 rounded-lg text-label-xs font-semibold border transition-all ${
+                      allocateQty === q
+                        ? 'bg-primary text-on-primary border-primary'
+                        : 'bg-surface-container border-outline-variant/60 text-on-surface-variant hover:bg-surface-container-high'
+                    }`}
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2 border-t border-outline-variant/30">
+            <button
+              type="button"
+              onClick={() => setShowDirectAllocateModal(false)}
+              className="btn-outline text-label-md"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleAllocate}
+              disabled={!allocateMerchant || allocateQty <= 0 || stats.unassigned === 0 || allocateLoading}
+              className="btn-primary flex items-center gap-2"
+            >
+              {allocateLoading && <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>}
+              Allocate {allocateQty} Cards
+            </button>
+          </div>
+        </div>
+      </Modal>
+      {/* Floating Selection Bar */}
+      {selectedCardIds.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-surface-container-highest/95 backdrop-blur-md border border-primary/30 shadow-2xl rounded-2xl px-6 py-3 flex items-center gap-4 animate-slide-up">
+          <span className="text-body-md font-bold text-on-surface">
+            {selectedCardIds.size} card{selectedCardIds.size > 1 ? 's' : ''} selected
+          </span>
+          <div className="h-5 w-px bg-outline-variant/30" />
+          <button
+            onClick={handleBulkRevokeSelected}
+            disabled={bulkActionLoading}
+            className="btn-outline text-label-md py-1 px-3 flex items-center gap-1.5"
+          >
+            {bulkActionLoading ? <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span> : <span className="material-symbols-outlined text-[16px]">undo</span>}
+            Revoke Selected
+          </button>
+          <button
+            onClick={handleBulkDeleteSelected}
+            disabled={bulkActionLoading}
+            className="bg-error hover:bg-error-container text-white text-label-md font-bold py-1 px-3 rounded-lg flex items-center gap-1.5 transition-colors"
+          >
+            {bulkActionLoading ? <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span> : <span className="material-symbols-outlined text-[16px]">delete</span>}
+            Delete Selected
+          </button>
+          <button
+            onClick={() => setSelectedCardIds(new Set())}
+            className="text-label-sm text-on-surface-variant hover:text-on-surface px-2 py-1"
+          >
+            Clear
+          </button>
+        </div>
+      )}
+
+      {/* Confirm: Delete Card Permanently */}
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDeleteCard}
+        title="Delete Card Permanently"
+        danger
+        isLoading={deleting}
+        confirmLabel="Delete Permanently"
+        description={
+          <div className="space-y-3">
+            <div className="bg-surface-container rounded-xl p-4 font-mono text-body-md tracking-widest font-bold text-center text-error">
+              {deleteTarget?.card_number}
+            </div>
+            <p className="text-body-md text-on-surface-variant">
+              This card will be permanently erased from your inventory database. This action cannot be undone.
+            </p>
+          </div>
+        }
+      />
+
+      {/* Batch Actions Modal */}
+      <Modal
+        isOpen={showBatchModal}
+        onClose={() => setShowBatchModal(false)}
+        title="⚡ Quick Batch Card Actions"
+      >
+        <div className="space-y-5">
+          <p className="text-body-sm text-on-surface-variant">
+            Perform bulk actions on large batches of physical cards (e.g. undoing an accidental 500-card allocation or wiping duplicate inventory).
+          </p>
+
+          {/* Action Selector */}
+          <div>
+            <label className="form-label">Choose Action *</label>
+            <div className="grid grid-cols-2 gap-2 mt-1">
+              <button
+                type="button"
+                onClick={() => setBatchAction('revoke')}
+                className={`p-3 rounded-xl border text-left flex items-start gap-2.5 transition-all ${
+                  batchAction === 'revoke'
+                    ? 'border-primary bg-primary-container/20 text-primary font-bold shadow-sm'
+                    : 'border-outline-variant/50 hover:bg-surface-container text-on-surface'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[20px] text-primary shrink-0">undo</span>
+                <div>
+                  <p className="text-body-sm font-bold leading-tight">Revoke Cards</p>
+                  <p className="text-label-xs text-on-surface-variant mt-0.5">Return allocated cards from merchant back to pool</p>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setBatchAction('delete')}
+                className={`p-3 rounded-xl border text-left flex items-start gap-2.5 transition-all ${
+                  batchAction === 'delete'
+                    ? 'border-error bg-error-container/20 text-error font-bold shadow-sm'
+                    : 'border-outline-variant/50 hover:bg-surface-container text-on-surface'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[20px] text-error shrink-0">delete_forever</span>
+                <div>
+                  <p className="text-body-sm font-bold leading-tight">Permanently Delete</p>
+                  <p className="text-label-xs text-on-surface-variant mt-0.5">Completely delete unlinked cards from database</p>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* Merchant Filter / Target */}
+          <div>
+            <label className="form-label">
+              {batchAction === 'revoke' ? 'From Which Merchant? *' : 'Target Merchant (Optional)'}
+            </label>
+            <select
+              value={batchMerchant}
+              onChange={e => setBatchMerchant(e.target.value)}
+              className="input-field w-full mt-1"
+            >
+              <option value="">{batchAction === 'revoke' ? 'All Merchants (Recent Allocations)' : 'All / Unassigned Inventory'}</option>
+              {merchants.map(m => (
+                <option key={m.id} value={m.id}>
+                  {m.business_name} ({cards.filter(c => c.allocated_merchant_id === m.id && c.status === 'merchant_allocated').length} allocated)
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Batch Quantity */}
+          <div>
+            <label className="form-label">Number of Cards to {batchAction === 'revoke' ? 'Revoke' : 'Delete'} *</label>
+            <div className="flex items-center gap-3 mt-1">
+              <input
+                type="number"
+                min={1}
+                max={5000}
+                value={batchCount}
+                onChange={e => setBatchCount(Math.max(1, parseInt(e.target.value) || 1))}
+                className="input-field w-32 font-bold text-center"
+              />
+              <div className="flex gap-1.5 flex-wrap">
+                {[50, 100, 250, 500, 1000].map(cnt => (
+                  <button
+                    key={cnt}
+                    type="button"
+                    onClick={() => setBatchCount(cnt)}
+                    className={`px-3 py-1.5 rounded-lg text-label-xs font-semibold border transition-all ${
+                      batchCount === cnt
+                        ? 'bg-primary text-on-primary border-primary'
+                        : 'bg-surface-container border-outline-variant/60 text-on-surface-variant hover:bg-surface-container-high'
+                    }`}
+                  >
+                    {cnt}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Action Preview Warning Box */}
+          <div className={`p-3 rounded-xl border text-body-sm flex items-start gap-2.5 ${
+            batchAction === 'delete'
+              ? 'bg-red-50 text-red-800 border-red-200'
+              : 'bg-primary-container/15 text-primary border-primary/20'
+          }`}>
+            <span className="material-symbols-outlined text-[20px] shrink-0">
+              {batchAction === 'delete' ? 'warning' : 'info'}
+            </span>
+            <p>
+              {batchAction === 'revoke'
+                ? `Will revoke the most recent ${batchCount} allocated cards ${batchMerchant ? `from "${merchants.find(m => m.id === batchMerchant)?.business_name}"` : 'across all merchants'} and place them back in the unassigned pool.`
+                : `Will permanently delete up to ${batchCount} unlinked cards ${batchMerchant ? `allocated to "${merchants.find(m => m.id === batchMerchant)?.business_name}"` : 'from inventory'}. Linked customer cards are safely protected.`}
+            </p>
+          </div>
+
+          {/* Buttons */}
+          <div className="flex justify-end gap-2 pt-3 border-t border-outline-variant/30">
+            <button
+              type="button"
+              onClick={() => setShowBatchModal(false)}
+              className="btn-outline text-label-md"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleBatchManageSubmit}
+              disabled={batchCount <= 0 || batchLoading}
+              className={`flex items-center gap-2 font-bold px-4 py-2 rounded-xl text-white transition-colors ${
+                batchAction === 'delete'
+                  ? 'bg-error hover:bg-red-700'
+                  : 'bg-primary hover:bg-primary/90'
+              }`}
+            >
+              {batchLoading && <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>}
+              Execute {batchAction === 'revoke' ? 'Revoke' : 'Delete'} ({batchCount} Cards)
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
+

@@ -102,7 +102,6 @@ export const LandingFooter: React.FC = () => {
               {[
                 { label: 'Features', href: '/features' },
                 { label: 'How It Works', href: '/how-it-works' },
-                { label: 'Pricing', href: '/pricing' },
                 { label: 'ROI Calculator', href: '/roi-calculator' },
                 { label: 'Alternatives', href: '/alternatives' },
                 { label: 'Compliance', href: '/compliance' },

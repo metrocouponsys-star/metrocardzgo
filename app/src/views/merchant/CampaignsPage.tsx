@@ -280,6 +280,17 @@ export default function CampaignsPage() {
     }
   };
 
+  const handleDeleteCampaign = async (campaign: Campaign) => {
+    if (!window.confirm(`Are you sure you want to delete campaign "${campaign.name}"?`)) return;
+    try {
+      await api.deleteCampaign(campaign.id);
+      setCampaigns(prev => prev.filter(c => c.id !== campaign.id));
+      addToast('success', `Campaign "${campaign.name}" deleted`);
+    } catch {
+      addToast('error', 'Failed to delete campaign');
+    }
+  };
+
 
   return (
     <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-4xl mx-auto space-y-xl animate-fade-in">
@@ -502,22 +513,33 @@ export default function CampaignsPage() {
                     <span>{format(new Date(c.created_at), 'dd MMM yyyy')}</span>
                   </div>
                 </div>
-                {c.status === 'scheduled' && (
-                  <button
-                    onClick={async () => {
-                      try {
-                        const updated = await api.sendCampaign(user?.merchant_id || '', c.id);
-                        setCampaigns(list => list.map(x => x.id === c.id ? updated : x));
-                        addToast('success', `Campaign "${c.name}" sent now!`);
-                      } catch {
-                        addToast('error', 'Failed to send campaign');
-                      }
-                    }}
-                    className="btn-outline py-1 px-3 text-label-sm shrink-0 whitespace-nowrap"
-                  >
-                    Send Now
-                  </button>
-                )}
+                <div className="flex items-center gap-2 shrink-0">
+                  {c.status === 'scheduled' && (
+                    <button
+                      onClick={async () => {
+                        try {
+                          const updated = await api.sendCampaign(user?.merchant_id || '', c.id);
+                          setCampaigns(list => list.map(x => x.id === c.id ? updated : x));
+                          addToast('success', `Campaign "${c.name}" sent now!`);
+                        } catch {
+                          addToast('error', 'Failed to send campaign');
+                        }
+                      }}
+                      className="btn-outline py-1 px-3 text-label-sm whitespace-nowrap"
+                    >
+                      Send Now
+                    </button>
+                  )}
+                  {c.status !== 'sending' && (
+                    <button
+                      onClick={() => handleDeleteCampaign(c)}
+                      className="text-on-surface-variant hover:text-error p-1.5 rounded-lg hover:bg-error-container/20 transition-colors"
+                      title="Delete campaign"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">delete</span>
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
 

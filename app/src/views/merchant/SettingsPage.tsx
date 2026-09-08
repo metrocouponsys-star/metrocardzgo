@@ -122,6 +122,8 @@ export default function SettingsPage() {
   };
 
   const CATEGORIES = [
+    'Mobile',
+    'Mobile & Accessories',
     'Mobile & Electronics',
     'Salon & Spa',
     'Restaurant',
@@ -334,32 +336,87 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {/* Billing */}
-      {tab === 'billing' && (
-        <div className="card p-lg">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-14 h-14 rounded-xl bg-primary flex items-center justify-center text-on-primary">
-              <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>workspace_premium</span>
-            </div>
-            <div>
-              <h3 className="text-headline-md font-headline-md text-on-surface">{merchant?.plan_tier} Plan</h3>
-              <p className="text-body-md text-on-surface-variant">Active · Renews annually</p>
-            </div>
-          </div>
-          <div className="bg-surface-container rounded-xl p-4 mb-4 space-y-2">
-            {['Up to 5,000 members', 'Unlimited redemptions', 'WhatsApp + SMS campaigns', 'Reports & analytics', 'Priority support'].map(f => (
-              <div key={f} className="flex items-center gap-2 text-body-md">
-                <span className="material-symbols-outlined text-secondary text-[18px]">check_circle</span>
-                {f}
+      {/* Billing & Software Validity */}
+      {tab === 'billing' && (() => {
+        const start = merchant?.created_at ? new Date(merchant.created_at) : new Date();
+        const expiry = new Date(start);
+        expiry.setMonth(expiry.getMonth() + 16);
+        expiry.setDate(expiry.getDate() + 5);
+        const now = new Date();
+        const diffDays = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        const isExpired = diffDays <= 0;
+
+        return (
+          <div className="card p-lg space-y-6">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-xl bg-primary flex items-center justify-center text-on-primary shrink-0">
+                <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>workspace_premium</span>
               </div>
-            ))}
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-headline-md font-bold text-on-surface">{merchant?.plan_tier || 'Enterprise'} Plan</h3>
+                  <span className={`text-label-xs px-2.5 py-0.5 rounded-full font-bold ${
+                    isExpired ? 'bg-error-container text-on-error-container' : 'bg-primary-container/40 text-primary'
+                  }`}>
+                    {isExpired ? 'Expired' : 'Active'}
+                  </span>
+                </div>
+                <p className="text-body-sm text-on-surface-variant mt-0.5">Commercial Software License & System Validity</p>
+              </div>
+            </div>
+
+            {/* Software Validity Details (16 Months, 5 Days) */}
+            <div className="bg-surface-container-low border border-outline-variant/60 rounded-2xl p-5 space-y-4">
+              <div className="flex items-center justify-between border-b border-outline-variant/30 pb-3">
+                <div>
+                  <p className="text-label-xs font-semibold text-on-surface-variant uppercase tracking-wider">License Validity Period</p>
+                  <p className="text-headline-sm font-black text-primary mt-0.5">16 Months, 5 Days</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-label-xs font-semibold text-on-surface-variant uppercase tracking-wider">Status</p>
+                  <p className={`text-body-md font-bold ${isExpired ? 'text-error' : 'text-emerald-700'}`}>
+                    {isExpired ? 'License Expired' : `${diffDays} Days Remaining`}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-body-sm">
+                <div className="p-3 rounded-xl bg-surface border border-outline-variant/30">
+                  <span className="text-label-xs text-on-surface-variant block">Activation Date</span>
+                  <strong className="text-on-surface">{start.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</strong>
+                </div>
+                <div className="p-3 rounded-xl bg-surface border border-outline-variant/30">
+                  <span className="text-label-xs text-on-surface-variant block">Valid Until (Auto-Close Date)</span>
+                  <strong className="text-on-surface text-primary">{expiry.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</strong>
+                </div>
+              </div>
+
+              {/* Automatic Closure Banner */}
+              <div className="p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-start gap-2.5 text-amber-900">
+                <span className="material-symbols-outlined text-[20px] text-amber-600 shrink-0 mt-0.5">lock_clock</span>
+                <p className="text-label-sm leading-relaxed">
+                  <strong>Automatic Expiration Policy:</strong> This software is provided under a fixed validity of <strong>16 months and 5 days</strong>. Upon reaching the expiry date, merchant system access and card scanning services will automatically close unless renewed in advance.
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-surface-container rounded-xl p-4 space-y-2">
+              <p className="text-label-xs font-bold text-on-surface uppercase tracking-wider mb-1">Included in Your License</p>
+              {['Digital Membership & Card Scanning Engine', '16 Months 5 Days Cloud Hosting & Upgrades', 'Unlimited Member Check-ins & Redemptions', 'Points Rules & Reward Catalog Management', 'Direct WhatsApp Wishes & Auto-Reminders'].map(f => (
+                <div key={f} className="flex items-center gap-2 text-body-md">
+                  <span className="material-symbols-outlined text-secondary text-[18px]">check_circle</span>
+                  {f}
+                </div>
+              ))}
+            </div>
+
+            <a href="mailto:support@metrocardz.in?subject=Software%20License%20Renewal" className="btn-outline flex items-center justify-center gap-2 w-full">
+              <span className="material-symbols-outlined text-[18px]">contact_support</span>
+              Contact Support for Extension or Renewal
+            </a>
           </div>
-          <a href="mailto:support@metrocardz.in" className="btn-outline flex items-center justify-center gap-2 w-full">
-            <span className="material-symbols-outlined text-[18px]">upgrade</span>
-            Contact Support to Upgrade
-          </a>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Integrations Tab */}
       {tab === 'integrations' && (

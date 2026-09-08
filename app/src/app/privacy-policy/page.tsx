@@ -44,14 +44,15 @@ export default function PrivacyPolicyPage() {
               <li>Providing analytics, charts, and report exports inside the merchant dashboard.</li>
             </ul>
 
-            <h2 className="text-xl font-bold font-poppins text-warm-white mt-8 border-l-2 border-gold pl-3">3. DPDP Act 2023 Compliance</h2>
+            <h2 className="text-xl font-bold font-poppins text-warm-white mt-8 border-l-2 border-gold pl-3">3. DPDP Act 2023 Compliance & Data Collection Bond</h2>
             <p>
-              In alignment with India's <strong>Digital Personal Data Protection (DPDP) Act 2023</strong>:
+              In alignment with India's <strong>Digital Personal Data Protection (DPDP) Act 2023</strong> and our statutory legal bond:
             </p>
             <ul className="list-disc pl-5 space-y-2">
-              <li><strong>Role:</strong> MetroCardz operates as a Data Processor. The respective merchant is the Data Fiduciary responsible for obtaining proper customer consent.</li>
-              <li><strong>Rights:</strong> End-customers can request access to, correction of, or erasure of their loyalty records by contacting their respective merchant.</li>
-              <li><strong>Retention:</strong> We store customer data only as long as necessary to fulfill the loyalty program obligations or until requested otherwise.</li>
+              <li><strong>Legal Roles:</strong> MetroCardz operates as a Data Processor under a strict fiduciary service agreement. The merchant operates as the Data Fiduciary and warrants that customer consent has been collected lawfully.</li>
+              <li><strong>Zero Third-Party Commercialization Bond:</strong> Neither merchant business records nor customer phone numbers/names will ever be sold, rented, monetized, or shared with third-party advertisers or competing businesses.</li>
+              <li><strong>Customer Rights:</strong> End-customers have the right to access their loyalty pass data, update their details, or request erasure of their loyalty records by contacting their respective store merchant.</li>
+              <li><strong>Retention & Purge:</strong> We store customer loyalty information strictly for active program tracking. Data is permanently purged upon lawful deletion request or merchant account termination.</li>
             </ul>
 
             <h2 className="text-xl font-bold font-poppins text-warm-white mt-8 border-l-2 border-gold pl-3">4. Security Measures</h2>

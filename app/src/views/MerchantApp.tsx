@@ -27,6 +27,7 @@ import CampaignsPage from './merchant/CampaignsPage';
 import SettingsPage from './merchant/SettingsPage';
 import CardInventoryMerchantPage from './merchant/CardInventoryMerchantPage';
 import RewardsPage from './merchant/RewardsPage';
+import CelebrationsPage from './merchant/CelebrationsPage';
 
 // Admin views
 import AdminDashboardPage from './admin/AdminDashboardPage';
@@ -83,6 +84,7 @@ export default function MerchantApp() {
         <Route path="/settings" element={<ProtectedRoute roles={['owner']}><AppShell><SettingsPage /></AppShell></ProtectedRoute>} />
         <Route path="/cards" element={<ProtectedRoute roles={['owner']}><AppShell><CardInventoryMerchantPage /></AppShell></ProtectedRoute>} />
         <Route path="/rewards" element={<ProtectedRoute roles={['owner']}><AppShell><RewardsPage /></AppShell></ProtectedRoute>} />
+        <Route path="/celebrations" element={<ProtectedRoute roles={['owner', 'staff']}><AppShell><CelebrationsPage /></AppShell></ProtectedRoute>} />
 
         {/* Admin Panel */}
         <Route path="/admin" element={<ProtectedRoute roles={['super_admin']}><AppShell><AdminDashboardPage /></AppShell></ProtectedRoute>} />

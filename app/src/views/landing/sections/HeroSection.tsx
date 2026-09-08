@@ -119,22 +119,48 @@ export const HeroSection: React.FC = () => {
             </button>
           </div>
 
-          {/* Portal Quick Access Links */}
-          <div className="mt-6 flex flex-wrap items-center justify-center lg:justify-start gap-4 text-sm font-semibold">
+          {/* Portal Quick Access High-Visibility Pill Buttons */}
+          <div className="mt-8 pt-4 border-t border-warm-white/10 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3">
+            <span className="text-xs font-bold uppercase tracking-widest text-warm-white/40 text-center sm:text-left self-center mr-1">
+              Quick Portals:
+            </span>
+
+            {/* Check Membership Points Button */}
             <a
               href="/check-membership"
-              className="inline-flex items-center gap-1.5 text-gold hover:text-warm-white transition-colors duration-200 border-b border-gold/20 hover:border-warm-white pb-0.5"
+              className="group relative inline-flex items-center justify-center gap-2.5 px-5 py-2.5 rounded-xl bg-gradient-to-r from-gold/20 via-gold/10 to-transparent border border-gold/50 hover:border-gold hover:bg-gold/20 transition-all duration-300 shadow-sm hover:shadow-gold/20 hover:scale-[1.02] active:scale-95"
             >
-              <span className="material-symbols-outlined text-[16px] text-gold">qr_code_scanner</span>
-              Check Membership Points
+              <span className="w-7 h-7 rounded-lg bg-gold/20 flex items-center justify-center text-gold group-hover:bg-gold group-hover:text-black transition-colors">
+                <span className="material-symbols-outlined text-[18px]">qr_code_scanner</span>
+              </span>
+              <div className="text-left">
+                <div className="text-[11px] text-gold/80 font-medium leading-none">Customer Access</div>
+                <div className="text-sm font-bold text-warm-white group-hover:text-gold transition-colors">
+                  Check Membership Points
+                </div>
+              </div>
+              <span className="material-symbols-outlined text-[16px] text-gold/60 group-hover:translate-x-1 group-hover:text-gold transition-all ml-1">
+                arrow_forward
+              </span>
             </a>
-            <span className="text-warm-white/20">|</span>
+
+            {/* Merchant Portal Login Button */}
             <a
               href="/login"
-              className="inline-flex items-center gap-1.5 text-warm-white/60 hover:text-warm-white transition-colors duration-200 border-b border-warm-white/10 hover:border-warm-white pb-0.5"
+              className="group relative inline-flex items-center justify-center gap-2.5 px-5 py-2.5 rounded-xl bg-warm-white/5 border border-warm-white/20 hover:border-gold/60 hover:bg-warm-white/10 transition-all duration-300 shadow-sm hover:scale-[1.02] active:scale-95"
             >
-              <span className="material-symbols-outlined text-[16px]">storefront</span>
-              Merchant Portal
+              <span className="w-7 h-7 rounded-lg bg-warm-white/10 flex items-center justify-center text-warm-white group-hover:bg-gold group-hover:text-black transition-colors">
+                <span className="material-symbols-outlined text-[18px]">storefront</span>
+              </span>
+              <div className="text-left">
+                <div className="text-[11px] text-warm-white/50 font-medium leading-none">Business Owner</div>
+                <div className="text-sm font-bold text-warm-white group-hover:text-gold transition-colors">
+                  Merchant Portal Login
+                </div>
+              </div>
+              <span className="material-symbols-outlined text-[16px] text-warm-white/40 group-hover:translate-x-1 group-hover:text-gold transition-all ml-1">
+                login
+              </span>
             </a>
           </div>
 

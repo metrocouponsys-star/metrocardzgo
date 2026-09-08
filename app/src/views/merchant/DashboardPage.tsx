@@ -145,8 +145,8 @@ export default function DashboardPage() {
       <section className="grid grid-cols-3 gap-3">
         {[
           { icon: 'person_add', label: 'Add Member', route: '/members/new', color: 'from-primary/10 to-primary/5' },
-          { icon: 'local_offer', label: 'Offers', route: '/offers', color: 'from-secondary/10 to-secondary/5' },
-          { icon: 'bar_chart', label: 'Reports', route: '/reports', color: 'from-primary-container/20 to-primary-container/10' },
+          { icon: 'groups', label: 'Members', route: '/members', color: 'from-secondary/10 to-secondary/5' },
+          { icon: 'credit_card', label: 'Cards', route: '/cards', color: 'from-primary-container/20 to-primary-container/10' },
         ].map((action) => (
           <button
             key={action.route}
@@ -364,13 +364,22 @@ export default function DashboardPage() {
                   </p>
                 </div>
               </div>
-              <button
-                onClick={() => navigate('/campaigns')}
-                className="text-primary text-[12px] font-bold hover:underline flex items-center gap-1 self-start sm:self-auto"
-              >
-                <span className="material-symbols-outlined text-[16px]">campaign</span>
-                Manage Auto-Reminders
-              </button>
+              <div className="flex items-center gap-3 self-start sm:self-auto">
+                <button
+                  onClick={() => navigate('/celebrations')}
+                  className="text-primary text-[12px] font-bold hover:underline flex items-center gap-1"
+                >
+                  <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+                  View Full Page
+                </button>
+                <button
+                  onClick={() => navigate('/campaigns')}
+                  className="text-on-surface-variant text-[12px] font-medium hover:underline flex items-center gap-1"
+                >
+                  <span className="material-symbols-outlined text-[16px]">campaign</span>
+                  Auto-Reminders
+                </button>
+              </div>
             </div>
 
             {/* Filter Tabs */}

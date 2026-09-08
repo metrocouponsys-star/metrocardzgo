@@ -4,7 +4,7 @@
 
 export type MerchantStatus = 'active' | 'suspended';
 export type MemberStatus = 'active' | 'expiring_soon' | 'expired' | 'deactivated';
-export type OfferType = 'percent_off' | 'flat_off' | 'buy_1_get_1' | 'free_service' | 'wallet_points' | 'referral' | 'birthday' | 'points_redemption';
+export type OfferType = 'percent_off' | 'flat_off' | 'buy_1_get_1' | 'free_service' | 'wallet_points' | 'cashback' | 'referral' | 'birthday' | 'birthday_anniversary' | 'points_redemption';
 export type MessageChannel = 'sms' | 'whatsapp';
 export type CampaignStatus = 'draft' | 'scheduled' | 'sending' | 'sent';
 export type UserRole = 'super_admin' | 'owner' | 'staff';
@@ -220,6 +220,7 @@ export interface CelebrationMember {
   event_type: 'birthday' | 'anniversary';
   event_date: string;   // ISO date string (this year's event)
   days_until: number;   // 0 = today, 1 = tomorrow, etc.
+  loyalty_points?: number;
 }
 
 export interface PointsRule {
@@ -289,6 +290,15 @@ export interface PublicMemberView {
   total_visits?: number;
   referral_code?: string;
   physical_card_number?: string;
+  other_memberships?: Array<{
+    member_id: string;
+    merchant_name: string;
+    merchant_logo?: string;
+    member_code: string;
+    loyalty_points: number;
+    membership_type_name: string;
+    status: string;
+  }>;
   offers: Pick<OfferTemplate, 'id' | 'title' | 'description' | 'offer_type' | 'value'>[];
   open_lucky_draws?: Array<{
     id: string;

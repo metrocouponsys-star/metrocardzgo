@@ -45,14 +45,25 @@ export default function TermsAndConditionsPage() {
               Merchants retain all intellectual property rights to their uploaded business logos, offer names, and branding. MetroCardz retains all rights to the underlying loyalty engine code, templates, and card pass designs.
             </p>
 
-            <h2 className="text-xl font-bold font-poppins text-warm-white mt-8 border-l-2 border-gold pl-3">5. Limitation of Liability</h2>
+            <h2 className="text-xl font-bold font-poppins text-warm-white mt-8 border-l-2 border-gold pl-3">5. Data Collection Bond & Processing Agreement</h2>
+            <p>
+              Under this legally binding agreement and in strict compliance with the <strong>Digital Personal Data Protection (DPDP) Act 2023</strong> of India:
+            </p>
+            <ul className="list-disc pl-5 space-y-2">
+              <li><strong>Lawful Consent Warranty:</strong> The Merchant (Data Fiduciary) warrants and covenants that it has obtained lawful and explicit consent from each customer/member prior to registering their mobile number, name, and demographic data on the platform.</li>
+              <li><strong>Confidentiality & Non-Sale Bond:</strong> MetroCardz (Data Processor) legally binds and guarantees that it will <strong>never sell, broker, leak, or share</strong> merchant or customer personal data with any third party, competitor, or external advertiser.</li>
+              <li><strong>Purpose Limitation:</strong> Member records (points, visits, offers, vouchers) are processed strictly and exclusively to fulfill the merchant's customer loyalty and rewards program.</li>
+              <li><strong>Data Security:</strong> All data is safeguarded with TLS in transit and AES-256 storage standards within secure servers located in India.</li>
+            </ul>
+
+            <h2 className="text-xl font-bold font-poppins text-warm-white mt-8 border-l-2 border-gold pl-3">6. Limitation of Liability</h2>
             <p>
               MetroCardz shall not be liable for any indirect, incidental, or consequential damages resulting from the loss of customer loyalty points, network outages, or gateway delivery failures.
             </p>
 
-            <h2 className="text-xl font-bold font-poppins text-warm-white mt-8 border-l-2 border-gold pl-3">6. Governing Law</h2>
+            <h2 className="text-xl font-bold font-poppins text-warm-white mt-8 border-l-2 border-gold pl-3">7. Governing Law</h2>
             <p>
-              These Terms shall be governed by and construed in accordance with the laws of India. Any disputes arising out of these terms shall be subject to the exclusive jurisdiction of the courts of Bengaluru, Karnataka.
+              These Terms and Data Agreements shall be governed by and construed in accordance with the laws of India. Any disputes arising out of these terms shall be subject to the exclusive jurisdiction of the courts of Bengaluru, Karnataka.
             </p>
           </div>
         </div>

@@ -176,8 +176,8 @@ class OfferTemplateCreate(BaseModel):
     title: str
     description: str = ""
     offer_type: Literal[
-        "percent_off", "flat_off", "buy_1_get_1", "free_service", "wallet_points", "referral", "birthday",
-        "points_redemption", "visit_milestone"
+        "percent_off", "flat_off", "buy_1_get_1", "free_service", "wallet_points", "cashback", "referral", "birthday",
+        "birthday_anniversary", "points_redemption", "visit_milestone"
     ]
     value: Decimal = Decimal("0")
     applicable_membership_type_ids: List[str] = []
@@ -442,6 +442,7 @@ class PublicMemberView(BaseModel):
     rewards: Optional[List[dict]] = []
     redemptions: Optional[List[dict]] = []
     loyalty_history: Optional[List[dict]] = []
+    other_memberships: Optional[List[dict]] = []
 
 
 # ── Dashboard Celebrations ────────────────────────────────────────────────────
@@ -569,6 +570,17 @@ class AddCardsRequest(BaseModel):
 
 class AllocateCardsRequest(BaseModel):
     card_ids: List[str] = Field(..., min_length=1)
+
+
+class BulkCardActionRequest(BaseModel):
+    card_ids: List[str] = Field(..., min_length=1)
+
+
+class BatchCardManageRequest(BaseModel):
+    action: str = Field(..., description="'revoke' or 'delete'")
+    merchant_id: Optional[str] = None
+    count: int = Field(default=500, ge=1, le=5000)
+    status: Optional[str] = None
 
 
 # ── Admin Stats ───────────────────────────────────────────────────────────────

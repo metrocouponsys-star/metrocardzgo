@@ -15,7 +15,6 @@ export const LandingNavbar: React.FC = () => {
   const links = [
     { label: 'Cards', href: '#cards' },
     { label: 'Industries', href: '#industries' },
-    { label: 'Pricing', href: '#pricing' },
     { label: 'Contact', href: '#contact' },
   ];
 
@@ -86,37 +85,53 @@ export const LandingNavbar: React.FC = () => {
           ))}
         </ul>
 
-        {/* CTA + Login */}
-        <div className="hidden md:flex items-center gap-3">
+        {/* Desktop CTA Cluster: Check Points + Merchant Portal + Get Free Mockup */}
+        <div className="hidden md:flex items-center gap-2.5">
+          <a
+            href="/check-membership"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-gold/50 bg-gold/10 text-gold text-xs font-bold hover:bg-gold/20 hover:border-gold hover:scale-105 transition-all duration-200 shadow-xs"
+          >
+            <span className="material-symbols-outlined text-[15px]">qr_code_scanner</span>
+            Check Points
+          </a>
           <a
             href="/login"
-            className="text-warm-white/60 hover:text-warm-white text-sm font-medium transition-colors"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-warm-white/20 bg-warm-white/5 text-warm-white hover:text-gold hover:border-gold/50 hover:bg-warm-white/10 text-xs font-bold transition-all duration-200"
           >
-            Merchant Login
+            <span className="material-symbols-outlined text-[15px]">storefront</span>
+            Merchant Portal
           </a>
           <button
             onClick={() => handleNav('#contact')}
-            className="px-5 py-2 rounded-full text-sm font-semibold font-poppins text-rich-black transition-all duration-200 hover:scale-105 active:scale-95"
+            className="px-4 py-1.5 rounded-full text-xs font-bold font-poppins text-rich-black transition-all duration-200 hover:scale-105 active:scale-95 ml-1"
             style={{ background: 'linear-gradient(135deg, #D4AF37, #C9A227)' }}
           >
             Get Free Mockup
           </button>
         </div>
 
-        {/* Mobile: persistent Login button + hamburger */}
-        <div className="md:hidden flex items-center gap-2">
+        {/* Mobile: persistent Check Points + Login button + hamburger */}
+        <div className="md:hidden flex items-center gap-1.5">
           <a
-            href="/login"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gold/40 bg-gold/10 text-gold text-sm font-semibold transition-all active:scale-95"
+            href="/check-membership"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-gold/50 bg-gold/10 text-gold text-xs font-bold active:scale-95"
             style={{ WebkitTapHighlightColor: 'transparent' }}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span className="material-symbols-outlined text-[14px]">qr_code_scanner</span>
+            Points
+          </a>
+          <a
+            href="/login"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-warm-white/25 bg-warm-white/5 text-warm-white text-xs font-bold active:scale-95"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
+          >
+            <span className="material-symbols-outlined text-[14px]">storefront</span>
             Login
           </a>
           <button
             type="button"
-            className="flex flex-col justify-center items-center gap-1.5 p-3 rounded-lg cursor-pointer touch-manipulation select-none active:bg-warm-white/10"
-            style={{ WebkitTapHighlightColor: 'transparent', minWidth: '48px', minHeight: '48px' }}
+            className="flex flex-col justify-center items-center gap-1.5 p-2 rounded-lg cursor-pointer touch-manipulation select-none active:bg-warm-white/10"
+            style={{ WebkitTapHighlightColor: 'transparent', minWidth: '40px', minHeight: '40px' }}
             onClick={(e) => {
               e.stopPropagation();
               setMenuOpen(o => !o);
@@ -124,9 +139,9 @@ export const LandingNavbar: React.FC = () => {
             aria-label="Toggle menu"
             aria-expanded={menuOpen}
           >
-            <span className={`block w-6 h-0.5 bg-warm-white transition-transform duration-300 pointer-events-none ${menuOpen ? 'rotate-45 translate-y-2' : ''}`} />
-            <span className={`block w-6 h-0.5 bg-warm-white transition-opacity duration-300 pointer-events-none ${menuOpen ? 'opacity-0' : ''}`} />
-            <span className={`block w-6 h-0.5 bg-warm-white transition-transform duration-300 pointer-events-none ${menuOpen ? '-rotate-45 -translate-y-2' : ''}`} />
+            <span className={`block w-5 h-0.5 bg-warm-white transition-transform duration-300 pointer-events-none ${menuOpen ? 'rotate-45 translate-y-2' : ''}`} />
+            <span className={`block w-5 h-0.5 bg-warm-white transition-opacity duration-300 pointer-events-none ${menuOpen ? 'opacity-0' : ''}`} />
+            <span className={`block w-5 h-0.5 bg-warm-white transition-transform duration-300 pointer-events-none ${menuOpen ? '-rotate-45 -translate-y-2' : ''}`} />
           </button>
         </div>
       </div>
@@ -142,6 +157,24 @@ export const LandingNavbar: React.FC = () => {
         }}
       >
         <div className="px-6 py-4 flex flex-col gap-4">
+          {/* Quick Portal Cards on Mobile */}
+          <div className="grid grid-cols-2 gap-2 pb-3 border-b border-warm-white/10">
+            <a
+              href="/check-membership"
+              className="flex flex-col items-center justify-center p-3 rounded-xl border border-gold/40 bg-gold/10 text-gold text-center active:scale-95 transition-transform"
+            >
+              <span className="material-symbols-outlined text-[22px] mb-1">qr_code_scanner</span>
+              <span className="text-xs font-bold leading-tight">Check Points</span>
+            </a>
+            <a
+              href="/login"
+              className="flex flex-col items-center justify-center p-3 rounded-xl border border-warm-white/20 bg-warm-white/5 text-warm-white text-center active:scale-95 transition-transform"
+            >
+              <span className="material-symbols-outlined text-[22px] mb-1">storefront</span>
+              <span className="text-xs font-bold leading-tight">Merchant Portal</span>
+            </a>
+          </div>
+
           {links.map(link => (
             <button
               key={link.href}

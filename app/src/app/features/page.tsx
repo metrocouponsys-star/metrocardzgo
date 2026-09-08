@@ -56,7 +56,7 @@ export default function FeaturesPage() {
           </p>
           <div className="flex items-center justify-center gap-4 pt-2">
             <a href="/login" className="btn-primary">Start Free</a>
-            <a href="/pricing" className="btn-outline">View Pricing</a>
+            <a href="/contact" className="btn-outline">Contact Us</a>
           </div>
         </section>
 

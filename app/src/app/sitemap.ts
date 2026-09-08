@@ -10,7 +10,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // Core marketing pages — highest priority
     { url: `${SITE_URL}/`, changeFrequency: 'weekly' as const, priority: 1.0 },
     { url: `${SITE_URL}/features/`, changeFrequency: 'monthly' as const, priority: 0.95 },
-    { url: `${SITE_URL}/pricing/`, changeFrequency: 'weekly' as const, priority: 0.95 },
     { url: `${SITE_URL}/how-it-works/`, changeFrequency: 'monthly' as const, priority: 0.90 },
     { url: `${SITE_URL}/roi-calculator/`, changeFrequency: 'monthly' as const, priority: 0.85 },
     { url: `${SITE_URL}/alternatives/`, changeFrequency: 'monthly' as const, priority: 0.85 },

@@ -80,8 +80,10 @@ export default function AdminMembersPage() {
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}
             className="input-field min-w-[150px]"
+            title="Filter by Member Status"
+            aria-label="Member Status"
           >
-            <option value="">All Statuses</option>
+            <option value="">Status: All</option>
             <option value="active">Active</option>
             <option value="expiring_soon">Expiring Soon</option>
             <option value="expired">Expired</option>

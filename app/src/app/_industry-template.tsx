@@ -380,7 +380,6 @@ function IndustryNav() {
         </a>
         <div className="flex items-center gap-4">
           <a href="/#industries" className="text-warm-white/60 hover:text-gold text-sm hidden md:block transition-colors">Industries</a>
-          <a href="/#pricing" className="text-warm-white/60 hover:text-gold text-sm hidden md:block transition-colors">Pricing</a>
           <a
             href="/#contact"
             className="px-5 py-2 rounded-full text-sm font-semibold font-poppins text-rich-black transition-all duration-200 hover:scale-105"

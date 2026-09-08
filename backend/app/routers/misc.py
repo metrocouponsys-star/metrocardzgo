@@ -390,6 +390,24 @@ def send_campaign_now(
     return campaign
 
 
+@campaigns_router.delete("/{campaign_id}", status_code=204)
+def delete_campaign(
+    campaign_id: str,
+    merchant_id: str = Depends(get_merchant_id),
+    db: Session = Depends(get_db),
+):
+    """Delete a draft, scheduled, or completed campaign."""
+    campaign = db.query(Campaign).filter(
+        Campaign.id == campaign_id,
+        Campaign.merchant_id == merchant_id,
+    ).first()
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    if campaign.status == "sending":
+        raise HTTPException(status_code=400, detail="Cannot delete a campaign that is currently sending")
+    db.delete(campaign)
+    db.commit()
+
 
 # ── Reminders Router ──────────────────────────────────────────────────────────
 reminders_router = APIRouter(prefix="/reminders", tags=["reminders"])
@@ -1402,7 +1420,25 @@ def lookup_membership(payload: MembershipLookupRequest, request: Request, db: Se
             raise HTTPException(status_code=404, detail="No matching membership found. Please check your details and try again.")
 
         try:
-            return _build_public_member_view(member, merchant, db)
+            view = _build_public_member_view(member, merchant, db)
+            if len(verified) > 1:
+                other_list = []
+                for om in verified:
+                    if om.id != member.id:
+                        omerch = db.query(Merchant).filter(Merchant.id == om.merchant_id).first()
+                        if omerch and str(omerch.status or "").lower() != "suspended":
+                            om_type = db.query(MembershipType).filter(MembershipType.id == om.membership_type_id).first() if om.membership_type_id else None
+                            other_list.append({
+                                "member_id": om.id,
+                                "merchant_name": omerch.business_name or "Store",
+                                "merchant_logo": omerch.logo_url,
+                                "member_code": om.member_code or "",
+                                "loyalty_points": float(om.loyalty_points or 0),
+                                "membership_type_name": om_type.name if om_type else "Standard",
+                                "status": str(om.status or "active"),
+                            })
+                view.other_memberships = other_list
+            return view
         except Exception as view_err:
             import traceback
             print(f"[lookup] VIEW BUILD ERROR for {member.id}: {view_err}")

@@ -386,6 +386,24 @@ def redeem_voucher(
     return voucher
 
 
+@vouchers_router.delete("/{voucher_id}", status_code=204)
+def delete_voucher(
+    voucher_id: str,
+    merchant_id: str = Depends(get_merchant_id),
+    db: Session = Depends(get_db),
+):
+    voucher = db.query(GiftVoucher).filter(
+        GiftVoucher.id == voucher_id,
+        GiftVoucher.merchant_id == merchant_id,
+    ).first()
+    if not voucher:
+        raise HTTPException(404, "Voucher not found")
+    if voucher.is_redeemed:
+        raise HTTPException(400, "Cannot delete a voucher that has already been redeemed")
+    db.delete(voucher)
+    db.commit()
+
+
 # ── Points Rules Router ────────────────────────────────────────────────────────
 points_rules_router = APIRouter(prefix="/points-rules", tags=["points-rules"])
 

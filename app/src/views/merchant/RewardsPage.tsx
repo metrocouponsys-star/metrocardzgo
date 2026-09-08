@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import * as api from '../../api';
 import { invalidateContaining } from '../../api/cache';
-import { Modal } from '../../components/ui/Modal';
+import { Modal, ConfirmModal } from '../../components/ui/Modal';
 import { useToastStore } from '../../store/toastStore';
 import { useAuthStore } from '../../store/authStore';
 import type { Member } from '../../types';
@@ -12,7 +12,7 @@ const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: 'catalog',      label: 'Reward Catalog',  icon: 'card_giftcard' },
   { key: 'coupons',      label: 'Coupon Codes',     icon: 'confirmation_number' },
   { key: 'vouchers',     label: 'Gift Vouchers',    icon: 'wallet' },
-  { key: 'points_rules', label: 'Points Rules',     icon: 'bolt' },
+  { key: 'points_rules', label: 'Set Point',        icon: 'bolt' },
 ];
 
 export default function RewardsPage() {
@@ -570,11 +570,30 @@ function VouchersTab() {
   const [memberSearching, setMemberSearching] = useState(false);
   const [linking, setLinking] = useState(false);
 
+  // Delete voucher state
+  const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
   const load = () => {
     invalidateContaining('vouchers');
     api.getVouchers().then(setVouchers).catch(() => {}).finally(() => setLoading(false));
   };
   useEffect(() => { load(); }, []);
+
+  const handleDeleteVoucher = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await api.deleteVoucher(deleteTarget.id);
+      addToast('success', `Gift voucher "${deleteTarget.code}" deleted`);
+      setDeleteTarget(null);
+      load();
+    } catch (e: any) {
+      addToast('error', e.message || 'Failed to delete voucher');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const generate = async () => {
     if (!form.value) { addToast('error', 'Voucher value is required'); return; }
@@ -681,11 +700,18 @@ function VouchersTab() {
                 <code className={`font-mono font-bold tracking-widest text-body-lg ${v.is_redeemed ? 'text-on-surface-variant' : 'text-primary'}`}>
                   {v.code}
                 </code>
-                {!v.is_redeemed && (
-                  <button onClick={() => copyCode(v.code)} className="text-on-surface-variant hover:text-primary transition-colors" title="Copy code">
-                    <span className="material-symbols-outlined text-[18px]">content_copy</span>
-                  </button>
-                )}
+                <div className="flex items-center gap-1">
+                  {!v.is_redeemed && (
+                    <button onClick={() => copyCode(v.code)} className="text-on-surface-variant hover:text-primary transition-colors p-1 rounded-lg" title="Copy code">
+                      <span className="material-symbols-outlined text-[18px]">content_copy</span>
+                    </button>
+                  )}
+                  {!v.is_redeemed && (
+                    <button onClick={() => setDeleteTarget(v)} className="text-on-surface-variant hover:text-error transition-colors p-1 rounded-lg" title="Delete gift voucher">
+                      <span className="material-symbols-outlined text-[18px]">delete</span>
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="flex items-baseline gap-1">
                 <span className={`text-headline-lg font-bold ${v.is_redeemed ? 'text-on-surface-variant' : 'text-secondary'}`}>₹{v.value}</span>
@@ -824,6 +850,18 @@ function VouchersTab() {
           </div>
         </div>
       )}
+
+      {/* Confirm Delete Voucher */}
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDeleteVoucher}
+        title="Delete Gift Voucher"
+        danger
+        isLoading={deleting}
+        confirmLabel="Delete Voucher"
+        description={`Are you sure you want to permanently delete gift voucher "${deleteTarget?.code}" valued at ₹${deleteTarget?.value}?`}
+      />
     </div>
   );
 }

@@ -13,6 +13,7 @@ import type {
 } from '../types';
 
 import * as db from './mockData';
+import { computeCelebrationsFromMembers } from '../lib/celebrations';
 
 const FAKE_DELAY = 350; // ms — realistic network latency
 
@@ -417,9 +418,9 @@ export async function recordPurchase(
   };
 }
 
-export async function getMembers(merchantId: string): Promise<Member[]> {
+export async function getMembers(merchantId = ''): Promise<Member[]> {
   await delay(FAKE_DELAY);
-  return db.members.filter(m => m.merchant_id === merchantId).map(m => ({
+  return (merchantId ? db.members.filter(m => m.merchant_id === merchantId) : db.members).map(m => ({
     ...m,
     membership_type: db.membershipTypes.find(mt => mt.id === m.membership_type_id),
   }));
@@ -654,6 +655,12 @@ export async function createCampaign(merchantId: string, data: Partial<Campaign>
   return newCampaign;
 }
 
+export async function deleteCampaign(campaignId: string): Promise<void> {
+  await delay(FAKE_DELAY);
+  const idx = db.campaigns.findIndex(c => c.id === campaignId);
+  if (idx !== -1) db.campaigns.splice(idx, 1);
+}
+
 // ---- Reminder Rules ----
 export async function getReminderRules(merchantId: string): Promise<ReminderRule[]> {
   await delay(FAKE_DELAY);
@@ -853,7 +860,23 @@ export async function lookupMembership(identifier: string, last4: string): Promi
     throw new Error('No matching membership found. Please check your details and try again.');
   }
 
-  return buildDynamicPublicMemberView(verified[0]);
+  const primary = buildDynamicPublicMemberView(verified[0]);
+  if (verified.length > 1) {
+    primary.other_memberships = verified.slice(1).map(other => {
+      const merchant = db.merchants.find(m => m.id === other.merchant_id);
+      return {
+        member_id: other.id,
+        merchant_name: merchant?.business_name || 'Store',
+        merchant_logo: merchant?.logo_url,
+        member_code: other.member_code || '',
+        loyalty_points: Number(other.loyalty_points || 0),
+        membership_type_name: other.membership_type?.name || 'Member',
+        status: other.status,
+      };
+    });
+  }
+
+  return primary;
 }
 
 // ---- Card Inventory (Admin) ----
@@ -971,6 +994,66 @@ export async function deactivateCard(cardId: string): Promise<CardInventoryItem>
   if (idx === -1) throw new Error('Card not found');
   db.cardInventory[idx].status = 'deactivated';
   return db.cardInventory[idx];
+}
+
+export async function deleteCard(cardId: string): Promise<void> {
+  await delay(FAKE_DELAY);
+  const idx = db.cardInventory.findIndex(c => c.id === cardId);
+  if (idx !== -1) db.cardInventory.splice(idx, 1);
+}
+
+export async function bulkDeleteCards(cardIds: string[]): Promise<{ deleted: number }> {
+  await delay(FAKE_DELAY);
+  const set = new Set(cardIds);
+  const before = db.cardInventory.length;
+  for (let i = db.cardInventory.length - 1; i >= 0; i--) {
+    if (set.has(db.cardInventory[i].id)) {
+      db.cardInventory.splice(i, 1);
+    }
+  }
+  return { deleted: before - db.cardInventory.length };
+}
+
+export async function bulkRevokeCards(cardIds: string[]): Promise<{ revoked: number }> {
+  await revokeCardsFromMerchant(cardIds);
+  return { revoked: cardIds.length };
+}
+
+export async function batchManageCards(payload: {
+  action: 'revoke' | 'delete';
+  merchant_id?: string;
+  count: number;
+  status?: string;
+}): Promise<{ action: string; processed: number }> {
+  await delay(FAKE_DELAY);
+  let targets = db.cardInventory.filter(c => !c.linked_member_id);
+  if (payload.merchant_id) {
+    targets = targets.filter(c => c.allocated_merchant_id === payload.merchant_id);
+  }
+  if (payload.status) {
+    targets = targets.filter(c => c.status === payload.status);
+  } else if (payload.action === 'revoke') {
+    targets = targets.filter(c => c.status === 'merchant_allocated');
+  }
+
+  const selected = targets.slice(0, payload.count);
+  if (payload.action === 'revoke') {
+    for (const card of selected) {
+      card.status = 'unassigned';
+      card.allocated_merchant_id = undefined;
+      card.allocated_merchant_name = undefined;
+      card.allocated_at = undefined;
+    }
+    return { action: 'revoke', processed: selected.length };
+  } else {
+    const ids = new Set(selected.map(c => c.id));
+    for (let i = db.cardInventory.length - 1; i >= 0; i--) {
+      if (ids.has(db.cardInventory[i].id)) {
+        db.cardInventory.splice(i, 1);
+      }
+    }
+    return { action: 'delete', processed: selected.length };
+  }
 }
 
 // ---- Card Inventory (Merchant) ----
@@ -1358,6 +1441,10 @@ export async function redeemVoucher(code: string): Promise<any> {
   if (v) v.is_redeemed = true;
   return v;
 }
+export async function deleteVoucher(voucherId: string): Promise<void> {
+  const idx = vouchersDb.findIndex(x => x.id === voucherId);
+  if (idx !== -1) vouchersDb.splice(idx, 1);
+}
 
 // ── Mock Points Rules ─────────────────────────────────────────────────────────
 const rulesDb: any[] = [
@@ -1504,10 +1591,9 @@ export async function changeAdminPassword(currentPassword: string, newPassword: 
 }
 
 // ── Dashboard Celebrations (mock) ─────────────────────────────────────────────
-export async function getCelebrations(_daysAhead = 7): Promise<import('../types').CelebrationMember[]> {
+export async function getCelebrations(daysAhead = 7): Promise<import('../types').CelebrationMember[]> {
   await delay(FAKE_DELAY);
-  // Mock: return empty list — real data comes from the backend
-  return [];
+  return computeCelebrationsFromMembers(db.members, daysAhead);
 }
 
 

@@ -19,6 +19,7 @@ const API = `${BASE_URL}/api/v1`;
 
 import { useAuthStore } from '../store/authStore';
 import { invalidateContaining } from './cache';
+import { computeCelebrationsFromMembers } from '../lib/celebrations';
 
 function getToken(): string | null {
   try {
@@ -191,7 +192,7 @@ export async function getDashboardStats(_merchantId: string): Promise<DashboardS
 }
 
 // ── Members ───────────────────────────────────────────────────────────────────
-export async function getMembers(_merchantId: string): Promise<Member[]> {
+export async function getMembers(_merchantId = ''): Promise<Member[]> {
   return get<Member[]>('/members');
 }
 
@@ -345,6 +346,10 @@ export async function createCampaign(_merchantId: string, data: Partial<Campaign
   return post<Campaign>('/campaigns', data);
 }
 
+export async function deleteCampaign(campaignId: string): Promise<void> {
+  return del<void>(`/campaigns/${campaignId}`);
+}
+
 // ── Reminder Rules ────────────────────────────────────────────────────────────
 export async function getReminderRules(_merchantId: string): Promise<ReminderRule[]> {
   return get<ReminderRule[]>('/reminders');
@@ -473,6 +478,27 @@ export async function revokeCardsFromMerchant(cardIds: string[]): Promise<void> 
 
 export async function deactivateCard(cardId: string): Promise<CardInventoryItem> {
   return post<CardInventoryItem>(`/admin/cards/${cardId}/deactivate`);
+}
+
+export async function deleteCard(cardId: string): Promise<void> {
+  return del<void>(`/admin/cards/${cardId}`);
+}
+
+export async function bulkDeleteCards(cardIds: string[]): Promise<{ deleted: number }> {
+  return post<{ deleted: number }>('/admin/cards/bulk-delete', { card_ids: cardIds });
+}
+
+export async function bulkRevokeCards(cardIds: string[]): Promise<{ revoked: number }> {
+  return post<{ revoked: number }>('/admin/cards/bulk-revoke', { card_ids: cardIds });
+}
+
+export async function batchManageCards(payload: {
+  action: 'revoke' | 'delete';
+  merchant_id?: string;
+  count: number;
+  status?: string;
+}): Promise<{ action: string; processed: number }> {
+  return post<{ action: string; processed: number }>('/admin/cards/batch-action', payload);
 }
 
 export async function getMerchantCards(_merchantId: string): Promise<CardInventoryItem[]> {
@@ -609,6 +635,7 @@ export async function getVouchers(merchantId?: string): Promise<GiftVoucher[]> {
 }
 export async function generateVouchers(value: number, quantity: number, expiresAt?: string): Promise<GiftVoucher[]> { return post<GiftVoucher[]>('/vouchers/generate', { value, quantity, expires_at: expiresAt }); }
 export async function redeemVoucher(code: string, memberId: string): Promise<GiftVoucher> { return post<GiftVoucher>('/vouchers/redeem', { code, member_id: memberId }); }
+export async function deleteVoucher(voucherId: string): Promise<void> { return del<void>(`/vouchers/${voucherId}`); }
 
 // ── Points Rules ──────────────────────────────────────────────────────────────
 export interface PointsRule { id: string; merchant_id: string; rule_type: 'per_visit' | 'per_rupee'; points_value: number; spend_unit?: number; is_active: boolean; created_at: string; }
@@ -698,7 +725,17 @@ export async function getMerchantFeedback(): Promise<any[]> { return get('/publi
 
 // ── Dashboard Celebrations ───────────────────────────────────────────────
 export async function getCelebrations(daysAhead = 7): Promise<import('../types').CelebrationMember[]> {
-  return get(`/dashboard/celebrations?days_ahead=${daysAhead}`);
+  try {
+    return await get(`/dashboard/celebrations?days_ahead=${daysAhead}`);
+  } catch (err) {
+    console.warn('[Celebrations] Backend endpoint unavailable, computing from member list fallback:', err);
+    try {
+      const members = await getMembers();
+      return computeCelebrationsFromMembers(members, daysAhead);
+    } catch {
+      return [];
+    }
+  }
 }
 
 // ── Google Wallet ─────────────────────────────────────────────────────────────

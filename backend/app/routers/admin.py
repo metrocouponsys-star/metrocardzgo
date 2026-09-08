@@ -15,6 +15,7 @@ from app.schemas import (
     MerchantCreate, MerchantUpdate, MerchantOut,
     MerchantUserCreate, MerchantUserOut,
     AdminDashboardStats, CardInventoryOut, AddCardsRequest, AllocateCardsRequest,
+    BulkCardActionRequest, BatchCardManageRequest,
     CardDesignUploadRequest,
 )
 from datetime import datetime, timezone
@@ -489,6 +490,123 @@ def revoke_card(card_id: str, admin=Depends(require_super_admin), db: Session = 
     db.commit()
     db.refresh(card)
     return card
+
+
+@router.delete("/cards/{card_id}", status_code=204)
+def delete_card(
+    card_id: str,
+    admin=Depends(require_super_admin),
+    db: Session = Depends(get_db),
+):
+    """
+    Permanently delete a physical card from inventory.
+    Only permitted if the card is not actively linked to a member.
+    """
+    card = db.query(CardInventoryItem).filter(CardInventoryItem.id == card_id).first()
+    if not card:
+        raise HTTPException(status_code=404, detail="Card not found")
+    if card.linked_member_id:
+        raise HTTPException(status_code=400, detail="Cannot delete a card that is currently linked to an active member. Unlink first.")
+
+    _log_action(db, admin.id, card.allocated_merchant_id, "delete_card", f"card_number={card.card_number}")
+    db.delete(card)
+    db.commit()
+
+
+@router.post("/cards/bulk-revoke")
+def bulk_revoke_cards(
+    payload: BulkCardActionRequest,
+    admin=Depends(require_super_admin),
+    db: Session = Depends(get_db),
+):
+    """
+    Bulk revoke cards by ID list back to the unassigned pool.
+    """
+    revoked_count = 0
+    for card_id in payload.card_ids:
+        card = db.query(CardInventoryItem).filter(CardInventoryItem.id == card_id).first()
+        if not card or card.status == "deactivated" or card.status == "unassigned":
+            continue
+        if card.linked_member_id:
+            member = db.query(Member).filter(Member.id == card.linked_member_id).first()
+            if member:
+                member.physical_card_number = None
+        card.status = "unassigned"
+        card.allocated_merchant_id = None
+        card.allocated_at = None
+        card.linked_member_id = None
+        card.linked_at = None
+        revoked_count += 1
+
+    _log_action(db, admin.id, None, "bulk_revoke_cards", f"count={revoked_count}")
+    db.commit()
+    return {"revoked": revoked_count}
+
+
+@router.post("/cards/bulk-delete")
+def bulk_delete_cards(
+    payload: BulkCardActionRequest,
+    admin=Depends(require_super_admin),
+    db: Session = Depends(get_db),
+):
+    """
+    Bulk delete unlinked cards by ID list permanently.
+    """
+    deleted_count = 0
+    for card_id in payload.card_ids:
+        card = db.query(CardInventoryItem).filter(CardInventoryItem.id == card_id).first()
+        if not card or card.linked_member_id:
+            continue
+        db.delete(card)
+        deleted_count += 1
+
+    _log_action(db, admin.id, None, "bulk_delete_cards", f"count={deleted_count}")
+    db.commit()
+    return {"deleted": deleted_count}
+
+
+@router.post("/cards/batch-action")
+def batch_manage_cards(
+    payload: BatchCardManageRequest,
+    admin=Depends(require_super_admin),
+    db: Session = Depends(get_db),
+):
+    """
+    Manage batches of cards (e.g. revoke 500 allocated cards from a merchant, or delete 500 unassigned cards).
+    Useful when cards were accidentally created or allocated in bulk.
+    """
+    q = db.query(CardInventoryItem).filter(CardInventoryItem.linked_member_id.is_(None))
+
+    if payload.merchant_id:
+        q = q.filter(CardInventoryItem.allocated_merchant_id == payload.merchant_id)
+    if payload.status:
+        q = q.filter(CardInventoryItem.status == payload.status)
+    elif payload.action == "revoke":
+        q = q.filter(CardInventoryItem.status == "merchant_allocated")
+
+    if payload.action == "revoke":
+        cards = q.order_by(CardInventoryItem.allocated_at.desc(), CardInventoryItem.created_at.desc()).limit(payload.count).all()
+        count = 0
+        for card in cards:
+            card.status = "unassigned"
+            card.allocated_merchant_id = None
+            card.allocated_at = None
+            count += 1
+        _log_action(db, admin.id, payload.merchant_id, "batch_revoke_cards", f"count={count}")
+        db.commit()
+        return {"action": "revoke", "processed": count}
+
+    elif payload.action == "delete":
+        cards = q.order_by(CardInventoryItem.created_at.desc()).limit(payload.count).all()
+        count = len(cards)
+        for card in cards:
+            db.delete(card)
+        _log_action(db, admin.id, payload.merchant_id, "batch_delete_cards", f"count={count}")
+        db.commit()
+        return {"action": "delete", "processed": count}
+
+    else:
+        raise HTTPException(status_code=400, detail="Invalid action. Must be 'revoke' or 'delete'.")
 
 
 

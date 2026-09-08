@@ -31,17 +31,20 @@ export default function AddMemberPage() {
   const [loading, setLoading] = useState(false);
   const [duplicateId, setDuplicateId] = useState<string | null>(null);
 
-  const { register, handleSubmit, formState: { errors }, watch } = useForm<FormData>();
+  const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm<FormData>();
+  const selectedCardId = watch('card_id');
 
   useEffect(() => {
     api.getMembershipTypes(user?.merchant_id || '').then(setMembershipTypes);
-    api.getMerchantCards(user?.merchant_id || '').then(cards =>
-      setAvailableCards(
-        cards
-          .filter(c => c.status === 'merchant_allocated')
-          .sort((a, b) => a.card_number.localeCompare(b.card_number, undefined, { numeric: true, sensitivity: 'base' }))
-      )
-    );
+    api.getMerchantCards(user?.merchant_id || '').then(cards => {
+      const sorted = cards
+        .filter(c => c.status === 'merchant_allocated')
+        .sort((a, b) => a.card_number.localeCompare(b.card_number, undefined, { numeric: true, sensitivity: 'base' }));
+      setAvailableCards(sorted);
+      if (sorted.length > 0) {
+        setValue('card_id', sorted[0].id);
+      }
+    });
   }, []);
 
   const onSubmit = async (data: FormData) => {
@@ -291,25 +294,43 @@ export default function AddMemberPage() {
           </div>
         </div>
 
-        {/* Physical Card Assignment (optional) */}
+        {/* Physical Card Assignment (in stack order) */}
         {availableCards.length > 0 && (
-          <div>
-            <label className="form-label" htmlFor="card_id">
-              Assign Physical Card <span className="text-on-surface-variant font-normal">(optional — assign a pre-printed card now)</span>
-            </label>
+          <div className="bg-surface-container-low border border-outline-variant rounded-xl p-md space-y-sm">
+            <div className="flex items-center justify-between flex-wrap gap-2 mb-1">
+              <label className="form-label mb-0" htmlFor="card_id">
+                Assign Physical Card <span className="text-on-surface-variant font-normal">(in stack order)</span>
+              </label>
+              {availableCards[0] && (
+                <button
+                  type="button"
+                  onClick={() => setValue('card_id', availableCards[0].id)}
+                  className={`text-label-xs px-2.5 py-1 rounded-lg font-bold flex items-center gap-1 transition-all ${
+                    selectedCardId === availableCards[0].id
+                      ? 'bg-primary text-on-primary shadow-xs'
+                      : 'bg-primary-container/30 text-primary hover:bg-primary-container/50'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
+                  Next in Stack: {availableCards[0].card_number}
+                </button>
+              )}
+            </div>
             <select
               id="card_id"
-              className="input-field"
+              className="input-field font-mono"
               {...register('card_id')}
             >
               <option value="">No card — assign later from Cards page</option>
-              {availableCards.map(c => (
+              {availableCards.map((c, index) => (
                 <option key={c.id} value={c.id}>
-                  {c.card_number}
+                  #{index + 1} — {c.card_number} {index === 0 ? '(Top of Stack / Next in Sequence)' : ''}
                 </option>
               ))}
             </select>
-            <p className="text-label-sm text-on-surface-variant mt-1">{availableCards.length} cards available in your inventory</p>
+            <p className="text-label-sm text-on-surface-variant">
+              {availableCards.length} cards available. Cards are sorted in physical sequential order for fast issuing.
+            </p>
           </div>
         )}
 

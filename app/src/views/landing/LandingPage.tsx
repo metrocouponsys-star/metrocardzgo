@@ -14,7 +14,6 @@ import { IndustriesSection } from './sections/IndustriesSection';
 import { WhyChooseSection } from './sections/WhyChooseSection';
 import { HowItWorksSection } from './sections/HowItWorksSection';
 import { TestimonialsSection } from './sections/TestimonialsSection';
-import { PricingSection } from './sections/PricingSection';
 import { ContactSection } from './sections/ContactSection';
 
 // Initialise IntersectionObserver for .reveal-up elements
@@ -73,7 +72,6 @@ export const LandingPage: React.FC = () => {
         <WhyChooseSection />
         <HowItWorksSection />
         <TestimonialsSection />
-        <PricingSection />
         <ContactSection />
       </main>
 
