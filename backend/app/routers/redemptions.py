@@ -288,7 +288,8 @@ def get_member_loyalty_history(
             db.query(LoyaltyTransaction)
             .filter(
                 LoyaltyTransaction.member_id == member_id,
-                LoyaltyTransaction.merchant_id == merchant_id,
+                # Include transactions where merchant_id is NULL (e.g. older welcome-bonus records)
+                (LoyaltyTransaction.merchant_id == merchant_id) | (LoyaltyTransaction.merchant_id == None),
             )
             .order_by(LoyaltyTransaction.created_at.desc())
             .limit(100)

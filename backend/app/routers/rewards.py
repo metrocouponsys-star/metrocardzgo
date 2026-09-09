@@ -104,6 +104,7 @@ def claim_reward(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_active_user),
 ):
+    # Pre-check reward existence (no lock needed yet)
     reward = db.query(RewardCatalog).filter(
         RewardCatalog.id == reward_id, RewardCatalog.merchant_id == merchant_id
     ).first()
@@ -114,40 +115,61 @@ def claim_reward(
     if not member:
         raise HTTPException(404, "Member not found")
 
-    if float(member.loyalty_points or 0) < float(reward.points_cost):
-        raise HTTPException(400, f"Insufficient points. Need {reward.points_cost}, have {member.loyalty_points}")
+    try:
+        # Acquire row-level locks to prevent double-spend on concurrent requests
+        member = db.query(Member).filter(
+            Member.id == member_id, Member.merchant_id == merchant_id
+        ).with_for_update().first()
 
-    if reward.quantity_available is not None and reward.quantity_available <= 0:
-        raise HTTPException(400, "Reward is out of stock")
+        reward = db.query(RewardCatalog).filter(
+            RewardCatalog.id == reward_id, RewardCatalog.merchant_id == merchant_id
+        ).with_for_update().first()
 
-    # Deduct points
-    member.loyalty_points = Decimal(str(member.loyalty_points or 0)) - reward.points_cost
+        # Re-validate AFTER acquiring locks — values may have changed since pre-check
+        if not reward or not reward.is_active:
+            raise HTTPException(404, "Reward not found or inactive")
 
-    # Decrement stock
-    if reward.quantity_available is not None:
-        reward.quantity_available -= 1
+        if float(member.loyalty_points or 0) < float(reward.points_cost):
+            raise HTTPException(400, f"Insufficient points. Need {reward.points_cost}, have {member.loyalty_points}")
 
-    # Log loyalty transaction
-    txn = LoyaltyTransaction(
-        merchant_id=merchant_id,
-        member_id=member_id,
-        type="redeem",
-        points=-reward.points_cost,
-        note=f"Reward claimed: {reward.name}",
-        balance_after=member.loyalty_points,
-    )
-    db.add(txn)
+        if reward.quantity_available is not None and reward.quantity_available <= 0:
+            raise HTTPException(400, "Reward is out of stock")
 
-    claim = RewardClaim(
-        reward_id=reward_id,
-        member_id=member_id,
-        merchant_id=merchant_id,
-        points_spent=reward.points_cost,
-    )
-    db.add(claim)
-    db.commit()
-    db.refresh(claim)
-    return claim
+        # Deduct points
+        member.loyalty_points = Decimal(str(member.loyalty_points or 0)) - reward.points_cost
+
+        # Decrement stock
+        if reward.quantity_available is not None:
+            reward.quantity_available -= 1
+
+        # Log loyalty transaction
+        txn = LoyaltyTransaction(
+            merchant_id=merchant_id,
+            member_id=member_id,
+            type="redeem",
+            points=-reward.points_cost,
+            note=f"Reward claimed: {reward.name}",
+            balance_after=member.loyalty_points,
+        )
+        db.add(txn)
+
+        claim = RewardClaim(
+            reward_id=reward_id,
+            member_id=member_id,
+            merchant_id=merchant_id,
+            points_spent=reward.points_cost,
+        )
+        db.add(claim)
+        db.commit()
+        db.refresh(claim)
+        return claim
+
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception:
+        db.rollback()
+        raise
 
 
 @rewards_router.get("/claims", response_model=List[RewardClaimOut])

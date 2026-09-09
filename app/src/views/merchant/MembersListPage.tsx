@@ -63,8 +63,9 @@ export default function MembersListPage() {
     const active = members.filter(m => m.status === 'active').length;
     const expired = members.filter(m => m.status === 'expired').length;
     const deactivated = members.filter(m => m.status === 'deactivated').length;
-    const totalPoints = members.reduce((sum, m) => sum + Number(m.loyalty_points || 0), 0);
-    return { total, active, expired, deactivated, totalPoints };
+    // Sum of current balances (not lifetime earned — that would require summing loyalty_transactions)
+    const totalPointsBalance = members.reduce((sum, m) => sum + Number(m.loyalty_points || 0), 0);
+    return { total, active, expired, deactivated, totalPointsBalance };
   }, [members]);
 
   // CSV Export
@@ -169,8 +170,8 @@ export default function MembersListPage() {
             <span className="material-symbols-outlined text-[22px]">stars</span>
           </div>
           <div>
-            <p className="text-label-sm text-on-surface-variant">Total Points Issued</p>
-            <p className="text-headline-md font-bold text-on-surface">{counts.totalPoints.toLocaleString()}</p>
+            <p className="text-label-sm text-on-surface-variant">Points in Circulation</p>
+            <p className="text-headline-md font-bold text-on-surface">{counts.totalPointsBalance.toLocaleString()}</p>
           </div>
         </div>
       </div>

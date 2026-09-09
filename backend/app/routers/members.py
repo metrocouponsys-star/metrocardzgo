@@ -268,9 +268,17 @@ def create_member(
 
         merchant = db.query(Merchant).filter(Merchant.id == merchant_id).first()
 
-        # Generate sequential member code scoped to this merchant
-        count = db.query(Member).filter(Member.merchant_id == merchant_id).count()
-        member_code = f"MC{str(count + 1).zfill(4)}"
+        # Generate sequential member code using MAX to avoid gaps from deleted members
+        from sqlalchemy import func as sqlfunc
+        max_code_row = db.query(sqlfunc.max(Member.member_code)).filter(
+            Member.merchant_id == merchant_id,
+            Member.member_code.like("MC%"),
+        ).scalar()
+        try:
+            max_num = int(max_code_row[2:]) if max_code_row and max_code_row[2:].isdigit() else 0
+        except (TypeError, ValueError):
+            max_num = db.query(Member).filter(Member.merchant_id == merchant_id).count()
+        member_code = f"MC{str(max_num + 1).zfill(4)}"
 
         member_id_new = str(uuid.uuid4())
         public_token = generate_public_token(member_id_new, merchant.secret_salt)
@@ -426,6 +434,10 @@ def bulk_import_members(
     skipped = 0
     errors = []
 
+    # Get base count ONCE before the loop so each new member gets a unique sequential code
+    base_count = db.query(Member).filter(Member.merchant_id == merchant_id).count()
+    local_offset = 0  # incremented for every successfully added member
+
     for item in payload.members:
         clean_phone = item.phone.replace(" ", "").strip()
         if not item.name or not clean_phone:
@@ -448,8 +460,10 @@ def bulk_import_members(
             errors.append(f"No membership type available for {item.name}")
             continue
 
-        count = db.query(Member).filter(Member.merchant_id == merchant_id).count()
-        member_code = f"MC{str(count + 1).zfill(4)}"
+        # Use base_count + local_offset to guarantee unique codes within this batch
+        member_code = f"MC{str(base_count + local_offset + 1).zfill(4)}"
+        local_offset += 1
+
         member_id_new = str(uuid.uuid4())
         public_token = generate_public_token(member_id_new, merchant.secret_salt)
         referral_code = _generate_referral_code(db)
@@ -572,27 +586,34 @@ def apply_referral(
     if referrer.id == member_id:
         raise HTTPException(status_code=400, detail="You cannot use your own referral code")
 
-    # Apply referral
-    member.referred_by_member_id = referrer.id
+    try:
+        # Apply referral
+        member.referred_by_member_id = referrer.id
 
-    # Credit bonus to referrer (atomic with_for_update)
-    referrer = db.query(Member).filter(Member.id == referrer.id).with_for_update().first()
-    merchant = db.query(Merchant).filter(Merchant.id == merchant_id).first()
-    bonus = Decimal(str(merchant.referral_bonus_points or 50))
-    new_balance = (referrer.loyalty_points or Decimal("0")) + bonus
-    referrer.loyalty_points = new_balance
+        # Credit bonus to referrer (atomic with_for_update)
+        referrer = db.query(Member).filter(Member.id == referrer.id).with_for_update().first()
+        merchant = db.query(Merchant).filter(Merchant.id == merchant_id).first()
+        bonus = Decimal(str(merchant.referral_bonus_points or 50))
+        new_balance = (referrer.loyalty_points or Decimal("0")) + bonus
+        referrer.loyalty_points = new_balance
 
-    referral_tx = LoyaltyTransaction(
-        member_id=referrer.id,
-        merchant_id=merchant_id,
-        type="referral_bonus",
-        points=bonus,
-        balance_after=new_balance,
-    )
-    db.add(referral_tx)
-    db.commit()
-    db.refresh(member)
-    return member
+        referral_tx = LoyaltyTransaction(
+            member_id=referrer.id,
+            merchant_id=merchant_id,
+            type="referral_bonus",
+            points=bonus,
+            balance_after=new_balance,
+        )
+        db.add(referral_tx)
+        db.commit()
+        db.refresh(member)
+        return member
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception:
+        db.rollback()
+        raise
 
 
 @router.post("/{member_id}/renew", response_model=MemberOut)
@@ -610,14 +631,18 @@ def renew_membership(
     if not member:
         raise HTTPException(status_code=404, detail="Member not found")
 
-    today = date.today()
-    # If membership has already expired, renew from today; otherwise extend from current expiry
-    base = max(member.expiry_date, today)
-    member.expiry_date = base + timedelta(days=365)
-    member.status = "active"
-    db.commit()
-    db.refresh(member)
-    return member
+    try:
+        today = date.today()
+        # If membership has already expired, renew from today; otherwise extend from current expiry
+        base = max(member.expiry_date, today)
+        member.expiry_date = base + timedelta(days=365)
+        member.status = "active"
+        db.commit()
+        db.refresh(member)
+        return member
+    except Exception:
+        db.rollback()
+        raise
 
 
 @router.get("/{member_id}/referral-link")
@@ -776,122 +801,131 @@ def record_member_purchase(
     discount_amount = Decimal("0")
     coupon_obj = None
 
-    # 1. Apply Coupon if provided
-    if payload.coupon_code:
-        coupon_code_clean = payload.coupon_code.strip().upper()
-        coupon_obj = db.query(CouponCode).filter(
-            CouponCode.merchant_id == merchant_id,
-            CouponCode.code == coupon_code_clean,
-            CouponCode.is_active == True,
-        ).first()
+    try:
+        # 1. Apply Coupon if provided
+        if payload.coupon_code:
+            coupon_code_clean = payload.coupon_code.strip().upper()
+            coupon_obj = db.query(CouponCode).filter(
+                CouponCode.merchant_id == merchant_id,
+                CouponCode.code == coupon_code_clean,
+                CouponCode.is_active == True,
+            ).first()
 
-        if not coupon_obj:
-            raise HTTPException(400, f"Coupon code '{coupon_code_clean}' is invalid or inactive")
+            if not coupon_obj:
+                raise HTTPException(400, f"Coupon code '{coupon_code_clean}' is invalid or inactive")
 
-        today_dt = date.today()
-        if coupon_obj.expires_at and coupon_obj.expires_at < today_dt:
-            raise HTTPException(400, f"Coupon '{coupon_code_clean}' has expired")
-        if coupon_obj.max_uses is not None and coupon_obj.used_count >= coupon_obj.max_uses:
-            raise HTTPException(400, f"Coupon '{coupon_code_clean}' usage limit reached")
-        if gross_amount < (coupon_obj.min_purchase or Decimal("0")):
-            raise HTTPException(400, f"Minimum purchase of ₹{coupon_obj.min_purchase} required for coupon '{coupon_code_clean}'")
+            today_dt = date.today()
+            if coupon_obj.expires_at and coupon_obj.expires_at < today_dt:
+                raise HTTPException(400, f"Coupon '{coupon_code_clean}' has expired")
+            if coupon_obj.max_uses is not None and coupon_obj.used_count >= coupon_obj.max_uses:
+                raise HTTPException(400, f"Coupon '{coupon_code_clean}' usage limit reached")
+            if gross_amount < (coupon_obj.min_purchase or Decimal("0")):
+                raise HTTPException(400, f"Minimum purchase of ₹{coupon_obj.min_purchase} required for coupon '{coupon_code_clean}'")
 
-        if coupon_obj.discount_type == "flat":
-            discount_amount = min(coupon_obj.value, gross_amount)
+            if coupon_obj.discount_type == "flat":
+                discount_amount = min(coupon_obj.value, gross_amount)
+            else:
+                discount_amount = min((gross_amount * coupon_obj.value / Decimal("100")).quantize(Decimal("0.01")), gross_amount)
+
+            coupon_obj.used_count += 1
+
+        net_amount = max(Decimal("0"), gross_amount - discount_amount)
+
+        # 2. Redeem Offer if provided
+        offer_redeemed_title = None
+        if payload.offer_state_id:
+            try:
+                redemption = redeem_offer_atomic(
+                    db=db,
+                    member_id=member_id,
+                    offer_state_id=payload.offer_state_id,
+                    merchant_id=merchant_id,
+                    actor_id=current_user.id,
+                    amount=net_amount,
+                )
+                if redemption and redemption.offer_template:
+                    offer_redeemed_title = redemption.offer_template.title
+            except ServiceError as e:
+                raise HTTPException(e.status_hint, detail=e.message)
+
+
+        # 3. Calculate Points via configured PointsRules
+        points_rules = db.query(PointsRule).filter(
+            PointsRule.merchant_id == merchant_id,
+            PointsRule.is_active == True,
+        ).all()
+
+        points_earned = Decimal("0")
+        if points_rules:
+            for rule in points_rules:
+                if rule.rule_type == "per_rupee":
+                    spend_unit = rule.spend_unit or Decimal("1")
+                    if spend_unit > Decimal("0"):
+                        earned = (net_amount / spend_unit) * rule.points_value
+                        points_earned += Decimal(str(int(earned)))
+                elif rule.rule_type == "per_visit":
+                    points_earned += rule.points_value
         else:
-            discount_amount = min((gross_amount * coupon_obj.value / Decimal("100")).quantize(Decimal("0.01")), gross_amount)
+            # Default points rule fallback: 1 point per ₹10 spent + 10 points for the visit
+            earned_rupee = net_amount / Decimal("10")
+            points_earned = Decimal(str(int(earned_rupee))) + Decimal("10")
 
-        coupon_obj.used_count += 1
+        # 4. Credit points & log loyalty transaction
+        member.loyalty_points = Decimal(str(member.loyalty_points or 0)) + points_earned
+        member.total_visits = (member.total_visits or 0) + 1
 
-    net_amount = max(Decimal("0"), gross_amount - discount_amount)
+        # Format audit note
+        note_parts = [f"Purchase ₹{gross_amount:.2f}"]
+        if coupon_obj:
+            note_parts.append(f"Coupon: {coupon_obj.code} (-₹{discount_amount:.2f})")
+        if offer_redeemed_title:
+            note_parts.append(f"Offer: {offer_redeemed_title}")
+        if payload.note:
+            note_parts.append(f"Note: {payload.note}")
 
-    # 2. Redeem Offer if provided
-    offer_redeemed_title = None
-    if payload.offer_state_id:
-        try:
-            redemption = redeem_offer_atomic(
-                db=db,
-                member_id=member_id,
-                offer_state_id=payload.offer_state_id,
-                merchant_id=merchant_id,
-                actor_id=current_user.id,
-                amount=net_amount,
-            )
-            if redemption and redemption.offer_template:
-                offer_redeemed_title = redemption.offer_template.title
-        except ServiceError as e:
-            raise HTTPException(e.status_hint, detail=e.message)
+        audit_note = " | ".join(note_parts)
 
-    # 3. Calculate Points via configured PointsRules
-    points_rules = db.query(PointsRule).filter(
-        PointsRule.merchant_id == merchant_id,
-        PointsRule.is_active == True,
-    ).all()
+        txn = LoyaltyTransaction(
+            merchant_id=merchant_id,
+            member_id=member_id,
+            type="earn",
+            points=points_earned,
+            balance_after=member.loyalty_points,
+            note=audit_note,
+        )
+        db.add(txn)
 
-    points_earned = Decimal("0")
-    if points_rules:
-        for rule in points_rules:
-            if rule.rule_type == "per_rupee":
-                spend_unit = rule.spend_unit or Decimal("1")
-                if spend_unit > Decimal("0"):
-                    earned = (net_amount / spend_unit) * rule.points_value
-                    points_earned += Decimal(str(int(earned)))
-            elif rule.rule_type == "per_visit":
-                points_earned += rule.points_value
-    else:
-        # Default points rule fallback: 1 point per ₹10 spent + 10 points for the visit
-        earned_rupee = net_amount / Decimal("10")
-        points_earned = Decimal(str(int(earned_rupee))) + Decimal("10")
+        emit(
+            db,
+            merchant_id,
+            POINTS_EARNED,
+            {
+                "member_id": member_id,
+                "points": float(points_earned),
+                "new_balance": float(member.loyalty_points),
+            },
+            member_id=member_id,
+        )
 
-    # 4. Credit points & log loyalty transaction
-    member.loyalty_points = Decimal(str(member.loyalty_points or 0)) + points_earned
-    member.total_visits = (member.total_visits or 0) + 1
+        db.commit()
+        db.refresh(member)
 
-    # Format audit note
-    note_parts = [f"Purchase ₹{gross_amount:.2f}"]
-    if coupon_obj:
-        note_parts.append(f"Coupon: {coupon_obj.code} (-₹{discount_amount:.2f})")
-    if offer_redeemed_title:
-        note_parts.append(f"Offer: {offer_redeemed_title}")
-    if payload.note:
-        note_parts.append(f"Note: {payload.note}")
+        return PurchaseResult(
+            member_id=member.id,
+            gross_amount=gross_amount,
+            discount_amount=discount_amount,
+            net_amount=net_amount,
+            points_earned=points_earned,
+            new_loyalty_balance=member.loyalty_points,
+            coupon_applied=coupon_obj.code if coupon_obj else None,
+            offer_redeemed_title=offer_redeemed_title,
+            message=f"Purchase recorded! {points_earned} loyalty points earned.",
+        )
 
-    audit_note = " | ".join(note_parts)
-
-    txn = LoyaltyTransaction(
-        merchant_id=merchant_id,
-        member_id=member_id,
-        type="earn",
-        points=points_earned,
-        balance_after=member.loyalty_points,
-        note=audit_note,
-    )
-    db.add(txn)
-
-    emit(
-        db,
-        merchant_id,
-        POINTS_EARNED,
-        {
-            "member_id": member_id,
-            "points": float(points_earned),
-            "new_balance": float(member.loyalty_points),
-        },
-        member_id=member_id,
-    )
-
-    db.commit()
-    db.refresh(member)
-
-    return PurchaseResult(
-        member_id=member.id,
-        gross_amount=gross_amount,
-        discount_amount=discount_amount,
-        net_amount=net_amount,
-        points_earned=points_earned,
-        new_loyalty_balance=member.loyalty_points,
-        coupon_applied=coupon_obj.code if coupon_obj else None,
-        offer_redeemed_title=offer_redeemed_title,
-        message=f"Purchase recorded! {points_earned} loyalty points earned.",
-    )
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception:
+        db.rollback()
+        raise
 
