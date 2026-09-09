@@ -285,6 +285,8 @@ def create_member(
             if referrer and referrer.merchant_id == merchant_id:
                 referred_by_id = referrer.id
 
+        init_pts = Decimal(str(payload.initial_points)) if payload.initial_points and payload.initial_points > 0 else Decimal("0")
+
         member = Member(
             id=member_id_new,
             merchant_id=merchant_id,
@@ -301,7 +303,7 @@ def create_member(
             membership_type_id=payload.membership_type_id,
             joined_date=date.today(),
             expiry_date=date.today() + timedelta(days=365),
-            loyalty_points=Decimal("0"),
+            loyalty_points=init_pts,
             status="active",
             total_visits=0,
             referral_code=referral_code,
@@ -309,6 +311,18 @@ def create_member(
         )
         db.add(member)
         db.flush()
+
+        # Credit initial welcome points as a loyalty transaction (so history and balance are consistent)
+        if init_pts > Decimal("0"):
+            welcome_tx = LoyaltyTransaction(
+                member_id=member_id_new,
+                merchant_id=merchant_id,
+                type="earn",
+                points=init_pts,
+                balance_after=init_pts,
+                note="Welcome Bonus Points",
+            )
+            db.add(welcome_tx)
 
         # Auto-create MemberOfferState for each offer linked to the membership type
         offer_links = db.query(MembershipTypeOffer).filter(
@@ -378,7 +392,7 @@ def create_member(
 
 
 
-from pydantic import BaseModel as PyBaseModel
+from pydantic import BaseModel as PyBaseModel, field_validator
 
 class BulkImportItem(PyBaseModel):
     name: str
@@ -386,6 +400,13 @@ class BulkImportItem(PyBaseModel):
     date_of_birth: Optional[date] = None
     anniversary_date: Optional[date] = None
     membership_type_id: Optional[str] = None
+
+    @field_validator("date_of_birth", "anniversary_date", mode="before")
+    @classmethod
+    def empty_str_to_none(cls, v):
+        if v == "" or (isinstance(v, str) and not v.strip()):
+            return None
+        return v
 
 class BulkImportRequest(PyBaseModel):
     members: List[BulkImportItem]

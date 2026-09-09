@@ -48,10 +48,10 @@ class Settings(BaseSettings):
         return v
 
     # ── Redis ────────────────────────────────────────────────────────────
-    redis_url: str
+    redis_url: str = "redis://localhost:6379/0"
 
     # ── JWT / Security ───────────────────────────────────────────────────
-    secret_key: str
+    secret_key: str = "dev-secret-key-change-in-production-12345"
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 1440  # 24 Hours
     refresh_token_expire_days: int = 30

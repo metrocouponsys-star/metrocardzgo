@@ -280,6 +280,14 @@ class MemberCreate(BaseModel):
     family_dob_2: Optional[date] = None
     family_dob_3: Optional[date] = None
     referral_code: Optional[str] = None   # referral code of the person who referred this new member
+    initial_points: Optional[Decimal] = None  # optional welcome bonus points credited on enrollment
+
+    @field_validator("date_of_birth", "anniversary_date", "family_dob_1", "family_dob_2", "family_dob_3", mode="before")
+    @classmethod
+    def empty_str_to_none(cls, v):
+        if v == "" or (isinstance(v, str) and not v.strip()):
+            return None
+        return v
 
 
 class MemberUpdate(BaseModel):
@@ -295,6 +303,13 @@ class MemberUpdate(BaseModel):
     status: Optional[str] = None
     notes: Optional[str] = None           # merchant can save notes about the customer
     auto_renew: Optional[bool] = None     # merchant can enable auto-renewal for a member
+
+    @field_validator("date_of_birth", "anniversary_date", "family_dob_1", "family_dob_2", "family_dob_3", mode="before")
+    @classmethod
+    def empty_str_to_none(cls, v):
+        if v == "" or (isinstance(v, str) and not v.strip()):
+            return None
+        return v
 
 
 class ApplyReferralRequest(BaseModel):
@@ -456,6 +471,25 @@ class CelebrationMember(BaseModel):
     event_date: date                                 # the actual date (this year)
     days_until: int                                  # 0 = today, 1 = tomorrow, etc.
     model_config = {"from_attributes": True}
+
+
+class SendCelebrationWishRequest(BaseModel):
+    member_id: str
+    event_type: Literal["birthday", "anniversary"] = "birthday"
+    custom_message: Optional[str] = None
+    channel: Literal["whatsapp", "sms"] = "whatsapp"
+
+
+class SendCelebrationWishResponse(BaseModel):
+    success: bool
+    status: str
+    member_id: str
+    member_name: str
+    phone: str
+    message: str
+    whatsapp_url: str
+    delivery_status: str
+    provider: Optional[str] = None
 
 
 # ── Dashboard Stats ───────────────────────────────────────────────────────────

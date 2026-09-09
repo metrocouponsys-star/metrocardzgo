@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useToastStore } from '../../store/toastStore';
@@ -11,8 +11,8 @@ import { invalidateContaining } from '../../api/cache';
 interface FormData {
   name: string;
   phone: string;
-  date_of_birth: string;
-  anniversary_date: string;
+  date_of_birth?: string;
+  anniversary_date?: string;
   family_dob_1?: string;
   family_dob_2?: string;
   family_dob_3?: string;
@@ -28,11 +28,57 @@ export default function AddMemberPage() {
   const navigate = useNavigate();
   const [membershipTypes, setMembershipTypes] = useState<MembershipType[]>([]);
   const [availableCards, setAvailableCards] = useState<CardInventoryItem[]>([]);
+  const [cardSearch, setCardSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [duplicateId, setDuplicateId] = useState<string | null>(null);
 
   const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm<FormData>();
   const selectedCardId = watch('card_id');
+  const watchDob = watch('date_of_birth');
+  const watchAnniv = watch('anniversary_date');
+  const watchFamily1 = watch('family_dob_1');
+  const watchFamily2 = watch('family_dob_2');
+  const watchFamily3 = watch('family_dob_3');
+
+  const selectedCard = useMemo(() => {
+    return availableCards.find(c => c.id === selectedCardId);
+  }, [availableCards, selectedCardId]);
+
+  const filteredCards = useMemo(() => {
+    if (!cardSearch.trim()) return availableCards;
+    const q = cardSearch.replace(/\s/g, '').toLowerCase();
+    return availableCards.filter((c, index) => {
+      const rawNum = c.card_number.replace(/\s/g, '').toLowerCase();
+      const seq = String(index + 1);
+      return rawNum.includes(q) || seq === q || `#${seq}` === q;
+    });
+  }, [availableCards, cardSearch]);
+
+  const handleCardSearchChange = (val: string) => {
+    setCardSearch(val);
+    let digits = val.replace(/\D/g, '');
+    if (val.includes('?n=')) {
+      const m = val.match(/[?&]n=([0-9]+)/);
+      if (m) digits = m[1];
+    }
+    if (digits.length >= 16) {
+      const match = availableCards.find(c => c.card_number.replace(/\D/g, '') === digits);
+      if (match) {
+        setValue('card_id', match.id, { shouldDirty: true, shouldValidate: true });
+        addToast('success', `Card ${match.card_number} selected!`);
+      }
+    }
+  };
+
+  const handleCardSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (filteredCards.length > 0) {
+        setValue('card_id', filteredCards[0].id, { shouldDirty: true, shouldValidate: true });
+        addToast('success', `Card ${filteredCards[0].card_number} selected`);
+      }
+    }
+  };
 
   useEffect(() => {
     api.getMembershipTypes(user?.merchant_id || '').then(setMembershipTypes);
@@ -53,6 +99,11 @@ export default function AddMemberPage() {
     try {
       const createPayload = {
         ...data,
+        date_of_birth: data.date_of_birth?.trim() ? data.date_of_birth.trim() : undefined,
+        anniversary_date: data.anniversary_date?.trim() ? data.anniversary_date.trim() : undefined,
+        family_dob_1: data.family_dob_1?.trim() ? data.family_dob_1.trim() : undefined,
+        family_dob_2: data.family_dob_2?.trim() ? data.family_dob_2.trim() : undefined,
+        family_dob_3: data.family_dob_3?.trim() ? data.family_dob_3.trim() : undefined,
         initial_points: data.initial_points ? Number(data.initial_points) : undefined,
       };
       const newMember = await api.createMember(user?.merchant_id || '', createPayload as any);
@@ -236,7 +287,25 @@ export default function AddMemberPage() {
 
         {/* DOB */}
         <div>
-          <label className="form-label" htmlFor="dob">Date of Birth <span className="text-on-surface-variant font-normal">(for birthday reminders)</span></label>
+          <div className="flex items-center justify-between mb-1">
+            <label className="form-label mb-0" htmlFor="dob">
+              Date of Birth
+            </label>
+            <div className="flex items-center gap-2">
+              {watchDob && (
+                <button
+                  type="button"
+                  onClick={() => setValue('date_of_birth', '', { shouldDirty: true })}
+                  className="text-label-xs text-on-surface-variant hover:text-error transition-colors"
+                >
+                  Clear
+                </button>
+              )}
+              <span className="text-on-surface-variant font-normal text-label-xs bg-surface-container px-2 py-0.5 rounded-full">
+                Optional · for birthday greetings
+              </span>
+            </div>
+          </div>
           <input
             id="dob"
             type="date"
@@ -247,7 +316,25 @@ export default function AddMemberPage() {
 
         {/* Anniversary */}
         <div>
-          <label className="form-label" htmlFor="anniversary">Anniversary Date <span className="text-on-surface-variant font-normal">(optional — for anniversary reminders)</span></label>
+          <div className="flex items-center justify-between mb-1">
+            <label className="form-label mb-0" htmlFor="anniversary">
+              Anniversary Date
+            </label>
+            <div className="flex items-center gap-2">
+              {watchAnniv && (
+                <button
+                  type="button"
+                  onClick={() => setValue('anniversary_date', '', { shouldDirty: true })}
+                  className="text-label-xs text-on-surface-variant hover:text-error transition-colors"
+                >
+                  Clear
+                </button>
+              )}
+              <span className="text-on-surface-variant font-normal text-label-xs bg-surface-container px-2 py-0.5 rounded-full">
+                Optional · for anniversary greetings
+              </span>
+            </div>
+          </div>
           <input
             id="anniversary"
             type="date"
@@ -256,16 +343,36 @@ export default function AddMemberPage() {
           />
         </div>
 
-        {/* Family Member Birthdates (Up to 3) */}
+        {/* Family Member Birthdates (Up to 3) - 100% Optional */}
         <div className="bg-surface-container-low border border-outline-variant rounded-xl p-md space-y-sm">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="material-symbols-outlined text-primary text-[20px]">family_restroom</span>
-            <p className="text-label-md font-bold text-on-surface">Family Member Birth Dates <span className="text-body-sm font-normal text-on-surface-variant">(Up to 3)</span></p>
+          <div className="flex items-center justify-between flex-wrap gap-2 mb-1">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary text-[20px]">family_restroom</span>
+              <p className="text-label-md font-bold text-on-surface">
+                Family Member Birth Dates <span className="text-body-sm font-normal text-on-surface-variant">(Up to 3)</span>
+              </p>
+            </div>
+            <span className="text-on-surface-variant font-normal text-label-xs bg-surface-container px-2 py-0.5 rounded-full">
+              100% Optional · for family greetings
+            </span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-sm">
             <div>
-              <label className="form-label text-label-xs" htmlFor="family_dob_1">Family Member 1</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="form-label text-label-xs mb-0" htmlFor="family_dob_1">
+                  Family Member 1 <span className="text-on-surface-variant font-normal">(Optional)</span>
+                </label>
+                {watchFamily1 && (
+                  <button
+                    type="button"
+                    onClick={() => setValue('family_dob_1', '', { shouldDirty: true })}
+                    className="text-[10px] text-on-surface-variant hover:text-error transition-colors"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
               <input
                 id="family_dob_1"
                 type="date"
@@ -274,7 +381,20 @@ export default function AddMemberPage() {
               />
             </div>
             <div>
-              <label className="form-label text-label-xs" htmlFor="family_dob_2">Family Member 2</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="form-label text-label-xs mb-0" htmlFor="family_dob_2">
+                  Family Member 2 <span className="text-on-surface-variant font-normal">(Optional)</span>
+                </label>
+                {watchFamily2 && (
+                  <button
+                    type="button"
+                    onClick={() => setValue('family_dob_2', '', { shouldDirty: true })}
+                    className="text-[10px] text-on-surface-variant hover:text-error transition-colors"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
               <input
                 id="family_dob_2"
                 type="date"
@@ -283,7 +403,20 @@ export default function AddMemberPage() {
               />
             </div>
             <div>
-              <label className="form-label text-label-xs" htmlFor="family_dob_3">Family Member 3</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="form-label text-label-xs mb-0" htmlFor="family_dob_3">
+                  Family Member 3 <span className="text-on-surface-variant font-normal">(Optional)</span>
+                </label>
+                {watchFamily3 && (
+                  <button
+                    type="button"
+                    onClick={() => setValue('family_dob_3', '', { shouldDirty: true })}
+                    className="text-[10px] text-on-surface-variant hover:text-error transition-colors"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
               <input
                 id="family_dob_3"
                 type="date"
@@ -292,45 +425,203 @@ export default function AddMemberPage() {
               />
             </div>
           </div>
+          <p className="text-label-xs text-on-surface-variant mt-1">
+            All family birthday fields are completely optional. Cashiers can leave these blank and enroll the member directly.
+          </p>
         </div>
 
-        {/* Physical Card Assignment (in stack order) */}
+        {/* Physical Card Assignment (with search and sequential order) */}
         {availableCards.length > 0 && (
-          <div className="bg-surface-container-low border border-outline-variant rounded-xl p-md space-y-sm">
-            <div className="flex items-center justify-between flex-wrap gap-2 mb-1">
-              <label className="form-label mb-0" htmlFor="card_id">
-                Assign Physical Card <span className="text-on-surface-variant font-normal">(in stack order)</span>
-              </label>
+          <div className="bg-surface-container-low border border-outline-variant rounded-xl p-md space-y-3">
+            {/* Header with Title and "Next in Stack" Quick Button */}
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <label className="form-label mb-0" htmlFor="card_search">
+                  Assign Physical Card
+                </label>
+                <p className="text-label-xs text-on-surface-variant">
+                  {availableCards.length} cards available in inventory · sequential order
+                </p>
+              </div>
               {availableCards[0] && (
                 <button
                   type="button"
-                  onClick={() => setValue('card_id', availableCards[0].id)}
-                  className={`text-label-xs px-2.5 py-1 rounded-lg font-bold flex items-center gap-1 transition-all ${
+                  onClick={() => {
+                    setValue('card_id', availableCards[0].id, { shouldDirty: true, shouldValidate: true });
+                    setCardSearch('');
+                  }}
+                  className={`text-label-xs px-2.5 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-all ${
                     selectedCardId === availableCards[0].id
                       ? 'bg-primary text-on-primary shadow-xs'
                       : 'bg-primary-container/30 text-primary hover:bg-primary-container/50'
                   }`}
+                  title="Assign the top card from your physical stack"
                 >
-                  <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
+                  <span className="material-symbols-outlined text-[15px]">auto_awesome</span>
                   Next in Stack: {availableCards[0].card_number}
                 </button>
               )}
             </div>
-            <select
-              id="card_id"
-              className="input-field font-mono"
-              {...register('card_id')}
-            >
-              <option value="">No card — assign later from Cards page</option>
-              {availableCards.map((c, index) => (
-                <option key={c.id} value={c.id}>
-                  #{index + 1} — {c.card_number} {index === 0 ? '(Top of Stack / Next in Sequence)' : ''}
-                </option>
-              ))}
-            </select>
-            <p className="text-label-sm text-on-surface-variant">
-              {availableCards.length} cards available. Cards are sorted in physical sequential order for fast issuing.
-            </p>
+
+            {/* Currently Selected Card Status Bar */}
+            {selectedCard ? (
+              <div className="bg-surface border border-primary/40 rounded-xl p-3 flex items-center justify-between gap-3 shadow-xs">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>credit_card</span>
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-mono font-bold text-body-md tracking-wider text-on-surface">
+                        {selectedCard.card_number}
+                      </span>
+                      {selectedCard.id === availableCards[0]?.id ? (
+                        <span className="text-[10px] bg-primary text-on-primary font-bold px-2 py-0.5 rounded-full">
+                          Top of Stack (#1)
+                        </span>
+                      ) : (
+                        <span className="text-[10px] bg-surface-container text-on-surface-variant font-bold px-2 py-0.5 rounded-full">
+                          #{availableCards.findIndex(c => c.id === selectedCard.id) + 1} in stack
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-label-xs text-primary font-medium">
+                      ✓ Ready to link upon saving member
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setValue('card_id', '', { shouldDirty: true, shouldValidate: true })}
+                  className="text-label-xs text-on-surface-variant hover:text-error hover:bg-error-container/20 px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-1 shrink-0"
+                  title="Remove card assignment"
+                >
+                  <span className="material-symbols-outlined text-[16px]">close</span>
+                  <span>Remove Card</span>
+                </button>
+              </div>
+            ) : (
+              <div className="bg-surface border border-dashed border-outline-variant rounded-xl p-3 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-on-surface-variant text-label-sm">
+                  <span className="material-symbols-outlined text-[18px]">credit_card_off</span>
+                  <span>No physical card selected (member will use digital pass only)</span>
+                </div>
+                {availableCards[0] && (
+                  <button
+                    type="button"
+                    onClick={() => setValue('card_id', availableCards[0].id, { shouldDirty: true, shouldValidate: true })}
+                    className="text-label-xs text-primary font-bold hover:underline flex items-center gap-1"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">add</span>
+                    Assign Top Card
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Search Input Field */}
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-[18px]">
+                search
+              </span>
+              <input
+                id="card_search"
+                type="text"
+                value={cardSearch}
+                onChange={e => handleCardSearchChange(e.target.value)}
+                onKeyDown={handleCardSearchKeyDown}
+                placeholder="Search card by number or last 4 digits (e.g. 0285)..."
+                className="input-field pl-9 pr-8 font-mono text-body-sm"
+              />
+              {cardSearch && (
+                <button
+                  type="button"
+                  onClick={() => setCardSearch('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface p-0.5"
+                  title="Clear search"
+                >
+                  <span className="material-symbols-outlined text-[16px]">close</span>
+                </button>
+              )}
+            </div>
+
+            {/* Scrollable Card Selection List */}
+            <div className="max-h-48 overflow-y-auto rounded-xl border border-outline-variant/60 bg-surface divide-y divide-outline-variant/30">
+              {/* Option: No physical card */}
+              <button
+                type="button"
+                onClick={() => setValue('card_id', '', { shouldDirty: true, shouldValidate: true })}
+                className={`w-full text-left px-3 py-2 flex items-center justify-between text-label-sm transition-colors ${
+                  !selectedCardId
+                    ? 'bg-primary-container/20 text-primary font-bold'
+                    : 'text-on-surface-variant hover:bg-surface-container'
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[16px]">do_not_disturb_on</span>
+                  No card — assign later from Cards page
+                </span>
+                {!selectedCardId && <span className="material-symbols-outlined text-[16px]">check</span>}
+              </button>
+
+              {filteredCards.length === 0 ? (
+                <div className="p-4 text-center text-on-surface-variant text-label-sm">
+                  <span className="material-symbols-outlined text-[22px] block mb-1">search_off</span>
+                  No cards match &quot;{cardSearch}&quot;
+                </div>
+              ) : (
+                filteredCards.slice(0, 50).map(c => {
+                  const idx = availableCards.findIndex(item => item.id === c.id);
+                  const isSelected = selectedCardId === c.id;
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => {
+                        setValue('card_id', c.id, { shouldDirty: true, shouldValidate: true });
+                      }}
+                      className={`w-full text-left px-3 py-2.5 flex items-center justify-between transition-colors ${
+                        isSelected
+                          ? 'bg-primary-container/30 text-primary font-bold'
+                          : 'hover:bg-surface-container text-on-surface'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span className="text-label-xs font-mono text-on-surface-variant w-8 shrink-0">
+                          #{idx + 1}
+                        </span>
+                        <span className="font-mono text-body-sm tracking-wide truncate">
+                          {c.card_number}
+                        </span>
+                        {idx === 0 && (
+                          <span className="text-[10px] bg-primary/10 text-primary font-bold px-1.5 py-0.5 rounded shrink-0">
+                            Top
+                          </span>
+                        )}
+                      </div>
+                      {isSelected && (
+                        <span className="material-symbols-outlined text-primary text-[18px] shrink-0">
+                          check_circle
+                        </span>
+                      )}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Helper footer */}
+            <div className="flex items-center justify-between text-label-xs text-on-surface-variant px-1">
+              <span>
+                {cardSearch
+                  ? `Found ${filteredCards.length} matching card${filteredCards.length === 1 ? '' : 's'}`
+                  : `Showing ${Math.min(filteredCards.length, 50)} of ${availableCards.length} available cards`}
+              </span>
+              <span>Sorted in physical sequential order</span>
+            </div>
+
+            {/* Hidden field registered with react-hook-form */}
+            <input type="hidden" {...register('card_id')} value={selectedCardId || ''} />
           </div>
         )}
 

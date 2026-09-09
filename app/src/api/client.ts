@@ -1596,6 +1596,43 @@ export async function getCelebrations(daysAhead = 7): Promise<import('../types')
   return computeCelebrationsFromMembers(db.members, daysAhead);
 }
 
+export async function sendCelebrationWish(
+  memberId: string,
+  eventType: 'birthday' | 'anniversary' = 'birthday',
+  customMessage?: string,
+): Promise<{
+  success: boolean;
+  status: string;
+  member_id: string;
+  member_name: string;
+  phone: string;
+  message: string;
+  whatsapp_url: string;
+  delivery_status: string;
+  provider?: string;
+}> {
+  await delay(FAKE_DELAY);
+  const member = db.members.find(m => m.id === memberId);
+  const cleanPhone = (member?.phone || '').replace(/\D/g, '');
+  const phoneWithCountry = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+  const name = member?.name || 'Member';
+  const msg = customMessage || (eventType === 'anniversary'
+    ? `Dear ${name}, Happy Anniversary from all of us at Metro Cardz! 💍💐 Visit us today for special rewards!`
+    : `Dear ${name}, wishing you a very Happy Birthday from all of us at Metro Cardz! 🎂🎉 Enjoy your birthday rewards!`);
+  const encoded = encodeURIComponent(msg);
+  return {
+    success: true,
+    status: 'sent',
+    member_id: memberId,
+    member_name: name,
+    phone: member?.phone || '',
+    message: msg,
+    whatsapp_url: `https://wa.me/${phoneWithCountry}?text=${encoded}`,
+    delivery_status: 'sent',
+    provider: 'mock',
+  };
+}
+
 
 
 

@@ -25,7 +25,7 @@ from app.schemas import (
     DashboardStats, RedemptionOut, PublicMemberView, MembershipLookupRequest,
     NewMembersDataPoint, TopCustomer, PointsDataPoint, RetentionDataPoint,
     MerchantUpdate, MerchantOut, ReportSummary, ReportSummaryOut,
-    CelebrationMember,
+    CelebrationMember, SendCelebrationWishRequest, SendCelebrationWishResponse,
 )
 from app.core.rate_limit import public_rate_limit, membership_lookup_rate_limit
 from fastapi import Request
@@ -676,6 +676,73 @@ def get_dashboard_celebrations(
     return results
 
 
+@dashboard_router.post("/celebrations/send-wish", response_model=SendCelebrationWishResponse)
+def send_celebration_wish(
+    payload: SendCelebrationWishRequest,
+    merchant_id: str = Depends(get_merchant_id),
+    db: Session = Depends(get_db),
+):
+    """Send a birthday or anniversary greeting to a member directly on WhatsApp (or SMS)."""
+    from app.utils.whatsapp import build_celebration_message, send_whatsapp_message, get_whatsapp_web_url
+
+    member = db.query(Member).filter(
+        Member.id == payload.member_id,
+        Member.merchant_id == merchant_id,
+    ).first()
+    if not member:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Member not found in your business",
+        )
+
+    merchant = db.query(Merchant).filter(Merchant.id == merchant_id).first()
+    store_name = merchant.business_name if merchant else "Metro Cardz"
+
+    message = build_celebration_message(
+        member_name=member.name,
+        event_type=payload.event_type,
+        merchant_name=store_name,
+        member_code=member.member_code,
+        loyalty_points=int(member.loyalty_points or 0),
+        custom_message=payload.custom_message,
+    )
+
+    delivery_status = "sent"
+    provider = "simulated"
+    whatsapp_url = get_whatsapp_web_url(member.phone, message)
+
+    if payload.channel == "whatsapp":
+        res = send_whatsapp_message(phone=member.phone, message=message)
+        delivery_status = res.get("status", "sent")
+        provider = res.get("provider", "simulated")
+        if res.get("whatsapp_url"):
+            whatsapp_url = res["whatsapp_url"]
+
+    # Log in audit history
+    try:
+        log = MessageLog(
+            member_id=member.id,
+            channel=payload.channel,
+            status=delivery_status if delivery_status in ("sent", "delivered", "failed") else "sent",
+        )
+        db.add(log)
+        db.commit()
+    except Exception:
+        db.rollback()
+
+    return SendCelebrationWishResponse(
+        success=True,
+        status="success",
+        member_id=member.id,
+        member_name=member.name,
+        phone=member.phone,
+        message=message,
+        whatsapp_url=whatsapp_url,
+        delivery_status=delivery_status,
+        provider=provider,
+    )
+
+
 # ── Reports Router ────────────────────────────────────────────────────────────
 reports_router = APIRouter(prefix="/reports", tags=["reports"])
 
@@ -1213,7 +1280,8 @@ def _build_public_member_view(member: Member, merchant: Merchant, db: Session) -
         print(f"Notice: lucky draws notice: {err}")
 
 
-    # Calculate actual points balance from member record or sum of loyalty transactions
+    # Use the member's stored loyalty_points as the authoritative balance.
+    # Fall back to summing loyalty transactions only if the stored value is stale (e.g. manual DB edits).
     pts_balance = float(member.loyalty_points or 0)
     try:
         from app.models.loyalty import LoyaltyTransaction
@@ -1225,32 +1293,6 @@ def _build_public_member_view(member: Member, merchant: Merchant, db: Session) -
             pts_balance = float(tx_points)
     except Exception as err:
         print(f"Notice: points sum notice: {err}")
-
-    # Auto-credit a 200 pts Welcome Bonus for new/0-point members so points balance and history populate
-    if pts_balance == 0:
-        try:
-            from app.models.loyalty import LoyaltyTransaction
-            from decimal import Decimal as Dec
-            welcome_pts = Dec("200")
-            member.loyalty_points = welcome_pts
-            pts_balance = 200.0
-            txn = LoyaltyTransaction(
-                merchant_id=merchant_id,
-                member_id=member_id,
-                type="earn",
-                points=welcome_pts,
-                balance_after=welcome_pts,
-                note="Welcome Bonus Points",
-            )
-            db.add(txn)
-            try:
-                db.commit()
-            except Exception as commit_err:
-                print(f"Welcome bonus commit notice: {commit_err}")
-                db.rollback()
-        except Exception as bonus_err:
-            print(f"Welcome bonus credit notice: {bonus_err}")
-            pts_balance = 200.0
 
     redemptions_out = []
     try:

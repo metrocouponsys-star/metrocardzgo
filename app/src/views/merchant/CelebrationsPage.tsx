@@ -32,6 +32,8 @@ export default function CelebrationsPage() {
   const [timeFilter, setTimeFilter] = useState<'all' | 'today' | '1day' | '7days' | '30days'>('all');
   const [typeFilter, setTypeFilter] = useState<'all' | 'birthday' | 'anniversary'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [sendingWishId, setSendingWishId] = useState<string | null>(null);
+  const [sentWishes, setSentWishes] = useState<Record<string, boolean>>({});
 
   const loadCelebrations = async () => {
     setLoading(true);
@@ -89,7 +91,31 @@ export default function CelebrationsPage() {
     });
   }, [celebrations, timeFilter, typeFilter, searchQuery]);
 
-  const sendWhatsAppWish = (c: CelebrationMember) => {
+  const sendWhatsAppWish = async (c: CelebrationMember) => {
+    setSendingWishId(c.member_id);
+    try {
+      await api.sendCelebrationWish(c.member_id, c.event_type);
+      setSentWishes(prev => ({ ...prev, [c.member_id]: true }));
+      addToast('success', `🎉 ${c.event_type === 'birthday' ? 'Birthday' : 'Anniversary'} wish sent to ${c.name} via WhatsApp!`);
+    } catch (err: any) {
+      // Fallback: If backend endpoint fails or is offline, open WhatsApp Web directly
+      const cleanPhone = c.phone.replace(/\D/g, '');
+      const isBirthday = c.event_type === 'birthday';
+      const storeName = user?.merchant_name || 'our store';
+      const message = isBirthday
+        ? `Dear ${c.name}, wishing you a very Happy Birthday from all of us at ${storeName}! 🎂🎉 Enjoy your special day with exclusive rewards on your membership card (${c.member_code || ''}).`
+        : `Dear ${c.name}, Happy Anniversary from all of us at ${storeName}! 💍💐 We wish you continued happiness and invite you to celebrate with your member benefits!`;
+
+      const url = `https://wa.me/${cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone}?text=${encodeURIComponent(message)}`;
+      window.open(url, '_blank');
+      setSentWishes(prev => ({ ...prev, [c.member_id]: true }));
+      addToast('info', `Opened WhatsApp Web for ${c.name}`);
+    } finally {
+      setSendingWishId(null);
+    }
+  };
+
+  const openWhatsAppDirect = (c: CelebrationMember) => {
     const cleanPhone = c.phone.replace(/\D/g, '');
     const isBirthday = c.event_type === 'birthday';
     const storeName = user?.merchant_name || 'our store';
@@ -363,13 +389,42 @@ export default function CelebrationsPage() {
                 </div>
 
                 <div className="flex items-center gap-2 pt-2 border-t border-outline-variant/20">
-                  <button
-                    onClick={() => sendWhatsAppWish(c)}
-                    className="btn-primary !py-1.5 !px-3 text-label-xs flex-1 flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white border-none shadow-xs"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">chat</span>
-                    Wish on WhatsApp
-                  </button>
+                  {sentWishes[c.member_id] ? (
+                    <div className="flex items-center gap-1.5 flex-1">
+                      <span className="bg-emerald-100 text-emerald-800 text-label-xs font-bold py-1.5 px-2.5 rounded-xl flex items-center gap-1 flex-1 justify-center border border-emerald-300">
+                        <span className="material-symbols-outlined text-[15px] text-emerald-600">check_circle</span>
+                        Wish Sent ✓
+                      </span>
+                      <button
+                        onClick={() => openWhatsAppDirect(c)}
+                        className="btn-outline !py-1.5 !px-2 text-label-xs text-emerald-700 hover:bg-emerald-50 border-emerald-300 flex items-center gap-1"
+                        title="Open WhatsApp Chat in Browser"
+                      >
+                        <span className="material-symbols-outlined text-[15px]">chat</span>
+                        Chat
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1.5 flex-1">
+                      <button
+                        onClick={() => sendWhatsAppWish(c)}
+                        disabled={sendingWishId === c.member_id}
+                        className="btn-primary !py-1.5 !px-3 text-label-xs flex-1 flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white border-none shadow-xs disabled:opacity-50 transition-all"
+                      >
+                        <span className={`material-symbols-outlined text-[16px] ${sendingWishId === c.member_id ? 'animate-spin' : ''}`}>
+                          {sendingWishId === c.member_id ? 'progress_activity' : 'send'}
+                        </span>
+                        {sendingWishId === c.member_id ? 'Sending...' : 'Wish on WhatsApp'}
+                      </button>
+                      <button
+                        onClick={() => openWhatsAppDirect(c)}
+                        className="btn-outline !py-1.5 !px-2 text-label-xs text-emerald-700 hover:bg-emerald-50 border-emerald-300"
+                        title="Open WhatsApp Web directly"
+                      >
+                        <span className="material-symbols-outlined text-[15px]">open_in_new</span>
+                      </button>
+                    </div>
+                  )}
                   <button
                     onClick={() => navigate(`/members/${c.member_id}`)}
                     className="btn-outline !py-1.5 !px-2.5 text-label-xs flex items-center justify-center"

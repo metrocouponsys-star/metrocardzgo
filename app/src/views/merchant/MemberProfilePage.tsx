@@ -1196,7 +1196,7 @@ export default function MemberProfilePage() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="form-label">Date of Birth</label>
+              <label className="form-label">Date of Birth <span className="text-on-surface-variant font-normal text-label-xs">(Optional)</span></label>
               <input
                 type="date"
                 value={editForm.date_of_birth}
@@ -1205,7 +1205,7 @@ export default function MemberProfilePage() {
               />
             </div>
             <div>
-              <label className="form-label">Anniversary Date</label>
+              <label className="form-label">Anniversary Date <span className="text-on-surface-variant font-normal text-label-xs">(Optional)</span></label>
               <input
                 type="date"
                 value={editForm.anniversary_date}

@@ -123,6 +123,7 @@ export const deleteStaff = api.deleteStaff;
 export const submitFeedback = api.submitFeedback;
 export const getMerchantFeedback = api.getMerchantFeedback;
 export const getCelebrations = api.getCelebrations;
+export const sendCelebrationWish = api.sendCelebrationWish;
 
 // ── Google Wallet ────────────────────────────────────────────────────────────
 export const generateWalletPassUrl = api.generateWalletPassUrl;

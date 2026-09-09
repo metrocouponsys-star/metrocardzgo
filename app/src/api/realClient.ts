@@ -254,16 +254,31 @@ export async function getMemberByToken(token: string): Promise<PublicMemberView 
   }
 }
 
+function sanitizeMemberDatePayload<T extends Record<string, any>>(data: T): T {
+  const cleaned: any = { ...data };
+  const dateFields = ['date_of_birth', 'anniversary_date', 'family_dob_1', 'family_dob_2', 'family_dob_3'];
+  for (const field of dateFields) {
+    if (field in cleaned) {
+      const val = cleaned[field];
+      if (val === '' || (typeof val === 'string' && !val.trim())) {
+        cleaned[field] = null;
+      }
+    }
+  }
+  return cleaned as T;
+}
+
 export async function createMember(_merchantId: string, data: Partial<Member>): Promise<Member> {
-  return post<Member>('/members', data);
+  return post<Member>('/members', sanitizeMemberDatePayload(data));
 }
 
 export async function bulkImportMembers(_merchantId: string, rows: Partial<Member>[]): Promise<{ imported: number; skipped: number; errors: string[] }> {
-  return post<{ imported: number; skipped: number; errors: string[] }>('/members/bulk-import', { members: rows });
+  const sanitizedRows = rows.map(r => sanitizeMemberDatePayload(r));
+  return post<{ imported: number; skipped: number; errors: string[] }>('/members/bulk-import', { members: sanitizedRows });
 }
 
 export async function updateMember(_merchantId: string, memberId: string, data: Partial<Member>): Promise<Member> {
-  return patch<Member>(`/members/${memberId}`, data);
+  return patch<Member>(`/members/${memberId}`, sanitizeMemberDatePayload(data));
 }
 
 export async function recordPurchase(
@@ -736,6 +751,29 @@ export async function getCelebrations(daysAhead = 7): Promise<import('../types')
       return [];
     }
   }
+}
+
+export async function sendCelebrationWish(
+  memberId: string,
+  eventType: 'birthday' | 'anniversary' = 'birthday',
+  customMessage?: string,
+): Promise<{
+  success: boolean;
+  status: string;
+  member_id: string;
+  member_name: string;
+  phone: string;
+  message: string;
+  whatsapp_url: string;
+  delivery_status: string;
+  provider?: string;
+}> {
+  return post('/dashboard/celebrations/send-wish', {
+    member_id: memberId,
+    event_type: eventType,
+    custom_message: customMessage,
+    channel: 'whatsapp',
+  });
 }
 
 // ── Google Wallet ─────────────────────────────────────────────────────────────
