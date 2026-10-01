@@ -260,17 +260,21 @@ async def upload_merchant_logo(
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
-    # Upload to Supabase Storage and get public URL
+    # Upload to local VPS disk storage — served by Nginx at /uploads/
     try:
         logo_url = upload_logo_to_storage(merchant_id, compressed_webp)
     except RuntimeError as exc:
-        # Storage not configured (dev/test) — fall back to inline compressed WebP data URL
+        # Disk write failed (permissions?) — fall back to inline data URL
         import base64 as _b64
         import logging
-        logging.getLogger(__name__).warning("Logo storage not configured, using data URL fallback (merchant=%s): %s", merchant_id, exc)
+        logging.getLogger(__name__).warning(
+            "Local disk write failed, using data URL fallback (merchant=%s): %s. "
+            "Check UPLOADS_DIR exists and is writable.", merchant_id, exc
+        )
         logo_url = "data:image/webp;base64," + _b64.b64encode(compressed_webp).decode("ascii")
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"Storage upload failed: {exc}")
+        raise HTTPException(status_code=502, detail=f"Logo save failed: {exc}")
+
 
     # Persist URL to DB
     merchant.logo_url = logo_url

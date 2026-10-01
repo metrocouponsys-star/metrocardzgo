@@ -1,6 +1,10 @@
-"""Auth router — login, OTP, token refresh, logout, Google OAuth."""
-import redis as redis_lib
-from datetime import timedelta
+"""Auth router — login, OTP (MySQL-backed), token refresh, logout.
+
+OTP Storage: Uses the otp_codes MySQL table (no Redis needed).
+The OtpCode model is already defined in the Prisma schema and managed by SQLAlchemy.
+Hosting: Hostinger Web App (Next.js) — this Python API runs on Hostinger VPS if needed.
+"""
+from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -11,14 +15,44 @@ from app.core.rate_limit import auth_rate_limit, otp_rate_limit
 from app.core.config import settings
 from app.models.merchant import MerchantUser, Merchant
 from app.schemas import LoginRequest, EmailLoginRequest, OtpRequest, OtpVerifyRequest, LoginResponse, AuthUserOut, RefreshRequest
-import redis as redis_lib
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-# Redis for OTP storage
-def _get_redis():
-    return redis_lib.from_url(settings.redis_url, decode_responses=True)
+# ── OTP Storage — MySQL otp_codes table (no Redis needed) ────────────────────
+
+def _store_otp(phone: str, otp: str, db: Session) -> None:
+    """Save OTP to MySQL. Deletes any previous OTP for the same phone first."""
+    from sqlalchemy import text
+    # Delete old OTPs for this phone
+    db.execute(text("DELETE FROM otp_codes WHERE phone = :phone"), {"phone": phone})
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=5)
+    db.execute(
+        text("INSERT INTO otp_codes (phone, code, expires_at) VALUES (:phone, :code, :expires)"),
+        {"phone": phone, "code": otp, "expires": expires_at},
+    )
+    db.commit()
+
+
+def _verify_otp(phone: str, otp: str, db: Session) -> bool:
+    """Check OTP is valid and not expired. Deletes it on success (single-use)."""
+    from sqlalchemy import text
+    row = db.execute(
+        text("SELECT code, expires_at FROM otp_codes WHERE phone = :phone ORDER BY id DESC LIMIT 1"),
+        {"phone": phone},
+    ).fetchone()
+    if not row:
+        return False
+    stored_code, expires_at = row
+    # Make expires_at timezone-aware for comparison
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    if stored_code != otp or datetime.now(timezone.utc) > expires_at:
+        return False
+    # Consume OTP — single use
+    db.execute(text("DELETE FROM otp_codes WHERE phone = :phone"), {"phone": phone})
+    db.commit()
+    return True
 
 
 def _build_login_response(user: MerchantUser, db: Session) -> LoginResponse:
@@ -96,11 +130,12 @@ def send_otp(payload: OtpRequest, request: Request, db: Session = Depends(get_db
         return {"message": "OTP sent if number is registered"}
 
     otp = generate_otp()
+
+    # Store OTP in MySQL otp_codes table (no Redis needed)
     try:
-        r = _get_redis()
-        r.setex(f"otp:{phone}", 300, otp)  # OTP expires in 5 minutes
-    except Exception:
-        pass  # Redis unavailable — still succeed (OTP won't work, but don't crash)
+        _store_otp(phone, otp, db)
+    except Exception as e:
+        print(f"⚠️ OTP storage failed: {e}")
 
     # Send OTP via Msg91 in production if API key is set
     if settings.msg91_api_key and settings.msg91_template_id_otp:
@@ -131,23 +166,12 @@ def verify_otp(payload: OtpVerifyRequest, request: Request, db: Session = Depend
     otp_rate_limit(request)
     phone = payload.phone.replace(" ", "")
 
-    try:
-        r = _get_redis()
-        stored_otp = r.get(f"otp:{phone}")
-    except Exception:
-        stored_otp = None
-
-    if not stored_otp or stored_otp != payload.otp:
+    if not _verify_otp(phone, payload.otp, db):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired OTP")
 
     user = db.query(MerchantUser).filter(MerchantUser.phone == phone).first()
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
-
-    try:
-        r.delete(f"otp:{phone}")  # Consume OTP after successful use
-    except Exception:
-        pass
 
     return _build_login_response(user, db)
 
@@ -167,62 +191,5 @@ def refresh_token(payload: RefreshRequest, db: Session = Depends(get_db)):
 
 @router.post("/logout")
 def logout():
-    # JWT is stateless — client discards the token. For true invalidation,
-    # add token ID to a Redis blacklist here.
+    # JWT is stateless — client discards the token.
     return {"message": "Logged out successfully"}
-
-
-# ── Google OAuth (via Supabase) ───────────────────────────────────────────────
-
-class GoogleLoginRequest(BaseModel):
-    supabase_token: str
-
-
-@router.post("/google", response_model=LoginResponse)
-def google_login(payload: GoogleLoginRequest, request: Request, db: Session = Depends(get_db)):
-    """
-    Accept a Supabase JWT from the frontend (after Google OAuth).
-    Validate it with Supabase, extract the user email, find the matching
-    MerchantUser, and return our app JWT + user profile.
-    """
-    auth_rate_limit(request)
-
-    # Validate Supabase token by calling Supabase's /auth/v1/user endpoint
-    supabase_url = settings.supabase_url
-    supabase_service_key = settings.supabase_service_key
-    if not supabase_url:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Google login is not configured on this server."
-        )
-
-    try:
-        import httpx
-        resp = httpx.get(
-            f"{supabase_url}/auth/v1/user",
-            headers={
-                "Authorization": f"Bearer {payload.supabase_token}",
-                "apikey": supabase_service_key,
-            },
-            timeout=10,
-        )
-        if resp.status_code != 200:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Google token")
-
-        supabase_user = resp.json()
-        email = supabase_user.get("email")
-        if not email:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="No email in Google account")
-
-    except httpx.RequestError:
-        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Could not verify Google token")
-
-    # Find the MerchantUser by email
-    user = db.query(MerchantUser).filter(MerchantUser.email == email).first()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found. Contact Metro Cardz support to get onboarded."
-        )
-
-    return _build_login_response(user, db)

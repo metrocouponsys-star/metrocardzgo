@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&amp;family=Syne:wght@600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#111317;color:#e2e2e6;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}.material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-error": "#690005", "on-primary-fixed": "#241a00", "outline-variant": "#4d4635", "on-tertiary": "#472a00", "surface-container": "#1e2023", "surface-variant": "#333538", "secondary-container": "#896c00", "outline": "#99907c", "primary-fixed-dim": "#e9c349", "tertiary-fixed-dim": "#ffb95f", "on-tertiary-fixed": "#2a1700", "error": "#ffb4ab", "surface-container-lowest": "#0c0e11", "secondary-fixed-dim": "#e7c35a", "on-primary-container": "#554300", "tertiary": "#ffc37b", "inverse-on-surface": "#2f3034", "primary": "#f2ca50", "tertiary-fixed": "#ffddb8", "on-surface": "#e2e2e6", "primary-fixed": "#ffe088", "on-secondary": "#3d2f00", "on-primary-fixed-variant": "#574500", "surface-container-highest": "#333538", "on-primary": "#3c2f00", "secondary": "#e7c35a", "on-background": "#e2e2e6", "inverse-surface": "#e2e2e6", "error-container": "#93000a", "on-secondary-fixed-variant": "#584400", "background": "#111317", "on-secondary-container": "#fff3dc", "surface-container-low": "#1a1c1f", "surface-dim": "#111317", "on-error-container": "#ffdad6", "secondary-fixed": "#ffe08b", "tertiary-container": "#f7a00f", "surface-container-high": "#282a2d", "on-secondary-fixed": "#241a00", "surface": "#111317", "on-surface-variant": "#d0c5af", "surface-bright": "#37393d", "on-tertiary-container": "#633d00", "inverse-primary": "#735c00", "on-tertiary-fixed-variant": "#653e00", "primary-container": "#d4af37", "surface-tint": "#e9c349" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "gutter": "1rem", "margin-tablet": "2rem", "margin-desktop": "3rem", "space-sm": "0.5rem", "space-xs": "0.25rem", "gutter-desktop": "2rem", "margin": "1rem", "gutter-tablet": "1.5rem", "space-xl": "2.5rem", "space-lg": "1.5rem", "space-md": "1rem" }, "fontFamily": { "headline-lg": ["Syne"], "headline-md": ["Syne"], "display-hero": ["Syne"], "badge-micro": ["Plus Jakarta Sans"], "body-sm": ["Plus Jakarta Sans"], "body-semibold": ["Plus Jakarta Sans"], "body-base": ["Plus Jakarta Sans"], "headline-xl": ["Syne"], "display-hero-mobile": ["Syne"], "headline-xl-mobile": ["Syne"], "body-lg": ["Plus Jakarta Sans"], "label-caps": ["Plus Jakarta Sans"] }, "fontSize": { "headline-lg": ["22px", { "lineHeight": "30px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "headline-md": ["18px", { "lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "600" }], "display-hero": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "badge-micro": ["10px", { "lineHeight": "12px", "letterSpacing": "0.06em", "fontWeight": "700" }], "body-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "400" }], "body-semibold": ["14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "600" }], "body-base": ["14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" }], "headline-xl": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.015em", "fontWeight": "600" }], "display-hero-mobile": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "headline-xl-mobile": ["26px", { "lineHeight": "34px", "letterSpacing": "-0.015em", "fontWeight": "600" }], "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "400" }], "label-caps": ["11px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "700" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-base text-body-base text-on-surface min-h-screen flex flex-col antialiased selection:bg-primary-container selection:text-on-primary-container"><header class="fixed top-0 inset-x-0 z-50 bg-surface/80 backdrop-blur-xl pt-safe"><div class="h-16 px-margin flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm min-w-0"><img alt="Metro Cardz Logo" class="h-8 w-auto object-contain flex-shrink-0" src="https://lh3.googleusercontent.com/aida/AEtjO1UQuY5kj3NWrrIlfsbIn3CUYDCV9qUnAmCLePyZO1q1WsFZ04mHVX4MgFFjbL8MsLJT4k3CedVzldbFvHaAboY3VEURnnOOTMOy09o8xYLKfQ6tc7akpBIELc5JrtSuO_co7nI_xo8FhIyR3uJ0CtOWH7A97CJ6fDRAWCXrK811QMjUgjyCmhGKY_4tVJNqbcujNvMIi03AiMkOfuSRZ9PWZEHnbPR5wDbbggZ5MYgGRt5LCC6vpOEwWe0"/><div class="flex flex-col min-w-0"><span class="font-headline-md text-headline-md text-primary tracking-tight truncate leading-tight">Metro Cardz</span><span class="font-label-caps text-label-caps text-on-surface-variant truncate uppercase">Top Deals</span></div></div><div class="flex items-center gap-space-sm flex-shrink-0"><button class="h-9 px-3 rounded-full bg-surface-container-high hover:bg-surface-variant text-on-surface flex items-center gap-1 min-w-[44px] transition-colors"><span class="material-symbols-outlined text-[16px] text-primary">near_me</span><span class="font-body-sm text-body-sm text-on-surface font-semibold">Mumbai</span><span class="material-symbols-outlined text-[16px] text-outline">keyboard_arrow_down</span></button><button aria-label="Member Profile" class="relative p-1 rounded-full flex items-center justify-center min-w-[44px] min-h-[44px] focus:outline-none"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDSMLvyaSsnJIKMM-lpraZ7K0HqqtheUkhvbkZe7TL2i8rqRPjCIDoSwkGzjJYA20rNdgpIlix76TJxioGHhZ-VBXCewPxlqD7-y95YYMBM3QgUEfvelU9WakC_jENyDC1HWK0J5Bi2o2iHVZc0IYM17IoSPPVUuMV3GqFYvsZs9ebKLp9BoINJDoD1Cm0hcXMaiCYgP2-DoU8Z-gMCXKEEHu0k7f2HQybgFFDv-rIwjdg9a8qiGV6N"/><span class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-primary rounded-full shadow-[0_0_8px_rgba(242,202,80,0.8)]"></span></button></div></div></header><main class="flex-1 flex flex-col relative w-full pt-16 pb-24 bg-surface"><div class="flex flex-col w-full">
+<div class="px-margin pt-space-sm pb-space-md flex flex-col gap-space-xs">
+<div class="flex items-center justify-between gap-space-sm">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high">
+<span class="text-secondary text-sm">🔥</span>
+<span class="font-label-caps text-label-caps text-secondary tracking-wider">HAND-PICKED BY EDITORS</span>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[14px] text-outline">schedule</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Updated Today, 10:00 AM</span>
+</div>
+</div>
+<h1 class="font-headline-xl-mobile text-headline-xl-mobile text-on-surface tracking-tight">Today's Curated Picks</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Strictly vetted member exclusives refreshed daily at dawn.</p>
+</div>
+<div class="w-full overflow-x-auto no-scrollbar pb-space-sm pl-margin pr-margin">
+<div class="flex items-center gap-space-sm w-max">
+<button class="filter-pill h-9 px-4 rounded-full bg-surface-container-highest text-primary flex items-center gap-1.5 transition-all shadow-sm active:scale-95" data-filter="all">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span class="font-body-semibold text-body-semibold">All Picks</span>
+</button>
+<button class="filter-pill h-9 px-4 rounded-full bg-surface-container-low text-on-surface-variant flex items-center gap-1.5 transition-all active:scale-95" data-filter="trending">
+<span class="font-body-semibold text-body-semibold">Trending Today</span>
+</button>
+<button class="filter-pill h-9 px-4 rounded-full bg-surface-container-low text-on-surface-variant flex items-center gap-1.5 transition-all active:scale-95" data-filter="weekend">
+<span class="font-body-semibold text-body-semibold">Weekend Specials</span>
+</button>
+<button class="filter-pill h-9 px-4 rounded-full bg-surface-container-low text-on-surface-variant flex items-center gap-1.5 transition-all active:scale-95" data-filter="savings">
+<span class="font-body-semibold text-body-semibold">Highest Savings</span>
+</button>
+<button class="filter-pill h-9 px-4 rounded-full bg-surface-container-low text-on-surface-variant flex items-center gap-1.5 transition-all active:scale-95" data-filter="members">
+<span class="font-body-semibold text-body-semibold">Members Only</span>
+</button>
+</div>
+</div>
+<div class="px-margin pt-space-xs pb-space-lg flex flex-col">
+<div class="relative w-full rounded-2xl bg-surface-container-high overflow-hidden shadow-2xl">
+<div class="absolute inset-0 pointer-events-none rounded-2xl shadow-[inset_0_0_24px_rgba(242,202,80,0.18)]"></div>
+<div class="relative w-full h-52 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="High-speed cinematic action shot of luxury water park wave pool in Lonavala surrounded by lush misty Sahyadri mountains, crystal clear sapphire water, modern cabanas under golden sunlight, high shutter speed droplets glistening with gold tones, editorial luxury travel photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2ohTmZI_FTq2YaS-QnwgCYgynXbqMEefpFjVGJ0jlM856ig_4ukIX8dcSaa3jMjpQCa9-Ras6mprj_jcSXrNKlHCwO6QzxEKdO6K1xjD4gWyqQYfV3tBnyL_NfDN2Ir9VlcMvoM5cEuM4q7P3O7_Y9MNlkhUvKSs33imzlALWhTUF3gd0C8OW5pA5Z0jV2eyOy_wZJnL2fnBnvCb8FFVNhw780tbjJKbhD-l_DbbcfoG2mu_uzL6e"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-high via-surface-container-high/40 to-transparent"></div>
+<div class="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-lowest/90 backdrop-blur-md">
+<span class="material-symbols-outlined text-[14px] text-primary" style="font-variation-settings: 'FILL' 1;">timer</span>
+<span class="font-label-caps text-label-caps text-on-surface tracking-wider font-semibold" id="countdown-timer">ENDS IN 14h 32m</span>
+</div>
+<div class="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container-lowest/90 backdrop-blur-md">
+<span class="material-symbols-outlined text-[13px] text-primary" style="font-variation-settings: 'FILL' 1;">verified</span>
+<span class="font-badge-micro text-badge-micro text-primary-fixed uppercase tracking-wider">DIRECT MERCHANT</span>
+</div>
+<div class="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+<span class="px-2.5 py-0.5 rounded bg-primary text-on-primary font-badge-micro text-badge-micro uppercase tracking-widest font-bold shadow-md">SPOTLIGHT HERO</span>
+<div class="flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">4.9</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">(1.4k)</span>
+</div>
+</div>
+</div>
+<div class="p-space-md flex flex-col gap-space-sm">
+<div class="flex flex-col gap-0.5">
+<span class="font-label-caps text-label-caps text-primary tracking-widest uppercase">Lonavala, Maharashtra</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface leading-tight">Wet'nJoy Water Park</h2>
+<p class="font-body-base text-body-base text-on-surface-variant line-clamp-2">EXCLUSIVE: 40% Off Wave Pool &amp; Thrill Passes + Free Locker</p>
+</div>
+<div class="p-3 rounded-xl bg-surface-container flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-on-surface-variant">MEMBER VALUE</span>
+<div class="flex items-baseline gap-1.5">
+<span class="font-headline-md text-headline-md text-primary font-bold">₹899</span>
+<span class="font-body-sm text-body-sm text-outline line-through">₹1,499</span>
+</div>
+</div>
+<div class="text-right flex flex-col items-end">
+<span class="font-label-caps text-label-caps text-on-surface-variant">EST. SAVINGS</span>
+<span class="font-body-semibold text-body-semibold text-secondary">Save ₹600/pass</span>
+</div>
+</div>
+<div class="flex items-center gap-space-sm pt-space-xs">
+<button class="claim-btn flex-1 h-12 rounded-full bg-gradient-to-r from-primary-fixed-dim to-primary text-on-primary font-body-semibold text-body-semibold flex items-center justify-center gap-2 shadow-lg active:scale-98 transition-transform" data-offer="Wet'nJoy Water Park">
+<span class="material-symbols-outlined text-[18px]">bolt</span>
+<span>Single-Tap Instant Pass</span>
+</button>
+<button aria-label="Save Deal" class="h-12 w-12 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant active:text-primary transition-colors flex-shrink-0">
+<span class="material-symbols-outlined text-[20px]">bookmark_add</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<div class="px-margin pb-space-lg flex flex-col gap-space-lg">
+<div class="category-block flex flex-col gap-space-sm" data-category="entertainment">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-lg bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">sports_esports</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Entertainment &amp; Gaming</h3>
+</div>
+<span class="font-label-caps text-label-caps text-primary tracking-wider uppercase">01 / 04</span>
+</div>
+<div class="relative w-full rounded-xl bg-surface-container overflow-hidden shadow-md flex flex-col">
+<div class="absolute top-2.5 left-2.5 z-10 px-2 py-0.5 rounded bg-primary text-on-primary font-badge-micro text-badge-micro tracking-widest uppercase font-bold shadow-md">
+          FEATURED PICK
+        </div>
+<div class="relative w-full h-40 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Vibrant neon arcade and futuristic bowling alley at Smaaash Mumbai, sleek dynamic cinematic perspective with neon cyan and amber lighting reflecting on polished wooden lanes, friends competing joyfully, luxury recreation ambience." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAqVYlbGlitI9pV4zma6zWdc7F76uufptsDZo4SNLS5j8L17dqpsW7KAq0Gj7I8EvWohHFxMZ2yPvV5h4dT_zTn9Ylge89GyLt7sF4yR6Xygp2ADWVVVB3eWawjUo5SsACSi6z7IVJhZrO-FU-FKRj5lssVGGOQEQ1nUwGfvBDbhINBk6AC__wdtb5OkaXXOM7dvd_0Xp6PW2SVq9duoFiAaCRfpgtWHfVUfZkF1YUoCdI35PGslwqd"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container via-surface-container/30 to-transparent"></div>
+<div class="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full bg-surface-container-lowest/80 backdrop-blur-sm flex items-center gap-1">
+<span class="font-badge-micro text-badge-micro text-secondary font-semibold uppercase">DIRECT MERCHANT</span>
+</div>
+</div>
+<div class="p-space-md flex flex-col gap-space-sm">
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-on-surface-variant">LOWER PAREL &amp; BKC</span>
+<h4 class="font-headline-md text-headline-md text-on-surface">Smaaash VIP Arcade Pass</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Flat 50% Off Unlimited Bowling, Laser Tag &amp; VR Experience Simulator</p>
+</div>
+<div class="flex items-center justify-between p-2.5 rounded-lg bg-surface-container-low">
+<div>
+<span class="font-label-caps text-label-caps text-outline">SPECIAL RATE</span>
+<div class="flex items-baseline gap-1">
+<span class="font-headline-md text-headline-md text-primary font-bold">₹750</span>
+<span class="font-body-sm text-body-sm text-outline line-through">₹1,500</span>
+</div>
+</div>
+<div class="px-2 py-1 rounded bg-surface-container-high text-secondary font-label-caps text-label-caps font-bold uppercase">
+              50% SAVINGS
+            </div>
+</div>
+<button class="claim-btn w-full h-12 rounded-full bg-primary text-on-primary font-body-semibold text-body-semibold flex items-center justify-center gap-1.5 active:scale-98 transition-transform" data-offer="Smaaash VIP Arcade Pass">
+<span>Redeem Pass</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<div class="category-block flex flex-col gap-space-sm" data-category="dining">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-lg bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">local_bar</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Dining &amp; Nightlife</h3>
+</div>
+<span class="font-label-caps text-label-caps text-primary tracking-wider uppercase">02 / 04</span>
+</div>
+<div class="relative w-full rounded-xl bg-surface-container overflow-hidden shadow-md flex flex-col">
+<div class="absolute top-2.5 left-2.5 z-10 px-2 py-0.5 rounded bg-primary text-on-primary font-badge-micro text-badge-micro tracking-widest uppercase font-bold shadow-md">
+          FEATURED PICK
+        </div>
+<div class="relative w-full h-40 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Sophisticated interior of modern gastropub bistro bar with industrial chic lighting, artisanal draft craft beers poured in tall condensation glasses, ambient golden candlelight, urban young professionals talking in cozy banquettes, dramatic night mood." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCDz7Lp8kccYx6bDI5b-mEnn6CVmkV5mVL6lEO8TzFsqC30DqRHzLbk8jTHekBic28fnr3BdlsBKsvBygMBGDpvbXTD2lcNF-Mmt5f8bAg2xQ0mfSwW5jE4tnqgDqYeqQ8EpgYTYEsMzGJANt2cKTuOuGUR8ros1Q6FpY7jp_B-prjfyx8A6vy1q0hB-OYeMeKt8PePbetbXD2VKbnDWDE-pBpNvsFzXLEIvnW4cVgcq8PZV1jR6CDr"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container via-surface-container/30 to-transparent"></div>
+<div class="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full bg-surface-container-lowest/80 backdrop-blur-sm flex items-center gap-1">
+<span class="font-badge-micro text-badge-micro text-secondary font-semibold uppercase">AUTHORISED PARTNER</span>
+</div>
+</div>
+<div class="p-space-md flex flex-col gap-space-sm">
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-on-surface-variant">COLABA, DADAR &amp; KHAR</span>
+<h4 class="font-headline-md text-headline-md text-on-surface">Social Mumbai Outlets</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Complimentary Craft Brew Pint &amp; Flat 20% Off Entire Food Bill</p>
+</div>
+<div class="flex items-center justify-between p-2.5 rounded-lg bg-surface-container-low">
+<div>
+<span class="font-label-caps text-label-caps text-outline">PERK BENEFIT</span>
+<div class="font-body-semibold text-body-semibold text-on-surface">Free Brew (₹420 val)</div>
+</div>
+<div class="px-2 py-1 rounded bg-surface-container-high text-secondary font-label-caps text-label-caps font-bold uppercase">
+              FLAT 20% OFF
+            </div>
+</div>
+<button class="claim-btn w-full h-12 rounded-full bg-primary text-on-primary font-body-semibold text-body-semibold flex items-center justify-center gap-1.5 active:scale-98 transition-transform" data-offer="Social Mumbai Outlets">
+<span>Unlock Dine-in Voucher</span>
+<span class="material-symbols-outlined text-[18px]">restaurant</span>
+</button>
+</div>
+</div>
+</div>
+<div class="category-block flex flex-col gap-space-sm" data-category="weekend">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-lg bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">nature_people</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Weekend Getaway</h3>
+</div>
+<span class="font-label-caps text-label-caps text-primary tracking-wider uppercase">03 / 04</span>
+</div>
+<div class="relative w-full rounded-xl bg-surface-container overflow-hidden shadow-md flex flex-col">
+<div class="absolute top-2.5 left-2.5 z-10 px-2 py-0.5 rounded bg-primary text-on-primary font-badge-micro text-badge-micro tracking-widest uppercase font-bold shadow-md">
+          FEATURED PICK
+        </div>
+<div class="relative w-full h-40 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Stunning architectural treehouse resort cabin nestled high in serene tropical rainforest canopy in Lonavala, twilight amber lighting from large glass windows, outdoor wooden deck overlooking foggy lush hills, luxury eco-resort aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuClf0LbGs-9OWpEaa-ivupZxXs_W_ODTQAF41xsqsFnMRTprLfF-UrNmap7Z-XwFmnUwfgDNPGJ7P13DpOJHed3R_PKdozHsioJCldIYqPH00kR_mDcmzGted9G_BT2mE2Sc8yMZcz5O6DDBI-yAEXZfkNcczXlSV-zDjJuZW1aklf8jGpSMlJdqas0kCFR55YA4qSPBflk7B2nDyl-Z4yDa_sqbdWTALFfXvTFkW9Er8YUAyX41QHY"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container via-surface-container/30 to-transparent"></div>
+<div class="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full bg-surface-container-lowest/80 backdrop-blur-sm flex items-center gap-1">
+<span class="font-badge-micro text-badge-micro text-secondary font-semibold uppercase">DIRECT MERCHANT</span>
+</div>
+</div>
+<div class="p-space-md flex flex-col gap-space-sm">
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-on-surface-variant">LONAVALA / KANDALGAON</span>
+<h4 class="font-headline-md text-headline-md text-on-surface">The Machan Treehouse Resort</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Complimentary ₹2,500 Forest Spa Credit + 15% Off Suite Bookings</p>
+</div>
+<div class="flex items-center justify-between p-2.5 rounded-lg bg-surface-container-low">
+<div>
+<span class="font-label-caps text-label-caps text-outline">STAY CREDIT</span>
+<div class="font-headline-md text-headline-md text-primary font-bold">₹2,500 FREE</div>
+</div>
+<div class="px-2 py-1 rounded bg-surface-container-high text-secondary font-label-caps text-label-caps font-bold uppercase">
+              SAVE UP TO ₹5,400
+            </div>
+</div>
+<button class="claim-btn w-full h-12 rounded-full bg-primary text-on-primary font-body-semibold text-body-semibold flex items-center justify-center gap-1.5 active:scale-98 transition-transform" data-offer="The Machan Treehouse Resort">
+<span>Claim Member Retreat</span>
+<span class="material-symbols-outlined text-[18px]">bed</span>
+</button>
+</div>
+</div>
+</div>
+<div class="category-block flex flex-col gap-space-sm" data-category="entertainment">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-lg bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">movie</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Movies &amp; Multiplex</h3>
+</div>
+<span class="font-label-caps text-label-caps text-primary tracking-wider uppercase">04 / 04</span>
+</div>
+<div class="relative w-full rounded-xl bg-surface-container overflow-hidden shadow-md flex flex-col">
+<div class="absolute top-2.5 left-2.5 z-10 px-2 py-0.5 rounded bg-primary text-on-primary font-badge-micro text-badge-micro tracking-widest uppercase font-bold shadow-md">
+          FEATURED PICK
+        </div>
+<div class="relative w-full h-40 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Plush reclining leather loungers in an ultra luxury Gold Class cinema theatre hall, dim warm recessed brass lighting, gourmet artisanal truffle popcorn and artisanal mocktails served on sleek dark table trays, high-end cinematic experience." src="https://lh3.googleusercontent.com/aida-public/AB6AXuATROqSR3vK9nRO56exsJm5pTc3Kdu37qN5Q06803H_gwbLRjL0d6jhGE8RaW0LiPjQd32mYzl9ztqHM3MAZNGyita6MPp4RJuywWMbHnFEkl67vDSENw8L8C9UeyCbQyD4df_ixYjF3-50XrZK2w8K7VidxAmRDLoUnCkllok1QyPcNRlQ_pLujPPuSc1ljPD0-NU19bVLg5Y2Ws0S9TeuQ-P345kxsi7EPRvnSqGu-Zjy17J-1gK4"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container via-surface-container/30 to-transparent"></div>
+<div class="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full bg-surface-container-lowest/80 backdrop-blur-sm flex items-center gap-1">
+<span class="font-badge-micro text-badge-micro text-secondary font-semibold uppercase">DIRECT MERCHANT</span>
+</div>
+</div>
+<div class="p-space-md flex flex-col gap-space-sm">
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-on-surface-variant">PAN-MUMBAI MULTIPLEXES</span>
+<h4 class="font-headline-md text-headline-md text-on-surface">PVR INOX Gold Class</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Buy 1 Get 1 Complimentary on Chef-Curated Gourmet Platter &amp; Drinks</p>
+</div>
+<div class="flex items-center justify-between p-2.5 rounded-lg bg-surface-container-low">
+<div>
+<span class="font-label-caps text-label-caps text-outline">EXCLUSIVE COMBO</span>
+<div class="font-headline-md text-headline-md text-primary font-bold">1 + 1 GOURMET</div>
+</div>
+<div class="px-2 py-1 rounded bg-surface-container-high text-secondary font-label-caps text-label-caps font-bold uppercase">
+              SAVE ₹780
+            </div>
+</div>
+<button class="claim-btn w-full h-12 rounded-full bg-primary text-on-primary font-body-semibold text-body-semibold flex items-center justify-center gap-1.5 active:scale-98 transition-transform" data-offer="PVR INOX Gold Class">
+<span>Activate 1+1 Coupon</span>
+<span class="material-symbols-outlined text-[18px]">confirmation_number</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<div class="px-margin pb-space-lg">
+<div class="p-space-md rounded-2xl bg-surface-container-low flex items-center gap-space-md">
+<div class="w-12 h-12 rounded-full bg-primary-container/20 flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[24px] text-primary">notifications_active</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="font-body-semibold text-body-semibold text-on-surface">Never miss a 24h drop</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant truncate">Daily concierge alerts at 10:00 AM</div>
+</div>
+<button class="px-3.5 py-2 rounded-full bg-surface-container-high text-on-surface font-body-sm text-body-sm font-semibold active:bg-surface-variant transition-colors flex-shrink-0">
+        Enabled
+      </button>
+</div>
+</div>
+<div class="fixed bottom-24 left-4 right-4 z-50 transform translate-y-32 opacity-0 pointer-events-none transition-all duration-300 flex items-center justify-between p-3.5 rounded-xl bg-surface-container-highest shadow-2xl text-on-surface" id="toast">
+<div class="flex items-center gap-2.5 min-w-0">
+<span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="font-body-sm text-body-sm font-semibold truncate" id="toast-message">Pass activated successfully!</span>
+</div>
+<span class="font-label-caps text-label-caps text-primary tracking-wider uppercase pl-2">SAVED</span>
+</div>
+<script>
+    (function() {
+      // Filter Tabs Micro-interaction
+      const filterPills = document.querySelectorAll('.filter-pill');
+      const categoryBlocks = document.querySelectorAll('.category-block');
+
+      filterPills.forEach(pill => {
+        pill.addEventListener('click', () => {
+          filterPills.forEach(p => {
+            p.classList.remove('bg-surface-container-highest', 'text-primary');
+            p.classList.add('bg-surface-container-low', 'text-on-surface-variant');
+            const dot = p.querySelector('span.w-1\\.5');
+            if (dot) dot.remove();
+          });
+
+          pill.classList.remove('bg-surface-container-low', 'text-on-surface-variant');
+          pill.classList.add('bg-surface-container-highest', 'text-primary');
+          
+          if (!pill.querySelector('span.w-1\\.5')) {
+            const dot = document.createElement('span');
+            dot.className = 'w-1.5 h-1.5 rounded-full bg-primary';
+            pill.insertBefore(dot, pill.firstChild);
+          }
+
+          const filterVal = pill.getAttribute('data-filter');
+          categoryBlocks.forEach(block => {
+            if (filterVal === 'all') {
+              block.style.display = 'flex';
+            } else if (filterVal === 'weekend') {
+              block.style.display = block.getAttribute('data-category') === 'weekend' ? 'flex' : 'none';
+            } else if (filterVal === 'trending') {
+              block.style.display = (block.getAttribute('data-category') === 'entertainment' || block.getAttribute('data-category') === 'dining') ? 'flex' : 'none';
+            } else {
+              block.style.display = 'flex';
+            }
+          });
+        });
+      });
+
+      // Simple Countdown timer animation
+      let totalSeconds = (14 * 3600) + (32 * 60);
+      const timerEl = document.getElementById('countdown-timer');
+      setInterval(() => {
+        if (totalSeconds > 0) {
+          totalSeconds--;
+          const h = Math.floor(totalSeconds / 3600);
+          const m = Math.floor((totalSeconds % 3600) / 60);
+          const s = totalSeconds % 60;
+          if (timerEl) {
+            timerEl.textContent = `ENDS IN ${h}h ${m}m ${s < 10 ? '0' : ''}${s}s`;
+          }
+        }
+      }, 1000);
+
+      // Single Tap Claim Toast feedback
+      const claimButtons = document.querySelectorAll('.claim-btn');
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toast-message');
+      let toastTimeout;
+
+      claimButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const offerName = btn.getAttribute('data-offer') || 'Offer';
+          if (toast && toastMsg) {
+            toastMsg.textContent = `${offerName} locked to card!`;
+            toast.classList.remove('translate-y-32', 'opacity-0', 'pointer-events-none');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+              toast.classList.add('translate-y-32', 'opacity-0', 'pointer-events-none');
+              toast.classList.remove('translate-y-0', 'opacity-100');
+            }, 3000);
+          }
+        });
+      });
+    })();
+  </script>
+</div></main><nav class="fixed bottom-0 inset-x-0 z-50 pb-safe bg-surface/90 backdrop-blur-xl shadow-[0_-8px_32px_rgba(0,0,0,0.4)]" data-active-classes="text-primary font-body-semibold"><div class="flex justify-around items-center h-20 px-space-sm"><a class="flex flex-col items-center justify-center gap-1 w-16 h-14 text-on-surface-variant hover:text-on-surface transition-all" data-path="explore" href="#"><span class="material-symbols-outlined text-[24px]">explore</span><span class="font-label-caps text-label-caps tracking-wider">EXPLORE</span></a><a aria-current="page" class="flex flex-col items-center justify-center gap-1 w-16 h-14 transition-all text-primary font-body-semibold" data-path="top-deals" href="#"><span class="material-symbols-outlined text-[24px]">local_activity</span><span class="font-label-caps text-label-caps tracking-wider">TOP DEALS</span></a><a class="flex flex-col items-center justify-center gap-1 w-16 h-14 text-on-surface-variant hover:text-on-surface transition-all" data-path="my-card" href="#"><span class="material-symbols-outlined text-[24px]">contactless</span><span class="font-label-caps text-label-caps tracking-wider">MY CARD</span></a><a class="flex flex-col items-center justify-center gap-1 w-16 h-14 text-on-surface-variant hover:text-on-surface transition-all" data-path="admin" href="#"><span class="material-symbols-outlined text-[24px]">tune</span><span class="font-label-caps text-label-caps tracking-wider">ADMIN</span></a></div></nav></body></html>

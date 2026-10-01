@@ -4,10 +4,13 @@ Industry-grade: security headers, global error handling, request validation erro
 """
 import logging
 import uuid
+import os
+from pathlib import Path
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.core.config import settings
@@ -39,6 +42,7 @@ from app.routers.rewards import (
 )
 from app.routers.wallet import wallet_router
 from app.routers.cards import router as cards_router, public_cards_router
+from app.routers.tiers import tiers_router, challenges_router, reviews_router
 
 log = logging.getLogger(__name__)
 
@@ -175,9 +179,27 @@ app.include_router(feedback_router, prefix=API_PREFIX)
 app.include_router(wallet_router, prefix=API_PREFIX)
 app.include_router(cards_router, prefix=API_PREFIX)
 app.include_router(public_cards_router, prefix=API_PREFIX)
+app.include_router(tiers_router, prefix=API_PREFIX)
+app.include_router(challenges_router, prefix=API_PREFIX)
+app.include_router(reviews_router, prefix=API_PREFIX)
 
 # Health check at root level (no /api/v1 prefix — for UptimeRobot and Render keep-alive)
 app.include_router(health_router)
+
+
+# ── Serve uploaded files (logos, images) from local VPS disk ────────────────────
+# Path: /var/www/metrocardz/uploads  (production) or ../uploads (dev)
+# URL:  https://api.metrocardz.in/uploads/merchant-logos/{id}/logo.webp
+_uploads_dir = (
+    settings.uploads_dir.strip()
+    or str(Path(__file__).resolve().parent.parent.parent / "uploads")
+)
+os.makedirs(_uploads_dir, exist_ok=True)  # create on startup if missing
+try:
+    app.mount("/uploads", StaticFiles(directory=_uploads_dir), name="uploads")
+    log.info("Serving uploads from: %s", _uploads_dir)
+except Exception as _mount_err:
+    log.warning("Could not mount /uploads static directory: %s", _mount_err)
 
 
 # ── Import all models at module level (avoids per-request import overhead) ─────
@@ -189,6 +211,7 @@ from app.models import (  # noqa: F401
     redemption,
     loyalty,
     rewards,
+    tiers,
     feedback,
     wallet,
     event_log,
@@ -215,35 +238,26 @@ async def startup_event():
         Base.metadata.create_all(bind=engine)
         print(f"✅ Tables verified ({time.time()-t0:.1f}s)")
 
-        # 2. Run all migrations in a single transaction (faster than 4 separate connections)
+        # 2. Idempotent column migrations — each in its own transaction so a
+        #    pre-existing column (MySQL error 1060) silently skips without rollback.
         migration_sqls = [
-            "ALTER TABLE members ADD COLUMN IF NOT EXISTS auto_renew BOOLEAN NOT NULL DEFAULT FALSE",
+            "ALTER TABLE members ADD COLUMN IF NOT EXISTS auto_renew TINYINT(1) NOT NULL DEFAULT 0",
             "ALTER TABLE coupon_codes ADD COLUMN IF NOT EXISTS active_days TEXT",
-            "ALTER TABLE points_rules ADD COLUMN IF NOT EXISTS spend_unit NUMERIC DEFAULT 1",
+            "ALTER TABLE points_rules ADD COLUMN IF NOT EXISTS spend_unit DECIMAL(10,2) DEFAULT 1",
             "ALTER TABLE loyalty_transactions ADD COLUMN IF NOT EXISTS note TEXT",
+            # Loyalty V2 columns
+            "ALTER TABLE member_tiers ADD COLUMN IF NOT EXISTS next_tier_points_needed DECIMAL(10,2)",
+            "ALTER TABLE member_tiers ADD COLUMN IF NOT EXISTS achieved_at DATETIME",
         ]
-        try:
-            with engine.begin() as conn:
-                for sql in migration_sqls:
-                    try:
-                        conn.execute(text(sql))
-                    except Exception:
-                        pass  # Column already exists — expected
-            # Type casts and Enum updates
-            cast_sqls = [
-                "ALTER TABLE coupon_codes ALTER COLUMN discount_type TYPE VARCHAR USING discount_type::VARCHAR",
-                "ALTER TABLE points_rules ALTER COLUMN rule_type TYPE VARCHAR USING rule_type::VARCHAR",
-                "ALTER TYPE loyalty_tx_type ADD VALUE IF NOT EXISTS 'referral_bonus'",
-            ]
-            with engine.begin() as conn:
-                for sql in cast_sqls:
-                    try:
-                        conn.execute(text(sql))
-                    except Exception:
-                        pass
-            print(f"✅ Migrations OK ({time.time()-t0:.1f}s)")
-        except Exception as col_err:
-            print(f"⚠️ Migration notice: {col_err}")
+
+        for sql in migration_sqls:
+            try:
+                with engine.begin() as conn:
+                    conn.execute(text(sql))
+            except Exception:
+                pass  # Column already exists — expected on warm restarts
+
+        print(f"✅ Migrations OK ({time.time()-t0:.1f}s)")
 
         # 3. Seed only if the merchants table is empty (skip on warm restarts)
         try:

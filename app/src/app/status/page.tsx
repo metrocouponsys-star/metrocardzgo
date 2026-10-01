@@ -8,14 +8,13 @@ export const metadata: Metadata = {
 };
 
 const services = [
-  { name: 'Merchant Portal (Frontend)', status: 'operational', uptime: '99.97%' },
-  { name: 'Core API (FastAPI)', status: 'operational', uptime: '99.95%' },
-  { name: 'Database (PostgreSQL)', status: 'operational', uptime: '99.99%' },
-  { name: 'Redis / Session Store', status: 'operational', uptime: '99.93%' },
+  { name: 'Merchant Portal (Next.js — Hostinger)', status: 'operational', uptime: '99.97%' },
+  { name: 'Core API (Next.js /api/v1/* routes)', status: 'operational', uptime: '99.95%' },
+  { name: 'Database (MySQL — Hostinger)', status: 'operational', uptime: '99.99%' },
   { name: 'WhatsApp Campaigns (AiSensy)', status: 'operational', uptime: '99.80%' },
   { name: 'SMS OTP (Msg91)', status: 'operational', uptime: '99.88%' },
-  { name: 'File Storage (Supabase)', status: 'operational', uptime: '99.92%' },
-  { name: 'Background Worker (Celery)', status: 'operational', uptime: '99.90%' },
+  { name: 'File Storage (Hostinger Disk)', status: 'operational', uptime: '99.92%' },
+  { name: 'Scheduled Jobs (Hostinger Cron)', status: 'operational', uptime: '99.90%' },
   { name: 'Card Printing Operations', status: 'operational', uptime: '99.70%' },
 ];
 
@@ -31,7 +30,7 @@ const incidents = [
     date: 'June 22, 2026',
     title: 'Scheduled Maintenance — Database Upgrade',
     status: 'Completed',
-    detail: 'Planned PostgreSQL version upgrade from 14.x to 15.x. Portal was in read-only mode from 02:00–03:15 IST. All services restored fully at 03:15 IST.',
+    detail: 'Planned MySQL version upgrade. Portal was in read-only mode from 02:00–03:15 IST. All services restored fully at 03:15 IST.',
     statusColor: 'text-blue-400',
   },
 ];

@@ -5,6 +5,7 @@ export default {
   theme: {
     extend: {
       colors: {
+        // ── Existing merchant-portal palette (unchanged) ──────────────────────
         'primary': '#00236f',
         'on-primary': '#ffffff',
         'primary-container': '#1e3a8a',
@@ -59,7 +60,6 @@ export default {
           500: '#f59e0b',
           600: '#d97706',
         },
-        // Landing page palette
         'gold': {
           DEFAULT: '#C9A227',
           light: '#D4AF37',
@@ -73,20 +73,52 @@ export default {
         'maroon': '#5C1A2E',
         'warm-white': '#FAF7EF',
         'warm-grey': '#8A8A8A',
-        // Semantic status tokens
-        'expiring': '#d97706',       // amber-600 — "expiring soon" foreground
-        'expiring-bg': '#fef3c7',    // amber-100 — "expiring soon" badge background
-        'success': '#006c49',        // = secondary — active/success foreground
-        'success-bg': '#6ffbbe33',   // success with low opacity — active badge background
+        'expiring': '#d97706',
+        'expiring-bg': '#fef3c7',
+        'success': '#006c49',
+        'success-bg': '#6ffbbe33',
 
+        // ── Metro Obsidian Gold — Deals Platform Design System ────────────────
+        // Deep obsidian surface tiers (OLED-optimized)
+        'obs': {
+          canvas:         '#0D0F12',
+          surface:        '#14171F',
+          elevated:       '#1C212B',
+          highlight:      '#222936',
+          border:         '#2A303C',
+          'auric-border': '#3F3722',
+        },
+        // Gold accent family
+        'auric': {
+          DEFAULT:   '#D4AF37',
+          champagne: '#E5C158',
+          amber:     '#F59E0B',
+          specular:  '#FFF3D6',
+          dim:       '#E9C349',
+        },
+        // Typography neutrals
+        'obs-text': {
+          primary:   '#FFFFFF',
+          secondary: '#F8FAFC',
+          muted:     '#9CA3AF',
+          faded:     '#6B7280',
+        },
+        // Partner-status badge tones
+        'partner-public':     '#9CA3AF',
+        'partner-affiliate':  '#E5C158',
+        'partner-authorised': '#34D399',
+        'partner-direct':     '#FFF3D6',
       },
+
       borderRadius: {
         DEFAULT: '0.25rem',
         lg: '0.5rem',
         xl: '0.75rem',
         '2xl': '1rem',
+        '3xl': '1.5rem',
         full: '9999px',
       },
+
       spacing: {
         xs: '4px',
         sm: '8px',
@@ -97,9 +129,13 @@ export default {
         'container-margin-mobile': '16px',
         'container-margin-desktop': '40px',
       },
+
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
+        sans:    ['Inter', 'sans-serif'],
+        display: ['Syne', 'sans-serif'],
+        body:    ['"Plus Jakarta Sans"', 'sans-serif'],
       },
+
       fontSize: {
         'body-md': ['14px', { lineHeight: '20px', fontWeight: '400' }],
         'label-md': ['12px', { lineHeight: '16px', letterSpacing: '0.05em', fontWeight: '600' }],
@@ -108,36 +144,68 @@ export default {
         'headline-lg-mobile': ['24px', { lineHeight: '32px', letterSpacing: '-0.01em', fontWeight: '700' }],
         'label-sm': ['11px', { lineHeight: '14px', fontWeight: '500' }],
         'body-lg': ['16px', { lineHeight: '24px', fontWeight: '400' }],
+        // Deals type scale
+        'display-hero':        ['48px', { lineHeight: '56px', letterSpacing: '-0.02em', fontWeight: '700' }],
+        'display-hero-mobile': ['36px', { lineHeight: '44px', letterSpacing: '-0.02em', fontWeight: '700' }],
+        'headline-xl':         ['32px', { lineHeight: '40px', letterSpacing: '-0.015em', fontWeight: '600' }],
+        'headline-xl-mobile':  ['26px', { lineHeight: '34px', letterSpacing: '-0.015em', fontWeight: '600' }],
+        'deals-headline-lg':   ['22px', { lineHeight: '30px', letterSpacing: '-0.01em', fontWeight: '600' }],
+        'deals-headline-md':   ['18px', { lineHeight: '24px', letterSpacing: '0em', fontWeight: '600' }],
+        'badge-micro':         ['10px', { lineHeight: '12px', letterSpacing: '0.06em', fontWeight: '700' }],
+        'label-caps':          ['11px', { lineHeight: '14px', letterSpacing: '0.08em', fontWeight: '700' }],
       },
+
       boxShadow: {
-        'tonal': '0 2px 4px rgba(0,0,0,0.04), 0 12px 24px rgba(0,0,0,0.02)',
+        'tonal':    '0 2px 4px rgba(0,0,0,0.04), 0 12px 24px rgba(0,0,0,0.02)',
         'elevated': '0 8px 30px rgba(0, 35, 111, 0.08)',
+        // Deals elevation shadows
+        'obs-card':      '0 0 0 1px #2A303C',
+        'obs-elevated':  '0 8px 32px -4px rgba(0,0,0,0.6)',
+        'obs-modal':     '0 24px 48px -8px rgba(0,0,0,0.85)',
+        'auric-glow':    '0 0 20px -2px rgba(212,175,55,0.25)',
+        'auric-hero':    '0 0 32px 2px rgba(229,193,88,0.2)',
+        'gold-focus':    '0 0 0 3px rgba(212,175,55,0.15)',
+        'auric-button':  '0 4px 16px rgba(212,175,55,0.3)',
       },
+
       animation: {
-        'fade-in': 'fadeIn 0.4s ease-in-out',
-        'slide-up': 'slideUp 0.3s ease-out',
-        'scale-in': 'scaleIn 0.2s ease-out',
-        'scan': 'scan 2s infinite linear',
-        'pulse-dot': 'pulseDot 2s infinite',
-        'marquee': 'marquee 30s linear infinite',
+        'fade-in':       'fadeIn 0.4s ease-in-out',
+        'slide-up':      'slideUp 0.3s ease-out',
+        'scale-in':      'scaleIn 0.2s ease-out',
+        'scan':          'scan 2s infinite linear',
+        'pulse-dot':     'pulseDot 2s infinite',
+        'marquee':       'marquee 30s linear infinite',
         'marquee-reverse': 'marqueeReverse 30s linear infinite',
-        'float': 'float 6s ease-in-out infinite',
-        'shimmer': 'shimmer 2.5s linear infinite',
-        'draw-line': 'drawLine 1s ease-out forwards',
-        'glow-pulse': 'glowPulse 2s ease-in-out infinite',
+        'float':         'float 6s ease-in-out infinite',
+        'shimmer':       'shimmer 2.5s linear infinite',
+        'draw-line':     'drawLine 1s ease-out forwards',
+        'glow-pulse':    'glowPulse 2s ease-in-out infinite',
+        // Deals animations
+        'nfc-breathe':   'nfcBreathe 2.5s ease-in-out infinite',
+        'auric-pulse':   'auricPulse 2s ease-in-out infinite',
+        'gold-shimmer':  'goldShimmer 2.5s linear infinite',
+        'card-reveal':   'cardReveal 0.4s cubic-bezier(0.16,1,0.3,1) both',
       },
+
       keyframes: {
-        fadeIn: { from: { opacity: '0' }, to: { opacity: '1' } },
-        slideUp: { from: { opacity: '0', transform: 'translateY(20px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
-        scaleIn: { from: { opacity: '0', transform: 'scale(0.95)' }, to: { opacity: '1', transform: 'scale(1)' } },
-        scan: { '0%': { top: '0%' }, '100%': { top: '100%' } },
-        pulseDot: { '0%, 100%': { opacity: '1' }, '50%': { opacity: '0.4' } },
-        marquee: { '0%': { transform: 'translateX(0)' }, '100%': { transform: 'translateX(-50%)' } },
+        fadeIn:      { from: { opacity: '0' }, to: { opacity: '1' } },
+        slideUp:     { from: { opacity: '0', transform: 'translateY(20px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
+        scaleIn:     { from: { opacity: '0', transform: 'scale(0.95)' }, to: { opacity: '1', transform: 'scale(1)' } },
+        scan:        { '0%': { top: '0%' }, '100%': { top: '100%' } },
+        pulseDot:    { '0%, 100%': { opacity: '1' }, '50%': { opacity: '0.4' } },
+        marquee:     { '0%': { transform: 'translateX(0)' }, '100%': { transform: 'translateX(-50%)' } },
         marqueeReverse: { '0%': { transform: 'translateX(-50%)' }, '100%': { transform: 'translateX(0)' } },
-        float: { '0%, 100%': { transform: 'translateY(0px)' }, '50%': { transform: 'translateY(-12px)' } },
-        shimmer: { '0%': { backgroundPosition: '-200% center' }, '100%': { backgroundPosition: '200% center' } },
-        drawLine: { from: { strokeDashoffset: '1000' }, to: { strokeDashoffset: '0' } },
-        glowPulse: { '0%, 100%': { boxShadow: '0 0 20px rgba(201,162,39,0.3)' }, '50%': { boxShadow: '0 0 40px rgba(201,162,39,0.7)' } },
+        float:       { '0%, 100%': { transform: 'translateY(0px)' }, '50%': { transform: 'translateY(-12px)' } },
+        shimmer:     { '0%': { backgroundPosition: '-200% center' }, '100%': { backgroundPosition: '200% center' } },
+        drawLine:    { from: { strokeDashoffset: '1000' }, to: { strokeDashoffset: '0' } },
+        glowPulse:   { '0%, 100%': { boxShadow: '0 0 20px rgba(201,162,39,0.3)' }, '50%': { boxShadow: '0 0 40px rgba(201,162,39,0.7)' } },
+        nfcBreathe:  {
+          '0%, 100%': { boxShadow: '0 0 16px 2px rgba(212,175,55,0.15)', borderColor: 'rgba(212,175,55,0.4)' },
+          '50%':      { boxShadow: '0 0 32px 6px rgba(229,193,88,0.35)', borderColor: 'rgba(229,193,88,0.8)' },
+        },
+        auricPulse:  { '0%, 100%': { opacity: '0.7' }, '50%': { opacity: '1' } },
+        goldShimmer: { '0%': { backgroundPosition: '-200% center' }, '100%': { backgroundPosition: '200% center' } },
+        cardReveal:  { from: { opacity: '0', transform: 'translateY(12px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
       },
     },
   },

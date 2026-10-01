@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Outfit:wght@500;600;700&amp;family=Syne:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+    @layer base {
+      html, body {
+        width: 100vw;
+        margin: 0;
+        padding: 0;
+        background-color: #f8f9fa;
+        color: #191c1d;
+      }
+      body {
+        overscroll-behavior: none;
+        min-height: max(884px, 100dvh);
+      }
+      .pb-safe {
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      .pt-safe {
+        padding-top: env(safe-area-inset-top, 0px);
+      }
+      main > :first-child {
+        margin-top: 0 !important;
+      }
+      main > :last-child {
+        margin-bottom: 0 !important;
+      }
+    }
+    ::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+  </style>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "tertiary-fixed": "#ffe088",
+            "primary-fixed": "#ffdf98",
+            "on-surface": "#191c1d",
+            "on-secondary-container": "#586377",
+            "primary-fixed-dim": "#eec14b",
+            "background": "#f8f9fa",
+            "primary-container": "#c59b27",
+            "surface-container-lowest": "#ffffff",
+            "primary": "#775a00",
+            "secondary-container": "#d5e0f8",
+            "error": "#ba1a1a",
+            "outline-variant": "#d1c5af",
+            "surface-container-low": "#f3f4f5",
+            "on-surface-variant": "#4e4635",
+            "surface-container-highest": "#e1e3e4",
+            "on-tertiary-fixed-variant": "#574500",
+            "surface-bright": "#f8f9fa",
+            "on-error": "#ffffff",
+            "on-tertiary-fixed": "#241a00",
+            "surface-container": "#edeeef",
+            "on-primary-fixed": "#251a00",
+            "on-tertiary-container": "#453600",
+            "inverse-surface": "#2e3132",
+            "on-secondary": "#ffffff",
+            "tertiary-container": "#c09d25",
+            "error-container": "#ffdad6",
+            "on-error-container": "#93000a",
+            "on-secondary-fixed": "#111c2d",
+            "surface-container-high": "#e7e8e9",
+            "on-secondary-fixed-variant": "#3c475a",
+            "tertiary": "#735c00",
+            "tertiary-fixed-dim": "#e9c349",
+            "surface-tint": "#775a00",
+            "surface-dim": "#d9dadb",
+            "inverse-primary": "#eec14b",
+            "on-tertiary": "#ffffff",
+            "secondary-fixed": "#d8e3fb",
+            "secondary-fixed-dim": "#bcc7de",
+            "on-primary": "#ffffff",
+            "surface-variant": "#e1e3e4",
+            "surface": "#f8f9fa",
+            "on-primary-container": "#473500",
+            "outline": "#807663",
+            "on-primary-fixed-variant": "#5a4300",
+            "secondary": "#545f73",
+            "on-background": "#191c1d",
+            "inverse-on-surface": "#f0f1f2"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-lg": "1.5rem",
+            "space-md": "1rem",
+            "margin-desktop": "3.5rem",
+            "gutter-sm": "1rem",
+            "space-sm": "0.5rem",
+            "space-xl": "2.5rem",
+            "margin-mobile": "1.25rem",
+            "gutter": "1.5rem",
+            "margin": "1rem",
+            "space-xs": "0.25rem",
+            "gutter-lg": "2rem"
+          },
+          "fontFamily": {
+            "display-lg-mobile": ["Syne"],
+            "display-lg": ["Syne"],
+            "label-lg": ["Outfit"],
+            "title-md": ["Outfit"],
+            "headline-sm": ["Syne"],
+            "headline-md": ["Syne"],
+            "body-lg": ["Inter"],
+            "body-md": ["Inter"],
+            "body-sm": ["Inter"],
+            "label-caps": ["Outfit"],
+            "label-md": ["Outfit"],
+            "title-lg": ["Outfit"],
+            "headline-lg": ["Syne"],
+            "headline-xl-mobile": ["Syne"]
+          },
+          "fontSize": {
+            "headline-xl-mobile": ["26px", { "lineHeight": "34px", "letterSpacing": "-0.015em", "fontWeight": "700" }],
+            "headline-lg": ["22px", { "lineHeight": "30px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+            "headline-md": ["18px", { "lineHeight": "24px", "letterSpacing": "-0.005em", "fontWeight": "600" }],
+            "body-lg": ["16px", { "lineHeight": "26px", "fontWeight": "400" }],
+            "body-md": ["14px", { "lineHeight": "22px", "fontWeight": "400" }],
+            "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }],
+            "label-caps": ["11px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "700" }],
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.06em", "fontWeight": "600" }],
+            "label-lg": ["14px", { "lineHeight": "18px", "letterSpacing": "0.04em", "fontWeight": "600" }],
+            "badge-micro": ["10px", { "lineHeight": "12px", "letterSpacing": "0.06em", "fontWeight": "700" }]
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="bg-[#F8F9FA] font-body-md text-[#191c1d] min-h-screen flex flex-col antialiased selection:bg-[#FEF3C7] selection:text-[#92400E]">
+<!-- Header -->
+<header class="fixed top-0 inset-x-0 z-50 bg-[#F8F9FA]/90 backdrop-blur-xl border-b border-[#E5E7EB] pt-safe">
+<div class="h-16 px-4 flex items-center justify-between gap-2">
+<div class="flex items-center gap-2.5 min-w-0">
+<img alt="Metro Cardz Logo" class="h-8 w-auto object-contain flex-shrink-0" src="https://lh3.googleusercontent.com/aida/AEtjO1UQuY5kj3NWrrIlfsbIn3CUYDCV9qUnAmCLePyZO1q1WsFZ04mHVX4MgFFjbL8MsLJT4k3CedVzldbFvHaAboY3VEURnnOOTMOy09o8xYLKfQ6tc7akpBIELc5JrtSuO_co7nI_xo8FhIyR3uJ0CtOWH7A97CJ6fDRAWCXrK811QMjUgjyCmhGKY_4tVJNqbcujNvMIi03AiMkOfuSRZ9PWZEHnbPR5wDbbggZ5MYgGRt5LCC6vpOEwWe0"/>
+<div class="flex flex-col min-w-0">
+<span class="font-headline-md text-[17px] font-bold text-[#111827] tracking-tight truncate leading-tight">Metro Cardz</span>
+<span class="font-label-caps text-[10px] tracking-widest text-[#B45309] truncate uppercase font-semibold">Pearl Edition</span>
+</div>
+</div>
+<div class="flex items-center gap-2 flex-shrink-0">
+<button class="h-9 px-3 rounded-full bg-white border border-[#E5E7EB] shadow-sm hover:bg-[#F3F4F6] text-[#374151] flex items-center gap-1.5 min-w-[44px] transition-colors">
+<span class="material-symbols-outlined text-[16px] text-[#C59B27]" style="font-variation-settings: 'FILL' 1;">near_me</span>
+<span class="font-body-sm text-[13px] text-[#111827] font-semibold">Mumbai</span>
+<span class="material-symbols-outlined text-[16px] text-[#9CA3AF]">keyboard_arrow_down</span>
+</button>
+<button aria-label="Member Profile" class="relative p-0.5 rounded-full flex items-center justify-center min-w-[44px] min-h-[44px] focus:outline-none">
+<img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-2 ring-[#C59B27]/40" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDSMLvyaSsnJIKMM-lpraZ7K0HqqtheUkhvbkZe7TL2i8rqRPjCIDoSwkGzjJYA20rNdgpIlix76TJxioGHhZ-VBXCewPxlqD7-y95YYMBM3QgUEfvelU9WakC_jENyDC1HWK0J5Bi2o2iHVZc0IYM17IoSPPVUuMV3GqFYvsZs9ebKLp9BoINJDoD1Cm0hcXMaiCYgP2-DoU8Z-gMCXKEEHu0k7f2HQybgFFDv-rIwjdg9a8qiGV6N"/>
+<span class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-[#C59B27] rounded-full ring-2 ring-white"></span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col relative w-full pt-16 pb-24 bg-[#F8F9FA]">
+<div class="flex flex-col w-full">
+<!-- Micro Breadcrumb & Category Header -->
+<section class="px-4 pt-3 pb-2 flex flex-col gap-1">
+<div class="flex items-center gap-1.5 text-[#6B7280] font-label-caps text-[11px] tracking-widest uppercase">
+<span>Curated Access</span>
+<span class="material-symbols-outlined text-[12px] text-[#9CA3AF]">chevron_right</span>
+<span class="text-[#B45309] font-bold">Restaurants &amp; Dining</span>
+</div>
+<div class="flex items-baseline justify-between gap-2 mt-1">
+<h1 class="font-headline-xl-mobile text-[24px] text-[#111827] tracking-tight font-bold">
+            Dining Curations
+          </h1>
+<span class="font-body-sm text-[12px] text-[#92400E] font-bold bg-[#FEF3C7] border border-[#FDE68A] px-2.5 py-0.5 rounded-full whitespace-nowrap shadow-sm">
+            42 Offers Active
+          </span>
+</div>
+<p class="font-body-sm text-[13px] text-[#6B7280] leading-relaxed">
+          Exclusive cardholder privileges, verified merchant partnerships, and public culinary privileges across Mumbai metropolitan region.
+        </p>
+</section>
+<!-- Horizontal Scrollable Regional Filter Chips -->
+<section class="w-full mt-2">
+<div class="flex items-center gap-2 overflow-x-auto px-4 no-scrollbar py-1 scroll-smooth" id="city-filter-container">
+<button class="h-9 px-3.5 rounded-full bg-white border border-[#E5E7EB] text-[#374151] font-body-sm text-[13px] font-medium hover:border-[#D1D5DB] transition-all flex items-center whitespace-nowrap flex-shrink-0 shadow-sm">
+            All Regions
+          </button>
+<button class="h-9 px-4 rounded-full bg-[#D97706] text-white font-body-sm text-[13px] font-bold shadow-[0_2px_10px_rgba(217,119,6,0.35)] flex items-center gap-1.5 whitespace-nowrap flex-shrink-0">
+<span class="w-1.5 h-1.5 rounded-full bg-white"></span>
+            Mumbai
+          </button>
+<button class="h-9 px-3.5 rounded-full bg-white border border-[#E5E7EB] text-[#374151] font-body-sm text-[13px] font-medium hover:border-[#D1D5DB] transition-all flex items-center whitespace-nowrap flex-shrink-0 shadow-sm">
+            Thane
+          </button>
+<button class="h-9 px-3.5 rounded-full bg-white border border-[#E5E7EB] text-[#374151] font-body-sm text-[13px] font-medium hover:border-[#D1D5DB] transition-all flex items-center whitespace-nowrap flex-shrink-0 shadow-sm">
+            Navi Mumbai
+          </button>
+<button class="h-9 px-3.5 rounded-full bg-white border border-[#E5E7EB] text-[#374151] font-body-sm text-[13px] font-medium hover:border-[#D1D5DB] transition-all flex items-center whitespace-nowrap flex-shrink-0 shadow-sm">
+            Lonavala
+          </button>
+<button class="h-9 px-3.5 rounded-full bg-white border border-[#E5E7EB] text-[#374151] font-body-sm text-[13px] font-medium hover:border-[#D1D5DB] transition-all flex items-center whitespace-nowrap flex-shrink-0 shadow-sm">
+            Alibaug
+          </button>
+<button class="h-9 px-3.5 rounded-full bg-white border border-[#E5E7EB] text-[#374151] font-body-sm text-[13px] font-medium hover:border-[#D1D5DB] transition-all flex items-center whitespace-nowrap flex-shrink-0 shadow-sm">
+            Pune
+          </button>
+</div>
+</section>
+<!-- Interactive Controls: Filter & Sort Metrics Bar -->
+<section class="px-4 mt-3 flex items-center justify-between gap-2">
+<div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
+<!-- Active Pill -->
+<button class="h-8 px-3 rounded-full bg-[#FEF3C7] border border-[#FCD34D] text-[#92400E] font-label-caps text-[11px] uppercase font-bold flex items-center gap-1 whitespace-nowrap shadow-sm">
+<span class="material-symbols-outlined text-[14px] text-[#B45309]">percent</span>
+            Highest Discount
+          </button>
+<button class="h-8 px-3 rounded-full bg-white border border-[#E5E7EB] text-[#374151] font-label-caps text-[11px] uppercase hover:bg-[#F9FAFB] flex items-center gap-1 whitespace-nowrap shadow-sm">
+<span class="material-symbols-outlined text-[14px] text-[#6B7280]">verified</span>
+            Verified First
+          </button>
+<button class="h-8 px-3 rounded-full bg-white border border-[#E5E7EB] text-[#374151] font-label-caps text-[11px] uppercase hover:bg-[#F9FAFB] flex items-center gap-1 whitespace-nowrap shadow-sm">
+<span class="material-symbols-outlined text-[14px] text-[#6B7280]">near_me</span>
+            Distance
+          </button>
+</div>
+<button aria-label="Filter Preferences" class="h-8 w-8 rounded-full bg-white border border-[#E5E7EB] shadow-sm flex items-center justify-center text-[#4B5563] hover:text-[#111827] flex-shrink-0">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+</button>
+</section>
+<!-- Verified Tier Feed -->
+<div class="px-4 mt-4 flex flex-col gap-4">
+<!-- 1. DIRECT_MERCHANT TIER CARD (Bastian) -->
+<article class="relative bg-white rounded-xl overflow-hidden border border-[#E5E7EB] shadow-[0_4px_20px_rgba(0,0,0,0.05)] group transition-transform duration-200 active:scale-[0.99]">
+<!-- Visual Media Banner -->
+<div class="relative w-full h-48 overflow-hidden bg-[#F3F4F6]">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Luxurious dimly lit high-rise restaurant interior in Mumbai BKC at golden hour with champagne glassware, plush velvet seating, ambient warm golden glow lighting, polished obsidian surfaces, 8k photographic aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAqia_4zfuMo_8pshUX_y6PbF2L56RlF9mi5Zy_VjOGPXUOePlBP1ORHawgsI7TmUrmS5Mo52yoiCM2ZKhkxgvOE9r5GXQtvgI1h4JzZSeWQ-0zbH981qgksyVtdPmBa67WF6E6hL4fbqOcjUf0nA5c6rkWNZsNXlKfFWTk04U41YqkjHiZKU8tlsYkLXeu8oKd7r5-O17LJNsmkVT5ZkSD8L_dDl0qU87PDigId_-dYVDQLx2oZVd4"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30"></div>
+<!-- Top Badges Overlay -->
+<div class="absolute top-3 inset-x-3 flex items-start justify-between gap-2">
+<!-- PRD Compliance Badge: DIRECT_MERCHANT (Rich Gold Pill) -->
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FEF3C7]/95 backdrop-blur-md border border-[#FDE68A] shadow-sm">
+<span class="material-symbols-outlined text-[14px] text-[#B45309]" style="font-variation-settings: 'FILL' 1;">stars</span>
+<span class="font-badge-micro text-[10px] tracking-widest text-[#92400E] uppercase font-bold">DIRECT MERCHANT • GUARANTEED DEAL</span>
+</div>
+<button aria-label="Save Deal" class="w-8 h-8 rounded-full bg-white/90 backdrop-blur-md text-[#374151] border border-white/60 shadow-sm flex items-center justify-center hover:text-[#B45309] transition-colors">
+<span class="material-symbols-outlined text-[18px]">bookmark</span>
+</button>
+</div>
+<!-- Metric Floating Overlay Pill -->
+<div class="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+<div class="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/95 backdrop-blur-md shadow-sm border border-white/60">
+<span class="material-symbols-outlined text-[14px] text-[#D97706]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-body-sm text-[12px] text-[#111827] font-bold">4.9</span>
+<span class="font-body-sm text-[12px] text-[#6B7280]">• 1.2k Reviews</span>
+</div>
+<span class="font-label-caps text-[10px] uppercase bg-black/60 text-[#FEF3C7] px-2 py-1 rounded backdrop-blur-md font-bold tracking-wider">
+                NFC Concierge
+              </span>
+</div>
+</div>
+<!-- Card Core Information -->
+<div class="p-4 flex flex-col gap-3">
+<div>
+<div class="flex items-center gap-1.5 text-[#6B7280] font-body-sm text-[12px]">
+<span class="material-symbols-outlined text-[15px] text-[#C59B27]">location_on</span>
+<span class="font-semibold text-[#374151]">Bandra Kurla Complex (BKC)</span>
+<span>• 1.8 km</span>
+</div>
+<h2 class="font-headline-lg text-[20px] text-[#111827] font-bold mt-1 tracking-tight">
+                Bastian at the Top - BKC
+              </h2>
+</div>
+<!-- Deal Highlight Banner: Warm Golden Cream Box -->
+<div class="p-3.5 rounded-lg bg-[#FFFBEB] border border-[#FDE68A] flex items-center justify-between gap-2 shadow-[inset_0_1px_2px_rgba(251,191,36,0.1)]">
+<div class="flex flex-col">
+<span class="font-headline-md text-[17px] text-[#92400E] font-bold tracking-tight">
+                  Flat 25% Off Total Food Bill
+                </span>
+<span class="font-body-sm text-[12px] text-[#78350F]">
+                  Dine-in • Table Reservation required
+                </span>
+</div>
+<div class="w-10 h-10 rounded-full bg-[#FEF3C7] border border-[#FDE68A] flex items-center justify-center text-[#B45309] flex-shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[20px]">contactless</span>
+</div>
+</div>
+<!-- Micro Meta Strip -->
+<div class="flex items-center justify-between text-[#6B7280] text-[12px] pt-1">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-[#10B981]"></span>
+<span class="text-[#4B5563]">Verified 2 days ago</span>
+</div>
+<span class="font-label-caps text-[10px] uppercase tracking-wider text-[#B45309] font-bold">Exclusive Tier</span>
+</div>
+<!-- Primary Action Trigger -->
+<button class="w-full h-12 mt-1 rounded-full bg-[#D4AF37] hover:bg-[#C59B27] text-[#0F172A] font-title-md text-[14px] font-bold flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(212,175,55,0.35)] transition-all active:scale-[0.98]">
+<span>Claim Exclusive Offer</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</article>
+<!-- 2. AUTHORISED_PARTNER TIER CARD (Tresind) -->
+<article class="relative bg-white rounded-xl overflow-hidden border border-[#E5E7EB] shadow-[0_4px_20px_rgba(0,0,0,0.05)] group transition-transform duration-200 active:scale-[0.99]">
+<!-- Visual Media Banner -->
+<div class="relative w-full h-44 overflow-hidden bg-[#F3F4F6]">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Modern progressive Indian fine dining dish artfully plated with microgreens edible gold leaf and smoking aromatic nitrogen on slate obsidian tabletop dramatic lighting 8k resolution" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBDCEHlR3a1cNvhrxQI0Lnwow8H57-2LbEqz85PgsBUHmFD97YAbvMYpluNrWW92MND-fKsnpOlY_vkvnGCyg3iIsql70Zam75Oll_fnWUjZsK5RXOaPq03WC0UM1rJAnfwROn9rI8Jo90gc2HEFcCzxckT_LhjnQwnutXS-CJ3kyM7U5L8yIMl2qqxs_A1HQgfxTUfW90NZtX4CSOhIEfI7iSURvH4QEHCjCFVRF3XHoH_Ehr_d4HV"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30"></div>
+<!-- Top Badges Overlay -->
+<div class="absolute top-3 inset-x-3 flex items-start justify-between gap-2">
+<!-- PRD Compliance Badge: AUTHORISED_PARTNER (Emerald/Deep Navy Light Pill) -->
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#ECFDF5]/95 backdrop-blur-md border border-[#A7F3D0] shadow-sm">
+<span class="material-symbols-outlined text-[14px] text-[#047857]" style="font-variation-settings: 'FILL' 1;">verified</span>
+<span class="font-badge-micro text-[10px] tracking-widest text-[#065F46] uppercase font-bold">METRO CARDZ PARTNER</span>
+</div>
+<button aria-label="Save Deal" class="w-8 h-8 rounded-full bg-white/90 backdrop-blur-md text-[#374151] border border-white/60 shadow-sm flex items-center justify-center hover:text-[#047857] transition-colors">
+<span class="material-symbols-outlined text-[18px]">bookmark</span>
+</button>
+</div>
+<div class="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+<div class="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/95 backdrop-blur-md shadow-sm border border-white/60">
+<span class="material-symbols-outlined text-[14px] text-[#D97706]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-body-sm text-[12px] text-[#111827] font-bold">4.8</span>
+<span class="font-body-sm text-[12px] text-[#6B7280]">• 840 Reviews</span>
+</div>
+<span class="font-label-caps text-[10px] uppercase bg-black/60 text-white px-2 py-1 rounded backdrop-blur-md font-semibold">
+                All Days Valid
+              </span>
+</div>
+</div>
+<!-- Card Core Information -->
+<div class="p-4 flex flex-col gap-3">
+<div>
+<div class="flex items-center gap-1.5 text-[#6B7280] font-body-sm text-[12px]">
+<span class="material-symbols-outlined text-[15px] text-[#047857]">location_on</span>
+<span class="font-semibold text-[#374151]">BKC, Bandra East</span>
+<span>• 2.3 km</span>
+</div>
+<h2 class="font-headline-lg text-[20px] text-[#111827] font-bold mt-1 tracking-tight">
+                Trèsind Mumbai - BKC
+              </h2>
+</div>
+<!-- Deal Highlight Banner: Warm Golden Cream Box -->
+<div class="p-3.5 rounded-lg bg-[#FFFBEB] border border-[#FDE68A] flex items-center justify-between gap-2 shadow-[inset_0_1px_2px_rgba(251,191,36,0.1)]">
+<div class="flex flex-col">
+<span class="font-headline-md text-[17px] text-[#92400E] font-bold tracking-tight">
+                  Complimentary Signature Dessert
+                </span>
+<span class="font-body-sm text-[12px] text-[#78350F]">
+                  With 6-Course Chef Tasting Menu • Valid all days
+                </span>
+</div>
+<div class="w-9 h-9 rounded-full bg-[#FEF3C7] border border-[#FDE68A] flex items-center justify-center text-[#B45309] flex-shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[20px]">room_service</span>
+</div>
+</div>
+<!-- Verification & Recency -->
+<div class="flex items-center justify-between text-[#6B7280] text-[12px] pt-1">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[15px] text-[#047857]">check_circle</span>
+<span class="text-[#4B5563]">Verified 3 days ago</span>
+</div>
+<span class="font-label-caps text-[10px] uppercase tracking-wider text-[#065F46] font-bold">Authorised Code</span>
+</div>
+<!-- Partner Action Trigger (Light Refined Style) -->
+<button class="w-full h-12 rounded-full bg-[#F3F4F6] hover:bg-[#E5E7EB] border border-[#E5E7EB] text-[#111827] font-title-md text-[14px] font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
+<span>View Partner Deal</span>
+<span class="material-symbols-outlined text-[18px] text-[#047857]">arrow_forward</span>
+</button>
+</div>
+</article>
+<!-- 3. AFFILIATE TIER CARD (Imagicaa / Thrillophilia) -->
+<article class="relative bg-white rounded-xl overflow-hidden border border-[#E5E7EB] shadow-[0_4px_20px_rgba(0,0,0,0.05)] group transition-transform duration-200 active:scale-[0.99]">
+<!-- Visual Media Banner -->
+<div class="relative w-full h-44 overflow-hidden bg-[#F3F4F6]">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Vibrant luxury theme park lagoon with massive water slides sparkling crystal blue pools tropical palm trees in bright afternoon sunshine cinematic drone capture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjGqY1Z0YNkTKLDVIRlKII6hVktaymfB3Iy0ug8NKGTkTycwbqljVqwiLqV13xgC-gS0mT87abEINHIHfntQK24cHr9gM1FMiGEtJUL6tZuxuJnv0K9COKBkTLB7Qwgh7qRsRteMsXCFQPYLAFal81BhCtkc1Vgm6Xx-0qxHcxt6Za5Oc-iFexdjFzWg2rflQJoDMZFU_ANzIHY3vkyfYSUq4fBKuoMJ2wbe1TGy98mj4feMCUIuGf"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30"></div>
+<!-- Top Badges Overlay -->
+<div class="absolute top-3 inset-x-3 flex items-start justify-between gap-2">
+<!-- PRD Compliance Badge: AFFILIATE (Purple/Indigo Light Pill) -->
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#EEF2FF]/95 backdrop-blur-md border border-[#C7D2FE] shadow-sm">
+<span class="material-symbols-outlined text-[14px] text-[#4338CA]">link</span>
+<span class="font-badge-micro text-[10px] tracking-widest text-[#4338CA] uppercase font-bold">AFFILIATE PARTNER PASS</span>
+</div>
+<button aria-label="Save Deal" class="w-8 h-8 rounded-full bg-white/90 backdrop-blur-md text-[#374151] border border-white/60 shadow-sm flex items-center justify-center hover:text-[#4338CA] transition-colors">
+<span class="material-symbols-outlined text-[18px]">bookmark</span>
+</button>
+</div>
+<div class="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+<div class="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/95 backdrop-blur-md shadow-sm border border-white/60">
+<span class="material-symbols-outlined text-[14px] text-[#D97706]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-body-sm text-[12px] text-[#111827] font-bold">4.6</span>
+<span class="font-body-sm text-[12px] text-[#6B7280]">• 4.9k Bookings</span>
+</div>
+<span class="font-label-caps text-[10px] uppercase bg-black/60 text-white px-2 py-1 rounded backdrop-blur-md font-semibold">
+                Thrillophilia Powered
+              </span>
+</div>
+</div>
+<!-- Card Core Information -->
+<div class="p-4 flex flex-col gap-3">
+<div>
+<div class="flex items-center gap-1.5 text-[#6B7280] font-body-sm text-[12px]">
+<span class="material-symbols-outlined text-[15px] text-[#4338CA]">explore</span>
+<span class="font-semibold text-[#374151]">Khopoli, Mumbai-Pune Expy</span>
+<span>• 68 km</span>
+</div>
+<h2 class="font-headline-lg text-[20px] text-[#111827] font-bold mt-1 tracking-tight">
+                Imagicaa Water Park - Khopoli
+              </h2>
+</div>
+<!-- Deal Highlight Banner: Warm Golden Cream Box -->
+<div class="p-3.5 rounded-lg bg-[#FFFBEB] border border-[#FDE68A] flex items-center justify-between gap-2 shadow-[inset_0_1px_2px_rgba(251,191,36,0.1)]">
+<div class="flex flex-col">
+<span class="font-headline-md text-[17px] text-[#92400E] font-bold tracking-tight">
+                  Up to 35% Off Entry Pass + Express Entry
+                </span>
+<span class="font-body-sm text-[12px] text-[#78350F]">
+                  Digital voucher code redeemed via partner checkout
+                </span>
+</div>
+<div class="w-9 h-9 rounded-full bg-[#FEF3C7] border border-[#FDE68A] flex items-center justify-center text-[#B45309] flex-shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[20px]">confirmation_number</span>
+</div>
+</div>
+<!-- Micro Meta Strip -->
+<div class="flex items-center justify-between text-[#6B7280] text-[12px] pt-1">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[15px] text-[#6B7280]">schedule</span>
+<span class="text-[#4B5563]">Verified 1 day ago</span>
+</div>
+<span class="font-label-caps text-[10px] uppercase tracking-wider text-[#4338CA] font-bold">Affiliate Redirect</span>
+</div>
+<!-- Affiliate Direct CTA (Light Refined Style) -->
+<button class="w-full h-12 rounded-full bg-[#F3F4F6] hover:bg-[#E5E7EB] border border-[#E5E7EB] text-[#111827] font-title-md text-[14px] font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
+<span>Get Deal on Partner Site</span>
+<span class="material-symbols-outlined text-[18px] text-[#4338CA]">open_in_new</span>
+</button>
+</div>
+</article>
+<!-- 4. PUBLIC_LINK TIER CARD (Subko) -->
+<article class="relative bg-white rounded-xl overflow-hidden border border-[#E5E7EB] shadow-[0_4px_20px_rgba(0,0,0,0.05)] group transition-transform duration-200 active:scale-[0.99]">
+<!-- Visual Media Banner -->
+<div class="relative w-full h-44 overflow-hidden bg-[#F3F4F6]">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Artisanal specialty coffee roastery in vintage Mumbai Portuguese bungalow exposed red brick hand drip v60 brewing equipment aesthetic packaging warm morning sunlight 8k resolution" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCKBh5Lj1KX9WCSyw8wbUb14M4nCSufh_5eDLRSv2JHUmW6B_h1lhcWjAFavijpUmpo1tdfJcszu5ogm4mLfo2EvbaMl_yxhOTfNLmlIUm2LWRvt1FIiD89gVh8Q8kv3t24Mxg61XQm_SjcII5f2aZ8bZ4j4xaE1s-G7gIw9vfyfhjr-I1PZeshZ1jb1E2M4I6BLXaRlPqgT7oe8jtwu1bExZeKOhg-ClxHklZ47w4TgYY1c0EPLHT7"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30"></div>
+<!-- Top Badges Overlay -->
+<div class="absolute top-3 inset-x-3 flex items-start justify-between gap-2">
+<!-- PRD Compliance Badge: PUBLIC_LINK (Neutral Slate Pill) -->
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#F3F4F6]/95 backdrop-blur-md border border-[#E5E7EB] shadow-sm">
+<span class="material-symbols-outlined text-[14px] text-[#4B5563]">public</span>
+<span class="font-badge-micro text-[10px] tracking-widest text-[#374151] uppercase font-bold">PUBLIC DIRECT LISTING</span>
+</div>
+<button aria-label="Save Deal" class="w-8 h-8 rounded-full bg-white/90 backdrop-blur-md text-[#374151] border border-white/60 shadow-sm flex items-center justify-center hover:text-[#111827] transition-colors">
+<span class="material-symbols-outlined text-[18px]">bookmark</span>
+</button>
+</div>
+<div class="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+<div class="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/95 backdrop-blur-md shadow-sm border border-white/60">
+<span class="material-symbols-outlined text-[14px] text-[#D97706]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-body-sm text-[12px] text-[#111827] font-bold">4.7</span>
+<span class="font-body-sm text-[12px] text-[#6B7280]">• 2.1k Community</span>
+</div>
+<span class="font-label-caps text-[10px] uppercase bg-black/60 text-white px-2 py-1 rounded backdrop-blur-md font-semibold">
+                Unaffiliated Listing
+              </span>
+</div>
+</div>
+<!-- Card Core Information -->
+<div class="p-4 flex flex-col gap-3">
+<div>
+<div class="flex items-center gap-1.5 text-[#6B7280] font-body-sm text-[12px]">
+<span class="material-symbols-outlined text-[15px] text-[#6B7280]">local_cafe</span>
+<span class="font-semibold text-[#374151]">Ranwar Village, Bandra West</span>
+<span>• 3.4 km</span>
+</div>
+<h2 class="font-headline-lg text-[20px] text-[#111827] font-bold mt-1 tracking-tight">
+                Subko Specialty Coffee - Bandra
+              </h2>
+</div>
+<!-- Deal Highlight Banner: Warm Golden Cream Box -->
+<div class="p-3.5 rounded-lg bg-[#FFFBEB] border border-[#FDE68A] flex items-center justify-between gap-2 shadow-[inset_0_1px_2px_rgba(251,191,36,0.1)]">
+<div class="flex flex-col">
+<span class="font-headline-md text-[17px] text-[#92400E] font-bold tracking-tight">
+                  10% Walk-in Roastery Discount
+                </span>
+<span class="font-body-sm text-[12px] text-[#78350F]">
+                  On select bagged micro-lot beans • In-store direct
+                </span>
+</div>
+<div class="w-9 h-9 rounded-full bg-[#FEF3C7] border border-[#FDE68A] flex items-center justify-center text-[#B45309] flex-shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[20px]">storefront</span>
+</div>
+</div>
+<!-- Transparency Callout -->
+<div class="flex items-center justify-between text-[#6B7280] text-[12px] pt-1">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[15px] text-[#6B7280]">info</span>
+<span class="text-[#4B5563]">Community reported • 5d ago</span>
+</div>
+<span class="font-label-caps text-[10px] uppercase tracking-wider text-[#6B7280] font-bold">Public Deal</span>
+</div>
+<!-- Outbound Action Trigger (Light Refined Style) -->
+<button class="w-full h-12 rounded-full bg-[#F3F4F6] hover:bg-[#E5E7EB] border border-[#E5E7EB] text-[#374151] font-title-md text-[14px] font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
+<span>Visit Website</span>
+<span class="material-symbols-outlined text-[18px] text-[#6B7280]">north_east</span>
+</button>
+</div>
+</article>
+</div>
+<!-- End of Feed Playful Moment & Transparency Notice -->
+<section class="px-4 mt-8 mb-4">
+<div class="flex flex-col items-center text-center gap-2.5 p-6 rounded-xl bg-white border border-[#E5E7EB] shadow-[0_4px_16px_rgba(0,0,0,0.03)]">
+<div class="w-12 h-12 rounded-full bg-[#FEF3C7] border border-[#FDE68A] flex items-center justify-center text-[#B45309] mb-1 shadow-sm">
+<span class="material-symbols-outlined text-[26px]">verified_user</span>
+</div>
+<h3 class="font-headline-md text-[18px] text-[#111827] font-bold tracking-tight">
+            Guaranteed Deal Transparency
+          </h3>
+<p class="font-body-sm text-[13px] text-[#4B5563] max-w-xs leading-relaxed">
+            Metro Cardz categorizes every dining partner into verified direct contracts, vetted networks, or external public discoveries to protect your privileges.
+          </p>
+<div class="mt-2 flex items-center gap-2">
+<button class="px-5 py-2.5 rounded-full bg-[#FEF3C7] border border-[#FDE68A] text-[#92400E] font-title-md text-[13px] font-bold hover:bg-[#FDE68A] transition-colors shadow-sm">
+              Suggest a Dining Spot
+            </button>
+</div>
+</div>
+</section>
+</div>
+<script>
+      // City Filter active state switching micro-interaction
+      document.querySelectorAll('#city-filter-container button').forEach(button => {
+        button.addEventListener('click', function() {
+          document.querySelectorAll('#city-filter-container button').forEach(btn => {
+            btn.className = 'h-9 px-3.5 rounded-full bg-white border border-[#E5E7EB] text-[#374151] font-body-sm text-[13px] font-medium hover:border-[#D1D5DB] transition-all flex items-center whitespace-nowrap flex-shrink-0 shadow-sm';
+            const dot = btn.querySelector('span.rounded-full');
+            if (dot) dot.remove();
+          });
+          this.className = 'h-9 px-4 rounded-full bg-[#D97706] text-white font-body-sm text-[13px] font-bold shadow-[0_2px_10px_rgba(217,119,6,0.35)] flex items-center gap-1.5 whitespace-nowrap flex-shrink-0';
+          if (!this.querySelector('span.rounded-full')) {
+            const dot = document.createElement('span');
+            dot.className = 'w-1.5 h-1.5 rounded-full bg-white';
+            this.prepend(dot);
+          }
+        });
+      });
+    </script>
+</main>
+<!-- Bottom Navigation: Clean White Bar with Subtle Top Border & Gold Active Tab -->
+<nav class="fixed bottom-0 inset-x-0 z-50 pb-safe bg-white/95 backdrop-blur-xl border-t border-[#E5E7EB] shadow-[0_-4px_20px_rgba(0,0,0,0.05)]" data-active-classes="text-[#B45309] font-semibold">
+<div class="flex justify-around items-center h-16 px-2">
+<a aria-current="page" class="flex flex-col items-center justify-center gap-0.5 w-16 h-12 transition-all text-[#B45309] font-semibold" data-path="explore" href="#">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">explore</span>
+<span class="font-label-caps text-[10px] tracking-wider font-bold">EXPLORE</span>
+</a>
+<a class="flex flex-col items-center justify-center gap-0.5 w-16 h-12 text-[#6B7280] hover:text-[#111827] transition-all" data-path="top-deals" href="#">
+<span class="material-symbols-outlined text-[24px]">local_activity</span>
+<span class="font-label-caps text-[10px] tracking-wider">TOP DEALS</span>
+</a>
+<a class="flex flex-col items-center justify-center gap-0.5 w-16 h-12 text-[#6B7280] hover:text-[#111827] transition-all" data-path="my-card" href="#">
+<span class="material-symbols-outlined text-[24px]">contactless</span>
+<span class="font-label-caps text-[10px] tracking-wider">MY CARD</span>
+</a>
+<a class="flex flex-col items-center justify-center gap-0.5 w-16 h-12 text-[#6B7280] hover:text-[#111827] transition-all" data-path="admin" href="#">
+<span class="material-symbols-outlined text-[24px]">tune</span>
+<span class="font-label-caps text-[10px] tracking-wider">ADMIN</span>
+</a>
+</div>
+</nav>
+</body></html>

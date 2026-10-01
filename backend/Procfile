@@ -1,5 +1,10 @@
-# Render.com process definitions
-# web: the FastAPI HTTP server (auto-detects PORT from env)
-# worker: Celery background worker (handles reminder emails, PDF generation)
-web: gunicorn app.main:app -w 1 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --timeout 120 --preload
-worker: celery -A app.worker.celery_app worker --loglevel=info --concurrency=2
+# Metro Cardz — Hostinger VPS Process Definitions
+# =================================================
+# Hostinger Web App Hosting = Node.js only (runs the Next.js app)
+# Hostinger VPS (optional) = can run this Python API
+#
+# On Hostinger VPS, use systemd instead of Procfile.
+# Example systemd service — see DEPLOYMENT_GUIDE.md for full instructions.
+#
+# Start the FastAPI web server:
+web: gunicorn app.main:app -w 2 -k uvicorn.workers.UvicornWorker --bind 127.0.0.1:8000 --timeout 120 --preload

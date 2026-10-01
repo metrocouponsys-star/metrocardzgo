@@ -564,6 +564,13 @@ Route (app)  Size  First Load JS
 ```
 
 ```bash
+# Create the uploads directory for logos and images
+sudo mkdir -p /var/www/metrocardz/uploads/merchant-logos
+sudo chown -R deploy:deploy /var/www/metrocardz/uploads
+sudo chmod -R 755 /var/www/metrocardz/uploads
+```
+
+```bash
 # Deploy built files to the web root
 sudo mkdir -p /var/www/metrocardz/frontend
 sudo cp -r out/. /var/www/metrocardz/frontend/
@@ -626,6 +633,16 @@ Paste this:
 server {
     listen 80;
     server_name api.metrocardz.in;
+
+    # ── Serve uploaded files (logos, brand images) directly from disk
+    # No Supabase needed — Nginx reads from /var/www/metrocardz/uploads
+    location /uploads/ {
+        alias /var/www/metrocardz/uploads/;
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+        add_header Access-Control-Allow-Origin "*";
+        try_files $uri =404;
+    }
 
     location / {
         proxy_pass http://127.0.0.1:8000;

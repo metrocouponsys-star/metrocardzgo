@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en-IN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>You're Offline — Metro Cardz</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100dvh;
+      background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+      font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      color: #fff; padding: 24px;
+      text-align: center;
+    }
+    .glow {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none; overflow: hidden; z-index: 0;
+    }
+    .glow-a {
+      position: absolute; top: -20%; right: -10%; width: 50%; height: 50%;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(99,102,241,0.25), transparent 70%);
+      filter: blur(60px);
+    }
+    .glow-b {
+      position: absolute; bottom: -20%; left: -10%; width: 50%; height: 50%;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(168,85,247,0.25), transparent 70%);
+      filter: blur(60px);
+    }
+    .card {
+      position: relative; z-index: 1;
+      background: rgba(255,255,255,0.07);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 24px; padding: 40px 32px;
+      max-width: 380px; width: 100%;
+      box-shadow: 0 32px 64px rgba(0,0,0,0.4);
+    }
+    .icon { font-size: 64px; margin-bottom: 16px; }
+    h1 { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+    p { color: rgba(255,255,255,0.55); font-size: 14px; line-height: 1.6; margin-bottom: 12px; }
+    .tip {
+      background: rgba(99,102,241,0.15);
+      border: 1px solid rgba(99,102,241,0.3);
+      border-radius: 12px; padding: 12px 16px;
+      font-size: 13px; color: rgba(255,255,255,0.7);
+      margin-bottom: 24px; text-align: left;
+    }
+    .tip strong { color: #c4b5fd; display: block; margin-bottom: 4px; }
+    .btn {
+      display: block; width: 100%; padding: 14px;
+      border-radius: 14px; border: none; cursor: pointer;
+      font-size: 15px; font-weight: 700;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      color: #fff; text-decoration: none;
+      box-shadow: 0 8px 24px rgba(99,102,241,0.4);
+      transition: opacity 0.2s; margin-bottom: 10px;
+    }
+    .btn:hover { opacity: 0.9; }
+    .btn-ghost {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: none; color: rgba(255,255,255,0.7);
+    }
+    footer { position: relative; z-index: 1; margin-top: 24px; font-size: 12px; color: rgba(255,255,255,0.2); }
+  </style>
+</head>
+<body>
+  <div class="glow"><div class="glow-a"></div><div class="glow-b"></div></div>
+
+  <div class="card">
+    <div class="icon">📶</div>
+    <h1>You're Offline</h1>
+    <p>No internet connection detected. Some pages may not be available right now.</p>
+
+    <div class="tip">
+      <strong>💡 What you can still do:</strong>
+      Your digital membership card was saved for offline viewing.
+      Go back and open your card — it should load from cache.
+    </div>
+
+    <button class="btn" onclick="location.reload()">
+      🔄 Try Again
+    </button>
+    <button class="btn btn-ghost" onclick="history.back()">
+      ← Go Back
+    </button>
+  </div>
+
+  <footer>Metro Cardz · PWA Offline Mode</footer>
+
+  <script>
+    // Auto-reload when connection is restored
+    window.addEventListener('online', function() {
+      location.reload();
+    });
+
+    // Check current connectivity
+    if (navigator.onLine) {
+      // Actually online — go back
+      history.back();
+    }
+  </script>
+</body>
+</html>

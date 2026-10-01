@@ -1,0 +1,11 @@
+Metro Cardz — Deals & Experiences Platform
+Product Requirements Document (PRD) v1.0
+Owner: DeveloperBee | Target Device: Mobile
+
+Summary of Core Requirements:
+1. Public Entry: /go (NFC Landing) - ultra-fast, 8 category tiles, warm gold/amber & dark charcoal luxury aesthetic.
+2. Filtered Deals Grid: Category + City chips filter, Deal cards with 4 distinct Partner Status compliance badges (PUBLIC_LINK, AFFILIATE, AUTHORISED_PARTNER, DIRECT_MERCHANT).
+3. Deal Detail Page (/deal/[id]): Hero, brand info, terms, last-verified trust badge, primary CTA with transparent external redirect note, quick actions (Call, Map, Instagram).
+4. Live Offers Page (/live-offers): Curated top daily deals with featured badges across categories.
+5. My Card (/my-card): Digital replica of the physical NFC Gold Card with member details, points, active coupons, referral link.
+6. Admin Panel (/admin/deals): Clean utilitarian desktop/mobile web table, stale deal flags (>30 days), quick actions.

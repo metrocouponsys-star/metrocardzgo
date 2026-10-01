@@ -1,60 +1,27 @@
-# Render.com Infrastructure-as-Code
-# This file tells Render.com exactly how to deploy the Metro Cardz backend.
-# It defines the web service. The worker is defined separately in Procfile.
-# Docs: https://render.com/docs/blueprint-spec
+# Metro Cardz — Hostinger VPS Deployment
+# =========================================
+# This file replaces render.yaml — we deploy on Hostinger, not Render.com.
+#
+# NOTE: Hostinger Web App Hosting supports Node.js only.
+#   → The Next.js frontend (app/) deploys on Hostinger Web App.
+#   → This Python FastAPI backend runs on Hostinger VPS (if you have VPS).
+#   → If you only have Web App Hosting, the Next.js API routes (/api/v1/*)
+#     handle everything — this backend is NOT needed.
+#
+# VPS START COMMANDS:
+#   Build:  pip install -r requirements.txt
+#   Start:  gunicorn app.main:app -w 2 -k uvicorn.workers.UvicornWorker \
+#             --bind 127.0.0.1:8000 --timeout 120 --preload
+#
+# NGINX reverse proxy: add to /etc/nginx/sites-available/metrocardz
+#   location /api/v1/ {
+#       proxy_pass http://127.0.0.1:8000;
+#       proxy_set_header Host $host;
+#       proxy_set_header X-Real-IP $remote_addr;
+#   }
+#
+# SYSTEMD service: /etc/systemd/system/metrocardz-api.service
+# DATABASE: Same Hostinger MySQL used by Next.js frontend
 
-services:
-  # ── Web Service (FastAPI) ─────────────────────────────────────────────────
-  - type: web
-    name: metrocardz-api
-    runtime: python
-    region: singapore           # Closest to India for low latency
-    plan: free                  # Render free tier — upgrade to starter ($7/mo) for no sleep
-    buildCommand: pip install -r requirements.txt && alembic upgrade head
-    startCommand: gunicorn app.main:app -w 1 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --timeout 120 --preload
-    rootDir: backend            # Repo root → backend subdirectory
-    healthCheckPath: /health    # Render pings this to verify the service is up
-
-    envVars:
-      - key: PYTHON_VERSION
-        value: "3.11"
-      - key: ENVIRONMENT
-        value: production
-      - key: DEBUG
-        value: "false"
-      # The following must be set manually in Render dashboard (they contain secrets)
-      - key: DATABASE_URL
-        sync: false
-      - key: REDIS_URL
-        sync: false
-      - key: SECRET_KEY
-        sync: false
-      - key: ALLOWED_ORIGINS
-        value: https://metrocardz.in,https://www.metrocardz.in,http://localhost:3000,http://localhost:5173
-      - key: SUPABASE_URL
-        sync: false
-      - key: SUPABASE_SERVICE_KEY
-        sync: false
-      - key: MSG91_API_KEY
-        sync: false
-      - key: AISENSY_API_KEY
-        sync: false
-      - key: SENTRY_DSN
-        sync: false
-      - key: SENTRY_TRACES_SAMPLE_RATE
-        value: "0.1"
-
-  # ── Worker Service (Celery) ───────────────────────────────────────────────
-  # NOTE: On free tier, use GitHub Actions cron instead of this worker.
-  # Uncomment and use a paid plan ($7/mo) if you need persistent workers.
-  #
-  # - type: worker
-  #   name: metrocardz-worker
-  #   runtime: python
-  #   region: singapore
-  #   plan: starter
-  #   buildCommand: pip install -r requirements.txt
-  #   startCommand: celery -A app.worker.celery_app worker --loglevel=info --concurrency=2
-  #   rootDir: backend
-  #   envVars:
-  #     - fromGroup: metrocardz-secrets
+# Environment variables — set in /home/deploy/metrocardz/backend/.env
+# See .env file for all required variables.

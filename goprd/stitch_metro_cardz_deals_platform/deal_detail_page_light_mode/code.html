@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Outfit:wght@500;600;700&amp;family=Syne:wght@600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#f8f9fa;color:#191c1d;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}.material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}</style><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "tertiary-fixed": "#ffe088",
+          "primary-fixed": "#ffdf98",
+          "on-surface": "#191c1d",
+          "on-secondary-container": "#586377",
+          "primary-fixed-dim": "#eec14b",
+          "background": "#f8f9fa",
+          "primary-container": "#c59b27",
+          "surface-container-lowest": "#ffffff",
+          "primary": "#775a00",
+          "secondary-container": "#d5e0f8",
+          "error": "#ba1a1a",
+          "outline-variant": "#d1c5af",
+          "surface-container-low": "#f3f4f5",
+          "on-surface-variant": "#4e4635",
+          "surface-container-highest": "#e1e3e4",
+          "on-tertiary-fixed-variant": "#574500",
+          "surface-bright": "#f8f9fa",
+          "on-error": "#ffffff",
+          "on-tertiary-fixed": "#241a00",
+          "surface-container": "#edeeef",
+          "on-primary-fixed": "#251a00",
+          "on-tertiary-container": "#453600",
+          "inverse-surface": "#2e3132",
+          "on-secondary": "#ffffff",
+          "tertiary-container": "#c09d25",
+          "error-container": "#ffdad6",
+          "on-error-container": "#93000a",
+          "on-secondary-fixed": "#111c2d",
+          "surface-container-high": "#e7e8e9",
+          "on-secondary-fixed-variant": "#3c475a",
+          "tertiary": "#735c00",
+          "tertiary-fixed-dim": "#e9c349",
+          "surface-tint": "#775a00",
+          "surface-dim": "#d9dadb",
+          "inverse-primary": "#eec14b",
+          "on-tertiary": "#ffffff",
+          "secondary-fixed": "#d8e3fb",
+          "secondary-fixed-dim": "#bcc7de",
+          "on-primary": "#ffffff",
+          "surface-variant": "#e1e3e4",
+          "surface": "#f8f9fa",
+          "on-primary-container": "#473500",
+          "outline": "#807663",
+          "on-primary-fixed-variant": "#5a4300",
+          "secondary": "#545f73",
+          "on-background": "#191c1d",
+          "inverse-on-surface": "#f0f1f2"
+        },
+        "borderRadius": {
+          "DEFAULT": "0.25rem",
+          "lg": "0.5rem",
+          "xl": "0.75rem",
+          "full": "9999px"
+        },
+        "spacing": {
+          "space-lg": "1.5rem",
+          "space-md": "1rem",
+          "margin-desktop": "3.5rem",
+          "gutter-sm": "1rem",
+          "space-sm": "0.5rem",
+          "space-xl": "2.5rem",
+          "margin-mobile": "1.25rem",
+          "gutter": "1.5rem",
+          "margin": "1rem",
+          "space-xs": "0.25rem",
+          "gutter-lg": "2rem"
+        },
+        "fontFamily": {
+          "display-lg-mobile": ["Syne"],
+          "display-lg": ["Syne"],
+          "label-lg": ["Outfit"],
+          "title-md": ["Outfit"],
+          "headline-sm": ["Syne"],
+          "headline-md": ["Syne"],
+          "body-lg": ["Inter"],
+          "body-md": ["Inter"],
+          "body-sm": ["Inter"],
+          "label-caps": ["Outfit"],
+          "label-md": ["Outfit"],
+          "title-lg": ["Outfit"],
+          "headline-lg": ["Syne"],
+          "badge-micro": ["Outfit"]
+        },
+        "fontSize": {
+          "display-lg-mobile": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.015em", "fontWeight": "700" }],
+          "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+          "label-lg": ["14px", { "lineHeight": "18px", "letterSpacing": "0.04em", "fontWeight": "600" }],
+          "title-md": ["16px", { "lineHeight": "22px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+          "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+          "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.005em", "fontWeight": "600" }],
+          "body-lg": ["16px", { "lineHeight": "26px", "fontWeight": "400" }],
+          "body-md": ["14px", { "lineHeight": "22px", "fontWeight": "400" }],
+          "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }],
+          "label-caps": ["11px", { "lineHeight": "14px", "letterSpacing": "0.1em", "fontWeight": "700" }],
+          "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.06em", "fontWeight": "600" }],
+          "title-lg": ["18px", { "lineHeight": "24px", "letterSpacing": "0.01em", "fontWeight": "600" }],
+          "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+          "badge-micro": ["10px", { "lineHeight": "12px", "letterSpacing": "0.06em", "fontWeight": "700" }]
+        }
+      }
+    }
+  };
+</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head><body class="bg-[#f8f9fa] font-body-md text-body-md text-[#191c1d] min-h-screen flex flex-col antialiased selection:bg-[#ffdf98] selection:text-[#473500]"><header class="fixed top-0 inset-x-0 z-50 bg-white/95 backdrop-blur-xl border-b border-[#e5e7eb] pt-safe"><div class="h-16 px-margin flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm"><button aria-label="Go Back" class="w-10 h-10 flex items-center justify-center text-[#111827] hover:text-[#775a00] rounded-full bg-[#f3f4f5] border border-[#e5e7eb] transition-colors" onclick="history.back()"><span class="material-symbols-outlined text-[18px]">arrow_back_ios_new</span></button><img alt="Metro Cardz Logo" class="h-7 w-auto object-contain flex-shrink-0" src="https://lh3.googleusercontent.com/aida/AEtjO1UQuY5kj3NWrrIlfsbIn3CUYDCV9qUnAmCLePyZO1q1WsFZ04mHVX4MgFFjbL8MsLJT4k3CedVzldbFvHaAboY3VEURnnOOTMOy09o8xYLKfQ6tc7akpBIELc5JrtSuO_co7nI_xo8FhIyR3uJ0CtOWH7A97CJ6fDRAWCXrK811QMjUgjyCmhGKY_4tVJNqbcujNvMIi03AiMkOfuSRZ9PWZEHnbPR5wDbbggZ5MYgGRt5LCC6vpOEwWe0"/><div class="flex flex-col min-w-0"><span class="font-headline-sm text-[16px] leading-tight font-semibold text-[#111827] tracking-tight truncate">Experience Detail</span><span class="font-label-caps text-[10px] tracking-wider text-[#807663] truncate uppercase">Metro Cardz Concierge</span></div></div><div class="flex items-center gap-space-sm flex-shrink-0"><button aria-label="Member Profile" class="relative p-0.5 rounded-full flex items-center justify-center min-w-[40px] min-h-[40px] focus:outline-none"><img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-2 ring-[#eec14b]/40" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDSMLvyaSsnJIKMM-lpraZ7K0HqqtheUkhvbkZe7TL2i8rqRPjCIDoSwkGzjJYA20rNdgpIlix76TJxioGHhZ-VBXCewPxlqD7-y95YYMBM3QgUEfvelU9WakC_jENyDC1HWK0J5Bi2o2iHVZc0IYM17IoSPPVUuMV3GqFYvsZs9ebKLp9BoINJDoD1Cm0hcXMaiCYgP2-DoU8Z-gMCXKEEHu0k7f2HQybgFFDv-rIwjdg9a8qiGV6N"/><span class="absolute top-1 right-1 w-2.5 h-2.5 bg-[#c59b27] ring-2 ring-white rounded-full"></span></button></div></div></header><main class="flex-1 flex flex-col relative w-full pt-16 pb-safe bg-[#f8f9fa]"><div class="flex flex-col w-full pb-28">
+<div class="px-margin pt-space-sm pb-space-xs flex items-center justify-between">
+<a class="inline-flex items-center gap-space-xs text-[#545f73] hover:text-[#775a00] transition-colors py-space-xs" href="/explore/dining">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+<span class="font-label-caps text-label-caps uppercase tracking-wider font-semibold">Restaurants &amp; Dining</span>
+</a>
+<div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fef3c7] text-[#92400e] border border-[#fde68a]">
+<span class="material-symbols-outlined text-[14px]">bolt</span>
+<span class="font-badge-micro text-badge-micro tracking-widest uppercase font-bold">VIP Allocation</span>
+</div>
+</div>
+<div class="px-margin pt-space-xs">
+<div class="relative w-full aspect-[16/10] rounded-2xl overflow-hidden bg-white shadow-[0_4px_20px_rgba(0,0,0,0.06)] border border-[#e5e7eb]">
+<div class="absolute inset-0 bg-cover bg-center" data-alt="Luxurious, dimly lit high-end modern rooftop dining room at Bastian in Mumbai with plush velvet curved booths, warm ambient champagne gold strip lighting, panoramic floor-to-ceiling glass windows overlooking the glittering night skyline, architectural ceiling fixtures, and elegant minimalist brass table settings." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDNQh-yGR6oy5pdFYylRjkNJTKo02h31JxPHXUbYnxZSb-1sObKaNs5LKfkokYdxRMwHNyGzbcHXMxCoqfzB8Nes1pAGLP3l14jC97JEtk5RFuzDPBQtcNBRZH9CFO_JuHSXNB0QNiSnbwsFlqUu9L0-qtzjH_vDRHbgwEcQe6ZwkvI6dyadGScWAZTou9mLZwwxZSRHnYAfx5Pz6qZ4peb5qfL4nAFN8eQvq3m32FBIfvS9WIouiLA')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent"></div>
+<div class="absolute top-3 left-3 flex items-center gap-2">
+<div class="w-10 h-10 rounded-xl bg-white/95 backdrop-blur-md p-1.5 shadow-md flex items-center justify-center border border-white/60">
+<img class="w-full h-full object-contain" data-alt="Minimalist luxury emblem logo for Bastian restaurant featuring clean bespoke typography in brushed metallic gold over an obsidian dark badge." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCTvpJXs_pAnR3JIxMEE3jo4erl-w6Hdf3n3KrTOx48O8_KrBLQoOEEDTIOiKmSAB1VF1qSG-0uc7ptNzlzYiCH0t_CfVxYX2TCSzEDROn-KjwouLW9zKagZnqxSFXZQA31biPo9aLY4VMjUZc2_bjN8NMz8SnnBlSomC7XFDJP70mQfV4I5qyo084VWvb-Y7wlOmjrek3EBtQ7fqXrCuuEbuJzLIbT7k5Y5bQCHdRE_Ith0SuSUNVV"/>
+</div>
+<div class="px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-md flex items-center gap-1.5 text-[#191c1d] shadow-sm">
+<span class="material-symbols-outlined text-[13px] text-[#c59b27]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-body-sm text-body-sm font-bold text-[#111827]">4.9</span>
+<span class="font-badge-micro text-badge-micro text-[#545f73]">(640+ Privileged Diners)</span>
+</div>
+</div>
+<div class="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-space-sm">
+<div class="bg-gradient-to-r from-[#eec14b] via-[#f59e0b] to-[#d4af37] text-[#251a00] px-4 py-2.5 rounded-xl shadow-[0_8px_20px_rgba(212,175,55,0.45)] border border-[#ffdf98]/60 flex items-center gap-2.5 max-w-fit">
+<span class="material-symbols-outlined text-[22px] text-[#251a00]" style="font-variation-settings: 'FILL' 1;">percent</span>
+<div class="flex flex-col">
+<span class="font-label-caps text-[10px] uppercase tracking-wider text-[#453600] font-bold leading-none">Metro Cardz Exclusive</span>
+<span class="font-headline-sm text-[17px] font-bold tracking-tight leading-none mt-1 text-[#241a00]">FLAT 25% OFF TOTAL BILL</span>
+</div>
+</div>
+<div class="w-9 h-9 rounded-full bg-white/95 backdrop-blur-md flex items-center justify-center text-[#775a00] shadow-md border border-white/60">
+<span class="material-symbols-outlined text-[18px]">contactless</span>
+</div>
+</div>
+</div>
+</div>
+<div class="px-margin pt-space-md flex flex-col gap-space-sm">
+<div class="flex items-center justify-between gap-space-sm flex-wrap">
+<div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fef3c7] text-[#78350f] border border-[#fde68a] font-badge-micro text-badge-micro tracking-wider uppercase font-bold">
+<span class="material-symbols-outlined text-[14px] text-[#c59b27]" style="font-variation-settings: 'FILL' 1;">verified</span>
+<span>DIRECT MERCHANT PARTNER</span>
+</div>
+<div class="flex items-center gap-1.5 text-[#545f73] font-label-caps text-label-caps font-semibold">
+<span class="w-2 h-2 rounded-full bg-[#c59b27] animate-pulse"></span>
+<span>Tier 1 Gold Privilege</span>
+</div>
+</div>
+<div>
+<h1 class="font-headline-lg text-[28px] leading-tight text-[#0f172a] tracking-tight">Bastian at the Top</h1>
+<p class="font-body-md text-body-md text-[#4b5563] mt-1">Modern Asian &amp; Coastal Seafood • 48th Floor, BKC, Mumbai</p>
+</div>
+<div class="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#ecfdf5] border border-[#a7f3d0] text-[#065f46]">
+<span class="material-symbols-outlined text-[18px] text-[#059669] flex-shrink-0" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+<span class="font-body-sm text-body-sm font-medium leading-snug">Verified by Metro Cardz Ops 24h ago • Real-time redemption live</span>
+</div>
+</div>
+<div class="px-margin pt-space-md">
+<div class="relative overflow-hidden rounded-2xl bg-[#fffbeb] p-4 border border-[#fde68a] shadow-[0_2px_8px_rgba(212,175,55,0.08)]">
+<div class="flex items-start gap-3">
+<div class="w-8 h-8 rounded-full bg-[#fef3c7] text-[#92400e] border border-[#fde68a] flex items-center justify-center flex-shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[18px]">info</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-title-md text-[15px] font-bold text-[#78350f] leading-tight">Transparent Booking Notice</span>
+<p class="font-body-sm text-body-sm text-[#475569] leading-relaxed">
+            Tapping reserve redirects directly to Bastian's official table engine. Metro Cardz never processes guest payments or takes table booking commissions. Your exclusive savings apply directly to your final check.
+          </p>
+</div>
+</div>
+</div>
+</div>
+<div class="px-margin pt-space-lg">
+<div class="flex items-center justify-between mb-space-sm">
+<span class="font-label-caps text-label-caps uppercase tracking-widest text-[#807663] font-bold">Merchant Touchpoints</span>
+<span class="font-badge-micro text-badge-micro text-[#545f73] font-semibold">Instant Concierge</span>
+</div>
+<div class="grid grid-cols-4 gap-2.5">
+<a class="flex flex-col items-center justify-center py-3 px-1 rounded-2xl bg-white hover:bg-[#f8f9fa] border border-[#e5e7eb] shadow-[0_2px_6px_rgba(0,0,0,0.03)] transition-colors text-center group min-h-[64px]" href="tel:+912268250000">
+<div class="w-9 h-9 rounded-full bg-[#fef3c7] border border-[#fde68a] flex items-center justify-center text-[#775a00] group-hover:scale-105 transition-transform mb-1.5 shadow-sm">
+<span class="material-symbols-outlined text-[18px]">call</span>
+</div>
+<span class="font-body-sm text-body-sm text-[#0f172a] font-semibold truncate w-full">Call Desk</span>
+<span class="font-badge-micro text-[10px] text-[#807663] truncate w-full">+91 22 6825</span>
+</a>
+<button class="flex flex-col items-center justify-center py-3 px-1 rounded-2xl bg-white hover:bg-[#f8f9fa] border border-[#e5e7eb] shadow-[0_2px_6px_rgba(0,0,0,0.03)] transition-colors text-center group min-h-[64px]" id="viewMapBtn">
+<div class="w-9 h-9 rounded-full bg-[#fef3c7] border border-[#fde68a] flex items-center justify-center text-[#775a00] group-hover:scale-105 transition-transform mb-1.5 shadow-sm">
+<span class="material-symbols-outlined text-[18px]">pin_drop</span>
+</div>
+<span class="font-body-sm text-body-sm text-[#0f172a] font-semibold truncate w-full">Map View</span>
+<span class="font-badge-micro text-[10px] text-[#807663] truncate w-full">BKC Tower 3</span>
+</button>
+<a class="flex flex-col items-center justify-center py-3 px-1 rounded-2xl bg-white hover:bg-[#f8f9fa] border border-[#e5e7eb] shadow-[0_2px_6px_rgba(0,0,0,0.03)] transition-colors text-center group min-h-[64px]" href="https://instagram.com" rel="noopener" target="_blank">
+<div class="w-9 h-9 rounded-full bg-[#fef3c7] border border-[#fde68a] flex items-center justify-center text-[#775a00] group-hover:scale-105 transition-transform mb-1.5 shadow-sm">
+<span class="material-symbols-outlined text-[18px]">photo_camera</span>
+</div>
+<span class="font-body-sm text-body-sm text-[#0f172a] font-semibold truncate w-full">Instagram</span>
+<span class="font-badge-micro text-[10px] text-[#807663] truncate w-full">@bastianmumbai</span>
+</a>
+<button class="flex flex-col items-center justify-center py-3 px-1 rounded-2xl bg-white hover:bg-[#f8f9fa] border border-[#e5e7eb] shadow-[0_2px_6px_rgba(0,0,0,0.03)] transition-colors text-center group min-h-[64px]" id="menuPreviewBtn">
+<div class="w-9 h-9 rounded-full bg-[#fef3c7] border border-[#fde68a] flex items-center justify-center text-[#775a00] group-hover:scale-105 transition-transform mb-1.5 shadow-sm">
+<span class="material-symbols-outlined text-[18px]">restaurant_menu</span>
+</div>
+<span class="font-body-sm text-body-sm text-[#0f172a] font-semibold truncate w-full">Full Menu</span>
+<span class="font-badge-micro text-[10px] text-[#807663] truncate w-full">PDF (Curated)</span>
+</button>
+</div>
+</div>
+<div class="hidden px-margin pt-space-sm" id="mapDrawer">
+<div class="rounded-2xl overflow-hidden bg-white border border-[#e5e7eb] p-3 shadow-lg">
+<div class="flex items-center justify-between pb-2">
+<span class="font-title-md text-[15px] font-bold text-[#0f172a]">Location &amp; Valet Bay</span>
+<button class="text-[#807663] hover:text-[#0f172a] p-1" id="closeMapBtn">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+<div class="w-full h-44 bg-cover bg-center rounded-xl relative border border-[#e5e7eb]" data-location="Bastian BKC, Bandra Kurla Complex, Mumbai, Maharashtra" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBMwkXWpRI-ZntpoiRtTNLg8_dYUPmvovFUAGK21cbhu9W_zlnTxGDWtcvbaHX3mY2XhX4SbfdhcKOybIy6nAtWmvd7UviaJ4q4euPe33BtgrrpIIaop_TlbOrHJVSgGh6NUUQQI0KsZDlw3itlE14o0aGhapr-l3UDccomcNHAd7xwgt_mVlR0RYOn-UJy4_3zsvaC8mh0FFlZaI6Nn83zOfouYYjZsG0BvUz0AH8xQKECSwKFQHhu')">
+<div class="absolute inset-0 bg-black/20 backdrop-blur-[0.5px] flex items-center justify-center">
+<div class="px-3.5 py-1.5 rounded-full bg-white/95 text-[#775a00] flex items-center gap-1.5 shadow-lg border border-[#e5e7eb]">
+<span class="material-symbols-outlined text-[16px] text-[#c59b27]">navigation</span>
+<span class="font-body-sm text-body-sm font-semibold text-[#111827]">Tower 3, Wing B Valet Entrance</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="px-margin pt-space-lg">
+<div class="bg-white rounded-2xl p-4 border border-[#e5e7eb] shadow-[0_2px_10px_rgba(0,0,0,0.04)]">
+<div class="flex items-center justify-between cursor-pointer select-none" id="termsToggleHeader">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[#775a00] text-[22px]">assignment_turned_in</span>
+<span class="font-headline-sm text-[18px] text-[#0f172a] font-semibold">Offer Terms &amp; Privileges</span>
+</div>
+<button class="w-8 h-8 rounded-full bg-[#f3f4f5] flex items-center justify-center text-[#545f73] hover:text-[#775a00] transition-transform duration-200" id="termsChevron">
+<span class="material-symbols-outlined text-[20px]">expand_more</span>
+</button>
+</div>
+<div class="pt-space-md flex flex-col gap-3.5" id="termsContent">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-[18px] text-[#059669] mt-0.5 flex-shrink-0" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<div class="flex flex-col">
+<span class="font-body-md font-semibold text-[#0f172a]">Valid Days &amp; Dining Times</span>
+<span class="font-body-sm text-body-sm text-[#4b5563]">Applicable Monday to Thursday for dinner seatings starting from 7:00 PM onwards.</span>
+</div>
+</div>
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-[18px] text-[#059669] mt-0.5 flex-shrink-0" style="font-variation-settings: 'FILL' 1;">credit_card</span>
+<div class="flex flex-col">
+<span class="font-body-md font-semibold text-[#0f172a]">NFC Identity Presentation</span>
+<span class="font-body-sm text-body-sm text-[#4b5563]">Kindly tap physical Gold NFC Card or display dynamic Concierge QR on arrival to server manager.</span>
+</div>
+</div>
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-[18px] text-[#059669] mt-0.5 flex-shrink-0" style="font-variation-settings: 'FILL' 1;">monetization_on</span>
+<div class="flex flex-col">
+<span class="font-body-md font-semibold text-[#0f172a]">Discount Cap &amp; Exclusions</span>
+<span class="font-body-sm text-body-sm text-[#4b5563]">Maximum redemption value capped at ₹3,500 net per seated table. Not combinable with happy hours, corporate set menus, or ticketed guest events.</span>
+</div>
+</div>
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-[18px] text-[#059669] mt-0.5 flex-shrink-0" style="font-variation-settings: 'FILL' 1;">groups</span>
+<div class="flex flex-col">
+<span class="font-body-md font-semibold text-[#0f172a]">Party Allocation</span>
+<span class="font-body-sm text-body-sm text-[#4b5563]">Applies for dining parties of up to 6 guests. Larger parties require split concierge reservations.</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="px-margin pt-space-lg">
+<div class="flex items-center justify-between mb-space-sm">
+<span class="font-label-caps text-label-caps uppercase tracking-widest text-[#807663] font-bold">Signature Dishes Recommended</span>
+<span class="font-badge-micro text-badge-micro text-[#775a00] font-bold">Member Favorites</span>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<div class="bg-white rounded-2xl p-3 flex flex-col justify-between border border-[#e5e7eb] shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+<div class="relative w-full aspect-[4/3] rounded-xl overflow-hidden mb-2.5">
+<img class="w-full h-full object-cover" data-alt="Artisanal spicy salmon tartare served on crispy rice cubes with gold leaf garnish and micro-greens on a dark ceramic luxury plate." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCqns4-nbdOFfGjVpwRldqPglG-Jlg-ZghJcYNn9j8pGbDnp6oZU5xrWkoOyXbPfrAAJPBwgJyoYI9xAonjOJHXwsTQ8DY5EVkOt2qgNMQuHQeamhPRElrNYRtPFNvgBAflzt7TfIJxtfUXphtV-GIKywumYVRwR_NNCM_CKDfr88qH2cW7_D4JSoQ2ZYrpGLNxyu-6QSChx-409-kmpPnCR9Rn8jqYNuPuHbrFv5JpjmOHCa_xsRnj"/>
+<span class="absolute top-1.5 right-1.5 px-2 py-0.5 rounded-full bg-white/95 backdrop-blur-sm font-badge-micro text-badge-micro text-[#775a00] font-bold shadow-sm">Chef Pick</span>
+</div>
+<span class="font-title-md text-[15px] font-semibold text-[#0f172a] truncate">Crispy Spicy Salmon</span>
+<div class="flex items-center gap-1.5 mt-0.5">
+<span class="font-title-md text-[14px] font-bold text-[#775a00]">₹1,450</span>
+<span class="font-body-sm text-body-sm text-[#4b5563] truncate">• Asian Coastal</span>
+</div>
+</div>
+<div class="bg-white rounded-2xl p-3 flex flex-col justify-between border border-[#e5e7eb] shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+<div class="relative w-full aspect-[4/3] rounded-xl overflow-hidden mb-2.5">
+<img class="w-full h-full object-cover" data-alt="Gourmet butter poached lobster tail with truffle emulsion and charred asparagus plated elegantly under dramatic atmospheric spotlight." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCCc5x_i7LQQMG9569MT4UUtH5lGAefrQrocrAtPjAsXi8nIWyRAzxw2-vjKJlC9q68ZXkRrbUFDIUCZD0fsiZWRSYWeWLxd_MU35RO1ZUWV4EhOA1gOILjkOsHNAwAeZdKjBKnozF50iQKtb1lnLBc6r8IyjQy-J-3-VnFBUp1l8ljbJQlxwgEmE9Ranei8fEKe_t-f6EqC2dAViTAdbLx9gWmieEnYTMAWoJdvbGmDnf0SgXNE_Lf"/>
+<span class="absolute top-1.5 right-1.5 px-2 py-0.5 rounded-full bg-white/95 backdrop-blur-sm font-badge-micro text-badge-micro text-[#735c00] font-bold shadow-sm">Must Try</span>
+</div>
+<span class="font-title-md text-[15px] font-semibold text-[#0f172a] truncate">Truffle Butter Lobster</span>
+<div class="flex items-center gap-1.5 mt-0.5">
+<span class="font-title-md text-[14px] font-bold text-[#775a00]">₹3,200</span>
+<span class="font-body-sm text-body-sm text-[#4b5563] truncate">• Signature</span>
+</div>
+</div>
+</div>
+</div>
+<div class="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-xl border-t border-[#e5e7eb] px-margin py-3 pb-safe shadow-[0_-8px_24px_rgba(0,0,0,0.08)]">
+<div class="flex items-center gap-3 max-w-lg mx-auto">
+<button aria-label="Save deal to card" class="h-[52px] w-[52px] rounded-full bg-[#f3f4f5] hover:bg-[#e7e8e9] border border-[#e5e7eb] text-[#191c1d] flex items-center justify-center flex-shrink-0 transition-transform active:scale-95 shadow-sm" id="bookmarkBtn">
+<span class="material-symbols-outlined text-[22px] text-[#775a00]" id="bookmarkIcon">bookmark_border</span>
+</button>
+<a class="flex-1 h-[52px] px-5 rounded-full bg-gradient-to-r from-[#eec14b] via-[#f59e0b] to-[#d4af37] text-[#251a00] flex items-center justify-between transition-transform active:scale-[0.98] shadow-[0_4px_16px_rgba(212,175,55,0.4)] border border-[#ffdf98]/70" href="https://bastianmumbai.com/reservations" id="redirectCta" rel="noopener noreferrer" target="_blank">
+<div class="flex flex-col text-left">
+<span class="font-title-md text-title-md text-[#251a00] leading-tight font-bold">Book at Bastian.com</span>
+<span class="font-badge-micro text-badge-micro text-[#453600] leading-none mt-0.5 font-medium">Redirects to official merchant site</span>
+</div>
+<span class="material-symbols-outlined text-[20px] text-[#251a00] font-bold">arrow_outward</span>
+</a>
+</div>
+</div>
+<div class="fixed top-20 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-opacity duration-300 px-4 py-2 rounded-full bg-[#1e2023] text-white shadow-2xl flex items-center gap-2" id="toastMessage">
+<span class="material-symbols-outlined text-[#f2ca50] text-[18px]" style="font-variation-settings: 'FILL' 1;">check</span>
+<span class="font-body-sm text-body-sm font-semibold" id="toastText">Deal saved to your Gold Card</span>
+</div>
+</div>
+<script>
+  (function() {
+    const termsHeader = document.getElementById('termsToggleHeader');
+    const termsContent = document.getElementById('termsContent');
+    const termsChevron = document.getElementById('termsChevron');
+    const bookmarkBtn = document.getElementById('bookmarkBtn');
+    const bookmarkIcon = document.getElementById('bookmarkIcon');
+    const toast = document.getElementById('toastMessage');
+    const toastText = document.getElementById('toastText');
+    const mapBtn = document.getElementById('viewMapBtn');
+    const closeMapBtn = document.getElementById('closeMapBtn');
+    const mapDrawer = document.getElementById('mapDrawer');
+    const menuBtn = document.getElementById('menuPreviewBtn');
+
+    let isExpanded = true;
+    let isBookmarked = false;
+
+    function showToast(message) {
+      if (!toast || !toastText) return;
+      toastText.textContent = message;
+      toast.classList.remove('opacity-0');
+      toast.classList.add('opacity-100');
+      setTimeout(() => {
+        toast.classList.remove('opacity-100');
+        toast.classList.add('opacity-0');
+      }, 2600);
+    }
+
+    if (termsHeader && termsContent && termsChevron) {
+      termsHeader.addEventListener('click', () => {
+        isExpanded = !isExpanded;
+        if (isExpanded) {
+          termsContent.classList.remove('hidden');
+          termsChevron.style.transform = 'rotate(0deg)';
+        } else {
+          termsContent.classList.add('hidden');
+          termsChevron.style.transform = 'rotate(-90deg)';
+        }
+      });
+    }
+
+    if (bookmarkBtn && bookmarkIcon) {
+      bookmarkBtn.addEventListener('click', () => {
+        isBookmarked = !isBookmarked;
+        if (isBookmarked) {
+          bookmarkIcon.textContent = 'bookmark';
+          bookmarkIcon.style.fontVariationSettings = "'FILL' 1";
+          showToast('Added to Bastian VIP Wallet');
+        } else {
+          bookmarkIcon.textContent = 'bookmark_border';
+          bookmarkIcon.style.fontVariationSettings = "'FILL' 0";
+          showToast('Removed from Saved Cards');
+        }
+      });
+    }
+
+    if (mapBtn && mapDrawer) {
+      mapBtn.addEventListener('click', () => {
+        mapDrawer.classList.toggle('hidden');
+        if (!mapDrawer.classList.contains('hidden')) {
+          mapDrawer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      });
+    }
+
+    if (closeMapBtn && mapDrawer) {
+      closeMapBtn.addEventListener('click', () => {
+        mapDrawer.classList.add('hidden');
+      });
+    }
+
+    if (menuBtn) {
+      menuBtn.addEventListener('click', () => {
+        showToast('Loading Bastian Seasonal Dinner PDF...');
+      });
+    }
+  })();
+</script></main></body></html>

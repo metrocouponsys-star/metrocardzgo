@@ -1,156 +1,47 @@
 'use client';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useToastStore } from '../../store/toastStore';
-import { supabase, isSupabaseConfigured } from '../../lib/supabaseClient';
 import * as api from '../../api';
 
-const BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '');
-
 export default function LoginPage() {
-  const [emailLoading, setEmailLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
-  const [emailError, setEmailError] = useState('');
-  const [googleError, setGoogleError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  // ── Cold-start warm-up state ──────────────────────────────────────────────
-  const [serverReady, setServerReady] = useState(false);
-  const [warmUpMsg, setWarmUpMsg] = useState('');
-  const warmUpStarted = useRef(false);
-
   const { setAuth } = useAuthStore();
   const { addToast } = useToastStore();
   const navigate = useNavigate();
 
-  // ── Warm up backend silently — no message shown unless it takes very long ──
-  useEffect(() => {
-    if (warmUpStarted.current) return;
-    warmUpStarted.current = true;
-    const controller = new AbortController();
-    let timer: ReturnType<typeof setTimeout>;
-    // Only show loading overlay after 4s delay (most servers respond faster)
-    timer = setTimeout(() => {
-      if (!controller.signal.aborted) setWarmUpMsg('load');
-    }, 4000);
-    (async () => {
-      try {
-        await fetch(`${BASE_URL}/health`, { signal: controller.signal });
-        setServerReady(true);
-        setWarmUpMsg('');
-      } catch {
-        try {
-          await new Promise(r => setTimeout(r, 2000));
-          if (!controller.signal.aborted) await fetch(`${BASE_URL}/health`, { signal: controller.signal });
-          setServerReady(true);
-          setWarmUpMsg('');
-        } catch { setServerReady(true); setWarmUpMsg(''); }
-      } finally { clearTimeout(timer); }
-    })();
-    return () => { clearTimeout(timer); controller.abort(); };
-  }, []);
-
-  // ── Handle Google OAuth callback ──────────────────────────────────────────
-
-  useEffect(() => {
-    if (!isSupabaseConfigured) return;
-
-    try {
-      supabase.auth.getSession().then(({ data }) => {
-        if (data?.session) {
-          supabase.auth.signOut().catch(() => {});
-        }
-      }).catch(() => {});
-
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-        if (event === 'SIGNED_IN' && session?.access_token) {
-          setGoogleLoading(true);
-          setGoogleError('');
-          try {
-            const res = await fetch(`${BASE_URL}/api/v1/auth/google`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ supabase_token: session.access_token }),
-            });
-
-            if (!res.ok) {
-              const err = await res.json().catch(() => ({ detail: 'Authentication failed' }));
-              throw new Error(err.detail || 'Authentication failed');
-            }
-
-            const data = await res.json();
-            if (data.refresh_token && typeof window !== 'undefined') {
-              sessionStorage.setItem('metro-cardz-refresh', data.refresh_token);
-              localStorage.setItem('metro-cardz-refresh', data.refresh_token);
-            }
-            setAuth(data.user, data.access_token);
-            addToast('success', `Welcome, ${data.user.name}! 👋`);
-            const targetRoute = data.user.role === 'super_admin' ? '/admin' : data.user.role === 'staff' ? '/members/search?tab=qr' : '/dashboard';
-            navigate(targetRoute);
-          } catch (e: unknown) {
-            const msg = e instanceof Error ? e.message : 'Login failed';
-            setGoogleError(
-              msg.toLowerCase().includes('not found')
-                ? 'Your Google account is not registered on Metro Cardz. Contact support to get onboarded.'
-                : msg
-            );
-            await supabase.auth.signOut().catch(() => {});
-          } finally {
-            setGoogleLoading(false);
-          }
-        }
-      });
-
-      return () => subscription.unsubscribe();
-    } catch (err) {
-      console.warn('Supabase auth listener not active:', err);
-    }
-  }, [setAuth, addToast, navigate]);
-
-  // ── Email / Phone + Password login — routes through mock-aware api.login() ──
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  // ── Email / Password login ────────────────────────────────────────────────
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const val = email.trim();
     if (!val || !password) return;
-    setEmailLoading(true);
-    setEmailError('');
+    setLoading(true);
+    setError('');
     try {
-      // Always use api.login() — it handles both mock and real backend transparently
-      // so demo credentials (email or phone) work in all environments
+      // api.login() routes through Next.js API routes → Prisma → Hostinger MySQL
       const authResult = await api.login(val, password);
       setAuth(authResult.user, authResult.token);
       addToast('success', `Welcome, ${authResult.user.name}! 👋`);
-      const targetRoute = authResult.user.role === 'super_admin' ? '/admin' : authResult.user.role === 'staff' ? '/members/search?tab=qr' : '/dashboard';
+      const targetRoute =
+        authResult.user.role === 'super_admin'
+          ? '/admin'
+          : authResult.user.role === 'staff'
+          ? '/members/search?tab=qr'
+          : '/dashboard';
       navigate(targetRoute);
     } catch (e: unknown) {
-      setEmailError(e instanceof Error ? e.message : 'Login failed');
+      setError(e instanceof Error ? e.message : 'Login failed');
     } finally {
-      setEmailLoading(false);
+      setLoading(false);
     }
   };
-
-  // ── Google login ──────────────────────────────────────────────────────────
-  const handleGoogleLogin = async () => {
-    setGoogleLoading(true);
-    setGoogleError('');
-    const { error: oauthError } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: typeof window !== 'undefined' ? window.location.origin + '/login' : undefined,
-      },
-    });
-    if (oauthError) {
-      setGoogleError('Google login failed. Please try again.');
-      setGoogleLoading(false);
-    }
-    // If no error, browser redirects to Google — loading stays true
-  };
-
-  const isAnyLoading = emailLoading || googleLoading;
 
   return (
     <div className="min-h-screen bg-surface flex flex-col justify-center items-center px-4 relative overflow-hidden">
@@ -161,43 +52,14 @@ export default function LoginPage() {
       </div>
 
       <div className="w-full max-w-[420px] animate-slide-up">
-        {/* Login Header (Metro Cardz Logo image removed) */}
+        {/* Login Header */}
         <div className="mb-8 text-center">
           <div className="w-14 h-14 rounded-2xl bg-primary text-on-primary flex items-center justify-center mx-auto mb-3 shadow-md">
             <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
           </div>
-          <h1 className="text-headline-md font-headline-md font-bold text-primary">Member & Partner Login</h1>
-          <p className="text-label-sm text-on-surface-variant mt-1">Merchant Loyalty & Rewards Platform</p>
+          <h1 className="text-headline-md font-headline-md font-bold text-primary">Member &amp; Partner Login</h1>
+          <p className="text-label-sm text-on-surface-variant mt-1">Merchant Loyalty &amp; Rewards Platform</p>
         </div>
-
-        {/* Fancy animated server warm-up overlay */}
-        {warmUpMsg === 'load' && (
-          <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-surface/80 backdrop-blur-md">
-            {/* Animated ring */}
-            <div className="relative w-24 h-24 mb-6">
-              <div className="absolute inset-0 rounded-full border-4 border-primary/20" />
-              <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-primary animate-spin" style={{ animationDuration: '1s' }} />
-              <div className="absolute inset-2 rounded-full border-4 border-transparent border-t-secondary animate-spin" style={{ animationDuration: '1.5s', animationDirection: 'reverse' }} />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="material-symbols-outlined text-primary text-[28px]">lock</span>
-              </div>
-            </div>
-            <h3 className="text-headline-sm font-bold text-on-surface mb-2">Starting up…</h3>
-            <p className="text-body-sm text-on-surface-variant text-center max-w-[240px]">
-              The server is loading. This takes about 20 seconds on the first visit.
-            </p>
-            {/* Animated progress dots */}
-            <div className="flex gap-1.5 mt-4">
-              {[0, 1, 2, 3].map(i => (
-                <div
-                  key={i}
-                  className="w-2 h-2 rounded-full bg-primary animate-bounce"
-                  style={{ animationDelay: `${i * 0.15}s`, animationDuration: '0.8s' }}
-                />
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Card */}
         <div className="bg-surface-container-lowest rounded-2xl p-8 border border-outline-variant/30 shadow-tonal">
@@ -210,9 +72,9 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* ── Email/Phone + Password Form ── */}
-          <form onSubmit={handleEmailLogin} noValidate>
-            {/* Email / Phone field */}
+          {/* ── Email + Password Form ── */}
+          <form onSubmit={handleLogin} noValidate>
+            {/* Email field */}
             <div className="mb-3">
               <label htmlFor="login-email" className="block text-label-sm text-on-surface-variant mb-1.5 font-medium">
                 Email or Mobile Number
@@ -227,7 +89,7 @@ export default function LoginPage() {
                   autoComplete="username"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  disabled={isAnyLoading}
+                  disabled={loading}
                   placeholder="e.g. 9876543210 or email@domain.com"
                   className="w-full h-12 pl-10 pr-4 rounded-xl border border-outline-variant bg-surface-container text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 disabled:opacity-60"
                 />
@@ -249,7 +111,7 @@ export default function LoginPage() {
                   autoComplete="current-password"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  disabled={isAnyLoading}
+                  disabled={loading}
                   placeholder="Enter your password"
                   className="w-full h-12 pl-10 pr-11 rounded-xl border border-outline-variant bg-surface-container text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 disabled:opacity-60"
                 />
@@ -267,11 +129,11 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Email login error */}
-            {emailError && (
+            {/* Error */}
+            {error && (
               <div className="mb-4 bg-error-container rounded-xl p-3 border border-error/20 flex items-start gap-2">
                 <span className="material-symbols-outlined text-error text-[18px] mt-0.5">error</span>
-                <p className="text-body-sm text-error">{emailError}</p>
+                <p className="text-body-sm text-error">{error}</p>
               </div>
             )}
 
@@ -279,10 +141,10 @@ export default function LoginPage() {
             <button
               id="email-login-btn"
               type="submit"
-              disabled={isAnyLoading || !email.trim() || !password}
+              disabled={loading || !email.trim() || !password}
               className="w-full h-12 rounded-xl bg-primary text-on-primary font-semibold text-body-lg flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
             >
-              {emailLoading ? (
+              {loading ? (
                 <span className="material-symbols-outlined animate-spin text-[20px]">progress_activity</span>
               ) : (
                 <>
@@ -293,45 +155,6 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* ── Divider ── */}
-          <div className="flex items-center gap-3 my-5">
-            <div className="flex-1 h-px bg-outline-variant/40" />
-            <span className="text-label-sm text-on-surface-variant font-medium">or</span>
-            <div className="flex-1 h-px bg-outline-variant/40" />
-          </div>
-
-          {/* Google error */}
-          {googleError && (
-            <div className="mb-4 bg-error-container rounded-xl p-3 border border-error/20 flex items-start gap-2">
-              <span className="material-symbols-outlined text-error text-[18px] mt-0.5">error</span>
-              <p className="text-body-sm text-error">{googleError}</p>
-            </div>
-          )}
-
-          {/* ── Google button ── */}
-          <button
-            id="google-login-btn"
-            onClick={handleGoogleLogin}
-            disabled={isAnyLoading}
-            className="w-full h-12 rounded-xl border border-outline-variant flex items-center justify-center gap-3 font-medium text-body-md text-on-surface bg-surface-container hover:bg-surface-container-high transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
-            style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}
-          >
-            {googleLoading ? (
-              <span className="material-symbols-outlined animate-spin text-primary">progress_activity</span>
-            ) : (
-              <>
-                {/* Google icon SVG */}
-                <svg width="18" height="18" viewBox="0 0 48 48" fill="none">
-                  <path d="M47.5 24.6c0-1.6-.1-3.2-.4-4.7H24v9h13.1c-.6 3-2.4 5.6-5 7.3v6h8c4.7-4.3 7.4-10.7 7.4-17.6z" fill="#4285F4"/>
-                  <path d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-8-6c-2.1 1.4-4.8 2.3-7.9 2.3-6.1 0-11.2-4.1-13-9.6H2.8v6.2C6.8 42.6 14.9 48 24 48z" fill="#34A853"/>
-                  <path d="M11 28.9c-.5-1.4-.7-2.9-.7-4.9s.3-3.5.7-4.9v-6.2H2.8C1 16.6 0 20.2 0 24s1 7.4 2.8 10.1L11 28.9z" fill="#FBBC05"/>
-                  <path d="M24 9.5c3.4 0 6.5 1.2 8.9 3.5l6.7-6.7C35.9 2.4 30.5 0 24 0 14.9 0 6.8 5.4 2.8 13.9l8.2 6.2C12.8 13.6 17.9 9.5 24 9.5z" fill="#EA4335"/>
-                </svg>
-                Continue with Google
-              </>
-            )}
-          </button>
-
           <p className="text-center text-body-sm text-on-surface-variant mt-5">
             Not a merchant yet?{' '}
             <a href="#" className="text-primary font-semibold hover:underline">Contact support to get onboarded</a>
@@ -339,7 +162,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-label-sm text-on-surface-variant mt-6 opacity-60">
-          Secure login powered by Google · Metro Cardz
+          Metro Cardz · Powered by Hostinger
         </p>
       </div>
     </div>

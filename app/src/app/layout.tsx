@@ -51,7 +51,7 @@ export const metadata: Metadata = {
       { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
     ],
   },
-  manifest: '/site.webmanifest',
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({
@@ -67,7 +67,16 @@ export default function RootLayout({
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-        <link rel="manifest" href="/site.webmanifest" />
+        {/* PWA — manifest + theme + iOS meta */}
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#6366f1" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Metro Cardz" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <meta name="application-name" content="Metro Cardz" />
+        <meta name="msapplication-TileColor" content="#6366f1" />
 
         {/* ── Non-blocking Google Fonts ─────────────────────────────────────────
             Strategy:
@@ -80,11 +89,12 @@ export default function RootLayout({
         ──────────────────────────────────────────────────────────────────────── */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* Single consolidated stylesheet — Inter, Poppins, Space Mono, Material Symbols */}
+        {/* Single consolidated stylesheet — Inter, Poppins, Space Mono, Syne, Plus Jakarta Sans, Material Symbols */}
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;600;700;800;900&family=Space+Mono:wght@400;700&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;600;700;800;900&family=Space+Mono:wght@400;700&family=Syne:wght@600;700&family=Plus+Jakarta+Sans:wght@400;600;700&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
         />
+
         {/* Landing page decorative fonts (Playfair, Cormorant, Dancing Script) */}
         <link
           rel="stylesheet"
@@ -94,6 +104,20 @@ export default function RootLayout({
       <body>
         <SentryInit />
         {children}
+        {/* PWA Service Worker Registration */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js')
+                    .then(function(reg) { console.log('SW registered'); })
+                    .catch(function(err) { console.log('SW error:', err); });
+                });
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );

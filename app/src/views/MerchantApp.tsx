@@ -16,6 +16,7 @@ import LoginPage from './auth/LoginPage';
 
 // Merchant views
 import DashboardPage from './merchant/DashboardPage';
+import QrScanPage from './merchant/QrScanPage';
 import SearchMemberPage from './merchant/SearchMemberPage';
 import MembersListPage from './merchant/MembersListPage';
 import MemberProfilePage from './merchant/MemberProfilePage';
@@ -73,6 +74,7 @@ export default function MerchantApp() {
         {/* Auth */}
         <Route path="/login" element={<AuthRoute><LoginPage /></AuthRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute roles={['owner', 'staff']}><AppShell><DashboardPage /></AppShell></ProtectedRoute>} />
+        <Route path="/dashboard/scan" element={<ProtectedRoute roles={['owner', 'staff']}><QrScanPage /></ProtectedRoute>} />
         <Route path="/members" element={<ProtectedRoute roles={['owner', 'staff']}><AppShell><MembersListPage /></AppShell></ProtectedRoute>} />
         <Route path="/members/search" element={<ProtectedRoute roles={['owner', 'staff']}><AppShell><SearchMemberPage /></AppShell></ProtectedRoute>} />
         <Route path="/members/new" element={<ProtectedRoute roles={['owner', 'staff']}><AppShell><AddMemberPage /></AppShell></ProtectedRoute>} />

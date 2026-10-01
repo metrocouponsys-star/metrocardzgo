@@ -8,8 +8,8 @@
  *   Layer 2 (server, image_utils.py): Pillow enforces the same limits — the real safety net
  *
  * Storage math:
- *   Phone photos uncompressed → 2-5 MB → ~200–500 merchants in 1 GB Supabase free tier
- *   After compression → ≤100 KB → 10,000+ merchants in same 1 GB
+ *   Phone photos uncompressed → 2-5 MB → ~2,000–5,000 merchants per GB Hostinger storage
+ *   After compression → ≤100 KB → 10,000+ merchants per GB
  */
 
 import React, { useRef, useState, useCallback } from 'react';
@@ -102,7 +102,7 @@ export const MerchantLogoUpload: React.FC<MerchantLogoUploadProps> = ({
       const merchant = await response.json();
       const newUrl = merchant.logo_url;
 
-      // Update preview to the final Supabase Storage URL
+      // Update preview to the final Hostinger-hosted URL
       setPreview(newUrl);
       setProgress('');
       onSuccess(newUrl);

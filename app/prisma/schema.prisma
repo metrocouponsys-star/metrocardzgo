@@ -1,0 +1,1062 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// Metro Cardz — Unified Prisma Schema for Hostinger MySQL
+// Covers:
+//   1. Membership & Loyalty System  (migrated from Supabase PostgreSQL)
+//   2. Deals Platform               (NFC landing, categories, brands, deals)
+//
+// MySQL constraints applied:
+//   - Unique fields use @db.VarChar(255) NOT @db.Text (MySQL limitation)
+//   - Indexed fields use @db.VarChar(255) NOT @db.Text
+//   - All relation back-references included
+// ═══════════════════════════════════════════════════════════════════════════════
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SECTION 1 — MEMBERSHIP & LOYALTY SYSTEM
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum MerchantStatus {
+  active
+  suspended
+}
+
+enum MerchantApprovalStatus {
+  pending
+  approved
+  rejected
+}
+
+enum UserRole {
+  super_admin
+  owner
+  staff
+}
+
+enum OfferType {
+  percent_off
+  flat_off
+  buy_1_get_1
+  free_service
+  wallet_points
+  referral
+  birthday
+  points_redemption
+  visit_milestone
+}
+
+enum MemberStatus {
+  active
+  expiring_soon
+  expired
+  deactivated
+}
+
+enum OfferStateStatus {
+  active
+  exhausted
+}
+
+enum MessageChannel {
+  sms
+  whatsapp
+}
+
+enum ReminderTrigger {
+  birthday
+  anniversary
+  loyalty_threshold
+  expiry
+}
+
+enum CampaignAudience {
+  all
+  by_membership_type
+  expiring_soon
+}
+
+enum CampaignStatus {
+  draft
+  scheduled
+  sending
+  sent
+}
+
+enum MessageDeliveryStatus {
+  sent
+  failed
+  delivered
+}
+
+enum CardStatus {
+  unassigned
+  merchant_allocated
+  member_linked
+  deactivated
+}
+
+enum LoyaltyTxType {
+  earn
+  redeem
+  referral_bonus
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Merchants
+// ─────────────────────────────────────────────────────────────────────────────
+model Merchant {
+  id                   String                 @id @default(uuid()) @db.VarChar(36)
+  businessName         String                 @map("business_name") @db.Text
+  category             String?                @db.Text
+  planTier             String?                @default("Starter") @map("plan_tier") @db.VarChar(50)
+  whatsappNumber       String?                @map("whatsapp_number") @db.VarChar(20)
+  logoUrl              String?                @map("logo_url") @db.Text
+  address              String?                @db.Text
+  secretSalt           String                 @map("secret_salt") @db.VarChar(255)
+  cardDesignUrl        String?                @map("card_design_url") @db.Text
+  status               MerchantStatus         @default(active)
+  approvalStatus       MerchantApprovalStatus @default(approved) @map("approval_status")
+  referralBonusPoints  Decimal?               @map("referral_bonus_points")
+  createdAt            DateTime               @default(now()) @map("created_at")
+
+  users               MerchantUser[]
+  members             Member[]
+  membershipTypes     MembershipType[]
+  offerTemplates      OfferTemplate[]
+  campaigns           Campaign[]
+  reminderRules       ReminderRule[]
+  loyaltyTransactions LoyaltyTransaction[]
+  rewardCatalog       RewardCatalog[]
+  rewardClaims        RewardClaim[]
+  couponCodes         CouponCode[]
+  giftVouchers        GiftVoucher[]
+  pointsRules         PointsRule[]
+  scratchCards        ScratchCard[]
+  luckyDraws          LuckyDraw[]
+  walletClass         MerchantWalletClass?
+  eventLogs           EventLog[]
+  cardInventory       CardInventoryItem[]
+  auditLogs           AdminAuditLog[]
+  feedback            MemberFeedback[]
+
+  @@map("merchants")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Merchant Users
+// ─────────────────────────────────────────────────────────────────────────────
+model MerchantUser {
+  id           String    @id @default(uuid()) @db.VarChar(36)
+  merchantId   String?   @map("merchant_id") @db.VarChar(36)
+  name         String    @db.Text
+  phone        String    @unique @db.VarChar(20)
+  email        String?   @unique @db.VarChar(255)
+  role         UserRole  @default(staff)
+  passwordHash String?   @map("password_hash") @db.Text
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  merchant     Merchant?           @relation(fields: [merchantId], references: [id])
+  redemptions  RedemptionLog[]
+  auditLogs    AdminAuditLog[]
+  createdCards CardInventoryItem[]
+
+  @@index([merchantId])
+  @@map("merchant_users")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Membership Types
+// ─────────────────────────────────────────────────────────────────────────────
+model MembershipType {
+  id          String  @id @default(uuid()) @db.VarChar(36)
+  merchantId  String  @map("merchant_id") @db.VarChar(36)
+  name        String  @db.VarChar(200)
+  description String? @db.Text
+
+  merchant   Merchant              @relation(fields: [merchantId], references: [id])
+  members    Member[]
+  offerLinks MembershipTypeOffer[]
+  campaigns  Campaign[]
+
+  @@index([merchantId])
+  @@map("membership_types")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Offer Templates
+// ─────────────────────────────────────────────────────────────────────────────
+model OfferTemplate {
+  id                  String    @id @default(uuid()) @db.VarChar(36)
+  merchantId          String    @map("merchant_id") @db.VarChar(36)
+  title               String    @db.VarChar(500)
+  description         String?   @db.Text
+  offerType           OfferType @map("offer_type")
+  value               Decimal?  @default(0)
+  active              Boolean?  @default(true)
+  loyaltyPointsEarn   Decimal?  @map("loyalty_points_earn")
+  isPointsRedemption  Boolean   @default(false) @map("is_points_redemption")
+  loyaltyPointsCost   Decimal?  @map("loyalty_points_cost")
+  minVisits           Int?      @map("min_visits")
+  minPurchaseAmount   Decimal?  @map("min_purchase_amount")
+
+  merchant            Merchant              @relation(fields: [merchantId], references: [id])
+  membershipTypeLinks MembershipTypeOffer[]
+  memberOfferStates   MemberOfferState[]
+  redemptions         RedemptionLog[]
+  loyaltyTransactions LoyaltyTransaction[]
+
+  @@index([merchantId])
+  @@map("offer_templates")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Membership Type ↔ Offer (many-to-many)
+// ─────────────────────────────────────────────────────────────────────────────
+model MembershipTypeOffer {
+  membershipTypeId String  @map("membership_type_id") @db.VarChar(36)
+  offerTemplateId  String  @map("offer_template_id") @db.VarChar(36)
+  defaultQty       Decimal? @map("default_qty")
+
+  membershipType MembershipType @relation(fields: [membershipTypeId], references: [id])
+  offer          OfferTemplate  @relation(fields: [offerTemplateId], references: [id])
+
+  @@id([membershipTypeId, offerTemplateId])
+  @@map("membership_type_offers")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Members
+// ─────────────────────────────────────────────────────────────────────────────
+model Member {
+  id                 String       @id @default(uuid()) @db.VarChar(36)
+  merchantId         String       @map("merchant_id") @db.VarChar(36)
+  memberCode         String       @map("member_code") @db.VarChar(50)
+  publicToken        String       @unique @map("public_token") @db.VarChar(100)
+  physicalCardNumber String?      @map("physical_card_number") @db.VarChar(30)
+  name               String       @db.VarChar(200)
+  phone              String       @db.VarChar(20)
+  email              String?      @db.VarChar(255)
+  dateOfBirth        DateTime?    @map("date_of_birth") @db.Date
+  anniversaryDate    DateTime?    @map("anniversary_date") @db.Date
+  familyDob1         DateTime?    @map("family_dob_1") @db.Date
+  familyDob2         DateTime?    @map("family_dob_2") @db.Date
+  familyDob3         DateTime?    @map("family_dob_3") @db.Date
+  membershipTypeId   String       @map("membership_type_id") @db.VarChar(36)
+  joinedDate         DateTime     @map("joined_date") @db.Date
+  expiryDate         DateTime     @map("expiry_date") @db.Date
+  loyaltyPoints      Decimal?     @default(0) @map("loyalty_points")
+  status             MemberStatus @default(active)
+  notes              String?      @db.Text
+  totalVisits        Int          @default(0) @map("total_visits")
+  referralCode       String?      @unique @map("referral_code") @db.VarChar(20)
+  referredByMemberId String?      @map("referred_by_member_id") @db.VarChar(36)
+  autoRenew          Boolean      @default(false) @map("auto_renew")
+  createdAt          DateTime     @default(now()) @map("created_at")
+
+  merchant         Merchant             @relation(fields: [merchantId], references: [id])
+  membershipType   MembershipType       @relation(fields: [membershipTypeId], references: [id])
+  referredBy       Member?              @relation("MemberReferrals", fields: [referredByMemberId], references: [id])
+  referrals        Member[]             @relation("MemberReferrals")
+  offerStates      MemberOfferState[]
+  redemptions      RedemptionLog[]
+  messageLogs      MessageLog[]
+  loyaltyTxns      LoyaltyTransaction[]
+  walletPass       MemberWalletPass?
+  scratchCards     ScratchCard[]
+  luckyDrawEntries LuckyDrawEntry[]
+  rewardClaims     RewardClaim[]
+  feedback         MemberFeedback[]
+  giftVouchersUsed GiftVoucher[]        @relation("GiftVoucherRedeemer")
+  luckyDrawWins    LuckyDraw[]          @relation("LuckyDrawWinner")
+  eventLogs        EventLog[]
+  linkedCards      CardInventoryItem[]  @relation("LinkedMember")
+  // Loyalty V2
+  memberTier       MemberTier?
+  visitStreak      VisitStreak[]
+  challengeProgress ChallengeProgress[]
+  reviews          MemberReview[]
+  // DPDP Compliance
+  consents         MemberConsent[]
+  erasureRequests  ErasureRequest[]
+  correctionRequests CorrectionRequest[]
+
+  @@index([merchantId])
+  @@index([membershipTypeId])
+  @@index([phone(length: 20)])
+  @@index([publicToken(length: 100)])
+  @@map("members")
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Member Offer State
+// ─────────────────────────────────────────────────────────────────────────────
+model MemberOfferState {
+  id              String           @id @default(uuid()) @db.VarChar(36)
+  memberId        String           @map("member_id") @db.VarChar(36)
+  offerTemplateId String           @map("offer_template_id") @db.VarChar(36)
+  remainingQty    Decimal?         @map("remaining_qty")
+  initialQty      Decimal?         @map("initial_qty")
+  status          OfferStateStatus @default(active)
+
+  member        Member        @relation(fields: [memberId], references: [id])
+  offerTemplate OfferTemplate @relation(fields: [offerTemplateId], references: [id])
+
+  @@index([memberId])
+  @@index([offerTemplateId])
+  @@map("member_offer_state")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Redemption Log
+// ─────────────────────────────────────────────────────────────────────────────
+model RedemptionLog {
+  id              String   @id @default(uuid()) @db.VarChar(36)
+  memberId        String   @map("member_id") @db.VarChar(36)
+  offerTemplateId String   @map("offer_template_id") @db.VarChar(36)
+  merchantUserId  String   @map("merchant_user_id") @db.VarChar(36)
+  amount          Decimal?
+  ipAddress       String?  @map("ip_address") @db.VarChar(50)
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  member             Member             @relation(fields: [memberId], references: [id])
+  offerTemplate      OfferTemplate      @relation(fields: [offerTemplateId], references: [id])
+  staffUser          MerchantUser       @relation(fields: [merchantUserId], references: [id])
+  loyaltyTransaction LoyaltyTransaction?
+
+  @@index([memberId])
+  @@index([offerTemplateId])
+  @@map("redemption_log")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Reminder Rules
+// ─────────────────────────────────────────────────────────────────────────────
+model ReminderRule {
+  id             String          @id @default(uuid()) @db.VarChar(36)
+  merchantId     String          @map("merchant_id") @db.VarChar(36)
+  triggerType    ReminderTrigger @map("trigger_type")
+  channel        MessageChannel
+  templateText   String          @map("template_text") @db.Text
+  thresholdValue Decimal?        @map("threshold_value")
+  active         Boolean?        @default(true)
+  sendTime       String?         @map("send_time") @db.VarChar(8)
+  daysBefore     Int             @default(0) @map("days_before")
+  timezone       String          @default("Asia/Kolkata") @db.VarChar(100)
+
+  merchant    Merchant     @relation(fields: [merchantId], references: [id])
+  messageLogs MessageLog[]
+
+  @@index([merchantId])
+  @@map("reminder_rules")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Campaigns
+// ─────────────────────────────────────────────────────────────────────────────
+model Campaign {
+  id                     String           @id @default(uuid()) @db.VarChar(36)
+  merchantId             String           @map("merchant_id") @db.VarChar(36)
+  name                   String           @db.VarChar(500)
+  targetAudience         CampaignAudience @map("target_audience")
+  targetMembershipTypeId String?          @map("target_membership_type_id") @db.VarChar(36)
+  channel                MessageChannel
+  templateText           String           @map("template_text") @db.Text
+  scheduledAt            DateTime?        @map("scheduled_at")
+  status                 CampaignStatus   @default(draft)
+  audienceSize           Decimal?         @map("audience_size")
+  sentCount              Decimal?         @map("sent_count")
+  createdAt              DateTime         @default(now()) @map("created_at")
+
+  merchant         Merchant        @relation(fields: [merchantId], references: [id])
+  targetMemberType MembershipType? @relation(fields: [targetMembershipTypeId], references: [id])
+  messageLogs      MessageLog[]
+
+  @@index([merchantId])
+  @@map("campaigns")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Message Log
+// ─────────────────────────────────────────────────────────────────────────────
+model MessageLog {
+  id             String                @id @default(uuid()) @db.VarChar(36)
+  memberId       String                @map("member_id") @db.VarChar(36)
+  campaignId     String?               @map("campaign_id") @db.VarChar(36)
+  reminderRuleId String?               @map("reminder_rule_id") @db.VarChar(36)
+  channel        String                @db.VarChar(20)
+  status         MessageDeliveryStatus @default(sent)
+  sentAt         DateTime              @default(now()) @map("sent_at")
+
+  member       Member        @relation(fields: [memberId], references: [id])
+  campaign     Campaign?     @relation(fields: [campaignId], references: [id])
+  reminderRule ReminderRule? @relation(fields: [reminderRuleId], references: [id])
+
+  @@index([memberId])
+  @@map("message_log")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Admin Audit Log
+// ─────────────────────────────────────────────────────────────────────────────
+model AdminAuditLog {
+  id          String   @id @default(uuid()) @db.VarChar(36)
+  adminUserId String   @map("admin_user_id") @db.VarChar(36)
+  merchantId  String?  @map("merchant_id") @db.VarChar(36)
+  action      String   @db.VarChar(100)
+  detail      String?  @db.Text
+  ipAddress   String?  @map("ip_address") @db.VarChar(50)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  adminUser MerchantUser @relation(fields: [adminUserId], references: [id])
+  merchant  Merchant?    @relation(fields: [merchantId], references: [id])
+
+  @@index([adminUserId])
+  @@map("admin_audit_log")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Card Inventory
+// ─────────────────────────────────────────────────────────────────────────────
+model CardInventoryItem {
+  id                  String     @id @default(uuid()) @db.VarChar(36)
+  cardNumber          String     @unique @map("card_number") @db.VarChar(30)
+  status              CardStatus @default(unassigned)
+  allocatedMerchantId String?    @map("allocated_merchant_id") @db.VarChar(36)
+  allocatedAt         DateTime?  @map("allocated_at")
+  linkedMemberId      String?    @map("linked_member_id") @db.VarChar(36)
+  linkedAt            DateTime?  @map("linked_at")
+  createdByAdminId    String?    @map("created_by_admin_id") @db.VarChar(36)
+  createdAt           DateTime   @default(now()) @map("created_at")
+
+  merchant  Merchant?     @relation(fields: [allocatedMerchantId], references: [id])
+  member    Member?       @relation("LinkedMember", fields: [linkedMemberId], references: [id])
+  createdBy MerchantUser? @relation(fields: [createdByAdminId], references: [id])
+
+  @@index([allocatedMerchantId])
+  @@map("card_inventory")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Loyalty Transactions (immutable audit trail)
+// ─────────────────────────────────────────────────────────────────────────────
+model LoyaltyTransaction {
+  id                 String        @id @default(uuid()) @db.VarChar(36)
+  memberId           String        @map("member_id") @db.VarChar(36)
+  merchantId         String        @map("merchant_id") @db.VarChar(36)
+  type               LoyaltyTxType
+  points             Decimal
+  sourceRedemptionId String?       @unique @map("source_redemption_id") @db.VarChar(36)
+  sourceOfferId      String?       @map("source_offer_id") @db.VarChar(36)
+  balanceAfter       Decimal       @map("balance_after")
+  note               String?       @db.Text
+  createdAt          DateTime      @default(now()) @map("created_at")
+
+  member           Member         @relation(fields: [memberId], references: [id])
+  merchant         Merchant       @relation(fields: [merchantId], references: [id])
+  sourceRedemption RedemptionLog? @relation(fields: [sourceRedemptionId], references: [id])
+  sourceOffer      OfferTemplate? @relation(fields: [sourceOfferId], references: [id])
+
+  @@index([memberId])
+  @@index([merchantId])
+  @@map("loyalty_transactions")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Reward Catalog
+// ─────────────────────────────────────────────────────────────────────────────
+model RewardCatalog {
+  id                String   @id @default(uuid()) @db.VarChar(36)
+  merchantId        String   @map("merchant_id") @db.VarChar(36)
+  name              String   @db.VarChar(500)
+  description       String?  @db.Text
+  pointsCost        Decimal  @map("points_cost")
+  quantityAvailable Int?     @map("quantity_available")
+  isActive          Boolean  @default(true) @map("is_active")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  merchant Merchant      @relation(fields: [merchantId], references: [id])
+  claims   RewardClaim[]
+
+  @@index([merchantId])
+  @@map("reward_catalog")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Reward Claims
+// ─────────────────────────────────────────────────────────────────────────────
+model RewardClaim {
+  id          String   @id @default(uuid()) @db.VarChar(36)
+  rewardId    String   @map("reward_id") @db.VarChar(36)
+  memberId    String   @map("member_id") @db.VarChar(36)
+  merchantId  String   @map("merchant_id") @db.VarChar(36)
+  pointsSpent Decimal  @map("points_spent")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  reward   RewardCatalog @relation(fields: [rewardId], references: [id])
+  member   Member        @relation(fields: [memberId], references: [id])
+  merchant Merchant      @relation(fields: [merchantId], references: [id])
+
+  @@index([memberId])
+  @@map("reward_claims")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Coupon Codes
+// ─────────────────────────────────────────────────────────────────────────────
+model CouponCode {
+  id           String    @id @default(uuid()) @db.VarChar(36)
+  merchantId   String    @map("merchant_id") @db.VarChar(36)
+  code         String    @db.VarChar(50)
+  discountType String    @map("discount_type") @db.VarChar(20)
+  value        Decimal
+  minPurchase  Decimal?  @default(0) @map("min_purchase")
+  maxUses      Int?      @map("max_uses")
+  usedCount    Int       @default(0) @map("used_count")
+  expiresAt    DateTime? @map("expires_at") @db.Date
+  activeDays   String?   @map("active_days") @db.VarChar(100)
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  merchant Merchant @relation(fields: [merchantId], references: [id])
+
+  @@index([merchantId])
+  @@map("coupon_codes")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Gift Vouchers
+// ─────────────────────────────────────────────────────────────────────────────
+model GiftVoucher {
+  id                 String    @id @default(uuid()) @db.VarChar(36)
+  merchantId         String    @map("merchant_id") @db.VarChar(36)
+  code               String    @unique @map("code") @db.VarChar(50)
+  value              Decimal
+  isRedeemed         Boolean   @default(false) @map("is_redeemed")
+  redeemedByMemberId String?   @map("redeemed_by_member_id") @db.VarChar(36)
+  redeemedAt         DateTime? @map("redeemed_at")
+  expiresAt          DateTime? @map("expires_at") @db.Date
+  createdAt          DateTime  @default(now()) @map("created_at")
+
+  merchant   Merchant @relation(fields: [merchantId], references: [id])
+  redeemedBy Member?  @relation("GiftVoucherRedeemer", fields: [redeemedByMemberId], references: [id])
+
+  @@index([merchantId])
+  @@map("gift_vouchers")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Points Rules
+// ─────────────────────────────────────────────────────────────────────────────
+model PointsRule {
+  id          String   @id @default(uuid()) @db.VarChar(36)
+  merchantId  String   @map("merchant_id") @db.VarChar(36)
+  ruleType    String   @map("rule_type") @db.VarChar(50)
+  pointsValue Decimal  @map("points_value")
+  spendUnit   Decimal? @default(1) @map("spend_unit")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  merchant Merchant @relation(fields: [merchantId], references: [id])
+
+  @@index([merchantId])
+  @@map("points_rules")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Scratch Cards
+// ─────────────────────────────────────────────────────────────────────────────
+model ScratchCard {
+  id           String    @id @default(uuid()) @db.VarChar(36)
+  merchantId   String    @map("merchant_id") @db.VarChar(36)
+  memberId     String    @map("member_id") @db.VarChar(36)
+  rewardType   String    @map("reward_type") @db.VarChar(30)
+  rewardValue  String    @map("reward_value") @db.VarChar(500)
+  isRevealed   Boolean   @default(false) @map("is_revealed")
+  revealedAt   DateTime? @map("revealed_at")
+  triggerVisit Int?      @map("trigger_visit")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  merchant Merchant @relation(fields: [merchantId], references: [id])
+  member   Member   @relation(fields: [memberId], references: [id])
+
+  @@index([memberId])
+  @@map("scratch_cards")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Lucky Draws
+// ─────────────────────────────────────────────────────────────────────────────
+model LuckyDraw {
+  id             String    @id @default(uuid()) @db.VarChar(36)
+  merchantId     String    @map("merchant_id") @db.VarChar(36)
+  name           String    @db.VarChar(500)
+  prize          String    @db.VarChar(500)
+  prizes         Json?
+  drawDate       DateTime  @map("draw_date") @db.Date
+  minPoints      Decimal?  @default(0) @map("min_points")
+  minVisits      Int?      @default(0) @map("min_visits")
+  status         String    @default("open") @db.VarChar(20)
+  winnerMemberId String?   @map("winner_member_id") @db.VarChar(36)
+  winnerMemberIds Json?    @map("winner_member_ids")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  merchant Merchant         @relation(fields: [merchantId], references: [id])
+  winner   Member?          @relation("LuckyDrawWinner", fields: [winnerMemberId], references: [id])
+  entries  LuckyDrawEntry[]
+
+  @@index([merchantId])
+  @@map("lucky_draws")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Lucky Draw Entries
+// ─────────────────────────────────────────────────────────────────────────────
+model LuckyDrawEntry {
+  id        String   @id @default(uuid()) @db.VarChar(36)
+  drawId    String   @map("draw_id") @db.VarChar(36)
+  memberId  String   @map("member_id") @db.VarChar(36)
+  enteredAt DateTime @default(now()) @map("entered_at")
+
+  draw   LuckyDraw @relation(fields: [drawId], references: [id])
+  member Member    @relation(fields: [memberId], references: [id])
+
+  @@index([drawId])
+  @@map("lucky_draw_entries")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Member Feedback
+// ─────────────────────────────────────────────────────────────────────────────
+model MemberFeedback {
+  id         String   @id @default(uuid()) @db.VarChar(36)
+  memberId   String   @map("member_id") @db.VarChar(36)
+  merchantId String   @map("merchant_id") @db.VarChar(36)
+  rating     Int
+  comment    String?  @db.Text
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  member   Member   @relation(fields: [memberId], references: [id])
+  merchant Merchant @relation(fields: [merchantId], references: [id])
+
+  @@index([merchantId])
+  @@map("member_feedback")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Google Wallet — Merchant Wallet Class
+// ─────────────────────────────────────────────────────────────────────────────
+model MerchantWalletClass {
+  id              String    @id @default(uuid()) @db.VarChar(36)
+  merchantId      String    @unique @map("merchant_id") @db.VarChar(36)
+  googleClassId   String    @unique @map("google_class_id") @db.VarChar(255)
+  logoUrl         String?   @map("logo_url") @db.Text
+  backgroundColor String?   @default("#1A1A1A") @map("background_color") @db.VarChar(20)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime? @updatedAt @map("updated_at")
+
+  merchant Merchant          @relation(fields: [merchantId], references: [id])
+  passes   MemberWalletPass[]
+
+  @@map("merchant_wallet_classes")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Google Wallet — Member Wallet Pass
+// ─────────────────────────────────────────────────────────────────────────────
+model MemberWalletPass {
+  id             String    @id @default(uuid()) @db.VarChar(36)
+  memberId       String    @unique @map("member_id") @db.VarChar(36)
+  walletClassId  String    @map("wallet_class_id") @db.VarChar(36)
+  googleObjectId String    @unique @map("google_object_id") @db.VarChar(255)
+  status         String    @default("not_added") @db.VarChar(30)
+  lastSyncedAt   DateTime? @map("last_synced_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  member      Member              @relation(fields: [memberId], references: [id])
+  walletClass MerchantWalletClass @relation(fields: [walletClassId], references: [id])
+
+  @@map("member_wallet_passes")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Idempotency Records
+// ─────────────────────────────────────────────────────────────────────────────
+model IdempotencyRecord {
+  id             String    @id @default(uuid()) @db.VarChar(36)
+  idempotencyKey String    @map("idempotency_key") @db.VarChar(255)
+  merchantId     String    @map("merchant_id") @db.VarChar(36)
+  endpoint       String    @db.VarChar(255)
+  status         String    @db.VarChar(20)
+  statusCode     Int?      @map("status_code")
+  responseBody   String?   @map("response_body") @db.Text
+  createdAt      DateTime  @default(now()) @map("created_at")
+  expiresAt      DateTime? @map("expires_at")
+
+  @@index([idempotencyKey, merchantId])
+  @@map("idempotency_records")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Event Logs
+// ─────────────────────────────────────────────────────────────────────────────
+model EventLog {
+  id         String   @id @default(uuid()) @db.VarChar(36)
+  merchantId String   @map("merchant_id") @db.VarChar(36)
+  memberId   String?  @map("member_id") @db.VarChar(36)
+  eventType  String   @map("event_type") @db.VarChar(100)
+  payload    Json
+  actorId    String?  @map("actor_id") @db.VarChar(36)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  merchant Merchant @relation(fields: [merchantId], references: [id])
+  member   Member?  @relation(fields: [memberId], references: [id])
+
+  @@index([merchantId])
+  @@map("event_logs")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// OTP Codes (replaces Redis)
+// ─────────────────────────────────────────────────────────────────────────────
+model OtpCode {
+  id        Int      @id @default(autoincrement())
+  phone     String   @db.VarChar(20)
+  code      String   @db.VarChar(10)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([phone])
+  @@map("otp_codes")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SECTION 2 — DEALS PLATFORM
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum PartnerStatus {
+  public_link
+  affiliate
+  authorised_partner
+  direct_merchant
+}
+
+model DealCategory {
+  id     Int     @id @default(autoincrement())
+  name   String  @db.VarChar(100)
+  slug   String  @unique @db.VarChar(100)
+  icon   String? @db.VarChar(20)
+  brands DealBrand[]
+
+  @@map("deals_categories")
+}
+
+model DealCity {
+  id     Int    @id @default(autoincrement())
+  name   String @db.VarChar(100)
+  slug   String @unique @db.VarChar(100)
+  brands DealBrand[]
+
+  @@map("deals_cities")
+}
+
+model DealBrand {
+  id            Int           @id @default(autoincrement())
+  name          String        @db.VarChar(200)
+  categoryId    Int           @map("category_id")
+  category      DealCategory  @relation(fields: [categoryId], references: [id])
+  cityId        Int           @map("city_id")
+  city          DealCity      @relation(fields: [cityId], references: [id])
+  description   String?       @db.Text
+  logoUrl       String?       @map("logo_url") @db.Text
+  website       String?       @db.Text
+  instagram     String?       @db.Text
+  phone         String?       @db.VarChar(20)
+  mapsUrl       String?       @map("maps_url") @db.Text
+  partnerStatus PartnerStatus @map("partner_status")
+  active        Boolean       @default(true)
+  createdAt     DateTime      @default(now()) @map("created_at")
+  deals         Deal[]
+
+  @@index([categoryId])
+  @@index([cityId])
+  @@map("deals_brands")
+}
+
+model Deal {
+  id               Int       @id @default(autoincrement())
+  brandId          Int       @map("brand_id")
+  brand            DealBrand @relation(fields: [brandId], references: [id])
+  offerTitle       String    @map("offer_title") @db.VarChar(500)
+  offerPercentage  Int?      @map("offer_percentage")
+  offerType        String    @map("offer_type") @db.VarChar(30)
+  startDate        DateTime  @map("start_date")
+  endDate          DateTime  @map("end_date")
+  bookingUrl       String?   @map("booking_url") @db.Text
+  affiliateUrl     String?   @map("affiliate_url") @db.Text
+  terms            String?   @db.Text
+  lastVerifiedDate DateTime  @map("last_verified_date")
+  featured         Boolean   @default(false)
+  active           Boolean   @default(true)
+  heroImageUrl     String?   @map("hero_image_url") @db.Text
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  clicks ClickLog[]
+
+  @@index([brandId])
+  @@index([active, featured])
+  @@map("deals_deals")
+}
+
+model DealAdminUser {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique @db.VarChar(255)
+  passwordHash String   @map("password_hash") @db.Text
+  role         String   @default("admin") @db.VarChar(20)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("deals_admin_users")
+}
+
+model ClickLog {
+  id        Int      @id @default(autoincrement())
+  dealId    Int      @map("deal_id")
+  deal      Deal     @relation(fields: [dealId], references: [id])
+  timestamp DateTime @default(now())
+  referrer  String?  @db.Text
+  userAgent String?  @map("user_agent") @db.Text
+
+  @@index([dealId])
+  @@map("deals_click_log")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SECTION 3 — LOYALTY V2 (Tiers, Streaks, Challenges, Reviews)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Merchant-defined loyalty tier configuration
+model TierConfig {
+  id                     String   @id @default(uuid()) @db.VarChar(36)
+  merchantId             String   @map("merchant_id") @db.VarChar(36)
+  name                   String   @db.VarChar(100)
+  slug                   String   @db.VarChar(50)
+  colorHex               String?  @map("color_hex") @db.VarChar(7)
+  icon                   String?  @db.VarChar(50)
+  minPoints              Decimal  @default(0) @map("min_points") @db.Decimal(10, 2)
+  minVisits              Int?     @map("min_visits")
+  bonusPointsMultiplier  Decimal  @default(1.0) @map("bonus_points_multiplier") @db.Decimal(5, 2)
+  benefits               Json?                          // JSON array of benefit strings
+  displayOrder           Int      @default(0) @map("display_order")
+  isActive               Boolean  @default(true) @map("is_active")
+  createdAt              DateTime @default(now()) @map("created_at")
+
+  memberTiers MemberTier[]
+
+  @@index([merchantId])
+  @@map("tier_configs")
+}
+
+// Current tier per member (denormalized for fast reads)
+model MemberTier {
+  id                   String      @id @default(uuid()) @db.VarChar(36)
+  memberId             String      @unique @map("member_id") @db.VarChar(36)
+  merchantId           String      @map("merchant_id") @db.VarChar(36)
+  tierConfigId         String?     @map("tier_config_id") @db.VarChar(36)
+  tierName             String      @default("Bronze") @map("tier_name") @db.VarChar(100)
+  tierSlug             String      @default("bronze") @map("tier_slug") @db.VarChar(50)
+  nextTierPointsNeeded Decimal?    @map("next_tier_points_needed") @db.Decimal(10, 2)
+  achievedAt           DateTime?   @map("achieved_at")
+  updatedAt            DateTime    @updatedAt @map("updated_at")
+
+  member     Member      @relation(fields: [memberId], references: [id])
+  tierConfig TierConfig? @relation(fields: [tierConfigId], references: [id])
+
+  @@index([merchantId])
+  @@map("member_tiers")
+}
+
+// Consecutive weekly visit streaks
+model VisitStreak {
+  id             String    @id @default(uuid()) @db.VarChar(36)
+  memberId       String    @map("member_id") @db.VarChar(36)
+  merchantId     String    @map("merchant_id") @db.VarChar(36)
+  currentStreak  Int       @default(0) @map("current_streak")
+  longestStreak  Int       @default(0) @map("longest_streak")
+  lastVisitWeek  String?   @map("last_visit_week") @db.VarChar(10)  // e.g. "2026-W39"
+  streakBrokenAt DateTime? @map("streak_broken_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  member Member @relation(fields: [memberId], references: [id])
+
+  @@unique([memberId, merchantId])
+  @@index([merchantId])
+  @@map("visit_streaks")
+}
+
+// Time-limited challenges/missions (admin-defined)
+model Challenge {
+  id            String   @id @default(uuid()) @db.VarChar(36)
+  merchantId    String   @map("merchant_id") @db.VarChar(36)
+  title         String   @db.VarChar(500)
+  description   String   @db.Text
+  challengeType String   @map("challenge_type") @db.VarChar(50) // visit_count | spend_amount | referral_count
+  targetValue   Decimal  @map("target_value") @db.Decimal(10, 2)
+  rewardType    String   @default("points") @map("reward_type") @db.VarChar(50)
+  rewardValue   Decimal  @map("reward_value") @db.Decimal(10, 2)
+  startDate     DateTime @map("start_date") @db.Date
+  endDate       DateTime @map("end_date") @db.Date
+  imageUrl      String?  @map("image_url") @db.Text
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  memberProgress ChallengeProgress[]
+
+  @@index([merchantId, isActive])
+  @@map("challenges")
+}
+
+// Member progress toward a challenge
+model ChallengeProgress {
+  id           String    @id @default(uuid()) @db.VarChar(36)
+  challengeId  String    @map("challenge_id") @db.VarChar(36)
+  memberId     String    @map("member_id") @db.VarChar(36)
+  currentValue Decimal   @default(0) @map("current_value") @db.Decimal(10, 2)
+  isCompleted  Boolean   @default(false) @map("is_completed")
+  completedAt  DateTime? @map("completed_at")
+  rewardIssued Boolean   @default(false) @map("reward_issued")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  challenge Challenge @relation(fields: [challengeId], references: [id])
+  member    Member    @relation(fields: [memberId], references: [id])
+
+  @@unique([challengeId, memberId])
+  @@index([memberId])
+  @@map("challenge_progress")
+}
+
+// Points expiry rule per merchant
+model PointsExpiryRule {
+  id                 String   @id @default(uuid()) @db.VarChar(36)
+  merchantId         String   @unique @map("merchant_id") @db.VarChar(36)
+  inactivityDays     Int      @default(180) @map("inactivity_days")
+  warningDaysBefore  Int      @default(30) @map("warning_days_before")
+  isActive           Boolean  @default(true) @map("is_active")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  @@map("points_expiry_rules")
+}
+
+// Member reviews (earn 10 points per review)
+model MemberReview {
+  id           String    @id @default(uuid()) @db.VarChar(36)
+  memberId     String    @map("member_id") @db.VarChar(36)
+  merchantId   String    @map("merchant_id") @db.VarChar(36)
+  redemptionId String?   @map("redemption_id") @db.VarChar(36)
+  rating       Int       // 1-5
+  comment      String?   @db.Text
+  pointsEarned Decimal   @default(0) @map("points_earned") @db.Decimal(10, 2)
+  isVisible    Boolean   @default(true) @map("is_visible")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  member Member @relation(fields: [memberId], references: [id])
+
+  @@index([merchantId, isVisible])
+  @@index([memberId])
+  @@map("member_reviews")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SECTION 4 — DPDP (Digital Personal Data Protection Act 2023) Compliance
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Consent record per member per purpose (immutable — never update, only insert)
+// DPDP Section 6: Consent must be free, specific, informed, unconditional, unambiguous
+model MemberConsent {
+  id          String   @id @default(uuid()) @db.VarChar(36)
+  memberId    String   @map("member_id") @db.VarChar(36)
+  merchantId  String   @map("merchant_id") @db.VarChar(36)
+  // Purpose of consent — each requires separate consent record
+  purpose     String   @db.VarChar(50)  // membership | marketing | analytics | whatsapp | third_party
+  granted     Boolean                    // true = consent given, false = consent withdrawn
+  ipAddress   String?  @map("ip_address") @db.VarChar(50)
+  userAgent   String?  @map("user_agent") @db.Text
+  policyVersion String @default("v1.0") @map("policy_version") @db.VarChar(20)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  member Member @relation(fields: [memberId], references: [id])
+
+  // Append-only: never update a consent record, always insert new
+  @@index([memberId, purpose])
+  @@index([merchantId])
+  @@map("member_consents")
+}
+
+// PII Access Audit Log — immutable record of every time PII is decrypted
+// DPDP Section 8: Data fiduciary must maintain processing records
+model PIIAccessLog {
+  id              String   @id @default(uuid()) @db.VarChar(36)
+  memberId        String   @map("member_id") @db.VarChar(36)
+  merchantId      String   @map("merchant_id") @db.VarChar(36)
+  accessReason    String   @map("access_reason") @db.VarChar(100)  // sms_otp | whatsapp_reminder | ...
+  fieldsAccessed  String   @map("fields_accessed") @db.VarChar(500)  // JSON array as string
+  performedBy     String   @map("performed_by") @db.VarChar(100)    // 'system' | user_id
+  ipAddress       String?  @map("ip_address") @db.VarChar(50)
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  // Append-only: never delete or update audit logs
+  @@index([memberId])
+  @@index([createdAt])
+  @@map("pii_access_log")
+}
+
+// Right-to-Erasure Requests — DPDP Section 13
+// Erasure = anonymise PII, retain aggregated stats for business records
+model ErasureRequest {
+  id              String    @id @db.VarChar(50)    // e.g. "ER-ABCD1234"
+  memberId        String    @map("member_id") @db.VarChar(36)
+  merchantId      String    @map("merchant_id") @db.VarChar(36)
+  requestedAt     DateTime  @default(now()) @map("requested_at")
+  reason          String    @db.Text
+  // Status flow: pending → processing → completed | rejected
+  status          String    @default("pending") @db.VarChar(20)
+  processedAt     DateTime? @map("processed_at")
+  processedBy     String?   @map("processed_by") @db.VarChar(100)
+  rejectionReason String?   @map("rejection_reason") @db.Text
+  // Anonymisation record (what was done)
+  anonymisedFields String?  @map("anonymised_fields") @db.Text
+
+  member Member @relation(fields: [memberId], references: [id])
+
+  @@index([memberId])
+  @@index([status])
+  @@map("erasure_requests")
+}
+
+// Data Correction Requests — DPDP Section 12
+model CorrectionRequest {
+  id          String   @id @default(uuid()) @db.VarChar(36)
+  memberId    String   @map("member_id") @db.VarChar(36)
+  merchantId  String   @map("merchant_id") @db.VarChar(36)
+  field       String   @db.VarChar(50)   // which field to correct (e.g. 'name', 'phone')
+  // Store correction value encrypted
+  newValueEncrypted String? @map("new_value_encrypted") @db.Text
+  reason      String?  @db.Text
+  status      String   @default("pending") @db.VarChar(20)
+  requestedAt DateTime @default(now()) @map("requested_at")
+  resolvedAt  DateTime? @map("resolved_at")
+
+  member Member @relation(fields: [memberId], references: [id])
+
+  @@index([memberId])
+  @@map("correction_requests")
+}
+
+

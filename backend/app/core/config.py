@@ -1,7 +1,10 @@
 """
 Metro Cardz — Application Settings
 Loaded from environment variables. Works with .env file locally,
-and Render.com environment variables in production.
+and Hostinger hPanel → Web App → Environment Variables in production.
+
+Hosting: Hostinger Web App (Node.js for Next.js) or VPS (for this Python API)
+Database: Hostinger MySQL — shared with the Next.js frontend via Prisma
 """
 from functools import lru_cache
 from typing import List
@@ -23,32 +26,31 @@ class Settings(BaseSettings):
     environment: str = "development"
     debug: bool = False
 
-    # ── Database ─────────────────────────────────────────────────────────
-    database_url: str = "sqlite:///test.db"
+    # ── Database — Hostinger MySQL ────────────────────────────────────────
+    # Format: mysql+pymysql://USER:PASSWORD@localhost:3306/DATABASE_NAME
+    # Find credentials in: hPanel → Databases → MySQL Databases
+    # Host is ALWAYS 'localhost' on Hostinger servers
+    database_url: str = "mysql+pymysql://root:@localhost:3306/metrocardz"
 
     @field_validator("database_url", mode="before")
     @classmethod
     def assemble_db_url(cls, v: str) -> str:
         if isinstance(v, str):
             v = v.strip()
-            if v.startswith("postgres://"):
-                v = v.replace("postgres://", "postgresql+psycopg://", 1)
-            elif v.startswith("postgresql://"):
-                v = v.replace("postgresql://", "postgresql+psycopg://", 1)
-            if "psycopg" in v:
+            # Normalize MySQL URL to use PyMySQL driver
+            if v.startswith("mysql://"):
+                v = v.replace("mysql://", "mysql+pymysql://", 1)
+            # Check PyMySQL is available
+            if "pymysql" in v:
                 try:
-                    import psycopg  # check driver is available
+                    import pymysql  # noqa: F401
                 except ImportError:
                     import logging
                     logging.getLogger(__name__).critical(
-                        "psycopg driver NOT found. PostgreSQL connection will fail. "
-                        "Check requirements.txt includes psycopg[binary]."
+                        "PyMySQL driver NOT found. MySQL connection will fail. "
+                        "Run: pip install PyMySQL"
                     )
-                    # Do NOT fall back to SQLite — surface the real error
         return v
-
-    # ── Redis ────────────────────────────────────────────────────────────
-    redis_url: str = "redis://localhost:6379/0"
 
     # ── JWT / Security ───────────────────────────────────────────────────
     secret_key: str = "dev-secret-key-change-in-production-12345"
@@ -57,16 +59,17 @@ class Settings(BaseSettings):
     refresh_token_expire_days: int = 30
 
     # ── CORS ─────────────────────────────────────────────────────────────
-    allowed_origins: str = "https://metrocardz.in,https://www.metrocardz.in,http://localhost:3000,http://localhost:5173"
+    # Add your Hostinger domain here
+    allowed_origins: str = "https://metrocardz.com,https://www.metrocardz.com,http://localhost:3000,http://localhost:5173"
 
     @property
     def allowed_origins_list(self) -> List[str]:
         return [o.strip() for o in self.allowed_origins.split(",") if o.strip()]
 
-    # ── Supabase Storage ─────────────────────────────────────────────────
-    supabase_url: str = ""
-    supabase_service_key: str = ""
-    storage_bucket: str = "metrocardz-assets"
+    # ── Local File Storage (Hostinger disk, served by web server) ────────
+    # Production: set to /home/u446352478/public_html/uploads
+    # Development: leave empty → defaults to backend/../uploads
+    uploads_dir: str = ""
 
     # ── SMS (Msg91) ──────────────────────────────────────────────────────
     msg91_api_key: str = ""
@@ -79,21 +82,15 @@ class Settings(BaseSettings):
 
     # ── Email (SendGrid) ──────────────────────────────────────────────────
     sendgrid_api_key: str = ""
-    sendgrid_from_email: str = "noreply@metrocardz.in"
+    sendgrid_from_email: str = "noreply@metrocardz.com"
 
     # ── Internal Cron Auth ────────────────────────────────────────────────
-    internal_cron_key: str = ""   # secret key for /internal/* endpoints (set in Render env)
+    # Used by /internal/* endpoints called by Hostinger Cron Jobs
+    internal_cron_key: str = ""
 
-    # ── Sentry ───────────────────────────────────────────────────────────
+    # ── Sentry (Error Tracking) ───────────────────────────────────────────
     sentry_dsn: str = ""
     sentry_traces_sample_rate: float = 0.1
-
-    # ── Google Wallet ─────────────────────────────────────────────────────────
-    # Set these in production (Render env vars):
-    #   GOOGLE_WALLET_ISSUER_ID = your numeric issuer ID from Google Pay & Wallet Console
-    #   GOOGLE_WALLET_SA_JSON_PATH = /etc/secrets/google_wallet_sa.json (mounted as file secret)
-    google_wallet_issuer_id: str = ""
-    google_wallet_sa_json_path: str = ""
 
     # ── Super Admin ──────────────────────────────────────────────────────
     super_admin_phone: str = "9000000000"

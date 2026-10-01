@@ -52,7 +52,7 @@ export default function CompliancePage() {
             {
               icon: 'security',
               title: 'Rate Limiting & Abuse Prevention',
-              desc: 'Login, OTP, and public endpoints are protected by IP-level rate limiting via Redis. Failed logins are limited to 5/minute. OTP requests are limited to 3/minute per phone number.',
+              desc: 'Login, OTP, and public endpoints are protected by IP-level rate limiting (in-memory sliding window). Failed logins are limited to 5/minute. OTP requests are limited to 3/minute per phone number.',
             },
             {
               icon: 'gavel',

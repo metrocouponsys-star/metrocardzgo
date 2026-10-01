@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&amp;family=Syne:wght@600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#111317;color:#e2e2e6;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}.material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-error": "#690005", "on-primary-fixed": "#241a00", "outline-variant": "#4d4635", "on-tertiary": "#472a00", "surface-container": "#1e2023", "surface-variant": "#333538", "secondary-container": "#896c00", "outline": "#99907c", "primary-fixed-dim": "#e9c349", "tertiary-fixed-dim": "#ffb95f", "on-tertiary-fixed": "#2a1700", "error": "#ffb4ab", "surface-container-lowest": "#0c0e11", "secondary-fixed-dim": "#e7c35a", "on-primary-container": "#554300", "tertiary": "#ffc37b", "inverse-on-surface": "#2f3034", "primary": "#f2ca50", "tertiary-fixed": "#ffddb8", "on-surface": "#e2e2e6", "primary-fixed": "#ffe088", "on-secondary": "#3d2f00", "on-primary-fixed-variant": "#574500", "surface-container-highest": "#333538", "on-primary": "#3c2f00", "secondary": "#e7c35a", "on-background": "#e2e2e6", "inverse-surface": "#e2e2e6", "error-container": "#93000a", "on-secondary-fixed-variant": "#584400", "background": "#111317", "on-secondary-container": "#fff3dc", "surface-container-low": "#1a1c1f", "surface-dim": "#111317", "on-error-container": "#ffdad6", "secondary-fixed": "#ffe08b", "tertiary-container": "#f7a00f", "surface-container-high": "#282a2d", "on-secondary-fixed": "#241a00", "surface": "#111317", "on-surface-variant": "#d0c5af", "surface-bright": "#37393d", "on-tertiary-container": "#633d00", "inverse-primary": "#735c00", "on-tertiary-fixed-variant": "#653e00", "primary-container": "#d4af37", "surface-tint": "#e9c349" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "gutter": "1rem", "margin-tablet": "2rem", "margin-desktop": "3rem", "space-sm": "0.5rem", "space-xs": "0.25rem", "gutter-desktop": "2rem", "margin": "1rem", "gutter-tablet": "1.5rem", "space-xl": "2.5rem", "space-lg": "1.5rem", "space-md": "1rem" }, "fontFamily": { "headline-lg": ["Syne"], "headline-md": ["Syne"], "display-hero": ["Syne"], "badge-micro": ["Plus Jakarta Sans"], "body-sm": ["Plus Jakarta Sans"], "body-semibold": ["Plus Jakarta Sans"], "body-base": ["Plus Jakarta Sans"], "headline-xl": ["Syne"], "display-hero-mobile": ["Syne"], "headline-xl-mobile": ["Syne"], "body-lg": ["Plus Jakarta Sans"], "label-caps": ["Plus Jakarta Sans"] }, "fontSize": { "headline-lg": ["22px", { "lineHeight": "30px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "headline-md": ["18px", { "lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "600" }], "display-hero": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "badge-micro": ["10px", { "lineHeight": "12px", "letterSpacing": "0.06em", "fontWeight": "700" }], "body-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "400" }], "body-semibold": ["14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "600" }], "body-base": ["14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" }], "headline-xl": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.015em", "fontWeight": "600" }], "display-hero-mobile": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "headline-xl-mobile": ["26px", { "lineHeight": "34px", "letterSpacing": "-0.015em", "fontWeight": "600" }], "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "400" }], "label-caps": ["11px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "700" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-base text-body-base text-on-surface min-h-screen flex flex-col antialiased selection:bg-primary-container selection:text-on-primary-container"><header class="fixed top-0 inset-x-0 z-50 bg-surface/80 backdrop-blur-xl pt-safe"><div class="h-16 px-margin flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm min-w-0"><img alt="Metro Cardz Logo" class="h-8 w-auto object-contain flex-shrink-0" src="https://lh3.googleusercontent.com/aida/AEtjO1UQuY5kj3NWrrIlfsbIn3CUYDCV9qUnAmCLePyZO1q1WsFZ04mHVX4MgFFjbL8MsLJT4k3CedVzldbFvHaAboY3VEURnnOOTMOy09o8xYLKfQ6tc7akpBIELc5JrtSuO_co7nI_xo8FhIyR3uJ0CtOWH7A97CJ6fDRAWCXrK811QMjUgjyCmhGKY_4tVJNqbcujNvMIi03AiMkOfuSRZ9PWZEHnbPR5wDbbggZ5MYgGRt5LCC6vpOEwWe0"/><div class="flex flex-col min-w-0"><span class="font-headline-md text-headline-md text-primary tracking-tight truncate leading-tight">Metro Cardz</span><span class="font-label-caps text-label-caps text-on-surface-variant truncate uppercase">Admin</span></div></div><div class="flex items-center gap-space-sm flex-shrink-0"><button class="h-9 px-3 rounded-full bg-surface-container-high hover:bg-surface-variant text-on-surface flex items-center gap-1 min-w-[44px] transition-colors"><span class="material-symbols-outlined text-[16px] text-primary">near_me</span><span class="font-body-sm text-body-sm text-on-surface font-semibold">Mumbai</span><span class="material-symbols-outlined text-[16px] text-outline">keyboard_arrow_down</span></button><button aria-label="Member Profile" class="relative p-1 rounded-full flex items-center justify-center min-w-[44px] min-h-[44px] focus:outline-none"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDSMLvyaSsnJIKMM-lpraZ7K0HqqtheUkhvbkZe7TL2i8rqRPjCIDoSwkGzjJYA20rNdgpIlix76TJxioGHhZ-VBXCewPxlqD7-y95YYMBM3QgUEfvelU9WakC_jENyDC1HWK0J5Bi2o2iHVZc0IYM17IoSPPVUuMV3GqFYvsZs9ebKLp9BoINJDoD1Cm0hcXMaiCYgP2-DoU8Z-gMCXKEEHu0k7f2HQybgFFDv-rIwjdg9a8qiGV6N"/><span class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-primary rounded-full shadow-[0_0_8px_rgba(242,202,80,0.8)]"></span></button></div></div></header><main class="flex-1 flex flex-col relative w-full pt-16 pb-24 bg-surface"><div class="flex flex-col w-full px-margin space-y-space-md">
+<!-- Operations Header Banner -->
+<div class="bg-surface-container-high rounded-xl p-space-md shadow-md flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">admin_panel_settings</span>
+<h1 class="font-headline-md text-headline-md text-on-surface">Deals Management Dashboard</h1>
+</div>
+<span class="font-badge-micro text-badge-micro uppercase px-2 py-0.5 rounded-full bg-primary/10 text-primary">OPS CONSOLE v2.4</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Real-time merchant verification index, compliance attribution, and inventory state toggles.</p>
+</div>
+<!-- Mandatory Compliance Alert Banner -->
+<div class="bg-surface-container-low rounded-lg p-3 flex items-start gap-3 shadow-sm">
+<span class="material-symbols-outlined text-tertiary-container text-[18px] shrink-0 mt-0.5">verified_user</span>
+<div class="flex flex-col min-w-0">
+<span class="font-body-semibold text-body-semibold text-on-surface">Mandatory Compliance Engine</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-tight">
+        Partner status determines disclaimer type and booking redirect attribution on the public portal. Audit quarterly to avoid SLA penalties.
+      </p>
+</div>
+</div>
+<!-- Stats Grid (High Density) -->
+<div class="grid grid-cols-2 gap-space-sm">
+<!-- Stat 1 -->
+<div class="bg-surface-container rounded-xl p-3 flex flex-col justify-between shadow-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Total Deals</span>
+<span class="material-symbols-outlined text-outline text-[16px]">layers</span>
+</div>
+<div class="mt-2 flex items-baseline gap-1.5">
+<span class="font-headline-lg text-headline-lg text-on-surface font-bold">128</span>
+<span class="font-body-sm text-body-sm text-primary">+4 net</span>
+</div>
+</div>
+<!-- Stat 2 -->
+<div class="bg-surface-container rounded-xl p-3 flex flex-col justify-between shadow-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Active Yield</span>
+<span class="material-symbols-outlined text-primary text-[16px]">bolt</span>
+</div>
+<div class="mt-2 flex items-baseline gap-1.5">
+<span class="font-headline-lg text-headline-lg text-primary font-bold">114</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">89.1%</span>
+</div>
+</div>
+<!-- Stat 3: Stale Alert -->
+<div class="bg-surface-container-highest rounded-xl p-3 flex flex-col justify-between shadow-md">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps text-tertiary uppercase">Stale Content (&gt;30d)</span>
+<span class="material-symbols-outlined text-tertiary-container text-[16px]" style="font-variation-settings: 'FILL' 1;">warning</span>
+</div>
+<div class="mt-2 flex items-baseline gap-1.5">
+<span class="font-headline-lg text-headline-lg text-tertiary-container font-bold">6 Deals</span>
+<span class="font-body-sm text-body-sm text-tertiary">Action req.</span>
+</div>
+</div>
+<!-- Stat 4 -->
+<div class="bg-surface-container rounded-xl p-3 flex flex-col justify-between shadow-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Direct Merch.</span>
+<span class="material-symbols-outlined text-secondary text-[16px]">workspace_premium</span>
+</div>
+<div class="mt-2 flex items-baseline gap-1.5">
+<span class="font-headline-lg text-headline-lg text-on-surface font-bold">34</span>
+<span class="font-body-sm text-body-sm text-secondary">Verified VIP</span>
+</div>
+</div>
+</div>
+<!-- Operational Action & Filtering Suite -->
+<div class="bg-surface-container-low rounded-xl p-space-sm space-y-space-sm shadow-sm">
+<!-- Search Bar -->
+<div class="relative w-full">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline text-[18px]">search</span>
+</div>
+<input class="w-full h-11 pl-9 pr-3 rounded-lg bg-surface-container text-on-surface placeholder:text-outline font-body-sm text-body-sm focus:outline-none focus:bg-surface-container-high transition-colors" id="dealSearch" placeholder="Search brand, offer or slug..." type="text"/>
+</div>
+<!-- Dropdown / Control Toolbar -->
+<div class="flex items-center gap-2 overflow-x-auto pb-1">
+<!-- Tier Filter -->
+<div class="relative shrink-0">
+<select class="appearance-none h-9 pl-3 pr-8 rounded-lg bg-surface-container font-body-sm text-body-sm text-on-surface font-semibold focus:outline-none cursor-pointer">
+<option value="ALL">All Partner Tiers</option>
+<option value="DIRECT_MERCHANT">Direct Merchant</option>
+<option value="AUTHORISED_PARTNER">Authorised Partner</option>
+<option value="AFFILIATE">Affiliate</option>
+<option value="PUBLIC_LINK">Public Link</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-2 pointer-events-none text-outline text-[16px]">expand_more</span>
+</div>
+<!-- Category Filter -->
+<div class="relative shrink-0">
+<select class="appearance-none h-9 pl-3 pr-8 rounded-lg bg-surface-container font-body-sm text-body-sm text-on-surface focus:outline-none cursor-pointer">
+<option value="ALL">All Categories</option>
+<option value="DINING">Restaurants &amp; Dining</option>
+<option value="LUXURY">Luxury Retail</option>
+<option value="WELLNESS">Wellness &amp; Spas</option>
+<option value="HOSPITALITY">Boutique Stays</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-2 pointer-events-none text-outline text-[16px]">expand_more</span>
+</div>
+<!-- Quick Add Deal Primary Action Button -->
+<button class="shrink-0 h-9 px-3 rounded-lg bg-primary hover:bg-primary-fixed-dim text-on-primary font-body-semibold text-body-semibold flex items-center gap-1.5 transition-colors shadow-sm ml-auto">
+<span class="material-symbols-outlined text-[16px]">add_circle</span>
+<span>+ New Deal</span>
+</button>
+</div>
+</div>
+<!-- Operational Deals Table / Card Flow -->
+<div class="flex flex-col space-y-space-sm">
+<!-- List Title & Active Count Context -->
+<div class="flex items-center justify-between px-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Indexed Deals (Showing 4 of 128)</span>
+<span class="font-badge-micro text-badge-micro text-outline">SORT: VERIFICATION RECENCY</span>
+</div>
+<!-- Deal Card 1: Bastian BKC -->
+<div class="bg-surface-container rounded-xl p-space-md shadow-md flex flex-col gap-3 relative transition-all" data-brand="bastian">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-3 min-w-0">
+<img class="w-10 h-10 rounded-lg object-cover bg-surface-container-high shrink-0" data-alt="Monochrome luxury restaurant emblem with opulent gold accents set against textured dark obsidian background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCypXgASExbgUkrni4dg27VSNEgeGm0kNfxg0Lxyi0hQIjvW5Bmd324gp7gsyS6I4GChyahTOMWI5oVbE7nduVhdfJnJB_VdbXuSxoLfFs_lQ53Vu_Vylg4hF5nlisO1fKSECr3PBxLPd5RWjgVwBBS9p6xF2w5PYia-1s4hg22-B1nlsk29-6aEx-Liyi6tsCFLxBhcjIUaI8gFo2R_YpwECQIMhtW-0DU2f-BTI85_jrUGaREb7ig"/>
+<div class="flex flex-col min-w-0">
+<span class="font-body-semibold text-body-semibold text-on-surface truncate">Bastian BKC</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Restaurants • Fine Dining</span>
+</div>
+</div>
+<!-- Compliance Partner Badge: DIRECT_MERCHANT -->
+<div class="flex items-center gap-1 px-2.5 py-1 rounded-md bg-surface-container-highest shrink-0">
+<span class="material-symbols-outlined text-primary text-[14px]" style="font-variation-settings: 'FILL' 1;">stars</span>
+<span class="font-badge-micro text-badge-micro text-primary-fixed uppercase">DIRECT_MERCHANT</span>
+</div>
+</div>
+<div class="flex items-center justify-between bg-surface-container-low rounded-lg p-2.5">
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-on-surface-variant">OFFER TITLE &amp; REDUCTION</span>
+<span class="font-body-semibold text-body-semibold text-primary">Flat 25% Off Food Bill</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-label-caps text-label-caps text-on-surface-variant">ATTRIBUTION</span>
+<span class="font-body-sm text-body-sm text-on-surface font-semibold">Concierge Desk VIP</span>
+</div>
+</div>
+<!-- Metrics, Freshness & Controls Row -->
+<div class="flex items-center justify-between pt-1">
+<!-- Last Verified State (Fresh) -->
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Verified <strong class="text-on-surface font-semibold">2d ago</strong></span>
+</div>
+<!-- Active Toggle Switch & Quick Ops -->
+<div class="flex items-center gap-2">
+<!-- Toggle -->
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-9 h-5 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-surface peer-checked:bg-primary after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-on-primary after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
+</label>
+<!-- Quick Action Buttons -->
+<button class="w-8 h-8 rounded-lg bg-surface-container-high text-on-surface flex items-center justify-center hover:bg-surface-bright transition-colors" title="Edit Deal">
+<span class="material-symbols-outlined text-[16px]">edit</span>
+</button>
+<button class="h-8 px-2 rounded-lg bg-surface-container-high text-primary font-label-caps text-label-caps flex items-center gap-1 hover:bg-surface-bright transition-colors" title="Verify Now">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+<span>AUDIT</span>
+</button>
+<button class="w-8 h-8 rounded-lg bg-surface-container-high text-outline hover:text-error hover:bg-error-container transition-colors flex items-center justify-center" title="Archive">
+<span class="material-symbols-outlined text-[16px]">archive</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Deal Card 2: Taj Lands End (STALE FLAG >38d) -->
+<div class="bg-surface-container rounded-xl p-space-md shadow-md flex flex-col gap-3 relative transition-all" data-brand="taj">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-3 min-w-0">
+<img class="w-10 h-10 rounded-lg object-cover bg-surface-container-high shrink-0" data-alt="Heritage palace archway facade lit softly at twilight with warm golden amber chandeliers and architectural silhouettes" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCWf0CCyFWb9-8tUaI12DlbukDRJhInZaGaFu9pJ4LEP6Op5RTEuqCHjCrvGzuBuEttJI1kw2A_0ZeHJCYWz5J0VzF7Pfu71nWwXfLwV48jMu6aEJwptoOEgm1cj0kMmOCY2U8UC2WGuvl4B7oFEZyDHXIv7uaJlK7_5t0qjJg7x5cNAFTDqctdJBaezUPmBHYY5QBJHIxY6V3qB6BpYa9QI4XLLg_ogKOKxzzoE8RPpMINw8BFcuiz"/>
+<div class="flex flex-col min-w-0">
+<span class="font-body-semibold text-body-semibold text-on-surface truncate">Taj Lands End • Jiva Spa</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Wellness • Spa &amp; Retreat</span>
+</div>
+</div>
+<!-- Compliance Partner Badge: AUTHORISED_PARTNER -->
+<div class="flex items-center gap-1 px-2.5 py-1 rounded-md bg-surface-container-highest shrink-0">
+<span class="material-symbols-outlined text-secondary text-[14px]">verified</span>
+<span class="font-badge-micro text-badge-micro text-secondary uppercase">AUTHORISED_PARTNER</span>
+</div>
+</div>
+<div class="flex items-center justify-between bg-surface-container-low rounded-lg p-2.5">
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-on-surface-variant">OFFER TITLE &amp; REDUCTION</span>
+<span class="font-body-semibold text-body-semibold text-primary">Complimentary Hydrotherapy with 90m Spa</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-label-caps text-label-caps text-on-surface-variant">SLUG</span>
+<span class="font-body-sm text-body-sm text-on-surface font-semibold font-mono">/taj-jiva-spa</span>
+</div>
+</div>
+<!-- Warning High-Alert Freshness Strip -->
+<div class="bg-error-container/30 rounded-lg p-2 flex items-center justify-between">
+<div class="flex items-center gap-1.5 text-error">
+<span class="material-symbols-outlined text-[16px]">warning</span>
+<span class="font-body-sm text-body-sm font-semibold">38d ago - Needs Verification</span>
+</div>
+<button class="h-6 px-2 rounded bg-tertiary-container text-on-tertiary-container font-label-caps text-label-caps uppercase tracking-wider font-bold">
+          Verify Now
+        </button>
+</div>
+<!-- Controls Row -->
+<div class="flex items-center justify-between pt-1">
+<span class="font-body-sm text-body-sm text-tertiary flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">priority_high</span> Auto-pause in 48h
+        </span>
+<div class="flex items-center gap-2">
+<!-- Toggle -->
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-9 h-5 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-surface peer-checked:bg-primary after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-on-primary after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
+</label>
+<!-- Action Buttons -->
+<button class="w-8 h-8 rounded-lg bg-surface-container-high text-on-surface flex items-center justify-center hover:bg-surface-bright transition-colors" title="Edit Deal">
+<span class="material-symbols-outlined text-[16px]">edit</span>
+</button>
+<button class="w-8 h-8 rounded-lg bg-surface-container-high text-outline hover:text-error hover:bg-error-container transition-colors flex items-center justify-center" title="Archive">
+<span class="material-symbols-outlined text-[16px]">archive</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Deal Card 3: Reliance Jewels Luxury (AFFILIATE) -->
+<div class="bg-surface-container rounded-xl p-space-md shadow-md flex flex-col gap-3 relative transition-all" data-brand="jewels">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-3 min-w-0">
+<img class="w-10 h-10 rounded-lg object-cover bg-surface-container-high shrink-0" data-alt="Exquisite gold artisan jewelry piece placed on black velvet fabric with subtle rim lighting and metallic glints" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAEKHltmib3M0Gy5UtP9LBEPVMj44sLUPQqMRv6Eu_aE_ugSyQMNpqmUP4f501NZQxjxgVAQG6yhrKZpE6KR1zwCEp5fPQ5329FjmqehGJhhLLYU5dmv93e9vhZFb0bP1hm7iBAJvZ6naYbGayYBucn0H-P86gHYZ0_IE7l43wiyi_gv8JYiqqDnFUQNHaKKGvJIzP-ix_SZtlVSaE8nEqb8exe9S_cc3KQXigXIWZ8Yu1uAVEVoks"/>
+<div class="flex flex-col min-w-0">
+<span class="font-body-semibold text-body-semibold text-on-surface truncate">Zoya • A Tata Brand</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Luxury Retail • High Jewelry</span>
+</div>
+</div>
+<!-- Compliance Partner Badge: AFFILIATE -->
+<div class="flex items-center gap-1 px-2.5 py-1 rounded-md bg-surface-container-highest shrink-0">
+<span class="material-symbols-outlined text-outline text-[14px]">link</span>
+<span class="font-badge-micro text-badge-micro text-on-surface-variant uppercase">AFFILIATE</span>
+</div>
+</div>
+<div class="flex items-center justify-between bg-surface-container-low rounded-lg p-2.5">
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-on-surface-variant">OFFER TITLE &amp; REDUCTION</span>
+<span class="font-body-semibold text-body-semibold text-primary">₹15,000 Voucher on ₹1.5L Spend</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-label-caps text-label-caps text-on-surface-variant">TRACKING KEY</span>
+<span class="font-body-sm text-body-sm text-on-surface font-semibold font-mono">UTM_GOLD2025</span>
+</div>
+</div>
+<div class="flex items-center justify-between pt-1">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Verified <strong class="text-on-surface font-semibold">14d ago</strong></span>
+</div>
+<div class="flex items-center gap-2">
+<!-- Toggle -->
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-9 h-5 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-surface peer-checked:bg-primary after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-on-primary after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
+</label>
+<button class="w-8 h-8 rounded-lg bg-surface-container-high text-on-surface flex items-center justify-center hover:bg-surface-bright transition-colors" title="Edit Deal">
+<span class="material-symbols-outlined text-[16px]">edit</span>
+</button>
+<button class="h-8 px-2 rounded-lg bg-surface-container-high text-primary font-label-caps text-label-caps flex items-center gap-1 hover:bg-surface-bright transition-colors" title="Verify Now">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+<span>AUDIT</span>
+</button>
+<button class="w-8 h-8 rounded-lg bg-surface-container-high text-outline hover:text-error hover:bg-error-container transition-colors flex items-center justify-center" title="Archive">
+<span class="material-symbols-outlined text-[16px]">archive</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Deal Card 4: Sula Vineyards (PUBLIC_LINK, Inactive) -->
+<div class="bg-surface-container/60 rounded-xl p-space-md shadow-sm flex flex-col gap-3 relative transition-all opacity-80" data-brand="sula">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-3 min-w-0">
+<img class="w-10 h-10 rounded-lg object-cover bg-surface-container-high shrink-0 grayscale" data-alt="Sun setting over serene lush vineyard grapes and wine barrels in golden evening haze with modern minimal framing" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAWwyr6rtghWgIU_P6NZB6Q0_GKlS8aV9QClZj6DEePEKFsM0o6C4QPzyfBWQMaYWdONRrDuERhH6a9W0bqG6KQ_umRoAJM8cytYiOTx4RWRTWC6UVrlKQ1xqF8uWqiPZDPR_YTzor9NZKvjkYBPH4KXbCRHaJxfhkrGeucM0h6QTHmXmtXGomG5JEvmP59dAusgcHNZfoHpf_x15Ve3fzCLt61COO1AidbE-F8xXLaLljQ8_-T9rwX"/>
+<div class="flex flex-col min-w-0">
+<span class="font-body-semibold text-body-semibold text-on-surface truncate">Sula Vineyards Stays</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Boutique Stays • Vineyard Tour</span>
+</div>
+</div>
+<!-- Compliance Partner Badge: PUBLIC_LINK -->
+<div class="flex items-center gap-1 px-2.5 py-1 rounded-md bg-surface-container-highest shrink-0">
+<span class="material-symbols-outlined text-outline text-[14px]">public</span>
+<span class="font-badge-micro text-badge-micro text-outline uppercase">PUBLIC_LINK</span>
+</div>
+</div>
+<div class="flex items-center justify-between bg-surface-container-low rounded-lg p-2.5">
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-on-surface-variant">OFFER TITLE &amp; REDUCTION</span>
+<span class="font-body-semibold text-body-semibold text-outline">15% Public Tasting Pass</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-label-caps text-label-caps text-on-surface-variant">STATE</span>
+<span class="font-badge-micro text-badge-micro text-outline uppercase bg-surface-container px-2 py-0.5 rounded">PAUSED</span>
+</div>
+</div>
+<div class="flex items-center justify-between pt-1">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-outline"></span>
+<span class="font-body-sm text-body-sm text-outline">Verified <strong>42d ago</strong></span>
+</div>
+<div class="flex items-center gap-2">
+<!-- Toggle Inactive -->
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox"/>
+<div class="w-9 h-5 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-surface peer-checked:bg-primary after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-on-primary after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
+</label>
+<button class="w-8 h-8 rounded-lg bg-surface-container-high text-on-surface flex items-center justify-center hover:bg-surface-bright transition-colors" title="Edit Deal">
+<span class="material-symbols-outlined text-[16px]">edit</span>
+</button>
+<button class="h-8 px-2 rounded-lg bg-surface-container-high text-primary font-label-caps text-label-caps flex items-center gap-1 hover:bg-surface-bright transition-colors" title="Verify Now">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+<span>AUDIT</span>
+</button>
+<button class="w-8 h-8 rounded-lg bg-surface-container-high text-outline hover:text-error hover:bg-error-container transition-colors flex items-center justify-center" title="Archive">
+<span class="material-symbols-outlined text-[16px]">archive</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Operational Mass Controls / Floating Action Trigger Container -->
+<div class="sticky bottom-4 z-20 w-full pt-space-xs">
+<div class="bg-surface-container-highest/95 backdrop-blur-md rounded-xl p-3 shadow-xl flex items-center justify-between">
+<div class="flex items-center gap-2">
+<input class="w-4 h-4 accent-primary rounded cursor-pointer" id="selectAllDeals" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface font-semibold">Select All (128)</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="h-9 px-3 rounded-lg bg-surface-variant text-on-surface font-label-caps text-label-caps flex items-center gap-1.5 hover:bg-surface-bright transition-colors" id="batchVerifyBtn">
+<span class="material-symbols-outlined text-[16px] text-secondary">fact_check</span>
+<span>BATCH VERIFY</span>
+</button>
+<button class="h-9 px-3 rounded-lg bg-primary hover:bg-primary-fixed-dim text-on-primary font-body-semibold text-body-semibold flex items-center gap-1 transition-transform active:scale-95 shadow-md">
+<span class="material-symbols-outlined text-[16px]">add</span>
+<span>ADD DEAL</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<script>
+  // Simple operational search micro-interaction
+  const searchInput = document.getElementById('dealSearch');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      const dealCards = document.querySelectorAll('[data-brand]');
+      dealCards.forEach((card) => {
+        const text = card.textContent.toLowerCase();
+        if (text.includes(query)) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    });
+  }
+
+  // Batch verify toast mimic
+  const batchBtn = document.getElementById('batchVerifyBtn');
+  if (batchBtn) {
+    batchBtn.addEventListener('click', () => {
+      const originalText = batchBtn.innerHTML;
+      batchBtn.innerHTML = `<span class="material-symbols-outlined text-[16px] text-primary animate-spin">refresh</span><span>VERIFYING...</span>`;
+      setTimeout(() => {
+        batchBtn.innerHTML = `<span class="material-symbols-outlined text-[16px] text-primary">done_all</span><span>ALL COMPLIANT</span>`;
+        setTimeout(() => {
+          batchBtn.innerHTML = originalText;
+        }, 2200);
+      }, 700);
+    });
+  }
+</script></main><nav class="fixed bottom-0 inset-x-0 z-50 pb-safe bg-surface/90 backdrop-blur-xl shadow-[0_-8px_32px_rgba(0,0,0,0.4)]" data-active-classes="text-primary font-body-semibold"><div class="flex justify-around items-center h-20 px-space-sm"><a class="flex flex-col items-center justify-center gap-1 w-16 h-14 text-on-surface-variant hover:text-on-surface transition-all" data-path="explore" href="#"><span class="material-symbols-outlined text-[24px]">explore</span><span class="font-label-caps text-label-caps tracking-wider">EXPLORE</span></a><a class="flex flex-col items-center justify-center gap-1 w-16 h-14 text-on-surface-variant hover:text-on-surface transition-all" data-path="top-deals" href="#"><span class="material-symbols-outlined text-[24px]">local_activity</span><span class="font-label-caps text-label-caps tracking-wider">TOP DEALS</span></a><a class="flex flex-col items-center justify-center gap-1 w-16 h-14 text-on-surface-variant hover:text-on-surface transition-all" data-path="my-card" href="#"><span class="material-symbols-outlined text-[24px]">contactless</span><span class="font-label-caps text-label-caps tracking-wider">MY CARD</span></a><a aria-current="page" class="flex flex-col items-center justify-center gap-1 w-16 h-14 transition-all text-primary font-body-semibold" data-path="admin" href="#"><span class="material-symbols-outlined text-[24px]">tune</span><span class="font-label-caps text-label-caps tracking-wider">ADMIN</span></a></div></nav></body></html>

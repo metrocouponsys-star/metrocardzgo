@@ -1,0 +1,91 @@
+// Metro Cardz — Prisma Schema
+// Database: MySQL (Hostinger-managed)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum PartnerStatus {
+  public_link
+  affiliate
+  authorised_partner
+  direct_merchant
+}
+
+model Category {
+  id     Int     @id @default(autoincrement())
+  name   String
+  slug   String  @unique
+  brands Brand[]
+}
+
+model City {
+  id     Int     @id @default(autoincrement())
+  name   String
+  slug   String  @unique
+  brands Brand[]
+}
+
+model Brand {
+  id             Int           @id @default(autoincrement())
+  name           String
+  categoryId     Int
+  category       Category      @relation(fields: [categoryId], references: [id])
+  cityId         Int
+  city           City          @relation(fields: [cityId], references: [id])
+  description    String?       @db.Text
+  logoUrl        String?
+  website        String?
+  instagram      String?
+  phone          String?
+  mapsUrl        String?
+  partnerStatus  PartnerStatus
+  active         Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  deals          Deal[]
+
+  @@index([categoryId])
+  @@index([cityId])
+}
+
+model Deal {
+  id                Int       @id @default(autoincrement())
+  brandId           Int
+  brand             Brand     @relation(fields: [brandId], references: [id])
+  offerTitle        String
+  offerPercentage   Int?
+  offerType         String    // e.g. "percentage", "bogo", "flat", "package"
+  startDate         DateTime
+  endDate           DateTime
+  bookingUrl        String?
+  affiliateUrl      String?
+  terms             String?   @db.Text
+  lastVerifiedDate  DateTime
+  featured          Boolean   @default(false)
+  active            Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+
+  @@index([brandId])
+  @@index([active, featured])
+}
+
+model AdminUser {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String
+  role         String   @default("admin")
+  createdAt    DateTime @default(now())
+}
+
+// Phase 2 (optional, not required for v1)
+// model ClickLog {
+//   id        Int      @id @default(autoincrement())
+//   dealId    Int
+//   timestamp DateTime @default(now())
+//   referrer  String?
+// }

@@ -1,23 +1,34 @@
 """
 Metro Cardz — Logo Image Processing Utilities
+100% Local Storage — files saved to VPS disk, served by Nginx.
+
+No Supabase. No S3. No third-party storage.
+
+Storage layout on VPS:
+  /var/www/metrocardz/uploads/merchant-logos/{merchant_id}/logo.webp
+  
+Served publicly via Nginx at:
+  https://api.metrocardz.in/uploads/merchant-logos/{merchant_id}/logo.webp
 
 Two-layer compression strategy:
-  1. Client-side (browser-image-compression in React) — reduces upload size, gives instant preview.
-  2. Server-side (this module, Pillow) — the real enforcement net, always runs regardless of client.
+  1. Client-side (browser-image-compression in React) — reduces upload size.
+  2. Server-side (this module, Pillow) — enforces hard limits always.
 
-Storage math:
-  Uncompressed phone photos: 2–5 MB each → ~200–500 merchants in 1 GB Supabase Storage free tier.
-  Compressed WebP (max 100 KB, 512 px): → 10,000+ merchants in the same 1 GB budget.
+Rules:
+  - One logo per merchant, always overwrite (upsert) — no stale versions.
+  - Fixed max dimension 512 px — logos never render larger than this.
+  - WebP output only — 25–35% smaller than JPEG at equal quality.
+  - Hard reject raw input > 10 MB before allocating CPU.
+  - Binary-search quality reduction ensures output ≤ 100 KB.
 
-Rules baked in:
-  - One logo per merchant, always overwrite (upsert) — no stale versions pile up.
-  - Fixed max dimension 512 px — logos never render larger than this in any UI.
-  - WebP output only — 25–35% smaller than JPEG at equal perceived quality.
-  - Hard reject raw input > 10 MB before allocating any CPU.
-  - Binary-search quality reduction ensures we stay under 100 KB no matter what.
+Storage cost: ~100 KB × 10,000 merchants = 1 GB total — fits trivially
+on Hostinger VPS (200 GB disk). Even 100,000 merchants = 10 GB.
 """
 
 import io
+import os
+import shutil
+from pathlib import Path
 from PIL import Image
 
 
@@ -25,9 +36,18 @@ from PIL import Image
 
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024   # 10 MB — hard reject before processing
 MAX_OUTPUT_KB    = 100                 # 100 KB — target output ceiling
-MAX_DIMENSION    = 512                 # px — max width OR height (aspect ratio preserved)
-INITIAL_QUALITY  = 85                 # WebP quality to start binary search from
-MIN_QUALITY      = 20                 # Never go below this (visually unacceptable)
+MAX_DIMENSION    = 512                 # px — max width OR height (aspect preserved)
+INITIAL_QUALITY  = 85                 # WebP quality to start binary search
+MIN_QUALITY      = 20                 # Never go below this
+
+# Local uploads root — configurable via UPLOADS_DIR env var.
+# On VPS: /var/www/metrocardz/uploads
+# In development: relative to backend directory
+_DEFAULT_UPLOADS_DIR = os.environ.get(
+    "UPLOADS_DIR",
+    os.path.join(os.path.dirname(__file__), "..", "..", "..", "uploads"),
+)
+UPLOADS_ROOT = Path(_DEFAULT_UPLOADS_DIR).resolve()
 
 
 # ── Core compression function ─────────────────────────────────────────────────
@@ -46,32 +66,28 @@ def compress_logo(file_bytes: bytes) -> bytes:
         ValueError: If file_bytes exceeds MAX_UPLOAD_BYTES (10 MB).
         ValueError: If the bytes cannot be decoded as an image.
     """
-    # Hard size guard — reject before PIL even opens the file
     if len(file_bytes) > MAX_UPLOAD_BYTES:
         raise ValueError(
             f"File too large ({len(file_bytes) // (1024*1024)} MB). "
             f"Maximum allowed is {MAX_UPLOAD_BYTES // (1024*1024)} MB."
         )
 
-    # Open image with PIL
     try:
         img = Image.open(io.BytesIO(file_bytes))
-        img.verify()  # Detect corrupt images early
-        img = Image.open(io.BytesIO(file_bytes))  # Re-open after verify() (it closes the stream)
+        img.verify()
+        img = Image.open(io.BytesIO(file_bytes))
     except Exception as e:
         raise ValueError(f"Invalid image file: {e}") from e
 
-    # Normalise colour mode — WebP does not handle all PIL modes cleanly
+    # Normalise colour mode
     if img.mode in ("RGBA", "LA"):
-        # Preserve transparency by converting to RGBA first
         img = img.convert("RGBA")
     elif img.mode == "P":
-        # Palette mode — convert via RGBA to capture transparency in GIF-style images
         img = img.convert("RGBA")
     else:
         img = img.convert("RGB")
 
-    # Resize — shrink to MAX_DIMENSION while preserving aspect ratio; never upscale
+    # Resize — shrink only, never upscale
     img.thumbnail((MAX_DIMENSION, MAX_DIMENSION), Image.LANCZOS)
 
     # Binary-search WebP quality to hit the MAX_OUTPUT_KB target
@@ -81,43 +97,45 @@ def compress_logo(file_bytes: bytes) -> bytes:
     while quality >= MIN_QUALITY:
         output.seek(0)
         output.truncate()
-        img.save(
-            output,
-            format="WEBP",
-            quality=quality,
-            method=6,          # Slower encode but best compression ratio
-        )
+        img.save(output, format="WEBP", quality=quality, method=6)
         if output.tell() <= MAX_OUTPUT_KB * 1024:
             break
-        quality -= 10          # Step down and try again
+        quality -= 10
 
-    # If even MIN_QUALITY is above budget (extreme edge case: very complex 512×512 image),
-    # we still return the best we achieved — it will be close to the limit.
     return output.getvalue()
 
 
-# ── Supabase Storage helpers ──────────────────────────────────────────────────
+# ── Local Disk Storage helpers ────────────────────────────────────────────────
 
-def get_supabase_client():
+def _logo_path(merchant_id: str) -> Path:
+    """Return the absolute path where the merchant's logo is stored."""
+    return UPLOADS_ROOT / "merchant-logos" / merchant_id / "logo.webp"
+
+
+def _public_url(merchant_id: str) -> str:
     """
-    Returns a Supabase client initialised with the service key.
-    Import is deferred so the module can be used without supabase-py installed
-    (e.g. in unit tests that mock this function).
+    Return the public URL that Nginx will serve the file from.
+
+    Nginx config serves /var/www/metrocardz/uploads at:
+      https://api.metrocardz.in/uploads/...
     """
-    from supabase import create_client, Client
     from app.core.config import settings
-
-    url = (settings.supabase_url or "").strip()
-    key = (settings.supabase_service_key or "").strip()
-    return create_client(url, key)
+    # In production: https://api.metrocardz.in/uploads/merchant-logos/{id}/logo.webp
+    # In development: http://localhost:8000/uploads/merchant-logos/{id}/logo.webp
+    if settings.is_production:
+        base = "https://api.metrocardz.in"
+    else:
+        base = "http://localhost:8000"
+    return f"{base}/uploads/merchant-logos/{merchant_id}/logo.webp"
 
 
 def upload_logo_to_storage(merchant_id: str, webp_bytes: bytes) -> str:
     """
-    Upload compressed WebP logo bytes to Supabase Storage.
+    Save compressed WebP logo to the local VPS disk.
 
-    Storage path: merchant-logos/{merchant_id}/logo.webp
-    Always uses upsert=True (overwrite existing logo — no version history needed).
+    Storage path: /var/www/metrocardz/uploads/merchant-logos/{merchant_id}/logo.webp
+    Creates directories if they don't exist.
+    Always overwrites (upsert) — no version history needed.
 
     Args:
         merchant_id: The UUID of the merchant.
@@ -127,58 +145,29 @@ def upload_logo_to_storage(merchant_id: str, webp_bytes: bytes) -> str:
         Public URL string to the uploaded logo file.
 
     Raises:
-        RuntimeError: If Supabase URL / service key are not configured or storage fails.
-        Exception: On Supabase API errors.
+        RuntimeError: If the file cannot be written to disk.
     """
-    from app.core.config import settings
-
-    if (
-        not settings.supabase_url
-        or not settings.supabase_service_key
-        or "xxxxxxxxxxxx" in settings.supabase_url
-        or "your-supabase" in settings.supabase_service_key
-        or "example.com" in settings.supabase_url
-    ):
+    logo_path = _logo_path(merchant_id)
+    try:
+        logo_path.parent.mkdir(parents=True, exist_ok=True)
+        logo_path.write_bytes(webp_bytes)
+    except OSError as e:
         raise RuntimeError(
-            "SUPABASE_URL and SUPABASE_SERVICE_KEY must be set to real credentials to use remote logo uploads."
-        )
+            f"Failed to save logo to disk at {logo_path}: {e}\n"
+            "Check that the uploads directory exists and the app has write permission."
+        ) from e
 
-    client = get_supabase_client()
-    bucket  = "merchant-logos"
-    path    = f"{merchant_id}/logo.webp"
-
-    res = client.storage.from_(bucket).upload(
-        path,
-        webp_bytes,
-        file_options={
-            "content-type": "image/webp",
-            "upsert": "true",          # Always overwrite — one logo per merchant
-            "cache-control": "3600",   # Browser cache 1 hour
-        },
-    )
-
-    if isinstance(res, dict) and ("error" in res or str(res.get("statusCode", "")).startswith(("4", "5"))):
-        raise RuntimeError(f"Supabase storage error response: {res}")
-
-    # Build the public URL (bucket must have public read policy in Supabase dashboard)
-    url = (settings.supabase_url or "").strip().rstrip("/")
-    public_url = f"{url}/storage/v1/object/public/{bucket}/{path}"
-    return public_url
+    return _public_url(merchant_id)
 
 
 def delete_logo_from_storage(merchant_id: str) -> None:
     """
-    Remove a merchant's logo from Supabase Storage.
+    Remove a merchant's logo from local disk.
     Called when a merchant is deleted or resets their logo.
 
     Args:
         merchant_id: The UUID of the merchant whose logo to delete.
     """
-    from app.core.config import settings
-
-    if not settings.supabase_url or not settings.supabase_service_key:
-        return  # Nothing to clean up if storage isn't configured
-
-    client = get_supabase_client()
-    path   = f"{merchant_id}/logo.webp"
-    client.storage.from_("merchant-logos").remove([path])
+    logo_dir = UPLOADS_ROOT / "merchant-logos" / merchant_id
+    if logo_dir.exists():
+        shutil.rmtree(logo_dir, ignore_errors=True)
