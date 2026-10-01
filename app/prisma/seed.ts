@@ -58,24 +58,25 @@ async function main() {
   }
   console.log(`✅ ${CITIES.length} deal cities seeded`);
 
-  // 3. Super admin user
-  const superAdminPhone = process.env.SUPER_ADMIN_PHONE ?? '9999999999';
-  const superAdminPassword = process.env.SUPER_ADMIN_PASSWORD ?? 'Admin@123!';
-  const superAdminEmail = process.env.SUPER_ADMIN_EMAIL ?? 'admin@metrocouponz.in';
-  const passwordHash = await bcrypt.hash(superAdminPassword, 12);
+  // 3. Super admin user (Main Platform & Deals Admin)
+  const superAdminPhone = process.env.SUPER_ADMIN_PHONE ?? '9029999614';
+  const superAdminPassword = process.env.SUPER_ADMIN_PASSWORD ?? '9029999614';
+  const superAdminEmail = (process.env.SUPER_ADMIN_EMAIL ?? 'metrocouponsys@gmail.com').toLowerCase();
+  const passwordHash = await bcrypt.hash(superAdminPassword, 10);
 
   const crypto = await import('crypto');
   const adminId = crypto.randomUUID();
 
-  const existing = await prisma.merchantUser.findFirst({
-    where: { role: 'super_admin' },
+  // Upsert Merchant Super Admin
+  const existingMerchantUser = await prisma.merchantUser.findFirst({
+    where: { OR: [{ email: superAdminEmail }, { phone: superAdminPhone }] },
   });
 
-  if (!existing) {
+  if (!existingMerchantUser) {
     await prisma.merchantUser.create({
       data: {
         id: adminId,
-        name: 'Metro Admin',
+        name: 'Metro Cardz Admin',
         phone: superAdminPhone,
         email: superAdminEmail,
         role: 'super_admin',
@@ -83,11 +84,31 @@ async function main() {
         merchantId: null,
       },
     });
-    console.log(`✅ Super admin created: ${superAdminPhone} / ${superAdminPassword}`);
-    console.log('⚠️  CHANGE THE SUPER ADMIN PASSWORD IMMEDIATELY AFTER FIRST LOGIN!');
+    console.log(`✅ Super Admin created in merchant_users: ${superAdminEmail} / ${superAdminPhone}`);
   } else {
-    console.log('ℹ️  Super admin already exists — skipping creation');
+    await prisma.merchantUser.update({
+      where: { id: existingMerchantUser.id },
+      data: {
+        role: 'super_admin',
+        passwordHash,
+        email: superAdminEmail,
+        phone: superAdminPhone,
+      },
+    });
+    console.log(`✅ Super Admin updated in merchant_users: ${superAdminEmail}`);
   }
+
+  // Upsert Deals Platform Admin (DealAdminUser)
+  await prisma.dealAdminUser.upsert({
+    where: { email: superAdminEmail },
+    update: { passwordHash, role: 'admin' },
+    create: {
+      email: superAdminEmail,
+      passwordHash,
+      role: 'admin',
+    },
+  });
+  console.log(`✅ Deals Admin created/updated in deals_admin_users: ${superAdminEmail}`);
 
   console.log('🚀 Seeding complete!');
 }
