@@ -17,5 +17,10 @@ export async function GET(_request: NextRequest, { params }: Params) {
   if (!member || member.status === 'deactivated') {
     return NextResponse.json({ detail: 'Member not found' }, { status: 404 });
   }
-  return NextResponse.json(member);
+
+  // Strip PII — this endpoint is public (no auth), only return safe fields
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { phone, email, notes, familyDob1, familyDob2, familyDob3, ...safeData } = member;
+
+  return NextResponse.json(safeData);
 }

@@ -110,6 +110,10 @@ export async function GET(request: NextRequest) {
   const auth = await requireAuth(request);
   if (auth instanceof NextResponse) return auth;
   const merchantId = getMerchantId(auth, request);
+  // Guard: non-super-admin must always have a merchantId
+  if (!merchantId && auth.role !== 'super_admin') {
+    return NextResponse.json({ detail: 'Merchant ID required' }, { status: 400 });
+  }
 
   const url = new URL(request.url);
   const memberId = url.searchParams.get('member_id') ?? undefined;

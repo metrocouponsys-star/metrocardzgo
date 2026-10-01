@@ -20,8 +20,7 @@ export const prisma =
         : ['error'],
   });
 
-if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = prisma;
-}
+// Always cache the singleton — prevents connection pool exhaustion in production
+globalForPrisma.prisma = prisma;
 
 export default prisma;
