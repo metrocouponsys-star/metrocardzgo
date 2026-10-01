@@ -1,0 +1,32 @@
+id,merchant_id,name,phone,email,role,password_hash,created_at
+01f86008-d11e-4516-9d3c-9b6064f32b8b,9f5a3fe4-f21f-4fed-beaf-67dcb9c6cffc,sdfg,1234567897,sf@gmail.com,staff,$2b$12$wDxYurmE8dn/.CM3H7e6We89zlg.2/UWJC9dvLI6.z.KXJc/DjvU2,2026-07-20 09:25:21.374936+00
+16a25cb0-8425-469e-a7ef-796b19f944e4,b64a2ee7-5fc4-434d-9b92-1fa730df2810,Sangeeta R.Shekhadia,8369362245,sangeetasekhadia19@gmail.com,owner,$2b$12$3qk11xSXVl69llJ7HMHLJO0LB99Y/vPa539NK8S.TtJI4ZUODn4L2,2026-09-05 09:13:52.478761+00
+1b175b67-f7f6-4370-a873-389112809d49,9f5a3fe4-f21f-4fed-beaf-67dcb9c6cffc,santosh vishwakarma,+918169285189,s@gmail.com,staff,$2b$12$Q3CI4Ny7k3noptVudtPlmum2YLUuROR2BpUav328PFJ9G7tSjsg4e,2026-07-20 05:39:33.159169+00
+59d80d29-7bc8-4a21-bb65-b8de3275aaa7,63c2aeec-7410-4c78-9a68-beb45b1c622c,DIPESH CHANDALIYA,9867292864,shreekankujewellers@gmail.com,owner,$2b$12$bG1gBSTMCSxwRtLL5QvPq.33X7ib7PvXFpjQkL8CXtY8Ga62OvBPa,2026-08-27 11:31:30.712304+00
+73ec7de3-5486-4b72-956a-4c9a6cac9ec2,merch_  6,Demostaff,123456789,staff@gym.com,staff,$2b$12$gFg8pJRHvuWYabiK42Hk4uwafwc38dhT6gcHj2Zf7GIOPeg/x7T1q,2026-08-01 15:08:12.753937+00
+915e66e2-da8c-4c1b-9974-d4e1360845df,bba7c912-fc02-4559-b02e-22e69a7f53aa,SHIV BHONSLE,8888888888,metroteck@gmail.com,owner,$2b$12$4kQ7TQswwATiTmBHa006d.BMmcDXdo7ntYMRmu6uKSvQXtvOJPaNO,2026-08-19 07:36:35.462573+00
+9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7,,Metro Cardz Admin,9029999614,metrocouponsys@gmail.com,super_admin,$2b$12$Qx9JWnYLSEkgQBVHuiIfoO5KBGO8toLOqoyMC3.uL78UBLySQDfNC,2026-07-14 16:01:40+00
+a1167172-835c-40e9-9c96-bab8733914c5,bc3951f9-ff8c-436b-8322-e5dd6592ca4b,SANDESH HARMALKAR,7738224040,sandeshharmalkar66@gmail.com,owner,$2b$12$MFRQF2X3tfLCycLKuL9Um.5zoUO8iprbQsKpwacb5YZ8dc3jH6U1y,2026-09-05 05:40:51.291968+00
+a1c573cb-927b-4192-b2c0-0015fcb353fb,ab519120-ca10-4071-b5b0-f3c9e9096ae9,Vilas Prabhakar Sansare,9607211555,shreebhetrtn@gmail.com,owner,$2b$12$X.WEZEO7TegJoheil409jOwYwfzr4XVfkW4DH98wNHSL3M2q0D/Ie,2026-09-03 11:04:57.04703+00
+a8261c94-07d2-4e78-8828-8ffd3cf2b485,c74f8bef-6fd7-40f2-a363-1daa167d0439,Mahesh Patil,9099101214,goodluck101214@gmail.com,owner,$2b$12$vxDuc6C5wWcWyG//VY8LxOadcTW4DX6eJxf0iQk.CeSnZOYQB/65W,2026-09-03 08:43:13.142371+00
+admin_fa570309-0e69-4344-a5a4-fab7fc60ce12,mer-rst,Vikram Nair (Restaurant Owner),9876500019,restaurant@metrocardz.in,owner,$2b$12$ogJLv7llLGY9bYj.GmroSeM5a3I7DYRB0vYMFux0MN54bh6wRExG.,2026-07-22 15:31:22.929404+00
+admin_merch_  1,merch_  1,Suresh Gupta,9876500001,insurance@metrocardz.in,owner,$2a$06$jG6Kz/dG7zEIdDJcRdF8rucu/1TddCikAgU4DJsJoW9/vBi4BI.dC,2026-07-22 15:31:22.929404+00
+admin_merch_  2,merch_  2,Vikram Malhotra,9876500002,realestate@metrocardz.in,owner,$2a$06$oA.1G36fC79RzJlQWjBE3OcYmun8NwNbPT7lsQFsXWcoMiBAYM126,2026-07-22 15:31:22.929404+00
+admin_merch_  3,merch_  3,Rohan Mehta,9876500003,travels@metrocardz.in,owner,$2a$06$py1ok2kH2pzIwp8B82bu4OEEPusdHj9dVSKguy6GqbHxu1650yzqC,2026-07-22 15:31:22.929404+00
+admin_merch_  4,merch_  4,Sunil Verma,9876500004,acservices@metrocardz.in,owner,$2a$06$tY0du18f5XlDTqiKcxf2u.TZ2rjLhQRgNgN.GGyfPnNdBpOx2.YjW,2026-07-22 15:31:22.929404+00
+admin_merch_  5,merch_  5,Sangeeta Patel,9876500005,supermarket@metrocardz.in,owner,$2a$06$Mdlsc.OT48F0B1g1uu6tBerTX/9aaZuc.HjIZB1OaNEqMIFsh5K1S,2026-07-22 15:31:22.929404+00
+admin_merch_  6,merch_  6,Karan Malhotra,9876500006,gym@metrocardz.in,owner,$2a$06$Kr1SOmzfTjSQJVe2rdBSSOEbrAoc6xZhYnnAUhqYboDnztBULeOqW,2026-07-22 15:31:22.929404+00
+admin_merch_  7,merch_  7,Rajesh Kumar,98765432109876500007,salon@metrocardz.in,owner,$2a$06$HQklZToZMyQ/fhAer3T5KeOFlYuTsCBAEiA9RfaXHLYcwoDUf7VR.,2026-07-22 15:31:22.929404+00
+admin_merch_  8,merch_  8,Vikramaditya Rao,9876500008,automobile@metrocardz.in,owner,$2a$06$x96neou5e5iNvBSARXSeSuzsLFXyTvygfyUepb.d/UQeFJa9nErVm,2026-07-22 15:31:22.929404+00
+admin_merch_  9,merch_  9,Anish Giri,9876500009,cafe@metrocardz.in,owner,$2a$06$PccnQFMjse2vbF0/Gzct1uejxulfcBtjk0ti084c0y7WbZC3HzfGK,2026-07-22 15:31:22.929404+00
+admin_merch_ 10,merch_ 10,Ramesh Agrawal,9876500010,jewellery@metrocardz.in,owner,$2a$06$B5L8DQ3rkqAB2o3OCxvSEe1NF1WewWJfHf3BE7ayMWLX2hI.MB2Pu,2026-07-22 15:31:22.929404+00
+admin_super,,Super Admin,9000000000,admin@metrocardz.in,super_admin,$2a$06$QN5OGPS/eIXvncI5lacDiuOXv2n7QXlc2I5z5iRJq57FGe0.i5NCe,2026-07-22 15:31:22.929404+00
+b2dc8e8f-662e-4d12-b548-0da13cb17c1e,9f5a3fe4-f21f-4fed-beaf-67dcb9c6cffc,demo,7021975373,sharvilmore99@gmail.com,owner,$2b$12$RbadfXilLfxVJxg6QZ25meMRYAYz3qoK0CwzrutJPAVGykfiW7tVi,2026-07-15 07:57:55.124057+00
+d9ee3bf3-8676-4c2b-8f9f-7f72835ff9b0,75eff299-f162-4427-8b08-04f404141ef9,Piyush Prakash Jain,9987893373,jpiyush10@gmail.com,owner,$2b$12$abbKF7.fKHMkM9EaR2R6WuBIgPaUMtNxUc0yV/7.CmKkEv8wC80Fe,2026-09-07 07:19:30.110423+00
+f8b0ae73-5c2a-4120-bb56-576ff628420c,4bf2fb6b-bdf3-49d3-ac1b-1e6e746c6643,TABS,7039199976,tabsbytaraasha@gmail.com,owner,$2b$12$7lQMy25O1QEwXilgZSvn.exdV9g./.PVFJ9/T4YrlBiOK898aLCk2,2026-07-21 16:07:17.549294+00
+mu-mer-btq-1,mer-btq,Anita Singhania (Head Designer),9876500012,boutique@metrocardz.in,owner,$2b$12$ogJLv7llLGY9bYj.GmroSeM5a3I7DYRB0vYMFux0MN54bh6wRExG.,2026-08-17 17:43:32.817107+00
+mu-mer-dnt-1,mer-dnt,Dr. Kavita Rao (Chief Dentist),9876500015,dental@metrocardz.in,owner,$2b$12$ogJLv7llLGY9bYj.GmroSeM5a3I7DYRB0vYMFux0MN54bh6wRExG.,2026-08-17 17:49:13.757503+00
+mu-mer-ftw-1,mer-ftw,Deepak Chhabra (Lounge Manager),9876500014,footwear@metrocardz.in,owner,$2b$12$ogJLv7llLGY9bYj.GmroSeM5a3I7DYRB0vYMFux0MN54bh6wRExG.,2026-08-17 17:49:13.757503+00
+mu-mer-opt-1,mer-opt,Dr. Alok Verma (Optometrist),9876500013,optician@metrocardz.in,owner,$2b$12$ogJLv7llLGY9bYj.GmroSeM5a3I7DYRB0vYMFux0MN54bh6wRExG.,2026-08-17 17:49:13.757503+00
+mu-mob-owner,mer-mob,Sanjay Sharma (Tech Director),9876500016,mobile@metrocardz.in,owner,$2b$12$ogJLv7llLGY9bYj.GmroSeM5a3I7DYRB0vYMFux0MN54bh6wRExG.,2026-08-17 17:24:04.183421+00
+usr-grm,mer-grm,Manish Kapoor (Fashion Dir.),9876500011,garments@metrocardz.in,owner,$2a$12$IChQ.4bplJA3V2g0Vf2Q4OyXy3RQ4Q3ZpahZ2MH1KSCEw0a84Kfqu,2026-08-12 13:38:31.979893+00

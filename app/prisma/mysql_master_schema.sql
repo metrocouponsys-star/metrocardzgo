@@ -1,5 +1,5 @@
--- CreateTable
-CREATE TABLE `merchants` (
+﻿-- CreateTable
+CREATE TABLE IF NOT EXISTS `merchants` (
     `id` VARCHAR(36) NOT NULL,
     `business_name` TEXT NOT NULL,
     `category` TEXT NULL,
@@ -18,7 +18,7 @@ CREATE TABLE `merchants` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `merchant_users` (
+CREATE TABLE IF NOT EXISTS `merchant_users` (
     `id` VARCHAR(36) NOT NULL,
     `merchant_id` VARCHAR(36) NULL,
     `name` TEXT NOT NULL,
@@ -35,7 +35,7 @@ CREATE TABLE `merchant_users` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `membership_types` (
+CREATE TABLE IF NOT EXISTS `membership_types` (
     `id` VARCHAR(36) NOT NULL,
     `merchant_id` VARCHAR(36) NOT NULL,
     `name` VARCHAR(200) NOT NULL,
@@ -46,7 +46,7 @@ CREATE TABLE `membership_types` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `offer_templates` (
+CREATE TABLE IF NOT EXISTS `offer_templates` (
     `id` VARCHAR(36) NOT NULL,
     `merchant_id` VARCHAR(36) NOT NULL,
     `title` VARCHAR(500) NOT NULL,
@@ -65,7 +65,7 @@ CREATE TABLE `offer_templates` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `membership_type_offers` (
+CREATE TABLE IF NOT EXISTS `membership_type_offers` (
     `membership_type_id` VARCHAR(36) NOT NULL,
     `offer_template_id` VARCHAR(36) NOT NULL,
     `default_qty` DECIMAL(65, 30) NULL,
@@ -74,7 +74,7 @@ CREATE TABLE `membership_type_offers` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `members` (
+CREATE TABLE IF NOT EXISTS `members` (
     `id` VARCHAR(36) NOT NULL,
     `merchant_id` VARCHAR(36) NOT NULL,
     `member_code` VARCHAR(50) NOT NULL,
@@ -110,7 +110,7 @@ CREATE TABLE `members` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `member_offer_state` (
+CREATE TABLE IF NOT EXISTS `member_offer_state` (
     `id` VARCHAR(36) NOT NULL,
     `member_id` VARCHAR(36) NOT NULL,
     `offer_template_id` VARCHAR(36) NOT NULL,
@@ -124,7 +124,7 @@ CREATE TABLE `member_offer_state` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `redemption_log` (
+CREATE TABLE IF NOT EXISTS `redemption_log` (
     `id` VARCHAR(36) NOT NULL,
     `member_id` VARCHAR(36) NOT NULL,
     `offer_template_id` VARCHAR(36) NOT NULL,
@@ -139,7 +139,7 @@ CREATE TABLE `redemption_log` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `reminder_rules` (
+CREATE TABLE IF NOT EXISTS `reminder_rules` (
     `id` VARCHAR(36) NOT NULL,
     `merchant_id` VARCHAR(36) NOT NULL,
     `trigger_type` ENUM('birthday', 'anniversary', 'loyalty_threshold', 'expiry') NOT NULL,
@@ -156,7 +156,7 @@ CREATE TABLE `reminder_rules` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `campaigns` (
+CREATE TABLE IF NOT EXISTS `campaigns` (
     `id` VARCHAR(36) NOT NULL,
     `merchant_id` VARCHAR(36) NOT NULL,
     `name` VARCHAR(500) NOT NULL,
@@ -175,7 +175,7 @@ CREATE TABLE `campaigns` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `message_log` (
+CREATE TABLE IF NOT EXISTS `message_log` (
     `id` VARCHAR(36) NOT NULL,
     `member_id` VARCHAR(36) NOT NULL,
     `campaign_id` VARCHAR(36) NULL,
@@ -189,7 +189,7 @@ CREATE TABLE `message_log` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `admin_audit_log` (
+CREATE TABLE IF NOT EXISTS `admin_audit_log` (
     `id` VARCHAR(36) NOT NULL,
     `admin_user_id` VARCHAR(36) NOT NULL,
     `merchant_id` VARCHAR(36) NULL,
@@ -203,7 +203,7 @@ CREATE TABLE `admin_audit_log` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `card_inventory` (
+CREATE TABLE IF NOT EXISTS `card_inventory` (
     `id` VARCHAR(36) NOT NULL,
     `card_number` VARCHAR(30) NOT NULL,
     `status` ENUM('unassigned', 'merchant_allocated', 'member_linked', 'deactivated') NOT NULL DEFAULT 'unassigned',
@@ -220,7 +220,7 @@ CREATE TABLE `card_inventory` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `loyalty_transactions` (
+CREATE TABLE IF NOT EXISTS `loyalty_transactions` (
     `id` VARCHAR(36) NOT NULL,
     `member_id` VARCHAR(36) NOT NULL,
     `merchant_id` VARCHAR(36) NOT NULL,
@@ -239,7 +239,7 @@ CREATE TABLE `loyalty_transactions` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `reward_catalog` (
+CREATE TABLE IF NOT EXISTS `reward_catalog` (
     `id` VARCHAR(36) NOT NULL,
     `merchant_id` VARCHAR(36) NOT NULL,
     `name` VARCHAR(500) NOT NULL,
@@ -254,7 +254,7 @@ CREATE TABLE `reward_catalog` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `reward_claims` (
+CREATE TABLE IF NOT EXISTS `reward_claims` (
     `id` VARCHAR(36) NOT NULL,
     `reward_id` VARCHAR(36) NOT NULL,
     `member_id` VARCHAR(36) NOT NULL,
@@ -267,7 +267,7 @@ CREATE TABLE `reward_claims` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `coupon_codes` (
+CREATE TABLE IF NOT EXISTS `coupon_codes` (
     `id` VARCHAR(36) NOT NULL,
     `merchant_id` VARCHAR(36) NOT NULL,
     `code` VARCHAR(50) NOT NULL,
@@ -286,7 +286,7 @@ CREATE TABLE `coupon_codes` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `gift_vouchers` (
+CREATE TABLE IF NOT EXISTS `gift_vouchers` (
     `id` VARCHAR(36) NOT NULL,
     `merchant_id` VARCHAR(36) NOT NULL,
     `code` VARCHAR(50) NOT NULL,
@@ -303,7 +303,7 @@ CREATE TABLE `gift_vouchers` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `points_rules` (
+CREATE TABLE IF NOT EXISTS `points_rules` (
     `id` VARCHAR(36) NOT NULL,
     `merchant_id` VARCHAR(36) NOT NULL,
     `rule_type` VARCHAR(50) NOT NULL,
@@ -317,7 +317,7 @@ CREATE TABLE `points_rules` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `scratch_cards` (
+CREATE TABLE IF NOT EXISTS `scratch_cards` (
     `id` VARCHAR(36) NOT NULL,
     `merchant_id` VARCHAR(36) NOT NULL,
     `member_id` VARCHAR(36) NOT NULL,
@@ -333,7 +333,7 @@ CREATE TABLE `scratch_cards` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `lucky_draws` (
+CREATE TABLE IF NOT EXISTS `lucky_draws` (
     `id` VARCHAR(36) NOT NULL,
     `merchant_id` VARCHAR(36) NOT NULL,
     `name` VARCHAR(500) NOT NULL,
@@ -352,7 +352,7 @@ CREATE TABLE `lucky_draws` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `lucky_draw_entries` (
+CREATE TABLE IF NOT EXISTS `lucky_draw_entries` (
     `id` VARCHAR(36) NOT NULL,
     `draw_id` VARCHAR(36) NOT NULL,
     `member_id` VARCHAR(36) NOT NULL,
@@ -363,7 +363,7 @@ CREATE TABLE `lucky_draw_entries` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `member_feedback` (
+CREATE TABLE IF NOT EXISTS `member_feedback` (
     `id` VARCHAR(36) NOT NULL,
     `member_id` VARCHAR(36) NOT NULL,
     `merchant_id` VARCHAR(36) NOT NULL,
@@ -376,7 +376,7 @@ CREATE TABLE `member_feedback` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `merchant_wallet_classes` (
+CREATE TABLE IF NOT EXISTS `merchant_wallet_classes` (
     `id` VARCHAR(36) NOT NULL,
     `merchant_id` VARCHAR(36) NOT NULL,
     `google_class_id` VARCHAR(255) NOT NULL,
@@ -391,7 +391,7 @@ CREATE TABLE `merchant_wallet_classes` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `member_wallet_passes` (
+CREATE TABLE IF NOT EXISTS `member_wallet_passes` (
     `id` VARCHAR(36) NOT NULL,
     `member_id` VARCHAR(36) NOT NULL,
     `wallet_class_id` VARCHAR(36) NOT NULL,
@@ -406,7 +406,7 @@ CREATE TABLE `member_wallet_passes` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `idempotency_records` (
+CREATE TABLE IF NOT EXISTS `idempotency_records` (
     `id` VARCHAR(36) NOT NULL,
     `idempotency_key` VARCHAR(255) NOT NULL,
     `merchant_id` VARCHAR(36) NOT NULL,
@@ -422,7 +422,7 @@ CREATE TABLE `idempotency_records` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `event_logs` (
+CREATE TABLE IF NOT EXISTS `event_logs` (
     `id` VARCHAR(36) NOT NULL,
     `merchant_id` VARCHAR(36) NOT NULL,
     `member_id` VARCHAR(36) NULL,
@@ -436,7 +436,7 @@ CREATE TABLE `event_logs` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `otp_codes` (
+CREATE TABLE IF NOT EXISTS `otp_codes` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `phone` VARCHAR(20) NOT NULL,
     `code` VARCHAR(10) NOT NULL,
@@ -448,7 +448,7 @@ CREATE TABLE `otp_codes` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `deals_categories` (
+CREATE TABLE IF NOT EXISTS `deals_categories` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(100) NOT NULL,
     `slug` VARCHAR(100) NOT NULL,
@@ -459,7 +459,7 @@ CREATE TABLE `deals_categories` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `deals_cities` (
+CREATE TABLE IF NOT EXISTS `deals_cities` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(100) NOT NULL,
     `slug` VARCHAR(100) NOT NULL,
@@ -469,7 +469,7 @@ CREATE TABLE `deals_cities` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `deals_brands` (
+CREATE TABLE IF NOT EXISTS `deals_brands` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(200) NOT NULL,
     `category_id` INTEGER NOT NULL,
@@ -490,7 +490,7 @@ CREATE TABLE `deals_brands` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `deals_deals` (
+CREATE TABLE IF NOT EXISTS `deals_deals` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `brand_id` INTEGER NOT NULL,
     `offer_title` VARCHAR(500) NOT NULL,
@@ -513,7 +513,7 @@ CREATE TABLE `deals_deals` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `deals_admin_users` (
+CREATE TABLE IF NOT EXISTS `deals_admin_users` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `email` VARCHAR(255) NOT NULL,
     `password_hash` TEXT NOT NULL,
@@ -525,7 +525,7 @@ CREATE TABLE `deals_admin_users` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `deals_click_log` (
+CREATE TABLE IF NOT EXISTS `deals_click_log` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `deal_id` INTEGER NOT NULL,
     `timestamp` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -537,7 +537,7 @@ CREATE TABLE `deals_click_log` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `tier_configs` (
+CREATE TABLE IF NOT EXISTS `tier_configs` (
     `id` VARCHAR(36) NOT NULL,
     `merchant_id` VARCHAR(36) NOT NULL,
     `name` VARCHAR(100) NOT NULL,
@@ -557,7 +557,7 @@ CREATE TABLE `tier_configs` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `member_tiers` (
+CREATE TABLE IF NOT EXISTS `member_tiers` (
     `id` VARCHAR(36) NOT NULL,
     `member_id` VARCHAR(36) NOT NULL,
     `merchant_id` VARCHAR(36) NOT NULL,
@@ -574,7 +574,7 @@ CREATE TABLE `member_tiers` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `visit_streaks` (
+CREATE TABLE IF NOT EXISTS `visit_streaks` (
     `id` VARCHAR(36) NOT NULL,
     `member_id` VARCHAR(36) NOT NULL,
     `merchant_id` VARCHAR(36) NOT NULL,
@@ -590,7 +590,7 @@ CREATE TABLE `visit_streaks` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `challenges` (
+CREATE TABLE IF NOT EXISTS `challenges` (
     `id` VARCHAR(36) NOT NULL,
     `merchant_id` VARCHAR(36) NOT NULL,
     `title` VARCHAR(500) NOT NULL,
@@ -610,7 +610,7 @@ CREATE TABLE `challenges` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `challenge_progress` (
+CREATE TABLE IF NOT EXISTS `challenge_progress` (
     `id` VARCHAR(36) NOT NULL,
     `challenge_id` VARCHAR(36) NOT NULL,
     `member_id` VARCHAR(36) NOT NULL,
@@ -626,7 +626,7 @@ CREATE TABLE `challenge_progress` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `points_expiry_rules` (
+CREATE TABLE IF NOT EXISTS `points_expiry_rules` (
     `id` VARCHAR(36) NOT NULL,
     `merchant_id` VARCHAR(36) NOT NULL,
     `inactivity_days` INTEGER NOT NULL DEFAULT 180,
@@ -640,7 +640,7 @@ CREATE TABLE `points_expiry_rules` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `member_reviews` (
+CREATE TABLE IF NOT EXISTS `member_reviews` (
     `id` VARCHAR(36) NOT NULL,
     `member_id` VARCHAR(36) NOT NULL,
     `merchant_id` VARCHAR(36) NOT NULL,
@@ -657,7 +657,7 @@ CREATE TABLE `member_reviews` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `member_consents` (
+CREATE TABLE IF NOT EXISTS `member_consents` (
     `id` VARCHAR(36) NOT NULL,
     `member_id` VARCHAR(36) NOT NULL,
     `merchant_id` VARCHAR(36) NOT NULL,
@@ -674,7 +674,7 @@ CREATE TABLE `member_consents` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `pii_access_log` (
+CREATE TABLE IF NOT EXISTS `pii_access_log` (
     `id` VARCHAR(36) NOT NULL,
     `member_id` VARCHAR(36) NOT NULL,
     `merchant_id` VARCHAR(36) NOT NULL,
@@ -690,7 +690,7 @@ CREATE TABLE `pii_access_log` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `erasure_requests` (
+CREATE TABLE IF NOT EXISTS `erasure_requests` (
     `id` VARCHAR(50) NOT NULL,
     `member_id` VARCHAR(36) NOT NULL,
     `merchant_id` VARCHAR(36) NOT NULL,
@@ -708,7 +708,7 @@ CREATE TABLE `erasure_requests` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `correction_requests` (
+CREATE TABLE IF NOT EXISTS `correction_requests` (
     `id` VARCHAR(36) NOT NULL,
     `member_id` VARCHAR(36) NOT NULL,
     `merchant_id` VARCHAR(36) NOT NULL,
@@ -724,188 +724,251 @@ CREATE TABLE `correction_requests` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- AddForeignKey
+ALTER TABLE `merchant_users` DROP FOREIGN KEY IF EXISTS `merchant_users_merchant_id_fkey`;
 ALTER TABLE `merchant_users` ADD CONSTRAINT `merchant_users_merchant_id_fkey` FOREIGN KEY (`merchant_id`) REFERENCES `merchants`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `membership_types` DROP FOREIGN KEY IF EXISTS `membership_types_merchant_id_fkey`;
 ALTER TABLE `membership_types` ADD CONSTRAINT `membership_types_merchant_id_fkey` FOREIGN KEY (`merchant_id`) REFERENCES `merchants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `offer_templates` DROP FOREIGN KEY IF EXISTS `offer_templates_merchant_id_fkey`;
 ALTER TABLE `offer_templates` ADD CONSTRAINT `offer_templates_merchant_id_fkey` FOREIGN KEY (`merchant_id`) REFERENCES `merchants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `membership_type_offers` DROP FOREIGN KEY IF EXISTS `membership_type_offers_membership_type_id_fkey`;
 ALTER TABLE `membership_type_offers` ADD CONSTRAINT `membership_type_offers_membership_type_id_fkey` FOREIGN KEY (`membership_type_id`) REFERENCES `membership_types`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `membership_type_offers` DROP FOREIGN KEY IF EXISTS `membership_type_offers_offer_template_id_fkey`;
 ALTER TABLE `membership_type_offers` ADD CONSTRAINT `membership_type_offers_offer_template_id_fkey` FOREIGN KEY (`offer_template_id`) REFERENCES `offer_templates`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `members` DROP FOREIGN KEY IF EXISTS `members_merchant_id_fkey`;
 ALTER TABLE `members` ADD CONSTRAINT `members_merchant_id_fkey` FOREIGN KEY (`merchant_id`) REFERENCES `merchants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `members` DROP FOREIGN KEY IF EXISTS `members_membership_type_id_fkey`;
 ALTER TABLE `members` ADD CONSTRAINT `members_membership_type_id_fkey` FOREIGN KEY (`membership_type_id`) REFERENCES `membership_types`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `members` DROP FOREIGN KEY IF EXISTS `members_referred_by_member_id_fkey`;
 ALTER TABLE `members` ADD CONSTRAINT `members_referred_by_member_id_fkey` FOREIGN KEY (`referred_by_member_id`) REFERENCES `members`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `member_offer_state` DROP FOREIGN KEY IF EXISTS `member_offer_state_member_id_fkey`;
 ALTER TABLE `member_offer_state` ADD CONSTRAINT `member_offer_state_member_id_fkey` FOREIGN KEY (`member_id`) REFERENCES `members`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `member_offer_state` DROP FOREIGN KEY IF EXISTS `member_offer_state_offer_template_id_fkey`;
 ALTER TABLE `member_offer_state` ADD CONSTRAINT `member_offer_state_offer_template_id_fkey` FOREIGN KEY (`offer_template_id`) REFERENCES `offer_templates`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `redemption_log` DROP FOREIGN KEY IF EXISTS `redemption_log_member_id_fkey`;
 ALTER TABLE `redemption_log` ADD CONSTRAINT `redemption_log_member_id_fkey` FOREIGN KEY (`member_id`) REFERENCES `members`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `redemption_log` DROP FOREIGN KEY IF EXISTS `redemption_log_offer_template_id_fkey`;
 ALTER TABLE `redemption_log` ADD CONSTRAINT `redemption_log_offer_template_id_fkey` FOREIGN KEY (`offer_template_id`) REFERENCES `offer_templates`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `redemption_log` DROP FOREIGN KEY IF EXISTS `redemption_log_merchant_user_id_fkey`;
 ALTER TABLE `redemption_log` ADD CONSTRAINT `redemption_log_merchant_user_id_fkey` FOREIGN KEY (`merchant_user_id`) REFERENCES `merchant_users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `reminder_rules` DROP FOREIGN KEY IF EXISTS `reminder_rules_merchant_id_fkey`;
 ALTER TABLE `reminder_rules` ADD CONSTRAINT `reminder_rules_merchant_id_fkey` FOREIGN KEY (`merchant_id`) REFERENCES `merchants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `campaigns` DROP FOREIGN KEY IF EXISTS `campaigns_merchant_id_fkey`;
 ALTER TABLE `campaigns` ADD CONSTRAINT `campaigns_merchant_id_fkey` FOREIGN KEY (`merchant_id`) REFERENCES `merchants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `campaigns` DROP FOREIGN KEY IF EXISTS `campaigns_target_membership_type_id_fkey`;
 ALTER TABLE `campaigns` ADD CONSTRAINT `campaigns_target_membership_type_id_fkey` FOREIGN KEY (`target_membership_type_id`) REFERENCES `membership_types`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `message_log` DROP FOREIGN KEY IF EXISTS `message_log_member_id_fkey`;
 ALTER TABLE `message_log` ADD CONSTRAINT `message_log_member_id_fkey` FOREIGN KEY (`member_id`) REFERENCES `members`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `message_log` DROP FOREIGN KEY IF EXISTS `message_log_campaign_id_fkey`;
 ALTER TABLE `message_log` ADD CONSTRAINT `message_log_campaign_id_fkey` FOREIGN KEY (`campaign_id`) REFERENCES `campaigns`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `message_log` DROP FOREIGN KEY IF EXISTS `message_log_reminder_rule_id_fkey`;
 ALTER TABLE `message_log` ADD CONSTRAINT `message_log_reminder_rule_id_fkey` FOREIGN KEY (`reminder_rule_id`) REFERENCES `reminder_rules`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `admin_audit_log` DROP FOREIGN KEY IF EXISTS `admin_audit_log_admin_user_id_fkey`;
 ALTER TABLE `admin_audit_log` ADD CONSTRAINT `admin_audit_log_admin_user_id_fkey` FOREIGN KEY (`admin_user_id`) REFERENCES `merchant_users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `admin_audit_log` DROP FOREIGN KEY IF EXISTS `admin_audit_log_merchant_id_fkey`;
 ALTER TABLE `admin_audit_log` ADD CONSTRAINT `admin_audit_log_merchant_id_fkey` FOREIGN KEY (`merchant_id`) REFERENCES `merchants`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `card_inventory` DROP FOREIGN KEY IF EXISTS `card_inventory_allocated_merchant_id_fkey`;
 ALTER TABLE `card_inventory` ADD CONSTRAINT `card_inventory_allocated_merchant_id_fkey` FOREIGN KEY (`allocated_merchant_id`) REFERENCES `merchants`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `card_inventory` DROP FOREIGN KEY IF EXISTS `card_inventory_linked_member_id_fkey`;
 ALTER TABLE `card_inventory` ADD CONSTRAINT `card_inventory_linked_member_id_fkey` FOREIGN KEY (`linked_member_id`) REFERENCES `members`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `card_inventory` DROP FOREIGN KEY IF EXISTS `card_inventory_created_by_admin_id_fkey`;
 ALTER TABLE `card_inventory` ADD CONSTRAINT `card_inventory_created_by_admin_id_fkey` FOREIGN KEY (`created_by_admin_id`) REFERENCES `merchant_users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `loyalty_transactions` DROP FOREIGN KEY IF EXISTS `loyalty_transactions_member_id_fkey`;
 ALTER TABLE `loyalty_transactions` ADD CONSTRAINT `loyalty_transactions_member_id_fkey` FOREIGN KEY (`member_id`) REFERENCES `members`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `loyalty_transactions` DROP FOREIGN KEY IF EXISTS `loyalty_transactions_merchant_id_fkey`;
 ALTER TABLE `loyalty_transactions` ADD CONSTRAINT `loyalty_transactions_merchant_id_fkey` FOREIGN KEY (`merchant_id`) REFERENCES `merchants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `loyalty_transactions` DROP FOREIGN KEY IF EXISTS `loyalty_transactions_source_redemption_id_fkey`;
 ALTER TABLE `loyalty_transactions` ADD CONSTRAINT `loyalty_transactions_source_redemption_id_fkey` FOREIGN KEY (`source_redemption_id`) REFERENCES `redemption_log`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `loyalty_transactions` DROP FOREIGN KEY IF EXISTS `loyalty_transactions_source_offer_id_fkey`;
 ALTER TABLE `loyalty_transactions` ADD CONSTRAINT `loyalty_transactions_source_offer_id_fkey` FOREIGN KEY (`source_offer_id`) REFERENCES `offer_templates`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `reward_catalog` DROP FOREIGN KEY IF EXISTS `reward_catalog_merchant_id_fkey`;
 ALTER TABLE `reward_catalog` ADD CONSTRAINT `reward_catalog_merchant_id_fkey` FOREIGN KEY (`merchant_id`) REFERENCES `merchants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `reward_claims` DROP FOREIGN KEY IF EXISTS `reward_claims_reward_id_fkey`;
 ALTER TABLE `reward_claims` ADD CONSTRAINT `reward_claims_reward_id_fkey` FOREIGN KEY (`reward_id`) REFERENCES `reward_catalog`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `reward_claims` DROP FOREIGN KEY IF EXISTS `reward_claims_member_id_fkey`;
 ALTER TABLE `reward_claims` ADD CONSTRAINT `reward_claims_member_id_fkey` FOREIGN KEY (`member_id`) REFERENCES `members`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `reward_claims` DROP FOREIGN KEY IF EXISTS `reward_claims_merchant_id_fkey`;
 ALTER TABLE `reward_claims` ADD CONSTRAINT `reward_claims_merchant_id_fkey` FOREIGN KEY (`merchant_id`) REFERENCES `merchants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `coupon_codes` DROP FOREIGN KEY IF EXISTS `coupon_codes_merchant_id_fkey`;
 ALTER TABLE `coupon_codes` ADD CONSTRAINT `coupon_codes_merchant_id_fkey` FOREIGN KEY (`merchant_id`) REFERENCES `merchants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `gift_vouchers` DROP FOREIGN KEY IF EXISTS `gift_vouchers_merchant_id_fkey`;
 ALTER TABLE `gift_vouchers` ADD CONSTRAINT `gift_vouchers_merchant_id_fkey` FOREIGN KEY (`merchant_id`) REFERENCES `merchants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `gift_vouchers` DROP FOREIGN KEY IF EXISTS `gift_vouchers_redeemed_by_member_id_fkey`;
 ALTER TABLE `gift_vouchers` ADD CONSTRAINT `gift_vouchers_redeemed_by_member_id_fkey` FOREIGN KEY (`redeemed_by_member_id`) REFERENCES `members`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `points_rules` DROP FOREIGN KEY IF EXISTS `points_rules_merchant_id_fkey`;
 ALTER TABLE `points_rules` ADD CONSTRAINT `points_rules_merchant_id_fkey` FOREIGN KEY (`merchant_id`) REFERENCES `merchants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `scratch_cards` DROP FOREIGN KEY IF EXISTS `scratch_cards_merchant_id_fkey`;
 ALTER TABLE `scratch_cards` ADD CONSTRAINT `scratch_cards_merchant_id_fkey` FOREIGN KEY (`merchant_id`) REFERENCES `merchants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `scratch_cards` DROP FOREIGN KEY IF EXISTS `scratch_cards_member_id_fkey`;
 ALTER TABLE `scratch_cards` ADD CONSTRAINT `scratch_cards_member_id_fkey` FOREIGN KEY (`member_id`) REFERENCES `members`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `lucky_draws` DROP FOREIGN KEY IF EXISTS `lucky_draws_merchant_id_fkey`;
 ALTER TABLE `lucky_draws` ADD CONSTRAINT `lucky_draws_merchant_id_fkey` FOREIGN KEY (`merchant_id`) REFERENCES `merchants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `lucky_draws` DROP FOREIGN KEY IF EXISTS `lucky_draws_winner_member_id_fkey`;
 ALTER TABLE `lucky_draws` ADD CONSTRAINT `lucky_draws_winner_member_id_fkey` FOREIGN KEY (`winner_member_id`) REFERENCES `members`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `lucky_draw_entries` DROP FOREIGN KEY IF EXISTS `lucky_draw_entries_draw_id_fkey`;
 ALTER TABLE `lucky_draw_entries` ADD CONSTRAINT `lucky_draw_entries_draw_id_fkey` FOREIGN KEY (`draw_id`) REFERENCES `lucky_draws`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `lucky_draw_entries` DROP FOREIGN KEY IF EXISTS `lucky_draw_entries_member_id_fkey`;
 ALTER TABLE `lucky_draw_entries` ADD CONSTRAINT `lucky_draw_entries_member_id_fkey` FOREIGN KEY (`member_id`) REFERENCES `members`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `member_feedback` DROP FOREIGN KEY IF EXISTS `member_feedback_member_id_fkey`;
 ALTER TABLE `member_feedback` ADD CONSTRAINT `member_feedback_member_id_fkey` FOREIGN KEY (`member_id`) REFERENCES `members`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `member_feedback` DROP FOREIGN KEY IF EXISTS `member_feedback_merchant_id_fkey`;
 ALTER TABLE `member_feedback` ADD CONSTRAINT `member_feedback_merchant_id_fkey` FOREIGN KEY (`merchant_id`) REFERENCES `merchants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `merchant_wallet_classes` DROP FOREIGN KEY IF EXISTS `merchant_wallet_classes_merchant_id_fkey`;
 ALTER TABLE `merchant_wallet_classes` ADD CONSTRAINT `merchant_wallet_classes_merchant_id_fkey` FOREIGN KEY (`merchant_id`) REFERENCES `merchants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `member_wallet_passes` DROP FOREIGN KEY IF EXISTS `member_wallet_passes_member_id_fkey`;
 ALTER TABLE `member_wallet_passes` ADD CONSTRAINT `member_wallet_passes_member_id_fkey` FOREIGN KEY (`member_id`) REFERENCES `members`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `member_wallet_passes` DROP FOREIGN KEY IF EXISTS `member_wallet_passes_wallet_class_id_fkey`;
 ALTER TABLE `member_wallet_passes` ADD CONSTRAINT `member_wallet_passes_wallet_class_id_fkey` FOREIGN KEY (`wallet_class_id`) REFERENCES `merchant_wallet_classes`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `event_logs` DROP FOREIGN KEY IF EXISTS `event_logs_merchant_id_fkey`;
 ALTER TABLE `event_logs` ADD CONSTRAINT `event_logs_merchant_id_fkey` FOREIGN KEY (`merchant_id`) REFERENCES `merchants`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `event_logs` DROP FOREIGN KEY IF EXISTS `event_logs_member_id_fkey`;
 ALTER TABLE `event_logs` ADD CONSTRAINT `event_logs_member_id_fkey` FOREIGN KEY (`member_id`) REFERENCES `members`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `deals_brands` DROP FOREIGN KEY IF EXISTS `deals_brands_category_id_fkey`;
 ALTER TABLE `deals_brands` ADD CONSTRAINT `deals_brands_category_id_fkey` FOREIGN KEY (`category_id`) REFERENCES `deals_categories`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `deals_brands` DROP FOREIGN KEY IF EXISTS `deals_brands_city_id_fkey`;
 ALTER TABLE `deals_brands` ADD CONSTRAINT `deals_brands_city_id_fkey` FOREIGN KEY (`city_id`) REFERENCES `deals_cities`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `deals_deals` DROP FOREIGN KEY IF EXISTS `deals_deals_brand_id_fkey`;
 ALTER TABLE `deals_deals` ADD CONSTRAINT `deals_deals_brand_id_fkey` FOREIGN KEY (`brand_id`) REFERENCES `deals_brands`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `deals_click_log` DROP FOREIGN KEY IF EXISTS `deals_click_log_deal_id_fkey`;
 ALTER TABLE `deals_click_log` ADD CONSTRAINT `deals_click_log_deal_id_fkey` FOREIGN KEY (`deal_id`) REFERENCES `deals_deals`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `member_tiers` DROP FOREIGN KEY IF EXISTS `member_tiers_member_id_fkey`;
 ALTER TABLE `member_tiers` ADD CONSTRAINT `member_tiers_member_id_fkey` FOREIGN KEY (`member_id`) REFERENCES `members`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `member_tiers` DROP FOREIGN KEY IF EXISTS `member_tiers_tier_config_id_fkey`;
 ALTER TABLE `member_tiers` ADD CONSTRAINT `member_tiers_tier_config_id_fkey` FOREIGN KEY (`tier_config_id`) REFERENCES `tier_configs`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `visit_streaks` DROP FOREIGN KEY IF EXISTS `visit_streaks_member_id_fkey`;
 ALTER TABLE `visit_streaks` ADD CONSTRAINT `visit_streaks_member_id_fkey` FOREIGN KEY (`member_id`) REFERENCES `members`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `challenge_progress` DROP FOREIGN KEY IF EXISTS `challenge_progress_challenge_id_fkey`;
 ALTER TABLE `challenge_progress` ADD CONSTRAINT `challenge_progress_challenge_id_fkey` FOREIGN KEY (`challenge_id`) REFERENCES `challenges`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `challenge_progress` DROP FOREIGN KEY IF EXISTS `challenge_progress_member_id_fkey`;
 ALTER TABLE `challenge_progress` ADD CONSTRAINT `challenge_progress_member_id_fkey` FOREIGN KEY (`member_id`) REFERENCES `members`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `member_reviews` DROP FOREIGN KEY IF EXISTS `member_reviews_member_id_fkey`;
 ALTER TABLE `member_reviews` ADD CONSTRAINT `member_reviews_member_id_fkey` FOREIGN KEY (`member_id`) REFERENCES `members`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `member_consents` DROP FOREIGN KEY IF EXISTS `member_consents_member_id_fkey`;
 ALTER TABLE `member_consents` ADD CONSTRAINT `member_consents_member_id_fkey` FOREIGN KEY (`member_id`) REFERENCES `members`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `erasure_requests` DROP FOREIGN KEY IF EXISTS `erasure_requests_member_id_fkey`;
 ALTER TABLE `erasure_requests` ADD CONSTRAINT `erasure_requests_member_id_fkey` FOREIGN KEY (`member_id`) REFERENCES `members`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `correction_requests` DROP FOREIGN KEY IF EXISTS `correction_requests_member_id_fkey`;
 ALTER TABLE `correction_requests` ADD CONSTRAINT `correction_requests_member_id_fkey` FOREIGN KEY (`member_id`) REFERENCES `members`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
 

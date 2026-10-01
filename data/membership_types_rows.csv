@@ -1,0 +1,29 @@
+id,merchant_id,name,description
+074ec04d-dbed-437f-b8b2-054ab63a9561,75eff299-f162-4427-8b08-04f404141ef9,VIP MEMBERSHIP,
+0b3e1648-761a-4b6d-9c32-c2161ba16a41,b64a2ee7-5fc4-434d-9b92-1fa730df2810,GOLD MEMBERSHIP,"One Year Membership. SAVINGS. 10,500/-. Price. 4999/-"
+666f2f50-4b7b-4fb1-a6fc-5574aa5bf57e,63c2aeec-7410-4c78-9a68-beb45b1c622c,STANDARD MEMBERSHIP,
+78fe536c-8141-4082-9feb-047e8ba35f76,bc3951f9-ff8c-436b-8322-e5dd6592ca4b,STANDARD,
+94d50169-c4e7-4c8d-9f9d-b7e23e6ca82f,4bf2fb6b-bdf3-49d3-ac1b-1e6e746c6643,prime,ska
+994077ec-8f2a-4591-85eb-6e6c2de05aab,b64a2ee7-5fc4-434d-9b92-1fa730df2810,BRONZE MEMBERSHIP,One Year Membership - SAVING Rs. 3500/-.  Price Rs. 1499/-
+a317a72d-b0f2-4d67-a420-a3688c6d811b,c74f8bef-6fd7-40f2-a363-1daa167d0439,Gold Membership,
+ea2bc841-f304-4a67-91db-c58ee4fa3273,9f5a3fe4-f21f-4fed-beaf-67dcb9c6cffc,Standard,fdkkl
+facf9011-6d18-47cd-bbc3-731c751ba145,b64a2ee7-5fc4-434d-9b92-1fa730df2810,SILVER MEMBERSHIP,One Year Membership - SAVINGS. Rs. 7000/- PRICE Rs. 2999/-
+mtype-grm-1,mer-grm,Fashionista Elite,15% flat cashback + complimentary alterations
+mtype-mer-btq-1,mer-btq,Royal Couture VIP,Custom fitting specialist + VIP Trial Lounge access
+mtype-mer-dnt-1,mer-dnt,Smile Care VIP,2 Free scaling & polishing sessions/year + 15% off Aligners
+mtype-mer-ftw-1,mer-ftw,Sole Club VIP,Free leather shoe conditioning + 15% cashback on footwear
+mtype-mer-opt-1,mer-opt,Vision Care VIP,Free annual computer eye exam + 20% off anti-glare lenses
+mtype-mer-rst-1,mer-rst,Dine Elite VIP,Priority seating + 10% off all meals + complimentary dessert on birthdays
+mtype-mob-1,mer-mob,Tech Elite,1-year free tempered glass replacement + 10% off all accessories + Express Repair priority queue + Free handset health diagnostic every 6 months
+mtype-mob-2,mer-mob,Gadget Pro,Express screen repair priority + 5% off spare parts + Free data backup service on every repair visit
+mtype-mob-3,mer-mob,Smart Starter,Standard membership — earn TechCoins on every purchase and repair; redeem for discounts and freebies
+tier_merch_  1_heritage_vip,merch_  1,Standard,Demo tier from pasted seed
+tier_merch_  2_home_owner_preferred,merch_  2,Standard,Demo tier from pasted seed
+tier_merch_  3_explorer,merch_  3,Standard,Demo tier from pasted seed
+tier_merch_  4_amc_gold_vip,merch_  4,Standard,Demo tier from pasted seed
+tier_merch_  5_smart_saver,merch_  5,Standard,Demo tier from pasted seed
+tier_merch_  6_elite_champion_vip,merch_  6,Standard,Demo tier from pasted seed
+tier_merch_  7_gold_luxe,merch_  7,Standard,Demo tier from pasted seed
+tier_merch_  8_care_starter,merch_  8,Standard,Demo tier from pasted seed
+tier_merch_  9_brew_master,merch_  9,Standard,Demo tier from pasted seed
+tier_merch_ 10_gold_elite,merch_ 10,Standard,Demo tier from pasted seed

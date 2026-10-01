@@ -1,0 +1,86 @@
+membership_type_id,offer_template_id,default_qty
+074ec04d-dbed-437f-b8b2-054ab63a9561,22804e99-1ab0-4ff7-92e3-0325484ab7ac,1
+074ec04d-dbed-437f-b8b2-054ab63a9561,36805043-8827-4e07-88a9-3258eab6e5d2,100
+074ec04d-dbed-437f-b8b2-054ab63a9561,75b1e665-1193-4e67-9cac-069097c9a061,1
+074ec04d-dbed-437f-b8b2-054ab63a9561,8eafbc19-2dbd-4f7a-be0e-900733c15e1c,1
+074ec04d-dbed-437f-b8b2-054ab63a9561,ab248ae6-dec1-40d4-9563-26f023313a4a,1
+074ec04d-dbed-437f-b8b2-054ab63a9561,ac33198b-6199-4bc4-a33d-0217dd274929,1
+074ec04d-dbed-437f-b8b2-054ab63a9561,b99345d2-d107-490b-b238-a448df053cb7,1
+074ec04d-dbed-437f-b8b2-054ab63a9561,ca64a6bf-23e1-4c70-be3c-e7c82ab63823,1
+074ec04d-dbed-437f-b8b2-054ab63a9561,d33e865b-6f54-4c4d-91df-fa7e51718bc5,10
+074ec04d-dbed-437f-b8b2-054ab63a9561,d795909c-a05b-4532-a8e7-953f3a140a76,1
+0b3e1648-761a-4b6d-9c32-c2161ba16a41,0b2ef328-b81e-4024-9615-44c94b7b0236,1
+0b3e1648-761a-4b6d-9c32-c2161ba16a41,42fe604d-8bf4-434d-b3a1-8720da240398,1
+0b3e1648-761a-4b6d-9c32-c2161ba16a41,7c621d88-1a4e-473e-aa43-7df25ca211f8,1
+0b3e1648-761a-4b6d-9c32-c2161ba16a41,89a17870-d160-4ba0-90ca-703c32b41326,1
+0b3e1648-761a-4b6d-9c32-c2161ba16a41,96e2055a-11b9-41d8-801b-7af310605692,12
+0b3e1648-761a-4b6d-9c32-c2161ba16a41,9ec8216f-295b-4d40-974e-0578e83e62d4,1
+0b3e1648-761a-4b6d-9c32-c2161ba16a41,a01b9f92-a3fa-4d77-a741-b2b4a8d93cf4,12
+0b3e1648-761a-4b6d-9c32-c2161ba16a41,da5fec5d-ba3d-4b12-a6ad-365d52169363,50
+0b3e1648-761a-4b6d-9c32-c2161ba16a41,dd2e6124-bf53-436a-a16c-0e241e0393e0,1
+0b3e1648-761a-4b6d-9c32-c2161ba16a41,deb6b76f-0efa-4dcf-904c-4c9de0810e81,1
+0b3e1648-761a-4b6d-9c32-c2161ba16a41,e750c8f9-4655-4b95-a2f6-a23fe434f084,1
+0b3e1648-761a-4b6d-9c32-c2161ba16a41,f12a2c36-644b-4f2a-8b6c-d3f1b714f672,1
+94d50169-c4e7-4c8d-9f9d-b7e23e6ca82f,0804af25-39c5-467b-b395-7eb99d9543de,1
+94d50169-c4e7-4c8d-9f9d-b7e23e6ca82f,33038b24-413c-4ef5-8db8-8629bed5830b,1
+994077ec-8f2a-4591-85eb-6e6c2de05aab,16524f33-2048-40bb-a168-d1c92d0d7bed,12
+994077ec-8f2a-4591-85eb-6e6c2de05aab,3ec65c04-dc71-4345-b27a-74511b1016e1,1
+994077ec-8f2a-4591-85eb-6e6c2de05aab,72e894af-e8ab-4402-ac09-244fd38b585d,1
+994077ec-8f2a-4591-85eb-6e6c2de05aab,8d1ccc3c-6a1f-4a32-918b-e5881fde9d41,1
+994077ec-8f2a-4591-85eb-6e6c2de05aab,9f0cc0e3-1218-429a-874d-8993a7c3851b,3
+994077ec-8f2a-4591-85eb-6e6c2de05aab,e9aafc93-d9bc-4599-ba85-2a56642f7ac4,1
+994077ec-8f2a-4591-85eb-6e6c2de05aab,f8b6a9ca-b6f9-46fd-b3b9-d259908d9cf1,50
+facf9011-6d18-47cd-bbc3-731c751ba145,07e2aacd-6eb5-42c5-9c28-8b7c45a1549c,6
+facf9011-6d18-47cd-bbc3-731c751ba145,1b72bba2-a877-43e7-932d-b5602c3b4f00,1
+facf9011-6d18-47cd-bbc3-731c751ba145,61fe464d-6a30-40cc-a6b0-30d147434623,12
+facf9011-6d18-47cd-bbc3-731c751ba145,716d4284-a79f-4a6d-bee3-6509c8213d23,1
+facf9011-6d18-47cd-bbc3-731c751ba145,71d3fc26-a7f3-4349-8054-a197b1702f0c,1
+facf9011-6d18-47cd-bbc3-731c751ba145,83f0d938-53dd-4081-be74-2562bf66f571,1
+facf9011-6d18-47cd-bbc3-731c751ba145,92e314b3-97f0-454f-97a3-d1ab9a2b944d,1
+facf9011-6d18-47cd-bbc3-731c751ba145,a2e021c3-86fb-4bda-8844-1c0953058532,1
+facf9011-6d18-47cd-bbc3-731c751ba145,ce8f2ba6-1451-4114-8495-c2a0f5a37982,50
+facf9011-6d18-47cd-bbc3-731c751ba145,dafb0c05-264d-4e2c-9eb0-b33e49fa6c3d,1
+facf9011-6d18-47cd-bbc3-731c751ba145,eb4203c3-bcf5-4b77-ba76-81d5643ca7e5,4
+tier_merch_  1_heritage_vip,offer_merch_1_1,10
+tier_merch_  1_heritage_vip,offer_merch_1_2,10
+tier_merch_  1_heritage_vip,offer_merch_1_3,10
+tier_merch_  1_heritage_vip,offer_merch_1_4,10
+tier_merch_  2_home_owner_preferred,offer_merch_2_1,10
+tier_merch_  2_home_owner_preferred,offer_merch_2_2,10
+tier_merch_  2_home_owner_preferred,offer_merch_2_3,10
+tier_merch_  2_home_owner_preferred,offer_merch_2_4,10
+tier_merch_  3_explorer,offer_merch_3_1,10
+tier_merch_  3_explorer,offer_merch_3_2,10
+tier_merch_  3_explorer,offer_merch_3_3,10
+tier_merch_  3_explorer,offer_merch_3_4,10
+tier_merch_  4_amc_gold_vip,offer_merch_4_1,10
+tier_merch_  4_amc_gold_vip,offer_merch_4_2,10
+tier_merch_  4_amc_gold_vip,offer_merch_4_3,10
+tier_merch_  4_amc_gold_vip,offer_merch_4_4,10
+tier_merch_  5_smart_saver,offer_merch_5_1,10
+tier_merch_  5_smart_saver,offer_merch_5_2,10
+tier_merch_  5_smart_saver,offer_merch_5_3,10
+tier_merch_  5_smart_saver,offer_merch_5_4,10
+tier_merch_  6_elite_champion_vip,b4b1b832-9a45-4c6b-ba29-d36b6eee51c3,
+tier_merch_  6_elite_champion_vip,b9a41c2a-c0f8-4e74-be4d-361b0179c715,
+tier_merch_  6_elite_champion_vip,efc9d470-af7a-421a-af5f-35e3cf969d23,
+tier_merch_  6_elite_champion_vip,offer_merch_6_1,10
+tier_merch_  6_elite_champion_vip,offer_merch_6_2,10
+tier_merch_  6_elite_champion_vip,offer_merch_6_3,10
+tier_merch_  6_elite_champion_vip,offer_merch_6_4,10
+tier_merch_  7_gold_luxe,offer_merch_7_1,10
+tier_merch_  7_gold_luxe,offer_merch_7_2,
+tier_merch_  7_gold_luxe,offer_merch_7_3,
+tier_merch_  7_gold_luxe,offer_merch_7_4,10
+tier_merch_  8_care_starter,offer_merch_8_1,10
+tier_merch_  8_care_starter,offer_merch_8_2,10
+tier_merch_  8_care_starter,offer_merch_8_3,10
+tier_merch_  8_care_starter,offer_merch_8_4,10
+tier_merch_  9_brew_master,offer_merch_9_1,
+tier_merch_  9_brew_master,offer_merch_9_2,10
+tier_merch_  9_brew_master,offer_merch_9_3,10
+tier_merch_  9_brew_master,offer_merch_9_4,10
+tier_merch_ 10_gold_elite,offer_merch_10_1,10
+tier_merch_ 10_gold_elite,offer_merch_10_2,10
+tier_merch_ 10_gold_elite,offer_merch_10_3,10
+tier_merch_ 10_gold_elite,offer_merch_10_4,10

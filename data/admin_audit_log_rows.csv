@@ -1,0 +1,12 @@
+id,admin_user_id,merchant_id,action,detail,ip_address,created_at
+4973818b-23f3-4be8-a016-ca17bcf00dfe,9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7,ab519120-ca10-4071-b5b0-f3c9e9096ae9,create_merchant,BHET MOBILE POINT,,2026-09-03 11:05:01.218797+00
+5574ce35-9210-4fcf-8fa9-93576242b157,9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7,75eff299-f162-4427-8b08-04f404141ef9,create_merchant,NIIYA ( FINE SILVER JEWELLERY ),,2026-09-07 07:19:34.233153+00
+7cf6ed7d-9aa7-4b46-861f-009701e0a7d4,9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7,75eff299-f162-4427-8b08-04f404141ef9,batch_revoke_cards,count=4,,2026-09-08 16:52:53.273143+00
+879f68aa-ee87-42fd-b7de-eb25c881f940,9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7,75eff299-f162-4427-8b08-04f404141ef9,batch_delete_cards,count=996,,2026-09-08 16:36:17.558757+00
+9216d1ba-46c1-4edc-8db5-031d0b3ced75,9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7,4bf2fb6b-bdf3-49d3-ac1b-1e6e746c6643,create_merchant,TABS,,2026-07-21 16:07:20.539411+00
+be5e8b34-739c-4ed9-aada-a99c59246139,9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7,bba7c912-fc02-4559-b02e-22e69a7f53aa,create_merchant,OM JEWELLERY,,2026-08-19 07:36:39.314945+00
+c8291833-86b9-48b3-8856-dd6a95478ae1,9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7,9f5a3fe4-f21f-4fed-beaf-67dcb9c6cffc,create_merchant,demo,,2026-07-15 07:57:58.524774+00
+d71273e1-f2a7-41c0-bc93-3b99f116c534,9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7,bc3951f9-ff8c-436b-8322-e5dd6592ca4b,create_merchant,SHREE BHUMIKA OPTICS,,2026-09-05 05:40:56.150761+00
+e4962db4-d080-4a36-a55b-4e4ee3aab445,9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7,b64a2ee7-5fc4-434d-9b92-1fa730df2810,create_merchant,Beauty Care Parlour & Academy,,2026-09-05 09:13:56.511197+00
+e844770e-8bcf-48c4-b7d6-7ffc84b572ce,9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7,c74f8bef-6fd7-40f2-a363-1daa167d0439,create_merchant,GOODLUCK MOBILE GALLERY,,2026-09-03 08:43:17.166579+00
+f46e2f17-8cb4-4702-8907-306f7c7c9d41,9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7,63c2aeec-7410-4c78-9a68-beb45b1c622c,create_merchant,SHREE KANKU JEWELERY,,2026-08-27 11:31:35.374263+00

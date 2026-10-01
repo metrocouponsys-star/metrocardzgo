@@ -1,0 +1,51 @@
+id,merchant_id,name,description,points_cost,quantity_available,is_active,created_at
+040aa62e-1f3c-49e5-9c7f-f76b7e3ed6a8,merch_  7,Free Hair Wash & Blow-Dry,,100,,true,2026-07-23 17:40:25.426995+00
+07c1a40e-f1bd-4992-a433-44f88e678f92,merch_  1,Free 250g Pack of Fresh Gourmet Coffee Beans,,350,,true,2026-07-23 17:40:25.426995+00
+084b3933-dffb-49b6-9404-18c29c0295a3,merch_  3,"₹2,000 Off International Flight Booking",,1000,,true,2026-07-23 17:40:25.426995+00
+0a4457b7-89df-44ac-b365-d03e9f5f3fcf,merch_  3,Complimentary Travel Insurance Voucher,,600,,true,2026-07-23 17:40:25.426995+00
+0d849608-2804-4d7a-b65f-6c3af5be11a8,merch_  4,Free Anti-Bacterial Filter Wash,,150,,true,2026-07-23 17:40:25.426995+00
+0fa2b754-21f0-46b0-86f4-3b5926f73aa8,merch_  5,₹50 Instant Cash Discount at Checkout,,200,,true,2026-07-23 17:40:25.426995+00
+115fcad3-2a94-40bb-84aa-52179524a8bf,merch_  7,₹500 Instant Service Credit / Keratin Treatment Rebate,,500,,true,2026-07-23 17:40:25.426995+00
+1789ab9b-a509-49c0-8582-61afde0a51e3,merch_  7,Complimentary Head Massage (20 mins),,200,,true,2026-07-23 17:40:25.426995+00
+2dc1f4dd-1ecf-4989-9ad4-6e268d67dafc,merch_  1,Full Body Diagnostic Health Checkup (Metropolis/Apollo),,1000,,true,2026-07-23 17:40:25.426995+00
+30f0c647-7e98-4f82-a489-5ace1f61aaaa,merch_  9,₹500 Instant Dinner Billing Credit,,500,,true,2026-07-23 17:40:25.426995+00
+3307e6e5-0498-4f89-b181-d89c14bcdc6c,merch_ 10,1g 24K Gold Coin (999.9 Gold),,10000,,true,2026-07-23 17:40:25.426995+00
+34e2b896-411b-41ba-99db-aa1d84e27430,merch_  7,Free Spa Manicure or De-Tan Facial,,350,,true,2026-07-23 17:40:25.426995+00
+3717afb7-4b02-40e5-a444-6a66e53eea15,merch_  6,Free Premium Whey Protein Shaker Bottle,,150,,true,2026-07-23 17:40:25.426995+00
+3ab97bdc-474a-4772-b970-32cbf2018c37,merch_  9,Free 250g Pack of Fresh Gourmet Coffee Beans,,350,,true,2026-07-23 17:40:25.426995+00
+3d07c499-9a37-4970-a694-d1c76e2c140b,merch_  6,Free InBody 3D Muscle & Fat Composition Scan,,500,,true,2026-07-23 17:40:25.426995+00
+4249a2cc-77c6-49bb-8bce-173c21f37043,merch_  6,1-on-1 Personal Training Session (45 mins),,300,,true,2026-07-23 17:40:25.426995+00
+52a32d1e-30b8-43f2-860b-90087cafddb1,merch_  8,Free Hydro-Foam Wash & Interior Vacuuming,,200,,true,2026-07-23 17:40:25.426995+00
+54bd7d32-7a65-49b6-9a43-7d8b9a00caf4,merch_  1,"Free Espresso, Cappuccino, or Iced Latte",,100,,true,2026-07-23 17:40:25.426995+00
+5794b6ee-2061-42e7-9dad-1a458091fc5f,merch_  3,Free Airport Executive Lounge Pass,,400,,true,2026-07-23 17:40:25.426995+00
+5a179972-ab2b-41c5-a2f9-5a597ccb013c,merch_  2,"₹25,000 Modular Kitchen Subsidy Voucher",,5000,,true,2026-07-23 17:40:25.426995+00
+636e393f-f9fc-47de-a00a-993b721df932,merch_  8,Free 3D Wheel Alignment & Balancing,,350,,true,2026-07-23 17:40:25.426995+00
+6b371d25-c7a0-4fc9-aa26-22c0dd32ac92,merch_  5,₹200 Grocery Shopping Voucher,,500,,true,2026-07-23 17:40:25.426995+00
+723858b2-68cc-4ccc-b8ab-00151f64f0ea,merch_  2,Complimentary Interior Decorator Consultation,,1500,,true,2026-07-23 17:40:25.426995+00
+77cc8555-f482-44d4-ae38-3e82f2ee5370,merch_ 10,10g Pure Hallmarked Silver Coin (999 Silver),,1500,,true,2026-07-23 17:40:25.426995+00
+a6cf5189-8d51-4fb3-a96b-44a5fcbd1917,merch_  1,Free Policy Wellness & Emergency Travel Kit,,300,,true,2026-07-23 17:40:25.426995+00
+ae3590cd-43b9-498c-a9c7-7d0afcc3a8be,merch_  9,Free Artisanal Muffin / Croissant / Cake Slice,,150,,true,2026-07-23 17:40:25.426995+00
+b3c1c09a-fddf-4837-b617-d7340416a069,merch_  9,"Free Espresso, Cappuccino, or Iced Latte",,100,,true,2026-07-23 17:40:25.426995+00
+ba3f28a2-56c0-47fd-bd5d-6c9bee61341e,merch_  1,₹500 Renewal Premium Rebate,,500,,true,2026-07-23 17:40:25.426995+00
+c80e3a01-6412-4579-9505-cb82dfd84034,merch_  4,Pre-Summer High-Pressure Foam Jet Service,,300,,true,2026-07-23 17:40:25.426995+00
+cbf35640-017c-41a1-8b24-9097afb1c513,merch_  1,Free Artisanal Muffin / Croissant / Cake Slice,,150,,true,2026-07-23 17:40:25.426995+00
+ccf8f19e-e98a-499a-a9d2-0e477cb68a88,merch_ 10,Free Gold & Diamond Polishing Spa Voucher,,500,,true,2026-07-23 17:40:25.426995+00
+e18736fc-771a-4e85-838b-ddcb0aee77ba,merch_  5,Free 5kg Basmati Rice Bag or 5L Edible Oil Can,,400,,true,2026-07-23 17:40:25.426995+00
+ec0205d1-534f-49a5-afd6-4b5d6dee0e37,merch_  4,₹500 Off Freon Gas Top-up,,500,,true,2026-07-23 17:40:25.426995+00
+eedec956-33ff-4e11-bfcd-e632be58b034,merch_  1,₹500 Instant Dinner Billing Credit,,500,,true,2026-07-23 17:40:25.426995+00
+f22d32b3-c77a-4616-a7df-f7784f91dba2,4bf2fb6b-bdf3-49d3-ac1b-1e6e746c6643,free tea,rty,100,,true,2026-07-22 08:11:08.083025+00
+f9d7f1f4-5b2c-4b35-85ac-2073766e6e5a,merch_  8,"₹2,500 Off Ceramic Coating Boost",,1000,,true,2026-07-23 17:40:25.426995+00
+fb267aa0-cdc1-4302-a256-206f78caddfc,merch_  2,Free Property Valuation & Legal Agreement Report,,500,,true,2026-07-23 17:40:25.426995+00
+fe9373eb-9748-42af-8cbd-ccff59f8276b,merch_ 10,"₹5,000 Waiver on Diamond/Gold Making Charges",,5000,,true,2026-07-23 17:40:25.426995+00
+rc-3a54234defb56e28155d05a193af51d1,merch_  4,demo reward,demo reward seeded,100,10,true,2026-07-23 16:50:21.131269+00
+rc-44598c0c85bf0d293e392c18dca4a8f9,merch_ 10,demo reward,demo reward seeded,100,10,true,2026-07-23 16:50:21.131269+00
+rc-4872493431968bf034cd5fed71f0c316,merch_  5,demo reward,demo reward seeded,100,10,true,2026-07-23 16:50:21.131269+00
+rc-55a36c50094ccc589a59bc85a91bd3e1,merch_  6,demo reward,demo reward seeded,100,10,true,2026-07-23 16:50:21.131269+00
+rc-7348c5e9d5fb6f78b1e390b0965e841f,merch_  1,demo reward,demo reward seeded,100,10,true,2026-07-23 16:50:21.131269+00
+rc-765143355d8eef0e2a0b1d7b2e29e5c8,merch_  2,demo reward,demo reward seeded,100,10,true,2026-07-23 16:50:21.131269+00
+rc-8e5695e663d47f525077fac8ce5e16d3,9f5a3fe4-f21f-4fed-beaf-67dcb9c6cffc,demo reward,demo reward seeded,100,10,true,2026-07-23 16:50:21.131269+00
+rc-919b11ef33804c9b29e57889085e9894,merch_  9,demo reward,demo reward seeded,100,10,true,2026-07-23 16:50:21.131269+00
+rc-af928b4bac97e159bb6eebc732bc761a,merch_  3,demo reward,demo reward seeded,100,10,true,2026-07-23 16:50:21.131269+00
+rc-cb5f9a441463756d9903fbbc8ad7f38f,merch_  8,demo reward,demo reward seeded,100,10,true,2026-07-23 16:50:21.131269+00
+rc-e63f353dc97c7d1fcc74bc150b9f7eba,merch_  7,demo reward,demo reward seeded,100,10,true,2026-07-23 16:50:21.131269+00
+rew-grm-1,mer-grm,₹500 Garments Billing Credit,Flat ₹500 discount on shopping bill,500,100,true,2026-08-12 13:31:48.155022+00
