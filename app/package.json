@@ -5,14 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "postinstall": "prisma generate",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint .",
     "preview": "next start",
-    "db:generate": "node node_modules/prisma/build/index.js generate",
-    "db:push": "node node_modules/prisma/build/index.js db push",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
     "db:seed": "npx tsx prisma/seed.ts",
-    "db:studio": "node node_modules/prisma/build/index.js studio"
+    "db:studio": "prisma studio"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
