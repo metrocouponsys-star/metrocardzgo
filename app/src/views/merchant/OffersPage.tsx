@@ -137,18 +137,18 @@ export default function OffersPage() {
       <div className="flex bg-surface-container rounded-2xl p-1.5 gap-1">
         <button
           onClick={() => setTab('offers')}
-          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-label-md font-medium transition-all
-            ${tab === 'offers' ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-high'}`}
+          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all
+            ${tab === 'offers' ? 'bg-accent text-white shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-high'}`}
         >
-          <span className="material-symbols-outlined text-[18px]">local_offer</span>
+          <span className="material-symbols-outlined text-[18px]" style={tab === 'offers' ? { fontVariationSettings: "'FILL' 1" } : undefined}>local_offer</span>
           Offers
         </button>
         <button
           onClick={() => setTab('set_points')}
-          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-label-md font-medium transition-all
-            ${tab === 'set_points' ? 'bg-primary text-on-primary shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-high'}`}
+          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all
+            ${tab === 'set_points' ? 'bg-accent text-white shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-high'}`}
         >
-          <span className="material-symbols-outlined text-[18px]">bolt</span>
+          <span className="material-symbols-outlined text-[18px]" style={tab === 'set_points' ? { fontVariationSettings: "'FILL' 1" } : undefined}>bolt</span>
           Set Points
         </button>
       </div>
@@ -167,24 +167,33 @@ export default function OffersPage() {
         <>
           {active.length > 0 && (
             <div>
-              <h3 className="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider mb-3">Active Offers ({active.length})</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+              <h3 className="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest mb-3 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-secondary inline-block" />
+                Active Offers ({active.length})
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {active.map(offer => <OfferRow key={offer.id} offer={offer} membershipTypes={membershipTypes} onEdit={openEdit} onToggle={toggleActive} onDelete={handleDelete} />)}
               </div>
             </div>
           )}
           {inactive.length > 0 && (
             <div>
-              <h3 className="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider mb-3">Inactive Offers ({inactive.length})</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-md opacity-60">
+              <h3 className="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest mb-3 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-outline inline-block" />
+                Inactive Offers ({inactive.length})
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 opacity-60">
                 {inactive.map(offer => <OfferRow key={offer.id} offer={offer} membershipTypes={membershipTypes} onEdit={openEdit} onToggle={toggleActive} onDelete={handleDelete} />)}
               </div>
             </div>
           )}
           {offers.length === 0 && (
-            <div className="card p-8 text-center text-on-surface-variant">
-              <span className="material-symbols-outlined text-[48px] mb-2">local_offer</span>
-              <p>No offers yet. Add your first offer to get started.</p>
+            <div className="card p-8 text-center">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent/10 to-accent/5 flex items-center justify-center mx-auto mb-3">
+                <span className="material-symbols-outlined text-accent text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>local_offer</span>
+              </div>
+              <p className="text-[14px] font-bold text-on-surface font-display mb-1">No offers yet</p>
+              <p className="text-[13px] text-on-surface-variant">Add your first promotional offer to get started.</p>
             </div>
           )}
         </>
@@ -305,15 +314,19 @@ function OfferRow({ offer, membershipTypes, onEdit, onToggle, onDelete }: {
   const icon = TYPE_ICONS[offer.offer_type] || 'star';
   const applicableNames = membershipTypes.filter(mt => offer.applicable_membership_type_ids?.includes(mt.id)).map(mt => mt.name);
   return (
-    <div className="card p-md flex flex-col gap-3">
+    <div className="card p-4 flex flex-col gap-3 hover:-translate-y-0.5 hover:shadow-card-hover transition-all duration-200">
       <div className="flex items-start gap-3">
-        <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${offer.offer_type === 'points_redemption' ? 'bg-amber-100 text-amber-600' : 'bg-primary-container/10 text-primary'}`}>
-          <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: offer.offer_type === 'points_redemption' ? "'FILL' 1" : undefined }}>{icon}</span>
+        <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
+          offer.offer_type === 'points_redemption'
+            ? 'bg-gradient-to-br from-tertiary/15 to-tertiary/5 text-tertiary'
+            : 'bg-gradient-to-br from-accent/10 to-accent/5 text-accent'
+        }`}>
+          <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>{icon}</span>
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h4 className="text-body-lg font-bold">{offer.title}</h4>
-            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${offer.active ? 'bg-secondary-container text-secondary' : 'bg-surface-container text-on-surface-variant'}`}>
+            <h4 className="text-[15px] font-bold text-on-surface font-display">{offer.title}</h4>
+            <span className={`chip ${offer.active ? 'chip--teal' : 'chip--neutral'}`}>
               {offer.active ? 'ACTIVE' : 'INACTIVE'}
             </span>
             {/* Feature 1: loyalty earn badge */}
@@ -335,20 +348,23 @@ function OfferRow({ offer, membershipTypes, onEdit, onToggle, onDelete }: {
         </div>
       </div>
       {applicableNames.length > 0 && (
-        <div className="flex flex-wrap gap-1">
-          {applicableNames.map(n => <span key={n} className="text-[10px] px-2 py-0.5 bg-primary-fixed/20 text-primary rounded-full">{n}</span>)}
+        <div className="flex flex-wrap gap-1.5">
+          {applicableNames.map(n => <span key={n} className="chip chip--accent">{n}</span>)}
         </div>
       )}
       <div className="flex gap-2">
-        <button onClick={() => onEdit(offer)} className="flex-1 py-2 rounded-lg border border-outline-variant text-on-surface-variant text-label-md hover:bg-surface-container transition-colors flex items-center justify-center gap-1">
+        <button onClick={() => onEdit(offer)} className="flex-1 py-2 rounded-xl border border-outline-variant/60 text-on-surface-variant text-[12px] font-semibold hover:bg-surface-container hover:border-outline transition-colors flex items-center justify-center gap-1.5">
           <span className="material-symbols-outlined text-[14px]">edit</span> Edit
         </button>
-        <button onClick={() => onToggle(offer)} className={`flex-1 py-2 rounded-lg text-label-md flex items-center justify-center gap-1 transition-colors
-          ${offer.active ? 'border border-error/30 text-error hover:bg-error-container' : 'border border-secondary/30 text-secondary hover:bg-secondary-container/20'}`}>
+        <button onClick={() => onToggle(offer)} className={`flex-1 py-2 rounded-xl text-[12px] font-semibold flex items-center justify-center gap-1.5 transition-colors border
+          ${offer.active
+            ? 'border-error/20 text-error hover:bg-error-container'
+            : 'border-secondary/20 text-secondary hover:bg-secondary-container/20'
+          }`}>
           <span className="material-symbols-outlined text-[14px]">{offer.active ? 'toggle_off' : 'toggle_on'}</span>
           {offer.active ? 'Deactivate' : 'Activate'}
         </button>
-        <button onClick={() => onDelete(offer)} className="px-3 py-2 rounded-lg border border-error/30 text-error hover:bg-error-container transition-colors flex items-center justify-center" title="Delete offer">
+        <button onClick={() => onDelete(offer)} className="px-3 py-2 rounded-xl border border-error/20 text-error hover:bg-error-container transition-colors flex items-center justify-center" title="Delete offer">
           <span className="material-symbols-outlined text-[16px]">delete</span>
         </button>
       </div>
@@ -408,9 +424,9 @@ function SetPointsTab() {
         </button>
       </div>
 
-      <div className="bg-primary-container/10 border border-primary/20 rounded-xl p-4 flex gap-3">
-        <span className="material-symbols-outlined text-primary flex-shrink-0">info</span>
-        <div className="text-body-sm text-on-surface">
+      <div className="bg-accent/5 border border-accent/15 rounded-xl p-4 flex gap-3">
+        <span className="material-symbols-outlined text-accent flex-shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>info</span>
+        <div className="text-[13px] text-on-surface">
           <strong>Set Points:</strong> Define how members earn loyalty points on visits or purchases. Members can spend points via the reward catalog or points redemption offers.
         </div>
       </div>
@@ -446,8 +462,8 @@ function SetPointsTab() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline gap-1 flex-wrap">
-                      <span className="text-headline-lg font-bold text-primary">⚡ {Number(r.points_value).toFixed(0)}</span>
-                      <span className="text-body-md text-on-surface-variant">pts / {r.rule_type === 'per_visit' ? 'visit' : `₹${r.spend_unit || 1}`}</span>
+                      <span className="text-[22px] font-extrabold text-accent font-display">⚡ {Number(r.points_value).toFixed(0)}</span>
+                      <span className="text-[13px] text-on-surface-variant">pts / {r.rule_type === 'per_visit' ? 'visit' : `₹${r.spend_unit || 1}`}</span>
                     </div>
                     <p className="text-body-sm text-on-surface-variant mt-0.5">{descText}</p>
                   </div>

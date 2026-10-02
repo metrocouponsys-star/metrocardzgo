@@ -26,6 +26,14 @@ function formatCelebrationDate(isoDateStr?: string) {
   }
 }
 
+// Time-based greeting
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
 export default function DashboardPage() {
   const { user } = useAuthStore();
   const navigate = useNavigate();
@@ -111,16 +119,33 @@ export default function DashboardPage() {
   return (
     <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-5xl mx-auto space-y-6">
 
+      {/* ── Welcome Banner ─── */}
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-sidebar via-primary-container to-sidebar p-6 md:p-8">
+        {/* Decorative glow */}
+        <div className="absolute top-0 right-0 w-48 h-48 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #FF6B35 0%, transparent 70%)', filter: 'blur(40px)' }} />
+        <div className="absolute bottom-0 left-1/4 w-32 h-32 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #00D4AA 0%, transparent 70%)', filter: 'blur(30px)' }} />
+
+        <div className="relative z-10">
+          <p className="text-accent text-[13px] font-bold tracking-wide mb-1">{getGreeting()} 👋</p>
+          <h1 className="text-2xl md:text-3xl font-extrabold text-white font-display tracking-tight mb-2">
+            {user?.name || 'Welcome'}
+          </h1>
+          <p className="text-white/40 text-[14px] max-w-md">
+            Here&apos;s what&apos;s happening with your loyalty program today.
+          </p>
+        </div>
+      </section>
+
       {/* ── Scan / Search CTA ─── */}
       <section
-        className="flex items-center gap-4 p-4 bg-white rounded-2xl border border-primary/[0.08] shadow-sm cursor-pointer active:opacity-80 md:hidden"
+        className="flex items-center gap-4 p-4 bg-white rounded-2xl shadow-card border border-outline-variant/30 cursor-pointer hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 active:scale-[0.99] md:hidden"
         onClick={() => navigate('/members/search?tab=qr')}
       >
-        <div className="w-11 h-11 rounded-xl bg-primary/[0.08] flex items-center justify-center shrink-0">
-          <span className="material-symbols-outlined text-primary text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>qr_code_scanner</span>
+        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center shrink-0">
+          <span className="material-symbols-outlined text-accent text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>qr_code_scanner</span>
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[14px] font-semibold text-on-surface">Scan / Search Customer</p>
+          <p className="text-[14px] font-bold text-on-surface font-display">Scan / Search Customer</p>
           <p className="text-[12px] text-on-surface-variant truncate">Redeem offers, add points, check member status</p>
         </div>
         <span className="material-symbols-outlined text-on-surface-variant text-[20px]">chevron_right</span>
@@ -128,14 +153,14 @@ export default function DashboardPage() {
 
       {/* Desktop scan card */}
       <section
-        className="hidden md:flex items-center gap-4 p-5 bg-white rounded-2xl border border-primary/[0.08] shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+        className="hidden md:flex items-center gap-4 p-5 bg-white rounded-2xl shadow-card border border-outline-variant/30 cursor-pointer hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200"
         onClick={() => navigate('/members/search?tab=qr')}
       >
-        <div className="w-12 h-12 rounded-xl bg-primary/[0.08] flex items-center justify-center shrink-0">
-          <span className="material-symbols-outlined text-primary text-[26px]" style={{ fontVariationSettings: "'FILL' 1" }}>qr_code_scanner</span>
+        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center shrink-0">
+          <span className="material-symbols-outlined text-accent text-[26px]" style={{ fontVariationSettings: "'FILL' 1" }}>qr_code_scanner</span>
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[16px] font-semibold text-on-surface">Scan / Search Customer</p>
+          <p className="text-[16px] font-bold text-on-surface font-display">Scan / Search Customer</p>
           <p className="text-[13px] text-on-surface-variant">Redeem offers, add points, or check member status</p>
         </div>
         <span className="material-symbols-outlined text-on-surface-variant text-[22px]">chevron_right</span>
@@ -144,33 +169,33 @@ export default function DashboardPage() {
       {/* ── Quick Actions ─── */}
       <section className="grid grid-cols-3 gap-3">
         {[
-          { icon: 'person_add', label: 'Add Member', route: '/members/new', color: 'from-primary/10 to-primary/5' },
-          { icon: 'groups', label: 'Members', route: '/members', color: 'from-secondary/10 to-secondary/5' },
-          { icon: 'credit_card', label: 'Cards', route: '/cards', color: 'from-primary-container/20 to-primary-container/10' },
+          { icon: 'person_add', label: 'Add Member', route: '/members/new', gradient: 'from-accent/10 to-accent/5', iconColor: 'text-accent' },
+          { icon: 'groups', label: 'Members', route: '/members', gradient: 'from-secondary/10 to-secondary/5', iconColor: 'text-secondary' },
+          { icon: 'credit_card', label: 'Cards', route: '/cards', gradient: 'from-tertiary/10 to-tertiary/5', iconColor: 'text-tertiary' },
         ].map((action) => (
           <button
             key={action.route}
             onClick={() => navigate(action.route)}
-            className="flex flex-col items-center gap-2 py-4 px-3 rounded-2xl bg-white border border-primary/[0.06] shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group"
+            className="flex flex-col items-center gap-2.5 py-4 px-3 rounded-2xl bg-white shadow-card border border-outline-variant/30 hover:shadow-card-hover hover:-translate-y-1 transition-all duration-200 group active:scale-[0.97]"
           >
-            <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${action.color} flex items-center justify-center group-hover:scale-110 transition-transform`}>
-              <span className="material-symbols-outlined text-primary text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>{action.icon}</span>
+            <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${action.gradient} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+              <span className={`material-symbols-outlined ${action.iconColor} text-[22px]`} style={{ fontVariationSettings: "'FILL' 1" }}>{action.icon}</span>
             </div>
-            <span className="text-[12px] font-semibold text-on-surface">{action.label}</span>
+            <span className="text-[12px] font-bold text-on-surface">{action.label}</span>
           </button>
         ))}
       </section>
 
-      {/* ── Stats Grid (Expiring this month removed) ─── */}
+      {/* ── Stats Grid ─── */}
       <section>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-[17px] font-bold text-on-surface">Overview</h3>
+          <h3 className="text-[17px] font-extrabold text-on-surface font-display">Overview</h3>
           {/* Refresh badge */}
           <div className="flex items-center gap-2">
             {updatedLabel && !loading && (
-              <span className="text-[11px] text-on-surface-variant flex items-center gap-1 animate-fade-in font-medium">
+              <span className="text-[11px] text-on-surface-variant flex items-center gap-1.5 animate-fade-in font-medium">
                 {refreshing
-                  ? <span className="material-symbols-outlined text-[13px] animate-spin-slow text-primary">refresh</span>
+                  ? <span className="material-symbols-outlined text-[13px] animate-spin-slow text-accent">refresh</span>
                   : <span className="w-1.5 h-1.5 rounded-full bg-secondary inline-block" />
                 }
                 {refreshing ? 'Refreshing…' : updatedLabel}
@@ -180,7 +205,7 @@ export default function DashboardPage() {
               onClick={() => fetchStats(true)}
               disabled={refreshing || loading}
               title="Refresh stats"
-              className="w-8 h-8 rounded-xl flex items-center justify-center text-on-surface-variant hover:bg-primary/[0.06] hover:text-primary transition-all disabled:opacity-40"
+              className="w-8 h-8 rounded-xl flex items-center justify-center text-on-surface-variant hover:bg-accent/[0.06] hover:text-accent transition-all disabled:opacity-40"
             >
               <span className={`material-symbols-outlined text-[18px] ${refreshing ? 'animate-spin-slow' : ''}`}>refresh</span>
             </button>
@@ -192,11 +217,11 @@ export default function DashboardPage() {
             Array.from({ length: 3 }).map((_, i) => <StatCardSkeleton key={i} />)
           ) : error ? (
             <div className="col-span-full flex flex-col items-center gap-3 py-8 text-center">
-              <div className="w-14 h-14 rounded-2xl bg-error/5 flex items-center justify-center">
+              <div className="w-14 h-14 rounded-2xl bg-error-container flex items-center justify-center">
                 <span className="material-symbols-outlined text-[28px] text-error">cloud_off</span>
               </div>
               <p className="text-body-md text-on-surface-variant">Failed to load stats.</p>
-              <button onClick={() => fetchStats()} className="btn-outline flex items-center gap-2">
+              <button onClick={() => fetchStats()} className="btn-primary flex items-center gap-2">
                 <span className="material-symbols-outlined text-[18px]">refresh</span>
                 Retry
               </button>
@@ -204,10 +229,11 @@ export default function DashboardPage() {
           ) : stats ? (
             <>
               <StatCard
-                label="Total Active Members"
+                label="Active Members"
                 value={`${stats.total_active_members} / ${stats.total_cards_assigned || stats.total_active_members}`}
-                trend={`${stats.total_active_members} Active / ${stats.total_cards_assigned || stats.total_active_members} Cards Assigned`}
+                trend={`${stats.total_active_members} Active / ${stats.total_cards_assigned || stats.total_active_members} Cards`}
                 icon="groups"
+                variant="accent"
                 className="stagger-item"
                 onClick={() => navigate('/members')}
               />
@@ -216,14 +242,16 @@ export default function DashboardPage() {
                 value={stats.redemptions_today}
                 trend="All handled"
                 icon="check_circle"
+                variant="teal"
                 className="stagger-item"
                 onClick={() => navigate('/reports')}
               />
               <StatCard
-                label="Points Issued (Month)"
+                label="Points Issued"
                 value={stats.wallet_points_issued_month}
-                trend="High engagement"
+                trend="This month"
                 icon="stars"
+                variant="amber"
                 className="stagger-item"
                 onClick={() => navigate('/rewards')}
               />
@@ -235,15 +263,15 @@ export default function DashboardPage() {
       {/* ── Recent Activity ─── */}
       <section className="space-y-3">
         <div className="flex justify-between items-center">
-          <h3 className="text-[17px] font-bold text-on-surface">Recent Activity</h3>
-          <button onClick={() => navigate('/reports')} className="text-primary text-[13px] font-bold hover:underline flex items-center gap-1 transition-colors">
+          <h3 className="text-[17px] font-extrabold text-on-surface font-display">Recent Activity</h3>
+          <button onClick={() => navigate('/reports')} className="text-accent text-[13px] font-bold hover:underline flex items-center gap-1 transition-colors">
             View All
             <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
           </button>
         </div>
 
         {loading ? (
-          <div className="bg-white rounded-2xl border border-primary/[0.06] shadow-sm divide-y divide-primary/[0.04]">
+          <div className="bg-white rounded-2xl shadow-card border border-outline-variant/30 divide-y divide-outline-variant/30">
             {Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="flex items-center gap-4 p-4" style={{ animationDelay: `${i * 60}ms` }}>
                 <div className="w-10 h-10 rounded-xl skeleton shrink-0" />
@@ -256,24 +284,24 @@ export default function DashboardPage() {
             ))}
           </div>
         ) : stats && stats.recent_redemptions.length > 0 ? (
-          <div className="bg-white rounded-2xl shadow-sm border border-primary/[0.06] overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-card border border-outline-variant/30 overflow-hidden">
             {stats.recent_redemptions.map((r, idx) => (
               <div
                 key={r.id}
-                className={`flex items-center justify-between px-4 py-3.5 hover:bg-primary/[0.02] transition-colors cursor-pointer group animate-slide-up ${
-                  idx > 0 ? 'border-t border-primary/[0.04]' : ''
+                className={`flex items-center justify-between px-4 py-3.5 hover:bg-surface-container/50 transition-colors cursor-pointer group animate-slide-up ${
+                  idx > 0 ? 'border-t border-outline-variant/30' : ''
                 }`}
                 style={{ animationDelay: `${idx * 50}ms` }}
                 onClick={() => navigate(`/members/${r.member_id}`)}
               >
                 <div className="flex items-center gap-3">
-                  <div className="icon-container w-10 h-10 shrink-0">
-                    <span className="material-symbols-outlined text-primary text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/10 flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-accent text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>
                       {OFFER_ICONS[r.offer?.offer_type || 'unknown'] || 'star'}
                     </span>
                   </div>
                   <div>
-                    <p className="text-[14px] font-semibold text-on-surface group-hover:text-primary transition-colors">{r.member?.name}</p>
+                    <p className="text-[14px] font-bold text-on-surface group-hover:text-accent transition-colors">{r.member?.name}</p>
                     <p className="text-[12px] text-on-surface-variant">{r.offer?.title}</p>
                   </div>
                 </div>
@@ -281,7 +309,7 @@ export default function DashboardPage() {
                   <p className="text-[11px] text-on-surface-variant font-medium">
                     {formatDistanceToNow(new Date(r.created_at), { addSuffix: true })}
                   </p>
-                  <span className="text-[11px] bg-secondary/[0.08] text-secondary px-2 py-0.5 rounded-lg font-semibold inline-flex items-center gap-0.5">
+                  <span className="chip chip--teal">
                     <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
                     Success
                   </span>
@@ -300,7 +328,7 @@ export default function DashboardPage() {
         )}
       </section>
 
-      {/* ── 🎉 Birthday & Anniversary Celebrations (At Very Bottom) ─── */}
+      {/* ── 🎉 Birthday & Anniversary Celebrations ─── */}
       {(() => {
         const todayCelebrations = celebrations.filter(c => c.days_until === 0);
         const in1DayCelebrations = celebrations.filter(c => c.days_until === 1);
@@ -320,7 +348,7 @@ export default function DashboardPage() {
 
         if (celebrationsLoading) {
           return (
-            <section className="bg-white rounded-2xl border border-primary/[0.06] shadow-sm p-4 animate-pulse">
+            <section className="bg-white rounded-2xl shadow-card border border-outline-variant/30 p-4 animate-pulse">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-6 rounded-lg bg-surface-container-high" />
@@ -345,32 +373,32 @@ export default function DashboardPage() {
         }
 
         return (
-          <section className="bg-white rounded-2xl border border-primary/[0.08] shadow-sm overflow-hidden space-y-0">
+          <section className="bg-white rounded-2xl shadow-card border border-outline-variant/30 overflow-hidden space-y-0">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 border-b border-primary/[0.06] bg-surface-container-low/40">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 border-b border-outline-variant/30 bg-surface-container-low/40">
               <div className="flex items-center gap-2.5">
                 <span className="text-[22px]">🎉</span>
                 <div>
-                  <h3 className="text-[16px] font-bold text-on-surface flex items-center gap-2">
-                    Birthday & Anniversary Celebrations
+                  <h3 className="text-[16px] font-extrabold text-on-surface font-display flex items-center gap-2">
+                    Celebrations
                     {todayCelebrations.length > 0 && (
-                      <span className="text-[11px] font-extrabold text-pink-700 bg-pink-100 px-2 py-0.5 rounded-full animate-pulse">
+                      <span className="chip chip--accent animate-pulse">
                         {todayCelebrations.length} Today!
                       </span>
                     )}
                   </h3>
                   <p className="text-[12px] text-on-surface-variant">
-                    Upcoming birthdays & anniversaries with dates for the next 30 days
+                    Upcoming birthdays & anniversaries for the next 30 days
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-3 self-start sm:self-auto">
                 <button
                   onClick={() => navigate('/celebrations')}
-                  className="text-primary text-[12px] font-bold hover:underline flex items-center gap-1"
+                  className="text-accent text-[12px] font-bold hover:underline flex items-center gap-1"
                 >
                   <span className="material-symbols-outlined text-[16px]">open_in_new</span>
-                  View Full Page
+                  View All
                 </button>
                 <button
                   onClick={() => navigate('/campaigns')}
@@ -383,7 +411,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Filter Tabs */}
-            <div className="flex items-center gap-1.5 p-3 overflow-x-auto border-b border-primary/[0.04] bg-surface">
+            <div className="flex items-center gap-1.5 p-3 overflow-x-auto border-b border-outline-variant/20 bg-surface">
               {[
                 { key: 'all', label: 'All Upcoming', count: allUpcoming.length },
                 { key: 'today', label: 'Today', count: todayCelebrations.length },
@@ -394,9 +422,9 @@ export default function DashboardPage() {
                 <button
                   key={t.key}
                   onClick={() => setCelebrationFilter(t.key as any)}
-                  className={`px-3 py-1.5 rounded-xl text-[12px] font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                  className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${
                     celebrationFilter === t.key
-                      ? 'bg-primary text-on-primary shadow-xs'
+                      ? 'bg-accent text-white shadow-sm'
                       : 'bg-surface-container/60 text-on-surface-variant hover:bg-surface-container'
                   }`}
                 >
@@ -416,7 +444,7 @@ export default function DashboardPage() {
                 <div className="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center mx-auto mb-2 text-on-surface-variant text-[22px]">
                   🎂
                 </div>
-                <p className="text-[14px] font-semibold text-on-surface">No celebrations found</p>
+                <p className="text-[14px] font-bold text-on-surface font-display">No celebrations found</p>
                 <p className="text-[12px] text-on-surface-variant max-w-sm mx-auto mt-0.5">
                   {celebrationFilter === 'today'
                     ? 'No member birthdays or anniversaries today.'
@@ -430,7 +458,7 @@ export default function DashboardPage() {
                 </p>
               </div>
             ) : (
-              <div className="divide-y divide-primary/[0.04]">
+              <div className="divide-y divide-outline-variant/20">
                 {displayedCelebrations.map(m => {
                   const isToday = m.days_until === 0;
                   const isTomorrow = m.days_until === 1;
@@ -440,31 +468,30 @@ export default function DashboardPage() {
                     <div
                       key={`${m.event_type}-${m.member_id}`}
                       onClick={() => navigate(`/members/${m.member_id}`)}
-                      className={`flex items-center justify-between gap-3 px-4 py-3.5 hover:bg-primary/[0.02] cursor-pointer transition-colors group ${
-                        isToday ? (isBirthday ? 'bg-pink-50/40' : 'bg-purple-50/40') : ''
+                      className={`flex items-center justify-between gap-3 px-4 py-3.5 hover:bg-surface-container/50 cursor-pointer transition-colors group ${
+                        isToday ? (isBirthday ? 'bg-accent-soft/40' : 'bg-purple-50/40') : ''
                       }`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-[20px] ${
-                          isBirthday ? 'bg-pink-100 text-pink-700' : 'bg-purple-100 text-purple-700'
+                          isBirthday ? 'bg-accent-soft text-accent' : 'bg-purple-100 text-purple-700'
                         }`}>
                           {isBirthday ? '🎂' : '💍'}
                         </div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <p className="text-[13px] font-bold text-on-surface group-hover:text-primary transition-colors truncate">
+                            <p className="text-[13px] font-bold text-on-surface group-hover:text-accent transition-colors truncate">
                               {m.name}
                             </p>
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full capitalize ${
-                              isBirthday ? 'bg-pink-100 text-pink-700' : 'bg-purple-100 text-purple-700'
-                            }`}>
+                            <span className={`chip ${isBirthday ? 'chip--accent' : ''} capitalize`}
+                              style={!isBirthday ? { background: '#F3E8FF', color: '#7C3AED' } : undefined}>
                               {isBirthday ? 'Birthday' : 'Anniversary'}
                             </span>
                           </div>
                           <p className="text-[11px] text-on-surface-variant mt-0.5 flex items-center gap-2 flex-wrap">
                             <span>#{m.member_code}</span>
                             {m.phone && <span>· {m.phone}</span>}
-                            <span className="font-semibold text-primary">
+                            <span className="font-semibold text-accent">
                               · 📅 {formatCelebrationDate(m.event_date)}
                             </span>
                           </p>
@@ -473,23 +500,23 @@ export default function DashboardPage() {
 
                       <div className="text-right shrink-0 flex flex-col items-end gap-1">
                         {isToday ? (
-                          <span className="text-[11px] font-extrabold text-pink-700 bg-pink-100 border border-pink-300 px-2.5 py-1 rounded-full animate-bounce inline-flex items-center gap-1">
+                          <span className="chip chip--accent animate-bounce">
                             🎁 Give Gift Today!
                           </span>
                         ) : isTomorrow ? (
-                          <span className="text-[11px] font-bold text-amber-700 bg-amber-100 border border-amber-200 px-2.5 py-0.5 rounded-full">
+                          <span className="chip chip--amber">
                             In 1 Day (Tomorrow)
                           </span>
                         ) : m.days_until <= 7 ? (
-                          <span className="text-[11px] font-semibold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full">
+                          <span className="chip chip--teal">
                             In {m.days_until} days
                           </span>
                         ) : (
-                          <span className="text-[11px] font-medium text-on-surface-variant bg-surface-container px-2.5 py-0.5 rounded-full">
-                            In {m.days_until} days (1 mo)
+                          <span className="chip chip--neutral">
+                            In {m.days_until} days
                           </span>
                         )}
-                        <span className="text-[10px] text-on-surface-variant group-hover:text-primary transition-colors flex items-center gap-0.5">
+                        <span className="text-[10px] text-on-surface-variant group-hover:text-accent transition-colors flex items-center gap-0.5">
                           View profile <span className="material-symbols-outlined text-[12px]">chevron_right</span>
                         </span>
                       </div>
@@ -504,13 +531,13 @@ export default function DashboardPage() {
 
       {/* ── FAB ─── */}
       <button
-        className="fixed bottom-24 right-4 md:right-12 md:bottom-8 w-14 h-14 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-2xl shadow-lg flex items-center justify-center active-scale hover:scale-105 z-40 transition-all group hover:shadow-xl"
+        className="fixed bottom-24 right-4 md:right-12 md:bottom-8 w-14 h-14 bg-gradient-to-br from-accent to-accent-hover text-white rounded-2xl shadow-lg shadow-accent/30 flex items-center justify-center active-scale hover:scale-105 z-40 transition-all group hover:shadow-xl hover:shadow-accent/40"
         onClick={() => navigate('/members/new')}
         title="Add new member"
       >
         <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>person_add</span>
         {/* Tooltip */}
-        <span className="absolute right-full mr-3 bg-on-surface text-surface text-[11px] font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-lg">
+        <span className="absolute right-full mr-3 bg-sidebar text-white text-[11px] font-bold px-3 py-1.5 rounded-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-lg">
           Add Member
         </span>
       </button>

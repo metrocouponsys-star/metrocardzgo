@@ -7,10 +7,10 @@ import { invalidateContaining } from '../../api/cache';
 import { Modal, ConfirmModal } from '../../components/ui/Modal';
 
 const TIER_COLORS = [
-  { bg: 'from-primary to-primary/70', text: 'text-white', badge: 'bg-white/20 text-white' },
-  { bg: 'from-secondary to-secondary/70', text: 'text-white', badge: 'bg-white/20 text-white' },
-  { bg: 'from-tertiary to-tertiary/70 bg-teal-600', text: 'text-white', badge: 'bg-white/20 text-white' },
-  { bg: 'from-amber-500 to-amber-600', text: 'text-white', badge: 'bg-white/20 text-white' },
+  { bg: 'from-accent to-accent-hover', text: 'text-white', badge: 'bg-white/20 text-white' },
+  { bg: 'from-secondary to-emerald-600', text: 'text-white', badge: 'bg-white/20 text-white' },
+  { bg: 'from-tertiary to-amber-600', text: 'text-white', badge: 'bg-white/20 text-white' },
+  { bg: 'from-purple-500 to-purple-700', text: 'text-white', badge: 'bg-white/20 text-white' },
 ];
 
 interface BundledOfferFormItem {
@@ -154,10 +154,10 @@ export default function MembershipTypesPage() {
   };
 
   return (
-    <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-4xl mx-auto space-y-xl animate-fade-in">
+    <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-4xl mx-auto space-y-6 animate-fade-in">
       <div className="flex items-start justify-between flex-wrap gap-3">
-        <div className="page-header mb-0">
-          <h2 className="page-title">Membership Types</h2>
+        <div>
+          <h1 className="page-title">Membership Types</h1>
           <p className="page-subtitle">Create tiers like "Prime" or "Standard" and bundle exclusive offer packages into each tier.</p>
         </div>
         {isOwner && (
@@ -267,16 +267,16 @@ export default function MembershipTypesPage() {
             );
           })}
 
-          {/* Add New card */}
+        {/* Add New card */}
           {isOwner && (
             <button
               onClick={openCreate}
-              className="card border-dashed border-2 border-outline-variant/50 flex flex-col items-center justify-center gap-3 text-on-surface-variant hover:bg-surface-container-low hover:border-primary hover:text-primary transition-all min-h-[240px] rounded-2xl"
+              className="card border-dashed border-2 border-outline-variant/40 flex flex-col items-center justify-center gap-3 text-on-surface-variant hover:bg-surface-container-low hover:border-accent hover:text-accent transition-all min-h-[240px] rounded-2xl group"
             >
-              <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
-                <span className="material-symbols-outlined text-[28px] text-primary">add_circle</span>
+              <div className="w-14 h-14 rounded-2xl bg-accent/10 group-hover:bg-accent/15 flex items-center justify-center transition-all">
+                <span className="material-symbols-outlined text-[28px] text-accent">add_circle</span>
               </div>
-              <span className="text-label-md font-bold">Add Membership Type</span>
+              <span className="text-[13px] font-bold">Add Membership Type</span>
             </button>
           )}
         </div>
@@ -325,7 +325,7 @@ export default function MembershipTypesPage() {
                     <div
                       key={offer.id}
                       className={`p-3 rounded-xl border flex items-center justify-between transition-all ${
-                        isSelected ? 'border-primary bg-primary/5' : 'border-outline-variant/50 hover:bg-surface-container'
+                        isSelected ? 'border-accent bg-accent/5' : 'border-outline-variant/50 hover:bg-surface-container'
                       }`}
                     >
                       <label className="flex items-center gap-3 cursor-pointer flex-1 min-w-0">

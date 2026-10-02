@@ -24,20 +24,20 @@ export function Modal({ isOpen, onClose, title, children, maxWidth = 'max-w-md' 
     <div className="fixed inset-0 z-[900] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-inverse-surface/40 backdrop-blur-sm animate-fade-in"
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-fade-in"
         onClick={onClose}
       />
       {/* Modal */}
-      <div className={`relative w-full ${maxWidth} max-h-[85vh] md:max-h-[90vh] bg-surface-container-lowest rounded-2xl shadow-2xl animate-scale-in flex flex-col my-auto overflow-hidden`}>
+      <div className={`relative w-full ${maxWidth} max-h-[85vh] md:max-h-[90vh] bg-white rounded-2xl shadow-dialog animate-scale-in flex flex-col my-auto overflow-hidden border border-outline-variant/30`}>
         {title && (
-          <div className="flex items-center justify-between px-lg py-md border-b border-outline-variant/30 shrink-0">
-            <h3 className="text-headline-md font-headline-md text-on-surface">{title}</h3>
-            <button onClick={onClose} className="p-1 rounded-full hover:bg-surface-container transition-colors">
-              <span className="material-symbols-outlined text-on-surface-variant">close</span>
+          <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant/30 shrink-0">
+            <h3 className="text-[18px] font-extrabold text-on-surface font-display">{title}</h3>
+            <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-surface-container transition-colors text-on-surface-variant hover:text-on-surface">
+              <span className="material-symbols-outlined text-[20px]">close</span>
             </button>
           </div>
         )}
-        <div className="p-lg overflow-y-auto custom-scrollbar flex-1 max-h-[calc(85vh-70px)]">{children}</div>
+        <div className="p-6 overflow-y-auto custom-scrollbar flex-1 max-h-[calc(85vh-70px)]">{children}</div>
       </div>
     </div>
   );
@@ -57,18 +57,21 @@ interface ConfirmModalProps {
 export function ConfirmModal({ isOpen, onClose, onConfirm, title, description, confirmLabel = 'Confirm', isLoading, danger }: ConfirmModalProps) {
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      <div className="flex flex-col gap-lg">
+      <div className="flex flex-col gap-6">
         <div>
-          <h3 className="text-headline-md font-headline-md text-on-surface mb-2">{title}</h3>
-          <div className="text-body-lg text-on-surface-variant">{description}</div>
+          <h3 className="text-[18px] font-extrabold text-on-surface font-display mb-2">{title}</h3>
+          <div className="text-[15px] text-on-surface-variant leading-relaxed">{description}</div>
         </div>
         <div className="flex gap-3 justify-end">
           <button onClick={onClose} className="btn-secondary" disabled={isLoading}>Cancel</button>
           <button
             onClick={onConfirm}
             disabled={isLoading}
-            className={`flex items-center gap-2 px-6 py-3 rounded-lg font-headline-md text-headline-md transition-colors active-scale disabled:opacity-50
-              ${danger ? 'bg-error text-on-error hover:bg-on-error-container' : 'bg-primary text-on-primary hover:bg-primary-container'}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-[14px] transition-all active-scale disabled:opacity-50
+              ${danger
+                ? 'bg-gradient-to-r from-error to-red-600 text-white shadow-sm hover:shadow-md'
+                : 'btn-primary'
+              }
             `}
           >
             {isLoading && <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>}

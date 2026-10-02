@@ -38,13 +38,14 @@ const REFRESH_INTERVAL_MS = 90_000; // auto-refresh every 90s
 
 // ── Chart theming ────────────────────────────────────────────────────────────
 const CHART_COLORS = {
-  primary: '#1a56db',
-  primaryLight: '#3b82f6',
-  green: '#059669',
-  greenLight: '#10b981',
-  red: '#dc2626',
-  amber: '#d97706',
-  grid: '#e5e7eb',
+  primary: '#FF6B35',
+  primaryLight: '#FF8F62',
+  green: '#00D4AA',
+  greenLight: '#34D399',
+  red: '#EF4444',
+  amber: '#F59E0B',
+  navy: '#0A1628',
+  grid: '#E2E8F0',
 };
 
 const TOOLTIP_STYLE = {

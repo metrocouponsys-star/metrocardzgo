@@ -150,9 +150,10 @@ export default function SettingsPage() {
   ] as const;
 
   return (
-    <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-3xl mx-auto space-y-xl animate-fade-in">
-      <div className="page-header">
-        <h2 className="page-title">Settings</h2>
+    <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-3xl mx-auto space-y-6 animate-fade-in">
+      <div>
+        <h1 className="page-title">Settings</h1>
+        <p className="page-subtitle">Manage your business profile, staff, and integrations.</p>
       </div>
 
       {/* Tab bar */}
@@ -161,10 +162,10 @@ export default function SettingsPage() {
           <button
             key={t.k}
             onClick={() => setTab(t.k)}
-            className={`flex items-center gap-1.5 px-4 py-3 text-label-md font-label-md border-b-2 transition-all
-              ${tab === t.k ? 'text-primary border-primary' : 'text-on-surface-variant border-transparent hover:bg-surface-container'}`}
+            className={`flex items-center gap-1.5 px-4 py-3 text-[13px] font-bold border-b-2 transition-all
+              ${tab === t.k ? 'text-accent border-accent' : 'text-on-surface-variant border-transparent hover:bg-surface-container hover:text-on-surface'}`}
           >
-            <span className="material-symbols-outlined text-[16px]">{t.icon}</span>
+            <span className="material-symbols-outlined text-[16px]" style={tab === t.k ? { fontVariationSettings: "'FILL' 1" } : undefined}>{t.icon}</span>
             {t.l}
           </button>
         ))}

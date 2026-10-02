@@ -29,7 +29,7 @@ class PageErrorBoundary extends Component<{ children: React.ReactNode }, EBState
           </div>
           <button
             onClick={() => { this.setState({ hasError: false, message: '' }); window.location.reload(); }}
-            className="btn-outline flex items-center gap-2"
+            className="btn-primary flex items-center gap-2"
           >
             <span className="material-symbols-outlined text-[18px]">refresh</span>
             Reload Page
@@ -42,26 +42,32 @@ class PageErrorBoundary extends Component<{ children: React.ReactNode }, EBState
 }
 
 const MERCHANT_NAV = [
-  { to: '/dashboard',        icon: 'dashboard',       label: 'Dashboard',   roles: ['owner', 'staff'] },
-  { to: '/members',          icon: 'groups',          label: 'Members',     roles: ['owner', 'staff'] },
-  { to: '/members/search?tab=qr', icon: 'qr_code_scanner', label: 'Scan',   roles: ['owner', 'staff'] },
-  { to: '/cards',            icon: 'credit_card',     label: 'Cards',       roles: ['owner'] },
-  { to: '/celebrations',     icon: 'cake',            label: 'Celebrations',roles: ['owner', 'staff'] },
-  { to: '/offers',           icon: 'local_offer',     label: 'Offers',      roles: ['owner'] },
-  { to: '/membership-types', icon: 'card_membership', label: 'Memberships', roles: ['owner'] },
-  { to: '/rewards',          icon: 'workspace_premium', label: 'Rewards',   roles: ['owner'] },
-  { to: '/campaigns',        icon: 'campaign',        label: 'Campaigns',   roles: ['owner'] },
-  { to: '/reports',          icon: 'bar_chart',       label: 'Reports',     roles: ['owner'] },
-  { to: '/settings',         icon: 'settings',        label: 'Settings',    roles: ['owner'] },
+  { to: '/dashboard',        icon: 'dashboard',       label: 'Dashboard',   roles: ['owner', 'staff'], group: 'core' },
+  { to: '/members',          icon: 'groups',          label: 'Members',     roles: ['owner', 'staff'], group: 'core' },
+  { to: '/members/search?tab=qr', icon: 'qr_code_scanner', label: 'Scan',   roles: ['owner', 'staff'], group: 'core' },
+  { to: '/cards',            icon: 'credit_card',     label: 'Cards',       roles: ['owner'], group: 'manage' },
+  { to: '/celebrations',     icon: 'cake',            label: 'Celebrations',roles: ['owner', 'staff'], group: 'manage' },
+  { to: '/offers',           icon: 'local_offer',     label: 'Offers',      roles: ['owner'], group: 'manage' },
+  { to: '/membership-types', icon: 'card_membership', label: 'Memberships', roles: ['owner'], group: 'manage' },
+  { to: '/rewards',          icon: 'workspace_premium', label: 'Rewards',   roles: ['owner'], group: 'manage' },
+  { to: '/campaigns',        icon: 'campaign',        label: 'Campaigns',   roles: ['owner'], group: 'manage' },
+  { to: '/reports',          icon: 'bar_chart',       label: 'Reports',     roles: ['owner'], group: 'tools' },
+  { to: '/settings',         icon: 'settings',        label: 'Settings',    roles: ['owner'], group: 'tools' },
 ];
 
 const ADMIN_NAV = [
-  { to: '/admin',           icon: 'dashboard',   label: 'Dashboard', roles: ['super_admin'] },
-  { to: '/admin/merchants', icon: 'storefront',  label: 'Merchants', roles: ['super_admin'] },
-  { to: '/admin/members',   icon: 'groups',      label: 'Members',   roles: ['super_admin'] },
-  { to: '/admin/cards',     icon: 'credit_card', label: 'Inventory', roles: ['super_admin'] },
-  { to: '/admin/reports',   icon: 'bar_chart',   label: 'Reports',   roles: ['super_admin'] },
+  { to: '/admin',           icon: 'dashboard',   label: 'Dashboard', roles: ['super_admin'], group: 'core' },
+  { to: '/admin/merchants', icon: 'storefront',  label: 'Merchants', roles: ['super_admin'], group: 'core' },
+  { to: '/admin/members',   icon: 'groups',      label: 'Members',   roles: ['super_admin'], group: 'core' },
+  { to: '/admin/cards',     icon: 'credit_card', label: 'Inventory', roles: ['super_admin'], group: 'core' },
+  { to: '/admin/reports',   icon: 'bar_chart',   label: 'Reports',   roles: ['super_admin'], group: 'core' },
 ];
+
+const GROUP_LABELS: Record<string, string> = {
+  core: 'Overview',
+  manage: 'Management',
+  tools: 'Tools',
+};
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, updateUser, logout, originalAdminUser, stopImpersonating } = useAuthStore();
@@ -113,83 +119,109 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const mobileNavItems = navItems.slice(0, 4);
 
+  // Group nav items for sidebar
+  const groupedNav = navItems.reduce<Record<string, typeof navItems>>((acc, item) => {
+    const group = (item as any).group || 'core';
+    if (!acc[group]) acc[group] = [];
+    acc[group].push(item);
+    return acc;
+  }, {});
+
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
+  // Get time-based greeting
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  };
+
   return (
     <div className="min-h-screen bg-background flex">
       {/* ═══════════════════════════════════════════════════════════════════════
-          Desktop Sidebar — Frosted Glass
+          Desktop Sidebar — Dark Premium
           ═══════════════════════════════════════════════════════════════════════ */}
-      <aside className="hidden md:flex flex-col h-screen fixed left-0 top-0 z-40 w-[260px] glass-surface border-r border-primary/[0.06]">
+      <aside className="hidden md:flex flex-col h-screen fixed left-0 top-0 z-40 w-[260px] bg-sidebar border-r border-white/[0.06]">
         {/* Brand Header */}
         <div className="p-5 flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-white flex items-center justify-center shadow-lg overflow-hidden shrink-0 ring-2 ring-primary/10 p-1">
+          <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shadow-lg overflow-hidden shrink-0 ring-1 ring-white/10 p-1.5">
             {user?.role !== 'super_admin' && user?.logo_url ? (
-              <img src={user.logo_url} alt="Logo" className="w-full h-full object-cover rounded-xl" />
+              <img src={user.logo_url} alt="Logo" className="w-full h-full object-cover rounded-lg" />
             ) : (
-              <img src="/logo.png" alt="Metro Cardz" className="w-full h-full object-contain" />
+              <img src="/logo.png" alt="Metro Cardz" className="w-full h-full object-contain brightness-0 invert" />
             )}
           </div>
           <div className="min-w-0">
-            <p className="text-[15px] font-bold text-on-surface leading-tight truncate">
+            <p className="text-[14px] font-bold text-white leading-tight truncate font-display">
               {user?.role !== 'super_admin' && user?.merchant_name ? user.merchant_name : 'Metro Cardz'}
             </p>
-            <p className="text-[11px] font-medium text-on-surface-variant mt-0.5 truncate">
-              {user?.role === 'super_admin' ? 'Super Admin Panel' : 'Loyalty Manager'}
+            <p className="text-[11px] font-medium text-sidebar-text mt-0.5 truncate">
+              {user?.role === 'super_admin' ? 'Super Admin' : 'Loyalty Platform'}
             </p>
           </div>
         </div>
 
         {/* Divider */}
-        <div className="mx-4 h-px bg-gradient-to-r from-transparent via-primary/10 to-transparent" />
+        <div className="mx-5 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
-        {/* Nav Links */}
-        <nav className="flex-1 py-3 px-3 space-y-0.5 overflow-y-auto custom-scrollbar">
-          {navItems.map(item => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.to === '/members' || item.to === '/dashboard' || item.to === '/admin' || item.to.startsWith('/members/search')}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold
-                ${isActive
-                  ? 'bg-primary/[0.08] text-primary shadow-sm'
-                  : 'text-on-surface-variant hover:bg-primary/[0.04] hover:text-on-surface'
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 ${
-                    isActive
-                      ? 'bg-primary text-on-primary shadow-md'
-                      : 'bg-surface-container text-on-surface-variant'
-                  }`}>
-                    <span
-                      className="material-symbols-outlined text-[18px]"
-                      style={isActive ? { fontVariationSettings: "'FILL' 1" } : undefined}
-                    >
-                      {item.icon}
-                    </span>
-                  </div>
-                  <span className="flex-1">{item.label}</span>
-                  {isActive && <div className="w-1.5 h-5 rounded-full bg-primary/40" />}
-                </>
-              )}
-            </NavLink>
+        {/* Nav Links — Grouped */}
+        <nav className="flex-1 py-4 px-3 space-y-5 overflow-y-auto custom-scrollbar">
+          {Object.entries(groupedNav).map(([group, items]) => (
+            <div key={group}>
+              {/* Group Label */}
+              <p className="px-3 mb-2 text-[10px] font-bold uppercase tracking-[0.1em] text-sidebar-text/50">
+                {GROUP_LABELS[group] || group}
+              </p>
+              <div className="space-y-0.5">
+                {items.map(item => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    end={item.to === '/members' || item.to === '/dashboard' || item.to === '/admin' || item.to.startsWith('/members/search')}
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold group
+                      ${isActive
+                        ? 'bg-accent/15 text-accent'
+                        : 'text-sidebar-text hover:bg-white/[0.06] hover:text-white'
+                      }`
+                    }
+                  >
+                    {({ isActive }) => (
+                      <>
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 ${
+                          isActive
+                            ? 'bg-accent text-white shadow-md shadow-accent/30'
+                            : 'bg-white/[0.06] text-sidebar-text group-hover:text-white'
+                        }`}>
+                          <span
+                            className="material-symbols-outlined text-[18px]"
+                            style={isActive ? { fontVariationSettings: "'FILL' 1" } : undefined}
+                          >
+                            {item.icon}
+                          </span>
+                        </div>
+                        <span className="flex-1">{item.label}</span>
+                        {isActive && <div className="w-1.5 h-5 rounded-full bg-accent/60" />}
+                      </>
+                    )}
+                  </NavLink>
+                ))}
+              </div>
+            </div>
           ))}
 
           {/* Quick search hint */}
           <button
             onClick={() => navigate('/members/search?tab=qr')}
-            className="w-full mt-4 flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container-low transition-colors text-[12px] border border-dashed border-outline-variant/40 group"
+            className="w-full mt-2 flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sidebar-text/60 hover:text-sidebar-text hover:bg-white/[0.04] transition-all text-[12px] border border-dashed border-white/10 group"
           >
             <span className="material-symbols-outlined text-[16px]">search</span>
             <span className="flex-1 text-left">Search members</span>
-            <kbd className="text-[10px] bg-surface-container px-1.5 py-0.5 rounded-md font-mono text-on-surface-variant/50 group-hover:text-on-surface-variant transition-colors">
+            <kbd className="text-[10px] bg-white/[0.06] px-1.5 py-0.5 rounded font-mono text-sidebar-text/40 group-hover:text-sidebar-text/60 transition-colors border border-white/[0.06]">
               ⌘K
             </kbd>
           </button>
@@ -198,9 +230,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {/* User Footer */}
         <div className="p-4">
           {/* Divider */}
-          <div className="mb-3 h-px bg-gradient-to-r from-transparent via-primary/10 to-transparent" />
+          <div className="mb-3 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-primary font-bold text-sm overflow-hidden shrink-0 ring-1 ring-primary/10">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent/30 to-accent/10 flex items-center justify-center text-accent font-bold text-sm overflow-hidden shrink-0 ring-1 ring-accent/20">
               {user?.logo_url ? (
                 <img src={user.logo_url} alt="Logo" className="w-full h-full object-cover" />
               ) : (
@@ -208,13 +240,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-bold text-on-surface truncate">{user?.name}</p>
-              <p className="text-[11px] text-on-surface-variant capitalize">{user?.role?.replace('_', ' ')}</p>
+              <p className="text-[13px] font-bold text-white truncate">{user?.name}</p>
+              <p className="text-[11px] text-sidebar-text capitalize">{user?.role?.replace('_', ' ')}</p>
             </div>
           </div>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-on-surface-variant hover:bg-error/5 hover:text-error text-[13px] font-medium transition-colors"
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sidebar-text hover:bg-error/10 hover:text-error text-[13px] font-medium transition-all duration-200"
           >
             <span className="material-symbols-outlined text-[18px]">logout</span>
             Sign Out
@@ -223,23 +255,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          Mobile Header
+          Mobile Header — Compact with blur
           ═══════════════════════════════════════════════════════════════════════ */}
-      <header className="md:hidden fixed top-0 w-full z-50 flex justify-between items-center px-4 h-14 glass-surface border-b border-primary/[0.06]">
+      <header className="md:hidden fixed top-0 w-full z-50 flex justify-between items-center px-4 h-14 bg-white/90 backdrop-blur-xl border-b border-outline-variant/40">
         <div className="flex items-center gap-2.5 flex-1 min-w-0 mr-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary-container flex items-center justify-center shrink-0 overflow-hidden text-on-primary shadow-sm">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-accent-hover flex items-center justify-center shrink-0 overflow-hidden text-on-accent shadow-sm">
             {user?.logo_url ? (
               <img src={user.logo_url} alt="Logo" className="w-full h-full object-cover" />
             ) : (
-              <span className="material-symbols-outlined text-on-primary text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>credit_card</span>
+              <span className="material-symbols-outlined text-on-accent text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>credit_card</span>
             )}
           </div>
-          <span className="text-[15px] font-bold text-on-surface truncate">
+          <span className="text-[15px] font-bold text-on-surface truncate font-display">
             {user?.role !== 'super_admin' && user?.merchant_name ? user.merchant_name : 'Metro Cardz'}
           </span>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <div className="w-8 h-8 rounded-xl bg-primary/[0.08] flex items-center justify-center text-primary font-bold text-[13px]">
+          <div className="avatar avatar--sm avatar--accent text-[11px]">
             {user?.name?.charAt(0) || 'U'}
           </div>
           <button
@@ -258,7 +290,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           ═══════════════════════════════════════════════════════════════════════ */}
       <main className="flex-1 md:ml-[260px] pt-14 md:pt-0 pb-20 md:pb-0 animate-fade-in flex flex-col min-h-screen">
         {originalAdminUser && (
-          <div className="bg-amber-600 text-white font-bold px-4 py-3 flex items-center justify-between shadow-md relative z-30 shrink-0">
+          <div className="bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold px-4 py-3 flex items-center justify-between shadow-md relative z-30 shrink-0">
             <div className="flex items-center gap-2 text-body-md">
               <span className="material-symbols-outlined animate-pulse text-[20px]">admin_panel_settings</span>
               <span>Impersonating {user?.merchant_name} (Logged in as Owner)</span>
@@ -276,13 +308,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </main>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          Mobile Bottom Navigation — Floating Glass Bar
+          Mobile Bottom Navigation — Floating Pill Bar
           ═══════════════════════════════════════════════════════════════════════ */}
       <nav
         className="md:hidden fixed bottom-0 left-0 right-0 z-[990] flex justify-around items-end px-2 pt-2 pb-2 nav-floating select-none"
         style={{ paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom, 0px))', WebkitTapHighlightColor: 'transparent' }}
       >
-        {mobileNavItems.map((item, idx) => {
+        {mobileNavItems.map((item) => {
           // Center scan button gets special elevated treatment
           const isScanBtn = item.icon === 'qr_code_scanner';
 
@@ -294,14 +326,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 end={item.to.startsWith('/members/search')}
                 className={({ isActive }) =>
                   `flex flex-col items-center justify-center -mt-5 cursor-pointer touch-manipulation active:scale-95 transition-all
-                  ${isActive ? 'text-primary' : 'text-on-surface-variant'}`
+                  ${isActive ? 'text-accent' : 'text-on-surface-variant'}`
                 }
               >
                 {({ isActive }) => (
                   <>
                     <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-200 ${
                       isActive
-                        ? 'bg-gradient-to-br from-primary to-primary-container text-on-primary scale-105 shadow-primary/30'
+                        ? 'bg-gradient-to-br from-accent to-accent-hover text-white scale-105 shadow-accent/30'
                         : 'bg-surface-container-high text-on-surface-variant border border-outline-variant/40'
                     }`}>
                       <span className="material-symbols-outlined text-[26px]" style={isActive ? { fontVariationSettings: "'FILL' 1" } : undefined}>{item.icon}</span>
@@ -320,13 +352,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               end={item.to === '/members' || item.to === '/dashboard' || item.to === '/admin'}
               className={({ isActive }) =>
                 `flex flex-col items-center justify-center px-3 py-1.5 rounded-2xl transition-all active:scale-95 cursor-pointer touch-manipulation min-w-[52px]
-                ${isActive ? 'text-primary' : 'text-on-surface-variant'}`
+                ${isActive ? 'text-accent' : 'text-on-surface-variant'}`
               }
             >
               {({ isActive }) => (
                 <>
                   <div className={`w-10 h-7 rounded-full flex items-center justify-center transition-all duration-200 ${
-                    isActive ? 'bg-primary/[0.12]' : ''
+                    isActive ? 'bg-accent/[0.12]' : ''
                   }`}>
                     <span className="material-symbols-outlined text-[22px]" style={isActive ? { fontVariationSettings: "'FILL' 1" } : undefined}>{item.icon}</span>
                   </div>
@@ -376,8 +408,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <div className="absolute bottom-0 left-0 right-0 bg-surface rounded-t-3xl p-5 shadow-2xl animate-slide-up max-h-[85vh] overflow-y-auto" style={{ paddingBottom: 'calc(2rem + env(safe-area-inset-bottom, 0px))' }}>
+          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl p-5 shadow-dialog animate-slide-up max-h-[85vh] overflow-y-auto" style={{ paddingBottom: 'calc(2rem + env(safe-area-inset-bottom, 0px))' }}>
             <div className="w-12 h-1.5 bg-outline-variant/40 rounded-full mx-auto mb-4" />
+            <p className="px-4 mb-3 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant/50">More Options</p>
             <div className="space-y-1">
               {navItems.slice(4).map(item => (
                 <NavLink
@@ -386,13 +419,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   onClick={() => setMobileMenuOpen(false)}
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all font-semibold text-[13px] cursor-pointer touch-manipulation active:scale-[0.98]
-                    ${isActive ? 'bg-primary/[0.08] text-primary' : 'text-on-surface-variant hover:bg-surface-container'}`
+                    ${isActive ? 'bg-accent/[0.08] text-accent' : 'text-on-surface-variant hover:bg-surface-container'}`
                   }
                 >
                   {({ isActive }) => (
                     <>
                       <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-                        isActive ? 'bg-primary text-on-primary' : 'bg-surface-container text-on-surface-variant'
+                        isActive ? 'bg-accent text-white' : 'bg-surface-container text-on-surface-variant'
                       }`}>
                         <span className="material-symbols-outlined text-[20px]" style={isActive ? { fontVariationSettings: "'FILL' 1" } : undefined}>{item.icon}</span>
                       </div>
