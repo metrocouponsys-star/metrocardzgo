@@ -95,12 +95,12 @@ export default {
         'success':        '#00D4AA',
         'success-bg':     '#E0FFF633',
 
-        // Sidebar
-        'sidebar':        '#0F172A',
-        'sidebar-hover':  '#1E293B',
+        // Sidebar — Light theme
+        'sidebar':        '#FFFFFF',
+        'sidebar-hover':  '#FFF5F2',
         'sidebar-active': '#FF6B35',
-        'sidebar-text':   '#94A3B8',
-        'sidebar-text-active': '#FFFFFF',
+        'sidebar-text':   '#64748B',
+        'sidebar-text-active': '#FF6B35',
 
         // ── Metro Obsidian Gold — Deals Platform Design System ────────────────
         'obs': {

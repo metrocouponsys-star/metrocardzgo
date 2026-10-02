@@ -120,17 +120,19 @@ export default function DashboardPage() {
     <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-5xl mx-auto space-y-6">
 
       {/* ── Welcome Banner ─── */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-sidebar via-primary-container to-sidebar p-6 md:p-8">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-accent/[0.07] via-surface to-secondary/[0.05] p-6 md:p-8 border border-accent/[0.12]">
         {/* Decorative glow */}
-        <div className="absolute top-0 right-0 w-48 h-48 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #FF6B35 0%, transparent 70%)', filter: 'blur(40px)' }} />
-        <div className="absolute bottom-0 left-1/4 w-32 h-32 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #00D4AA 0%, transparent 70%)', filter: 'blur(30px)' }} />
+        <div className="absolute top-0 right-0 w-48 h-48 rounded-full opacity-30" style={{ background: 'radial-gradient(circle, #FF6B35 0%, transparent 70%)', filter: 'blur(50px)' }} />
+        <div className="absolute bottom-0 left-1/4 w-32 h-32 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #00D4AA 0%, transparent 70%)', filter: 'blur(40px)' }} />
 
         <div className="relative z-10">
-          <p className="text-accent text-[13px] font-bold tracking-wide mb-1">{getGreeting()} 👋</p>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-white font-display tracking-tight mb-2">
+          <p className="text-accent text-[13px] font-bold tracking-wide mb-1">
+            {new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 17 ? 'Good afternoon' : 'Good evening'} 👋
+          </p>
+          <h1 className="text-2xl md:text-3xl font-extrabold text-on-surface font-display tracking-tight mb-1.5">
             {user?.name || 'Welcome'}
           </h1>
-          <p className="text-white/40 text-[14px] max-w-md">
+          <p className="text-on-surface-variant text-[14px] max-w-md">
             Here&apos;s what&apos;s happening with your loyalty program today.
           </p>
         </div>

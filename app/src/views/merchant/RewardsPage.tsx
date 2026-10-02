@@ -35,12 +35,12 @@ export default function RewardsPage() {
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-label-md font-medium transition-all whitespace-nowrap
+            className={`flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all whitespace-nowrap
               ${tab === t.key
-                ? 'bg-primary text-on-primary shadow-sm'
+                ? 'bg-accent text-white shadow-sm'
                 : 'text-on-surface-variant hover:bg-surface-container-high'}`}
           >
-            <span className="material-symbols-outlined text-[18px]">{t.icon}</span>
+            <span className="material-symbols-outlined text-[18px]" style={tab === t.key ? { fontVariationSettings: "'FILL' 1" } : undefined}>{t.icon}</span>
             {t.label}
           </button>
         ))}
