@@ -128,16 +128,16 @@ export default function CelebrationsPage() {
   };
 
   return (
-    <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-6xl mx-auto space-y-md animate-fade-in">
+    <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-6xl mx-auto space-y-5 animate-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="page-title flex items-center gap-2.5">
+          <h1 className="page-title flex items-center gap-2.5">
             <span className="text-[26px]">🎉</span>
-            Birthday & Anniversary Celebrations
-          </h2>
+            Birthday & Anniversary
+          </h1>
           <p className="page-subtitle">
-            Track and greet upcoming member birthdays and anniversaries to delight customers and boost retention.
+            Track and greet upcoming member birthdays and anniversaries to boost retention.
           </p>
         </div>
         <div className="flex items-center gap-2.5">
@@ -165,15 +165,15 @@ export default function CelebrationsPage() {
         <div
           onClick={() => setTimeFilter('today')}
           className={`card p-4 flex items-center gap-3 cursor-pointer transition-all ${
-            timeFilter === 'today' ? 'ring-2 ring-pink-500 bg-pink-50/20' : 'hover:bg-surface-container-low'
+            timeFilter === 'today' ? 'ring-2 ring-accent bg-accent/[0.04]' : 'hover:bg-surface-container-low'
           }`}
         >
           <div className="w-11 h-11 rounded-xl bg-pink-500/10 flex items-center justify-center text-[22px] shrink-0">
             🎂
           </div>
           <div>
-            <p className="text-label-sm text-on-surface-variant font-medium">Today's Celebrations</p>
-            <p className="text-headline-md font-bold text-pink-700">{counts.today}</p>
+            <p className="text-label-sm text-on-surface-variant font-medium">Today</p>
+            <p className="text-headline-md font-bold text-accent">{counts.today}</p>
           </div>
         </div>
 

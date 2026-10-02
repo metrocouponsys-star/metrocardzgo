@@ -93,8 +93,8 @@ export default function SearchMemberPage() {
 
   return (
     <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-4xl mx-auto">
-      <div className="page-header">
-        <h2 className="page-title">Customer Lookup</h2>
+      <div className="mb-5">
+        <h1 className="page-title">Customer Lookup</h1>
         <p className="page-subtitle">Find a member to manage their benefits or process a redemption.</p>
       </div>
 
@@ -107,10 +107,10 @@ export default function SearchMemberPage() {
               <button
                 key={t.key}
                 onClick={() => { setTab(t.key); setQuery(''); setResults([]); setNotFound(false); }}
-                className={`flex-1 py-4 text-label-md font-label-md flex items-center justify-center gap-1.5 transition-all border-b-2
-                  ${tab === t.key ? 'text-primary border-primary' : 'text-on-surface-variant border-transparent hover:bg-surface-container'}`}
+                className={`flex-1 py-3.5 text-[13px] font-bold flex items-center justify-center gap-1.5 transition-all border-b-2
+                  ${tab === t.key ? 'text-accent border-accent' : 'text-on-surface-variant border-transparent hover:bg-surface-container'}`}
               >
-                <span className="material-symbols-outlined text-[18px]">{t.icon}</span>
+                <span className="material-symbols-outlined text-[18px]" style={tab === t.key ? { fontVariationSettings: "'FILL' 1" } : undefined}>{t.icon}</span>
                 <span className="hidden sm:inline">{t.label}</span>
               </button>
             ))}
@@ -140,7 +140,7 @@ export default function SearchMemberPage() {
                     <button
                       onClick={performSearch}
                       disabled={searching || !query.trim()}
-                      className="h-14 px-6 bg-primary text-on-primary rounded-lg font-label-md flex items-center gap-2 hover:bg-primary-container transition-colors disabled:opacity-50 active-scale"
+                      className="h-14 px-6 bg-accent text-white rounded-lg font-bold flex items-center gap-2 hover:bg-accent-hover transition-colors disabled:opacity-50 active-scale"
                     >
                       {searching ? (
                         <span className="material-symbols-outlined animate-spin">progress_activity</span>

@@ -117,20 +117,20 @@ function LookupForm({
           </span>
         </div>
 
-        {/* Crisp Light Form Card */}
-        <div className="bg-white rounded-3xl p-6 sm:p-7 shadow-sm border border-slate-200 space-y-5">
+        {/* Form Card */}
+        <div className="bg-white rounded-2xl p-6 shadow-card border border-outline-variant/40 space-y-5">
           <form onSubmit={handleSubmit} className="space-y-5" noValidate>
 
             <div className="space-y-2">
-              <label htmlFor="cm-identifier" className="text-xs font-extrabold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[16px] text-amber-600">card_membership</span>
+              <label htmlFor="cm-identifier" className="form-label flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[16px] text-accent">card_membership</span>
                 Membership Code or Mobile Number
               </label>
               <div className="relative">
                 <input
                   id="cm-identifier"
                   type="text"
-                  className="w-full bg-slate-50 border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 rounded-2xl px-4 py-3.5 text-slate-900 placeholder:text-slate-400 text-sm font-bold transition-all outline-none"
+                  className="input-field"
                   placeholder="e.g. #MC0004 or 9987379000"
                   value={identifier}
                   onChange={e => setIdentifier(e.target.value)}
@@ -144,12 +144,12 @@ function LookupForm({
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="cm-last4" className="text-xs font-extrabold uppercase tracking-wider text-slate-600 flex items-center justify-between">
+              <label htmlFor="cm-last4" className="form-label flex items-center justify-between">
                 <span className="flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[16px] text-amber-600">lock</span>
+                  <span className="material-symbols-outlined text-[16px] text-accent">lock</span>
                   Last 4 Digits of Registered Phone
                 </span>
-                <span className="text-[10px] text-slate-400 font-bold uppercase">Security Check</span>
+                <span className="text-[10px] text-on-surface-variant/50 font-bold uppercase">Security Check</span>
               </label>
               <input
                 id="cm-last4"
@@ -157,7 +157,7 @@ function LookupForm({
                 inputMode="numeric"
                 maxLength={4}
                 pattern="\d{4}"
-                className="w-full bg-slate-50 border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 rounded-2xl px-4 py-3.5 text-center font-mono text-xl tracking-[0.4em] font-black text-amber-700 placeholder:text-slate-300 transition-all outline-none"
+                className="input-field text-center font-mono text-xl tracking-[0.4em] font-extrabold text-accent"
                 placeholder="0 0 0 0"
                 value={last4}
                 onChange={e => setLast4(e.target.value.replace(/\D/g, '').slice(0, 4))}
@@ -204,12 +204,12 @@ function LookupForm({
         </div>
 
         {/* Footer info */}
-        <div className="text-center space-y-2 text-xs text-slate-400 font-medium">
+        <div className="text-center space-y-2 text-[12px] text-on-surface-variant/60">
           <p>Scanning QR code on card directly opens this view.</p>
           <div className="flex items-center justify-center gap-3 pt-1">
-            <Link to="/login" className="text-amber-700 hover:underline font-bold">Merchant Login</Link>
-            <span className="text-slate-300">·</span>
-            <a href="/" className="text-slate-600 hover:underline font-medium">MetroCardz Home</a>
+            <Link to="/login" className="text-accent hover:underline font-bold">Merchant Login</Link>
+            <span className="text-outline-variant">·</span>
+            <a href="/" className="text-on-surface-variant hover:underline">MetroCardz Home</a>
           </div>
         </div>
 
