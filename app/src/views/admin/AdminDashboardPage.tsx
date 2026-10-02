@@ -61,29 +61,40 @@ export default function AdminDashboardPage() {
   };
 
   return (
-    <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-5xl mx-auto space-y-xl animate-fade-in">
-      <div className="prime-gradient rounded-2xl p-6 text-white flex flex-col md:flex-row justify-between items-start md:items-center gap-md">
-        <div>
-          <h2 className="text-headline-lg-mobile font-headline-lg text-white mb-1">Platform Overview</h2>
-          <p className="opacity-80 text-body-md">Super Admin Panel — Metro Cardz</p>
+    <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-5xl mx-auto space-y-6 animate-fade-in">
+      {/* ── Admin Banner (Light Theme) ── */}
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-accent/[0.07] via-surface to-secondary/[0.05] p-6 md:p-8 border border-accent/[0.12]">
+        <div className="absolute top-0 right-0 w-48 h-48 rounded-full opacity-25" style={{ background: 'radial-gradient(circle, #FF6B35 0%, transparent 70%)', filter: 'blur(50px)' }} />
+        <div className="absolute bottom-0 left-1/4 w-32 h-32 rounded-full opacity-15" style={{ background: 'radial-gradient(circle, #00D4AA 0%, transparent 70%)', filter: 'blur(40px)' }} />
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center">
+                <span className="material-symbols-outlined text-accent text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>admin_panel_settings</span>
+              </div>
+              <p className="text-accent text-[13px] font-bold tracking-wide">Super Admin</p>
+            </div>
+            <h1 className="text-2xl md:text-3xl font-extrabold text-on-surface font-display tracking-tight mb-1">Platform Overview</h1>
+            <p className="text-on-surface-variant text-[14px]">Metro Cardz — Admin Control Panel</p>
+          </div>
         </div>
-      </div>
+      </section>
 
       {/* Pending Approvals Warning Alert */}
       {!loading && stats && (stats.pending_approvals || 0) > 0 && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-md animate-fade-in shadow-sm">
+        <div className="bg-tertiary/[0.08] border border-tertiary/20 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-fade-in">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-800">
-              <span className="material-symbols-outlined text-[24px]">pending_actions</span>
+            <div className="w-10 h-10 rounded-xl bg-tertiary/10 flex items-center justify-center text-tertiary">
+              <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>pending_actions</span>
             </div>
             <div>
-              <h4 className="text-label-md font-bold text-yellow-900">Merchants Awaiting Review</h4>
-              <p className="text-body-sm text-yellow-800">There are {stats.pending_approvals} new merchant registrations pending approval.</p>
+              <h4 className="text-[14px] font-bold text-on-surface">Merchants Awaiting Review</h4>
+              <p className="text-[13px] text-on-surface-variant">There are <strong>{stats.pending_approvals}</strong> new merchant registrations pending approval.</p>
             </div>
           </div>
           <button
             onClick={() => navigate('/admin/merchants')}
-            className="w-full sm:w-auto bg-yellow-800 hover:bg-yellow-900 text-white text-label-md font-bold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-1"
+            className="w-full sm:w-auto btn-primary flex items-center justify-center gap-1.5 !py-2 !px-4"
           >
             Review Requests
             <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
@@ -92,88 +103,49 @@ export default function AdminDashboardPage() {
       )}
 
       {/* Stats Cards Grid */}
-      <section className="grid grid-cols-2 lg:grid-cols-5 gap-gutter">
+      <section className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         {loading ? (
           Array.from({ length: 5 }).map((_, i) => <StatCardSkeleton key={i} />)
         ) : stats ? (
           <>
-            <StatCard
-              label="Total Merchants"
-              value={stats.total_merchants}
-              icon="storefront"
-              onClick={() => navigate('/admin/merchants')}
-            />
+            <StatCard label="Total Merchants" value={stats.total_merchants} icon="storefront" onClick={() => navigate('/admin/merchants')} />
             <StatCard
               label="Pending Approval"
               value={stats.pending_approvals || 0}
               icon="pending_actions"
-              iconColor={(stats.pending_approvals || 0) > 0 ? "text-yellow-600" : "text-on-surface-variant"}
+              accent={(stats.pending_approvals || 0) > 0 ? 'tertiary' : undefined}
               onClick={() => navigate('/admin/merchants')}
             />
-            <StatCard
-              label="Total Members"
-              value={stats.total_members.toLocaleString()}
-              icon="groups"
-              onClick={() => navigate('/admin/members')}
-            />
-            <StatCard
-              label="Redemptions Today"
-              value={stats.redemptions_today}
-              icon="receipt_long"
-              onClick={() => navigate('/admin/reports')}
-            />
-            <StatCard
-              label="Active Merchants"
-              value={`${stats.active_merchants} / ${stats.total_merchants}`}
-              icon="check_circle"
-              onClick={() => navigate('/admin/merchants')}
-            />
+            <StatCard label="Total Members" value={stats.total_members.toLocaleString()} icon="groups" onClick={() => navigate('/admin/members')} />
+            <StatCard label="Redemptions Today" value={stats.redemptions_today} icon="receipt_long" onClick={() => navigate('/admin/reports')} />
+            <StatCard label="Active Merchants" value={`${stats.active_merchants} / ${stats.total_merchants}`} icon="check_circle" accent="teal" onClick={() => navigate('/admin/merchants')} />
           </>
         ) : null}
       </section>
 
       {/* Quick Action links */}
-      <section className="card p-lg space-y-md">
-        <h3 className="section-title">Quick Actions</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-md">
-          <button
-            onClick={() => navigate('/admin/merchants')}
-            className="p-md bg-surface-container-low border border-outline-variant/30 hover:border-primary rounded-xl text-left transition-all group flex items-center gap-3"
-          >
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
-              <span className="material-symbols-outlined text-[20px]">storefront</span>
-            </div>
-            <div>
-              <p className="font-bold text-body-md text-on-surface">Manage Merchants</p>
-              <p className="text-label-sm text-on-surface-variant">Approve, suspend, or view users.</p>
-            </div>
-          </button>
-
-          <button
-            onClick={() => navigate('/admin/cards')}
-            className="p-md bg-surface-container-low border border-outline-variant/30 hover:border-primary rounded-xl text-left transition-all group flex items-center gap-3"
-          >
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
-              <span className="material-symbols-outlined text-[20px]">credit_card</span>
-            </div>
-            <div>
-              <p className="font-bold text-body-md text-on-surface">Card Inventory</p>
-              <p className="text-label-sm text-on-surface-variant">Batch generate or allocate cards.</p>
-            </div>
-          </button>
-
-          <button
-            onClick={() => navigate('/admin/merchants')}
-            className="p-md bg-surface-container-low border border-outline-variant/30 hover:border-primary rounded-xl text-left transition-all group flex items-center gap-3"
-          >
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
-              <span className="material-symbols-outlined text-[20px]">pending_actions</span>
-            </div>
-            <div>
-              <p className="font-bold text-body-md text-on-surface">Pending Requests</p>
-              <p className="text-label-sm text-on-surface-variant">Onboard and verify registrations.</p>
-            </div>
-          </button>
+      <section className="card p-5 space-y-4">
+        <h3 className="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">Quick Actions</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {[
+            { icon: 'storefront', title: 'Manage Merchants', desc: 'Approve, suspend, or view users.', to: '/admin/merchants' },
+            { icon: 'credit_card', title: 'Card Inventory', desc: 'Batch generate or allocate cards.', to: '/admin/cards' },
+            { icon: 'pending_actions', title: 'Pending Requests', desc: 'Onboard and verify registrations.', to: '/admin/merchants' },
+          ].map(action => (
+            <button
+              key={action.title}
+              onClick={() => navigate(action.to)}
+              className="p-4 bg-surface-container-low border border-outline-variant/30 hover:border-accent rounded-xl text-left transition-all group flex items-center gap-3 hover:-translate-y-0.5 hover:shadow-card"
+            >
+              <div className="w-10 h-10 rounded-xl bg-accent/[0.08] flex items-center justify-center text-accent group-hover:bg-accent group-hover:text-white transition-all shrink-0">
+                <span className="material-symbols-outlined text-[20px]">{action.icon}</span>
+              </div>
+              <div>
+                <p className="font-bold text-[14px] text-on-surface">{action.title}</p>
+                <p className="text-[12px] text-on-surface-variant">{action.desc}</p>
+              </div>
+            </button>
+          ))}
         </div>
       </section>
 
