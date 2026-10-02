@@ -182,7 +182,7 @@ export default function ReportsPage() {
         return null;
       }
     })();
-    const baseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '');
+    const baseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/$/, '');
 
     if (token) {
       fetch(`${baseUrl}/api/v1/reports/export/members`, {

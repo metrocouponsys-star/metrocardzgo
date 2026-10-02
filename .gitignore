@@ -21,7 +21,9 @@ pip-log.txt
 pip-delete-this-directory.txt
 
 # Node / Frontend
+node_modules/
 app/node_modules/
+scripts/node_modules/
 app/dist/
 app/out/
 app/.next/

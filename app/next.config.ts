@@ -1,6 +1,22 @@
 import type { NextConfig } from 'next';
 import path from 'path';
 
+// Base URL of this deployment — used for CSP, image domains, CORS.
+// In Hostinger: set NEXT_PUBLIC_BASE_URL in hPanel → Web App → Environment Variables.
+// Examples:
+//   temp domain:  https://silver-sardine-905960.hostingersite.com
+//   final domain: https://metrocardz.com
+const BASE_URL = (process.env.NEXT_PUBLIC_BASE_URL || 'https://metrocardz.com').replace(/\/$/, '');
+const EXTRA_URL = process.env.NEXT_PUBLIC_EXTRA_ORIGIN || ''; // optional 2nd origin (e.g. www.)
+
+// Parse hostname from a URL string safely
+function hostname(url: string): string {
+  try { return new URL(url).hostname; } catch { return ''; }
+}
+
+const MAIN_HOST = hostname(BASE_URL);
+const EXTRA_HOST = EXTRA_URL ? hostname(EXTRA_URL) : '';
+
 const nextConfig: NextConfig = {
   // ── Hostinger Web App Hosting (Node.js standalone) ───────────────────────
   // Build:   npm run build
@@ -21,9 +37,11 @@ const nextConfig: NextConfig = {
   // No Supabase. No external CDN.
   images: {
     remotePatterns: [
-      // Production domain (metrocardz.com)
-      { protocol: 'https', hostname: 'metrocardz.com' },
-      { protocol: 'https', hostname: 'www.metrocardz.com' },
+      // Main domain — dynamically set from NEXT_PUBLIC_BASE_URL
+      ...(MAIN_HOST ? [{ protocol: 'https' as const, hostname: MAIN_HOST }] : []),
+      ...(EXTRA_HOST ? [{ protocol: 'https' as const, hostname: EXTRA_HOST }] : []),
+      // Hostinger temp domains (*.hostingersite.com)
+      { protocol: 'https', hostname: '*.hostingersite.com' },
       // Dev placeholders only
       { protocol: 'https', hostname: 'images.unsplash.com' },
     ],
@@ -67,7 +85,8 @@ const nextConfig: NextConfig = {
           }]),
 
           // ── Content Security Policy ────────────────────────────────────
-          // Adjust 'script-src' if you add external scripts
+          // Origins are read from NEXT_PUBLIC_BASE_URL so the same build
+          // works on the temp Hostinger domain AND the final metrocardz.com.
           {
             key: 'Content-Security-Policy',
             value: [
@@ -75,14 +94,14 @@ const nextConfig: NextConfig = {
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com https://www.googletagmanager.com https://www.google-analytics.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com data:",
-              "img-src 'self' data: blob: https://images.unsplash.com https://metrocardz.com https://www.metrocardz.com",
-              "connect-src 'self' https://metrocardz.com https://www.metrocardz.com https://www.google-analytics.com",
+              `img-src 'self' data: blob: https://images.unsplash.com ${BASE_URL} ${EXTRA_URL} https://*.hostingersite.com`.trim(),
+              `connect-src 'self' ${BASE_URL} ${EXTRA_URL} https://*.hostingersite.com https://www.google-analytics.com`.trim(),
               "media-src 'self'",
               "object-src 'none'",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",
-              "upgrade-insecure-requests",
+              ...(isDev ? [] : ["upgrade-insecure-requests"]),
             ].join('; '),
           },
         ],
@@ -110,7 +129,7 @@ const nextConfig: NextConfig = {
         source: '/api/(.*)',
         headers: [
           { key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' },
-          { key: 'Access-Control-Allow-Origin',   value: process.env.NEXT_PUBLIC_BASE_URL || 'https://metrocardz.com' },
+          { key: 'Access-Control-Allow-Origin',   value: BASE_URL },
           { key: 'Access-Control-Allow-Methods',  value: 'GET, POST, PUT, PATCH, DELETE, OPTIONS' },
           { key: 'Access-Control-Allow-Headers',  value: 'Authorization, Content-Type, X-Request-ID' },
           { key: 'Access-Control-Allow-Credentials', value: 'true' },

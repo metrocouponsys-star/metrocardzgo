@@ -14,7 +14,11 @@ import type {
 } from '../types';
 
 // ── HTTP Client ───────────────────────────────────────────────────────────────
-const BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '');
+// This is a Next.js app — the API lives at /api/v1/* on the SAME server.
+// NEXT_PUBLIC_API_BASE_URL should be left EMPTY (same-origin) or set to the
+// current deployment URL (e.g. https://silver-sardine-905960.hostingersite.com).
+// Do NOT point to localhost:8000 — there is no separate backend server.
+const BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/$/, '');
 const API = `${BASE_URL}/api/v1`;
 
 import { useAuthStore } from '../store/authStore';
