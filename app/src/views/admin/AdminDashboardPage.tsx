@@ -113,12 +113,12 @@ export default function AdminDashboardPage() {
               label="Pending Approval"
               value={stats.pending_approvals || 0}
               icon="pending_actions"
-              accent={(stats.pending_approvals || 0) > 0 ? 'tertiary' : undefined}
+              variant={(stats.pending_approvals || 0) > 0 ? 'amber' : undefined}
               onClick={() => navigate('/admin/merchants')}
             />
             <StatCard label="Total Members" value={stats.total_members.toLocaleString()} icon="groups" onClick={() => navigate('/admin/members')} />
             <StatCard label="Redemptions Today" value={stats.redemptions_today} icon="receipt_long" onClick={() => navigate('/admin/reports')} />
-            <StatCard label="Active Merchants" value={`${stats.active_merchants} / ${stats.total_merchants}`} icon="check_circle" accent="teal" onClick={() => navigate('/admin/merchants')} />
+            <StatCard label="Active Merchants" value={`${stats.active_merchants} / ${stats.total_merchants}`} icon="check_circle" variant="teal" onClick={() => navigate('/admin/merchants')} />
           </>
         ) : null}
       </section>
