@@ -166,7 +166,7 @@ export default function AdminDashboard() {
             <StatCard label="Redemptions Today" value={stats.redemptions_today} sub="Since midnight" bg={C.blueBg} color={C.blue} />
             <StatCard label="Active Deals" value={stats.active_deals ?? '—'} sub={stats.total_deals ? `of ${stats.total_deals} total` : undefined} bg={C.purpleBg} color={C.purple} href="/admin/deals" />
             <StatCard label="Cards Linked" value={stats.linked_cards ?? '—'} sub={stats.total_cards ? `of ${stats.total_cards} cards` : undefined} bg={C.amberBg} color={C.amber} href="/admin/cards" />
-            <StatCard label="Pending Approvals" value={stats.pending_approvals} sub="Awaiting review" bg={C.redBg ?? '#FEF2F2'} color={C.red ?? '#DC2626'} />
+            <StatCard label="Pending Approvals" value={stats.pending_approvals} sub="Awaiting review" bg="#FEF2F2" color="#DC2626" />
           </div>
         ) : null}
 
