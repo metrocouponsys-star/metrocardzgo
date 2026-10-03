@@ -1,7 +1,25 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+
+// â”€â”€â”€ Design tokens (shared with /go page) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const C = {
+  bg:          '#F5F5F5',
+  card:        '#FFFFFF',
+  border:      '#E8E8E8',
+  text:        '#1A1A1A',
+  textMuted:   '#6B6B6B',
+  textLight:   '#9B9B9B',
+  orange:      '#F97316',
+  orangeLight: '#FFF7F0',
+  orangeDark:  '#EA6500',
+  inputBg:     '#F9F9F9',
+  shadow:      '0 4px 24px rgba(0,0,0,0.08)',
+  errorBg:     '#FEF2F2',
+  errorBorder: '#FECACA',
+  errorText:   '#DC2626',
+};
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -30,155 +48,102 @@ export default function AdminLoginPage() {
         setError(data.message ?? 'Login failed');
       }
     } catch {
-      setError('Network error — please try again');
+      setError('Network error â€” please try again');
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div
-      style={{
-        background:     '#0D0F12',
-        minHeight:      '100dvh',
-        display:        'flex',
-        alignItems:     'center',
-        justifyContent: 'center',
-        padding:        '24px',
-        fontFamily:     '"Plus Jakarta Sans", sans-serif',
-      }}
-    >
-      <div style={{ width: '100%', maxWidth: '400px' }}>
+    <div style={{ background: C.bg, minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', fontFamily: '"Inter", sans-serif' }}>
+      <div style={{ width: '100%', maxWidth: '420px' }}>
 
-        {/* Logo */}
+        {/* Branding */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <div style={{ fontFamily: 'Syne, sans-serif', fontSize: '24px', fontWeight: 700, color: '#D4AF37', marginBottom: '4px' }}>
-            Metro Cardz
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+            <div style={{ width: '42px', height: '42px', background: C.orange, borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ color: '#fff', fontWeight: 800, fontSize: '18px', fontFamily: '"Syne", sans-serif' }}>M</span>
+            </div>
+            <span style={{ fontFamily: '"Syne", sans-serif', fontSize: '22px', fontWeight: 800, color: C.text }}>Metro Cardz</span>
           </div>
-          <div style={{ fontSize: '11px', letterSpacing: '0.12em', color: '#6B7280', fontWeight: 600 }}>
-            DEALS ADMIN PANEL
-          </div>
+          <div style={{ fontSize: '11px', letterSpacing: '0.12em', color: C.textLight, fontWeight: 600 }}>ADMIN PANEL</div>
         </div>
 
         {/* Login card */}
-        <div
-          style={{
-            background:   '#14171F',
-            border:       '1px solid #2A303C',
-            borderRadius: '20px',
-            padding:      '32px',
-          }}
-        >
-          <h1 style={{ fontFamily: 'Syne, sans-serif', fontSize: '22px', fontWeight: 700, color: '#FFFFFF', marginBottom: '6px' }}>
-            Admin Sign In
+        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: '16px', padding: '36px 32px', boxShadow: C.shadow }}>
+          <h1 style={{ fontFamily: '"Syne", sans-serif', fontSize: '22px', fontWeight: 800, color: C.text, margin: '0 0 4px' }}>
+            Sign In
           </h1>
-          <p style={{ fontSize: '13px', color: '#6B7280', marginBottom: '24px' }}>
-            Deals Platform Control Center
+          <p style={{ fontSize: '13px', color: C.textMuted, margin: '0 0 28px' }}>
+            Deals platform â€” authorised staff only
           </p>
 
           {error && (
-            <div
-              style={{
-                background:   'rgba(186,26,26,0.1)',
-                border:       '1px solid rgba(186,26,26,0.3)',
-                borderRadius: '10px',
-                padding:      '12px',
-                fontSize:     '13px',
-                color:        '#FF8A80',
-                marginBottom: '16px',
-              }}
-            >
-              ⚠ {error}
+            <div style={{ background: C.errorBg, border: `1px solid ${C.errorBorder}`, borderRadius: '10px', padding: '12px 14px', fontSize: '13px', color: C.errorText, marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontWeight: 700 }}>!</span> {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} noValidate>
             <div style={{ marginBottom: '16px' }}>
-              <label htmlFor="admin-email" style={{ display: 'block', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', color: '#9CA3AF', marginBottom: '6px' }}>
-                EMAIL ADDRESS
+              <label htmlFor="admin-email" style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: C.textMuted, marginBottom: '6px', letterSpacing: '0.02em' }}>
+                Email Address
               </label>
               <input
                 id="admin-email"
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={e => setEmail(e.target.value)}
                 required
                 autoComplete="email"
                 placeholder="admin@metrocardz.in"
-                style={{
-                  width:        '100%',
-                  height:       '48px',
-                  background:   '#1C212B',
-                  border:       '1px solid #2A303C',
-                  borderRadius: '10px',
-                  padding:      '0 14px',
-                  color:        '#F8FAFC',
-                  fontSize:     '15px',
-                  outline:      'none',
-                  fontFamily:   '"Plus Jakarta Sans", sans-serif',
-                  boxSizing:    'border-box',
-                }}
-                onFocus={(e) => { e.target.style.borderColor = '#D4AF37'; }}
-                onBlur={(e) => { e.target.style.borderColor = '#2A303C'; }}
+                style={{ width: '100%', height: '48px', background: C.inputBg, border: `1.5px solid ${C.border}`, borderRadius: '10px', padding: '0 14px', color: C.text, fontSize: '15px', outline: 'none', fontFamily: '"Inter", sans-serif', boxSizing: 'border-box', transition: 'border-color 0.2s' }}
+                onFocus={e => (e.target.style.borderColor = C.orange)}
+                onBlur={e => (e.target.style.borderColor = C.border)}
               />
             </div>
 
-            <div style={{ marginBottom: '24px' }}>
-              <label htmlFor="admin-password" style={{ display: 'block', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', color: '#9CA3AF', marginBottom: '6px' }}>
-                PASSWORD
+            <div style={{ marginBottom: '28px' }}>
+              <label htmlFor="admin-password" style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: C.textMuted, marginBottom: '6px', letterSpacing: '0.02em' }}>
+                Password
               </label>
               <input
                 id="admin-password"
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={e => setPassword(e.target.value)}
                 required
                 autoComplete="current-password"
-                placeholder="••••••••"
-                style={{
-                  width:        '100%',
-                  height:       '48px',
-                  background:   '#1C212B',
-                  border:       '1px solid #2A303C',
-                  borderRadius: '10px',
-                  padding:      '0 14px',
-                  color:        '#F8FAFC',
-                  fontSize:     '15px',
-                  outline:      'none',
-                  fontFamily:   '"Plus Jakarta Sans", sans-serif',
-                  boxSizing:    'border-box',
-                }}
-                onFocus={(e) => { e.target.style.borderColor = '#D4AF37'; }}
-                onBlur={(e) => { e.target.style.borderColor = '#2A303C'; }}
+                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                style={{ width: '100%', height: '48px', background: C.inputBg, border: `1.5px solid ${C.border}`, borderRadius: '10px', padding: '0 14px', color: C.text, fontSize: '15px', outline: 'none', fontFamily: '"Inter", sans-serif', boxSizing: 'border-box', transition: 'border-color 0.2s' }}
+                onFocus={e => (e.target.style.borderColor = C.orange)}
+                onBlur={e => (e.target.style.borderColor = C.border)}
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              style={{
-                width:          '100%',
-                height:         '52px',
-                background:     loading ? '#2A303C' : 'linear-gradient(135deg, #E5C158 0%, #D4AF37 100%)',
-                border:         'none',
-                borderRadius:   '12px',
-                color:          loading ? '#9CA3AF' : '#0D0F12',
-                fontSize:       '15px',
-                fontWeight:     700,
-                cursor:         loading ? 'not-allowed' : 'pointer',
-                boxShadow:      loading ? 'none' : '0 4px 16px rgba(212,175,55,0.3)',
-                fontFamily:     '"Plus Jakarta Sans", sans-serif',
-                transition:     'all 0.2s',
-              }}
+              style={{ width: '100%', height: '50px', background: loading ? '#E5E5E5' : C.orange, border: 'none', borderRadius: '10px', color: loading ? C.textLight : '#fff', fontSize: '15px', fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', fontFamily: '"Inter", sans-serif', transition: 'background 0.2s' }}
+              onMouseEnter={e => { if (!loading) (e.currentTarget.style.background = C.orangeDark); }}
+              onMouseLeave={e => { if (!loading) (e.currentTarget.style.background = C.orange); }}
             >
-              {loading ? 'Signing in...' : 'Sign In →'}
+              {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
 
-          <div style={{ marginTop: '20px', padding: '12px', background: '#1C212B', borderRadius: '10px', fontSize: '12px', color: '#6B7280', lineHeight: '18px' }}>
-            🔒 This panel is restricted to authorised Metro Cardz administrators only. All actions are logged.
+          {/* Security notice */}
+          <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: `1px solid ${C.border}`, fontSize: '12px', color: C.textLight, lineHeight: 1.6, display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: '1px' }}>
+              <path d="M12 2L4 7v5c0 4.4 3.4 8.5 8 9.5 4.6-1 8-5.1 8-9.5V7l-8-5z" stroke={C.textLight} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span>This panel is restricted to authorised Metro Cardz administrators only. All actions are logged and audited.</span>
           </div>
         </div>
+
+        <p style={{ textAlign: 'center', marginTop: '20px', fontSize: '12px', color: C.textLight }}>
+          Metro Cardz Admin v1.0
+        </p>
       </div>
     </div>
   );
