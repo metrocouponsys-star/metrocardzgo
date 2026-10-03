@@ -7,15 +7,36 @@ import { buildLoginResponse } from '@/lib/auth';
 export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json();
+
+    if (!email || !password) {
+      return NextResponse.json({ detail: 'Email and password are required' }, { status: 400 });
+    }
+
     const user = await prisma.merchantUser.findUnique({
-      where: { email: (email ?? '').trim().toLowerCase() },
+      where: { email: (email as string).trim().toLowerCase() },
     });
-    if (!user || !user.passwordHash || !(await verifyPassword(password, user.passwordHash))) {
+    if (!user || !user.passwordHash || !(await verifyPassword(password as string, user.passwordHash))) {
       return NextResponse.json({ detail: 'Invalid email or password' }, { status: 401 });
     }
-    return NextResponse.json(await buildLoginResponse(user.id));
+    const loginRes = await buildLoginResponse(user.id);
+    if (!loginRes) {
+      return NextResponse.json({ detail: 'User account error' }, { status: 500 });
+    }
+    return NextResponse.json(loginRes);
   } catch (err) {
-    console.error('[auth/login-email]', err);
-    return NextResponse.json({ detail: 'Internal server error' }, { status: 500 });
+    const errMsg = err instanceof Error ? err.message : String(err);
+
+    // Categorise the error for easier diagnosis in Hostinger logs
+    if (errMsg.includes('connect') || errMsg.includes('ECONNREFUSED') || errMsg.includes('Access denied')) {
+      console.error('[auth/login-email] DATABASE CONNECTION ERROR:', errMsg);
+      return NextResponse.json({ detail: 'Database connection failed. Check DATABASE_URL env var.' }, { status: 503 });
+    }
+    if (errMsg.includes('Unknown column') || errMsg.includes("Unknown field `email`")) {
+      console.error('[auth/login-email] SCHEMA MISMATCH — email column missing in DB:', errMsg);
+      return NextResponse.json({ detail: 'Database schema out of date. Run HOSTINGER_FIX_AND_SEED.sql in phpMyAdmin.' }, { status: 503 });
+    }
+
+    console.error('[auth/login-email] UNEXPECTED ERROR:', errMsg);
+    return NextResponse.json({ detail: 'Internal server error', hint: errMsg }, { status: 500 });
   }
 }
