@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { NFCLandingClient } from './NFCLandingClient';
 
-export const revalidate = 21600; // ISR: 6 hours
+export const dynamic = 'force-dynamic'; // Render at request time — avoids self-fetch timeout during build
 
 export const metadata: Metadata = {
   title: 'Metro Cardz — Explore Deals & Experiences',
@@ -22,8 +22,8 @@ export default async function GoPage() {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000';
 
     const [catRes, featuredRes] = await Promise.all([
-      fetch(`${baseUrl}/api/categories`, { next: { revalidate: 21600 } }),
-      fetch(`${baseUrl}/api/deals?featured=true`, { next: { revalidate: 1800 } }),
+      fetch(`${baseUrl}/api/categories`, { cache: 'no-store' }),
+      fetch(`${baseUrl}/api/deals?featured=true`, { cache: 'no-store' }),
     ]);
 
     if (catRes.ok) categories = await catRes.json();

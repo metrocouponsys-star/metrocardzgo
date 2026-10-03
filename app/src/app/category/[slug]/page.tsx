@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { DealsGridClient } from './DealsGridClient';
 
-export const revalidate = 3600; // ISR: 1 hour
+export const dynamic = 'force-dynamic'; // Render at request time — avoids self-fetch timeout during build
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -27,8 +27,8 @@ export default async function CategoryPage({ params }: PageProps) {
 
   try {
     const [dealsRes, citiesRes] = await Promise.all([
-      fetch(`${baseUrl}/api/deals?category=${slug}`, { next: { revalidate: 3600 } }),
-      fetch(`${baseUrl}/api/cities`, { next: { revalidate: 21600 } }),
+      fetch(`${baseUrl}/api/deals?category=${slug}`, { cache: 'no-store' }),
+      fetch(`${baseUrl}/api/cities`, { cache: 'no-store' }),
     ]);
 
     if (dealsRes.status === 404) notFound();

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { LiveOffersClient } from './LiveOffersClient';
 
-export const revalidate = 1800; // ISR: 30 minutes
+export const dynamic = 'force-dynamic'; // Render at request time — avoids self-fetch timeout during build
 
 export const metadata: Metadata = {
   title: "Today's Curated Picks — Metro Cardz",
@@ -13,7 +13,7 @@ export default async function LiveOffersPage() {
   let deals: Array<Record<string, unknown>> = [];
 
   try {
-    const res = await fetch(`${baseUrl}/api/deals?featured=true`, { next: { revalidate: 1800 } });
+    const res = await fetch(`${baseUrl}/api/deals?featured=true`, { cache: 'no-store' });
     if (res.ok) deals = await res.json();
   } catch {
     // Graceful degradation
