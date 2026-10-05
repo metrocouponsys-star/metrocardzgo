@@ -6,58 +6,74 @@ import { buildLoginResponse } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json();
+    const body = await request.json().catch(() => ({}));
+    const { email, password } = body as { email?: string; password?: string };
 
     if (!email || !password) {
       return NextResponse.json({ detail: 'Email and password are required' }, { status: 400 });
     }
 
-    const user = await prisma.merchantUser.findUnique({
-      where: { email: (email as string).trim().toLowerCase() },
-    });
-    if (!user || !user.passwordHash || !(await verifyPassword(password as string, user.passwordHash))) {
+    // Step 1 — look up user by email
+    let user;
+    try {
+      user = await prisma.merchantUser.findUnique({
+        where: { email: email.trim().toLowerCase() },
+      });
+    } catch (dbErr) {
+      const msg = dbErr instanceof Error ? dbErr.message : String(dbErr);
+      console.error('[login-email] DB error on findUnique:', msg);
+      return NextResponse.json(
+        {
+          detail: 'Database error during login',
+          hint: msg,
+          action: 'Check /api/v1/health to diagnose. Run HOSTINGER_LOGIN_FIX.sql in phpMyAdmin.',
+        },
+        { status: 503 }
+      );
+    }
+
+    if (!user || !user.passwordHash) {
       return NextResponse.json({ detail: 'Invalid email or password' }, { status: 401 });
     }
-    const loginRes = await buildLoginResponse(user.id);
+
+    // Step 2 — verify password
+    const passwordOk = await verifyPassword(password, user.passwordHash).catch(() => false);
+    if (!passwordOk) {
+      return NextResponse.json({ detail: 'Invalid email or password' }, { status: 401 });
+    }
+
+    // Step 3 — build JWT response (includes merchant lookup)
+    let loginRes;
+    try {
+      loginRes = await buildLoginResponse(user.id);
+    } catch (authErr) {
+      const msg = authErr instanceof Error ? authErr.message : String(authErr);
+      console.error('[login-email] Error in buildLoginResponse:', msg);
+      return NextResponse.json(
+        {
+          detail: 'Error building login response',
+          hint: msg,
+          action: 'Check /api/v1/health. Run HOSTINGER_LOGIN_FIX.sql if column errors.',
+        },
+        { status: 503 }
+      );
+    }
+
     if (!loginRes) {
       return NextResponse.json({ detail: 'User account error' }, { status: 500 });
     }
+
     return NextResponse.json(loginRes);
   } catch (err) {
-    const errMsg = err instanceof Error ? err.message : String(err);
-    // Also capture cause chain (Prisma wraps DB errors)
-    const causeMsg = (err instanceof Error && err.cause instanceof Error)
-      ? err.cause.message : '';
-    const fullMsg = `${errMsg} ${causeMsg}`.toLowerCase();
-
-    // Categorise the error for easier diagnosis in Hostinger logs
-    if (
-      fullMsg.includes('connect') ||
-      fullMsg.includes('econnrefused') ||
-      fullMsg.includes('access denied') ||
-      fullMsg.includes('enotfound')
-    ) {
-      console.error('[auth/login-email] DATABASE CONNECTION ERROR:', errMsg);
-      return NextResponse.json(
-        { detail: 'Database connection failed. Check DATABASE_URL env var on Hostinger hPanel.' },
-        { status: 503 }
-      );
-    }
-    if (
-      fullMsg.includes('unknown column') ||
-      fullMsg.includes("unknown field `email`") ||
-      fullMsg.includes('card_design_url') ||
-      fullMsg.includes('column') ||
-      fullMsg.includes('field')
-    ) {
-      console.error('[auth/login-email] SCHEMA MISMATCH — column missing in live DB:', errMsg);
-      return NextResponse.json(
-        { detail: 'Database schema out of date. Run HOSTINGER_LOGIN_FIX.sql in phpMyAdmin.' },
-        { status: 503 }
-      );
-    }
-
-    console.error('[auth/login-email] UNEXPECTED ERROR:', errMsg);
-    return NextResponse.json({ detail: 'Internal server error', hint: errMsg }, { status: 500 });
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[login-email] Uncaught error:', msg);
+    return NextResponse.json(
+      {
+        detail: 'Internal server error',
+        hint: msg,
+        action: 'Visit /api/v1/health for diagnostics.',
+      },
+      { status: 500 }
+    );
   }
 }
