@@ -7,6 +7,28 @@
 
 SET FOREIGN_KEY_CHECKS = 0;
 
+-- ─────────────────────────────────────────────────────────────────────────────
+-- PATCH: Add columns that were added to Prisma schema AFTER initial deployment.
+-- "CREATE TABLE IF NOT EXISTS" won't add these to an existing table.
+-- These ALTER TABLE statements are safe to run even if columns already exist.
+-- ─────────────────────────────────────────────────────────────────────────────
+ALTER TABLE `merchant_users`
+  ADD COLUMN IF NOT EXISTS `email` VARCHAR(255) NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS `merchant_users_email_key`
+  ON `merchant_users` (`email`);
+
+ALTER TABLE `merchants`
+  ADD COLUMN IF NOT EXISTS `card_design_url` TEXT NULL;
+
+ALTER TABLE `merchants`
+  ADD COLUMN IF NOT EXISTS `approval_status`
+    ENUM('pending', 'approved', 'rejected') NOT NULL DEFAULT 'approved';
+
+ALTER TABLE `merchants`
+  ADD COLUMN IF NOT EXISTS `referral_bonus_points` DECIMAL(65, 30) NULL;
+-- ─────────────────────────────────────────────────────────────────────────────
+
 -- 1. Ensure `merchants` table exists
 CREATE TABLE IF NOT EXISTS `merchants` (
     `id` VARCHAR(36) NOT NULL,
@@ -106,6 +128,42 @@ ON DUPLICATE KEY UPDATE
     `password_hash` = '$2b$10$cca8VB.mB9k9CQ3iKzS6eedXyxHCH3KDRcMSIURjPvWBjlonDp85i';
 
 -- =============================================================================
+-- SEED GARMENTS MERCHANT + OWNER ACCOUNT
+-- Email: garments@metrocardz.in
+-- Password: demo123
+-- =============================================================================
+
+-- Seed merchant record first (required for foreign key on merchant_users)
+INSERT INTO `merchants` (`id`, `business_name`, `category`, `plan_tier`, `secret_salt`, `status`, `approval_status`, `created_at`)
+VALUES (
+    'f1a2b3c4-d5e6-7890-abcd-ef1234567890',
+    'Metro Garments',
+    'Retail',
+    'Starter',
+    'garments-secret-salt-2024',
+    'active',
+    'approved',
+    NOW(3)
+)
+ON DUPLICATE KEY UPDATE `status` = 'active';
+
+-- Seed merchant owner account
+INSERT INTO `merchant_users` (`id`, `merchant_id`, `name`, `phone`, `email`, `role`, `password_hash`, `created_at`)
+VALUES (
+    'a1b2c3d4-e5f6-7890-1234-567890abcdef',
+    'f1a2b3c4-d5e6-7890-abcd-ef1234567890',
+    'Garments Admin',
+    '9000000001',
+    'garments@metrocardz.in',
+    'owner',
+    '$2b$10$155rhwyTGOGr8arc7Rqa4ueyoWJqzu3us7eGnAdy9hj/okf.8ob.C',
+    NOW(3)
+)
+ON DUPLICATE KEY UPDATE
+    `password_hash` = '$2b$10$155rhwyTGOGr8arc7Rqa4ueyoWJqzu3us7eGnAdy9hj/okf.8ob.C',
+    `role` = 'owner';
+
+-- =============================================================================
 -- SEED SAMPLE PHYSICAL CARDS (For Immediate Testing)
 -- =============================================================================
 INSERT IGNORE INTO `card_inventory` (`id`, `card_number`, `status`, `created_at`) VALUES
@@ -115,4 +173,16 @@ INSERT IGNORE INTO `card_inventory` (`id`, `card_number`, `status`, `created_at`
 ('crd-004', '4821 6739 0001 0004', 'unassigned', NOW(3)),
 ('crd-005', '4821 6739 0001 0005', 'unassigned', NOW(3));
 
+
 SET FOREIGN_KEY_CHECKS = 1;
+
+-- =============================================================================
+-- CREDENTIALS SUMMARY
+-- =============================================================================
+-- /login  (Merchant / Staff Login)
+--   Super Admin  → email: metrocouponsys@gmail.com   password: 9029999614
+--   Garments     → email: garments@metrocardz.in     password: demo123
+--
+-- /admin/login  (Deals Admin Panel)
+--   Admin        → email: metrocouponsys@gmail.com   password: 9029999614
+-- =============================================================================
