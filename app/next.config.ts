@@ -72,10 +72,10 @@ const nextConfig: NextConfig = {
           { key: 'X-DNS-Prefetch-Control',        value: 'on' },
           { key: 'Referrer-Policy',               value: 'strict-origin-when-cross-origin' },
 
-          // ── Permissions policy — disable sensitive browser APIs ────────
+          // ── Permissions policy — allow camera for QR card scanning ────
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=(self), payment=(), usb=(), bluetooth=()',
+            value: 'camera=(self), microphone=(), geolocation=(self), payment=(), usb=(), bluetooth=()',
           },
 
           // ── HSTS — forces HTTPS (only in production) ──────────────────
