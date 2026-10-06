@@ -111,7 +111,7 @@ export default function GoDiscoverPage() {
                 <div style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#6B7280' }}>Discover</div>
               </div>
             </div>
-            <Link href="/check-membership" style={{ textDecoration: 'none' }}>
+            <Link href="/go/login" style={{ textDecoration: 'none' }}>
               <button style={{ border: '1px solid #EAE3DD', background: '#fff', borderRadius: 999, padding: '8px 12px', color: '#1F2937', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>
                 Login
               </button>

@@ -1,42 +1,25 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import dynamic from 'next/dynamic';
 
-export default function LoginPage() {
-  const router = useRouter();
+// The /login route is the entry point for the Membership Platform (merchant loyalty SPA).
+// It is served by MerchantApp (React Router) which internally handles the /login path
+// and shows LoginPage.tsx from views/auth/LoginPage.tsx.
+// DO NOT redirect this to /go/login — that is a completely separate platform.
 
-  useEffect(() => {
-    router.replace('/go/login');
-  }, [router]);
-
-  return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: '#F7F7F5',
-        color: '#18181B',
-        fontFamily: 'Inter, system-ui, sans-serif',
-      }}
-    >
-      <div style={{ textAlign: 'center' }}>
-        <div
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: '50%',
-            border: '3px solid #FDE7D9',
-            borderTopColor: '#F97316',
-            margin: '0 auto 12px',
-            animation: 'spin 0.7s linear infinite',
-          }}
-        />
-        <div style={{ fontSize: 13, color: '#6B7280', fontWeight: 600 }}>Redirecting to Metro Cardz GO…</div>
+const MerchantApp = dynamic(
+  () => import('@/views/MerchantApp'),
+  {
+    ssr: false,
+    loading: () => (
+      <div style={{ background: '#F8FAFC', minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 32, height: 32, border: '3px solid #E2E8F0', borderTopColor: '#FF6B35', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-    </div>
-  );
+    ),
+  }
+);
+
+export default function LoginPageRoute() {
+  return <MerchantApp />;
 }
