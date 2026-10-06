@@ -5,9 +5,54 @@ import { useToastStore } from '../../store/toastStore';
 import type { Member } from '../../types';
 import * as api from '../../api';
 import { cached, invalidateContaining } from '../../api/cache';
-import { StatusBadge, MembershipBadge } from '../../components/ui/StatusBadge';
-import { EmptyState } from '../../components/ui/EmptyState';
 
+// ─── Tokens ──────────────────────────────────────────────────────────────────
+const T = {
+  bg: '#F6F3EE', white: '#FFFFFF', border: '#EAE3DD',
+  panel: '#FFFDFB', soft: '#F9F7F5',
+  text: '#111827', textMuted: '#6B7280', textLight: '#9CA3AF',
+  orange: '#FF6B35', orangeLight: '#FFF4EF', orangeDark: '#EA580C',
+  teal: '#00B894', tealLight: '#EAFBF6',
+  violet: '#7C3AED', violetLight: '#F5F3FF',
+  shadow: '0 10px 22px rgba(17,24,39,0.05)',
+  shadowMd: '0 16px 30px rgba(17,24,39,0.06)',
+};
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+const AVATAR_COLORS = [
+  ['#FF6B35', '#FFF4EF'], ['#00D4AA', '#E0FFF6'], ['#2563EB', '#EFF6FF'],
+  ['#7C3AED', '#F5F3FF'], ['#E11D48', '#FFF1F2'], ['#D97706', '#FEF3C7'],
+];
+function avatarColors(name: string) {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
+  return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
+}
+
+function StatusPill({ status }: { status: string }) {
+  const map: Record<string, [string, string]> = {
+    active:      ['#16A34A', '#F0FDF4'],
+    expired:     ['#D97706', '#FEF3C7'],
+    deactivated: ['#DC2626', '#FEF2F2'],
+  };
+  const [color, bg] = map[status] ?? ['#64748B', '#F1F5F9'];
+  return (
+    <span style={{ fontSize: '11px', fontWeight: 700, color, background: bg, padding: '3px 10px', borderRadius: '9999px', whiteSpace: 'nowrap', textTransform: 'capitalize' }}>
+      {status}
+    </span>
+  );
+}
+
+function Avatar({ name, size = 36 }: { name: string; size?: number }) {
+  const [color, bg] = avatarColors(name);
+  return (
+    <div style={{ width: size, height: size, borderRadius: '50%', background: bg, border: `2px solid ${color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: size * 0.38, fontWeight: 800, color, flexShrink: 0, fontFamily: '"Plus Jakarta Sans", Inter, sans-serif' }}>
+      {name.charAt(0).toUpperCase()}
+    </div>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 export default function MembersListPage() {
   const { user } = useAuthStore();
   const { addToast } = useToastStore();
@@ -18,364 +63,270 @@ export default function MembersListPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'expired' | 'deactivated'>('all');
 
-  useEffect(() => {
-    fetchMembers();
-  }, []);
+  useEffect(() => { fetchMembers(); }, []);
 
   const fetchMembers = async () => {
     setLoading(true);
     const cacheKey = `members/${user?.merchant_id}`;
     try {
-      const data = await cached(
-        cacheKey,
-        () => api.getMembers(user?.merchant_id || ''),
-        (fresh) => setMembers(fresh),
-      );
+      const data = await cached(cacheKey, () => api.getMembers(user?.merchant_id || ''), (fresh) => setMembers(fresh));
       setMembers(data);
-    } catch {
-      addToast('error', 'Failed to load customer list');
-    } finally {
-      setLoading(false);
-    }
+    } catch { addToast('error', 'Failed to load customer list'); }
+    finally { setLoading(false); }
   };
 
-  const filteredMembers = useMemo(() => {
-    return members.filter(m => {
-      if (statusFilter !== 'all' && m.status !== statusFilter) return false;
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const nameMatch = m.name.toLowerCase().includes(q);
-        const phoneMatch = m.phone.includes(q);
-        const codeMatch = (m.member_code || '').toLowerCase().includes(q);
-        const cardMatch = (m.physical_card_number || '').includes(q);
-        return nameMatch || phoneMatch || codeMatch || cardMatch;
-      }
-      return true;
-    });
-  }, [members, statusFilter, searchQuery]);
+  const filteredMembers = useMemo(() => members.filter(m => {
+    if (statusFilter !== 'all' && m.status !== statusFilter) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      return m.name.toLowerCase().includes(q) || m.phone.includes(q) || (m.member_code || '').toLowerCase().includes(q) || (m.physical_card_number || '').includes(q);
+    }
+    return true;
+  }), [members, statusFilter, searchQuery]);
 
-  const counts = useMemo(() => {
-    const total = members.length;
-    const active = members.filter(m => m.status === 'active').length;
-    const expired = members.filter(m => m.status === 'expired').length;
-    const deactivated = members.filter(m => m.status === 'deactivated').length;
-    const totalPointsBalance = members.reduce((sum, m) => sum + Number(m.loyalty_points || 0), 0);
-    return { total, active, expired, deactivated, totalPointsBalance };
-  }, [members]);
+  const counts = useMemo(() => ({
+    total: members.length,
+    active: members.filter(m => m.status === 'active').length,
+    expired: members.filter(m => m.status === 'expired').length,
+    deactivated: members.filter(m => m.status === 'deactivated').length,
+    totalPoints: members.reduce((s, m) => s + Number(m.loyalty_points || 0), 0),
+  }), [members]);
 
   const exportCsv = () => {
-    if (filteredMembers.length === 0) { addToast('error', 'No members to export'); return; }
-    const headers = ['Member Code', 'Name', 'Phone', 'Email', 'Membership Type', 'Points Balance', 'Visits', 'Status', 'Expiry Date', 'Card Number'];
+    if (!filteredMembers.length) { addToast('error', 'No members to export'); return; }
+    const headers = ['Member Code', 'Name', 'Phone', 'Email', 'Membership', 'Points', 'Visits', 'Status', 'Expiry', 'Card#'];
     const rows = filteredMembers.map(m => [
       `"${m.member_code || ''}"`, `"${m.name || ''}"`, `"${m.phone || ''}"`, `"${m.email || ''}"`,
       `"${m.membership_type?.name || ''}"`, m.loyalty_points || 0, m.total_visits || 0,
       `"${m.status || ''}"`, `"${m.expiry_date || ''}"`, `"${m.physical_card_number || ''}"`,
     ]);
-    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `metrocardz_members_${new Date().toISOString().split('T')[0]}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    addToast('success', `Exported ${filteredMembers.length} members to CSV`);
+    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+    const a = document.createElement('a');
+    a.href = url; a.download = `members_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    addToast('success', `Exported ${filteredMembers.length} members`);
   };
 
-  // Avatar initial color — deterministic per name
-  function avatarColor(name: string) {
-    const colors = [
-      'from-accent to-accent-hover', 'from-secondary to-emerald-500',
-      'from-tertiary to-amber-600', 'from-purple-500 to-purple-700',
-      'from-pink-500 to-rose-600', 'from-blue-500 to-blue-700',
-    ];
-    let hash = 0;
-    for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-    return colors[Math.abs(hash) % colors.length];
-  }
-
   const STATUS_TABS = [
-    { key: 'all',         label: 'All',         count: counts.total },
-    { key: 'active',      label: 'Active',       count: counts.active },
-    { key: 'expired',     label: 'Expired',      count: counts.expired },
-    { key: 'deactivated', label: 'Inactive',     count: counts.deactivated },
+    { key: 'all',         label: 'All',      count: counts.total },
+    { key: 'active',      label: 'Active',   count: counts.active },
+    { key: 'expired',     label: 'Expired',  count: counts.expired },
+    { key: 'deactivated', label: 'Inactive', count: counts.deactivated },
   ] as const;
 
+  const Btn = ({ label, icon, onClick, variant = 'ghost', disabled = false }: any) => (
+    <button disabled={disabled} onClick={onClick} style={{
+      display: 'flex', alignItems: 'center', gap: '6px', padding: '9px 14px',
+      borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: disabled ? 'not-allowed' : 'pointer',
+      border: variant === 'primary' ? 'none' : `1px solid ${T.border}`,
+      background: variant === 'primary' ? `linear-gradient(135deg, ${T.orange}, ${T.orangeDark})` : T.white,
+      color: variant === 'primary' ? '#fff' : T.textMuted,
+      boxShadow: variant === 'primary' ? `0 3px 12px rgba(255,107,53,0.3)` : T.shadow,
+      opacity: disabled ? 0.5 : 1, transition: 'all 0.15s',
+    }}>
+      <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>{icon}</span>
+      <span className="btn-label">{label}</span>
+    </button>
+  );
+
   return (
-    <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-6xl mx-auto space-y-5 animate-fade-in">
+    <div style={{ background: T.bg, minHeight: '100dvh', fontFamily: '"Inter", system-ui, sans-serif' }}>
+      <div style={{ maxWidth: '1080px', margin: '0 auto', padding: '24px 20px 40px' }}>
 
-      {/* ── Page Header ─── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="page-title">Customer Directory</h1>
-          <p className="page-subtitle">View, search, and manage all registered loyalty members.</p>
-        </div>
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={() => { invalidateContaining('members'); fetchMembers(); }}
-            disabled={loading}
-            className="btn-outline flex items-center gap-2"
-            title="Refresh member list"
-          >
-            <span className={`material-symbols-outlined text-[18px] ${loading ? 'animate-spin' : ''}`}>refresh</span>
-            <span className="hidden sm:inline">Refresh</span>
-          </button>
-          <button
-            onClick={exportCsv}
-            disabled={loading || members.length === 0}
-            className="btn-outline flex items-center gap-2"
-          >
-            <span className="material-symbols-outlined text-[18px]">download</span>
-            <span className="hidden sm:inline">Export CSV</span>
-          </button>
-          <button
-            onClick={() => navigate('/members/new')}
-            className="btn-primary flex items-center gap-2"
-          >
-            <span className="material-symbols-outlined text-[18px]">person_add</span>
-            Add Member
-          </button>
-        </div>
-      </div>
-
-      {/* ── Summary Cards ─── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          {
-            label: 'Total Members',
-            value: counts.total,
-            icon: 'groups',
-            gradient: 'from-accent/10 to-accent/5',
-            iconColor: 'text-accent',
-            filter: 'all' as const,
-          },
-          {
-            label: 'Active',
-            value: counts.active,
-            icon: 'check_circle',
-            gradient: 'from-secondary/10 to-secondary/5',
-            iconColor: 'text-secondary',
-            filter: 'active' as const,
-          },
-          {
-            label: 'Expired',
-            value: counts.expired,
-            icon: 'schedule',
-            gradient: 'from-tertiary/10 to-tertiary/5',
-            iconColor: 'text-tertiary',
-            filter: 'expired' as const,
-          },
-          {
-            label: 'Points in Circulation',
-            value: counts.totalPointsBalance.toLocaleString(),
-            icon: 'stars',
-            gradient: 'from-purple-500/10 to-purple-500/5',
-            iconColor: 'text-purple-600',
-            filter: 'all' as const,
-          },
-        ].map(card => (
-          <button
-            key={card.label}
-            onClick={() => setStatusFilter(card.filter)}
-            className="card p-4 flex items-center gap-3 text-left hover:-translate-y-0.5 hover:shadow-card-hover transition-all duration-200 active:scale-[0.98] cursor-pointer"
-          >
-            <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${card.gradient} flex items-center justify-center ${card.iconColor} shrink-0`}>
-              <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>{card.icon}</span>
+        {/* ── Header ── */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
+          <div>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: T.orangeLight, color: T.orangeDark, border: `1px solid ${T.border}`, borderRadius: '9999px', fontSize: '11px', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '6px 10px', marginBottom: '10px' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '13px', fontVariationSettings: "'FILL' 1" }}>groups</span>
+              Membership hub
             </div>
-            <div className="min-w-0">
-              <p className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wide truncate">{card.label}</p>
-              <p className="text-[20px] font-extrabold text-on-surface font-display leading-tight tabular-nums">{card.value}</p>
-            </div>
-          </button>
-        ))}
-      </div>
+            <h1 style={{ fontSize: '28px', fontWeight: 800, color: T.text, margin: '0 0 4px', fontFamily: '"Plus Jakarta Sans", Inter, sans-serif', letterSpacing: '-0.05em' }}>Customer Directory</h1>
+            <p style={{ fontSize: '13px', color: T.textMuted, margin: 0 }}>Monitor, search and manage every loyalty member in one place.</p>
+          </div>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <Btn label="Refresh" icon="refresh" onClick={() => { invalidateContaining('members'); fetchMembers(); }} disabled={loading} />
+            <Btn label="Export CSV" icon="download" onClick={exportCsv} disabled={loading || !members.length} />
+            <Btn label="Add Member" icon="person_add" onClick={() => navigate('/portal/members/new')} variant="primary" />
+          </div>
+        </div>
 
-      {/* ── Filter + Search Bar ─── */}
-      <div className="card p-3 flex flex-col md:flex-row gap-3 items-stretch md:items-center">
-        {/* Status Tabs */}
-        <div className="flex bg-surface-container rounded-xl p-1 gap-0.5">
-          {STATUS_TABS.map(tab => (
-            <button
-              key={tab.key}
-              onClick={() => setStatusFilter(tab.key)}
-              className={`flex-1 md:flex-initial px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all capitalize flex items-center gap-1.5
-                ${statusFilter === tab.key
-                  ? 'bg-white text-accent shadow-sm'
-                  : 'text-on-surface-variant hover:text-on-surface'}`}
-            >
-              {tab.label}
-              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${statusFilter === tab.key ? 'bg-accent/10 text-accent' : 'bg-surface-container-high text-on-surface-variant'}`}>
-                {tab.count}
-              </span>
+        {/* ── Summary Stat Cards ── */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px', marginBottom: '22px' }}>
+          {[
+            { label: 'Total', value: counts.total, icon: 'groups', color: T.orange, bg: T.orangeLight, filter: 'all' as const },
+            { label: 'Active', value: counts.active, icon: 'check_circle', color: '#16A34A', bg: '#F0FDF4', filter: 'active' as const },
+            { label: 'Expired', value: counts.expired, icon: 'schedule', color: '#D97706', bg: '#FEF3C7', filter: 'expired' as const },
+            { label: 'Points', value: counts.totalPoints.toLocaleString(), icon: 'stars', color: T.violet, bg: T.violetLight, filter: 'all' as const },
+          ].map(c => (
+            <button key={c.label} onClick={() => setStatusFilter(c.filter)} style={{
+              background: 'linear-gradient(180deg, #ffffff 0%, #fffaf7 100%)', borderRadius: '18px', padding: '16px 18px', border: `1px solid ${statusFilter === c.filter && c.filter !== 'all' ? c.color + '40' : T.border}`,
+              boxShadow: T.shadow, cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease',
+              outline: statusFilter === c.filter && c.filter !== 'all' ? `2px solid ${c.color}30` : 'none',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: c.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px', color: c.color, fontVariationSettings: "'FILL' 1" }}>{c.icon}</span>
+                </div>
+                <div>
+                  <p style={{ fontSize: '11px', fontWeight: 700, color: T.textLight, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 2px' }}>{c.label}</p>
+                  <p style={{ fontSize: '22px', fontWeight: 800, color: T.text, margin: 0, lineHeight: 1, fontFamily: '"Plus Jakarta Sans", Inter, sans-serif' }}>{c.value}</p>
+                </div>
+              </div>
             </button>
           ))}
         </div>
 
-        {/* Search Input */}
-        <div className="relative flex-1 md:min-w-[240px] md:max-w-[320px] md:ml-auto">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/60 text-[18px]">
-            search
-          </span>
-          <input
-            type="text"
-            placeholder="Name, phone, or member code…"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="input-field pl-10 pr-9 !h-10 text-[14px]"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface p-0.5 rounded"
-            >
-              <span className="material-symbols-outlined text-[16px]">close</span>
-            </button>
+        {/* ── Filter + Search ── */}
+        <div style={{ background: T.white, borderRadius: '18px', border: `1px solid ${T.border}`, boxShadow: T.shadow, padding: '12px 14px', marginBottom: '16px', display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '4px', background: T.soft, padding: '4px', borderRadius: '12px', border: `1px solid ${T.border}` }}>
+            {STATUS_TABS.map(tab => (
+              <button key={tab.key} onClick={() => setStatusFilter(tab.key)} style={{
+                padding: '5px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 700,
+                border: 'none', cursor: 'pointer', transition: 'all 0.15s',
+                background: statusFilter === tab.key ? T.white : 'transparent',
+                color: statusFilter === tab.key ? T.orangeDark : T.textMuted,
+                boxShadow: statusFilter === tab.key ? T.shadow : 'none',
+                display: 'flex', alignItems: 'center', gap: '5px',
+              }}>
+                {tab.label}
+                <span style={{ fontSize: '10px', background: statusFilter === tab.key ? T.orangeLight : '#E5E7EB', color: statusFilter === tab.key ? T.orangeDark : T.textLight, padding: '1px 6px', borderRadius: '9999px', fontWeight: 700 }}>{tab.count}</span>
+              </button>
+            ))}
+          </div>
+          <div style={{ position: 'relative', flex: 1, minWidth: '220px' }}>
+            <span className="material-symbols-outlined" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '17px', color: T.textLight, pointerEvents: 'none' }}>search</span>
+            <input
+              type="text"
+              placeholder="Name, phone, member code…"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              style={{ width: '100%', height: '42px', paddingLeft: '38px', paddingRight: searchQuery ? '36px' : '12px', border: `1.5px solid ${T.border}`, borderRadius: '12px', fontSize: '13px', background: T.soft, color: T.text, outline: 'none', boxSizing: 'border-box' }}
+            />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '16px', color: T.textLight }}>close</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* ── Table ── */}
+        <div style={{ background: T.white, borderRadius: '16px', border: `1px solid ${T.border}`, boxShadow: T.shadow, overflow: 'hidden' }}>
+          {loading ? (
+            <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {[...Array(6)].map((_, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(90deg, #F1F5F9 0%, #E2E8F0 40%, #F1F5F9 80%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s linear infinite', flexShrink: 0 }} />
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <div style={{ height: 13, width: '35%', borderRadius: '6px', background: 'linear-gradient(90deg, #F1F5F9 0%, #E2E8F0 40%, #F1F5F9 80%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s linear infinite' }} />
+                    <div style={{ height: 10, width: '20%', borderRadius: '6px', background: 'linear-gradient(90deg, #F1F5F9 0%, #E2E8F0 40%, #F1F5F9 80%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s linear infinite' }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : filteredMembers.length === 0 ? (
+            <div style={{ padding: '60px 24px', textAlign: 'center' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '48px', color: T.textLight, display: 'block', marginBottom: '12px' }}>{searchQuery ? 'search_off' : 'person_off'}</span>
+              <p style={{ fontWeight: 700, fontSize: '15px', color: T.text, margin: '0 0 6px' }}>{searchQuery ? 'No results found' : 'No Members Yet'}</p>
+              <p style={{ fontSize: '13px', color: T.textMuted, margin: '0 0 16px' }}>{searchQuery ? `No match for "${searchQuery}"` : 'Add your first loyalty member to get started.'}</p>
+              {!searchQuery && (
+                <button onClick={() => navigate('/portal/members/new')} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '10px 20px', background: `linear-gradient(135deg, ${T.orange}, ${T.orangeDark})`, color: '#fff', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>person_add</span>
+                  Add First Member
+                </button>
+              )}
+            </div>
+          ) : (
+            <>
+              {/* Desktop table */}
+              <div className="members-table-desktop">
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ borderBottom: `1px solid ${T.border}`, background: '#FAFBFC' }}>
+                      {['Customer', 'Member Code', 'Tier', 'Points', 'Visits', 'Status', ''].map(h => (
+                        <th key={h} style={{ padding: '11px 16px', fontSize: '11px', fontWeight: 700, color: T.textLight, textTransform: 'uppercase', letterSpacing: '0.07em', textAlign: h === 'Points' || h === 'Visits' ? 'right' : 'left' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredMembers.map((m, i) => (
+                      <tr key={m.id} onClick={() => navigate(`/portal/members/${m.id}`)} style={{ borderBottom: i < filteredMembers.length - 1 ? `1px solid ${T.border}` : 'none', cursor: 'pointer', transition: 'background 0.1s' }}
+                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#FAFBFC'}
+                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = ''}>
+                        <td style={{ padding: '12px 16px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <Avatar name={m.name} size={36} />
+                            <div>
+                              <p style={{ fontSize: '13px', fontWeight: 700, color: T.text, margin: '0 0 1px' }}>{m.name}</p>
+                              <p style={{ fontSize: '12px', color: T.textMuted, margin: 0 }}>{m.phone}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td style={{ padding: '12px 16px', fontFamily: 'monospace', fontSize: '12px', fontWeight: 700, color: T.textMuted }}>#{m.member_code || '—'}</td>
+                        <td style={{ padding: '12px 16px' }}>
+                          {m.membership_type ? (
+                            <span style={{ fontSize: '11px', fontWeight: 700, background: T.orangeLight, color: T.orangeDark, padding: '3px 10px', borderRadius: '9999px' }}>{m.membership_type.name}</span>
+                          ) : <span style={{ fontSize: '12px', color: T.textLight }}>Standard</span>}
+                        </td>
+                        <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 800, fontSize: '13px', color: T.orange, fontFamily: 'monospace' }}>{Number(m.loyalty_points || 0).toLocaleString()}<span style={{ fontSize: '10px', color: T.textLight, fontWeight: 400 }}> pts</span></td>
+                        <td style={{ padding: '12px 16px', textAlign: 'right', fontSize: '13px', color: T.text }}>{m.total_visits || 0}</td>
+                        <td style={{ padding: '12px 16px' }}><StatusPill status={m.status} /></td>
+                        <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                          <button onClick={e => { e.stopPropagation(); navigate(`/portal/members/${m.id}`); }} style={{ padding: '6px 14px', border: `1px solid ${T.border}`, borderRadius: '8px', fontSize: '12px', fontWeight: 700, color: T.textMuted, background: T.white, cursor: 'pointer' }}>View →</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile list */}
+              <div className="members-table-mobile">
+                {filteredMembers.map((m, i) => (
+                  <div key={m.id} onClick={() => navigate(`/portal/members/${m.id}`)} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px', borderBottom: i < filteredMembers.length - 1 ? `1px solid ${T.border}` : 'none', cursor: 'pointer', transition: 'background 0.1s' }}
+                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#FAFBFC'}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = ''}>
+                    <Avatar name={m.name} size={42} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: '14px', fontWeight: 700, color: T.text, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.name}</p>
+                      <p style={{ fontSize: '12px', color: T.textMuted, margin: '0 0 6px' }}>{m.phone} · #{m.member_code}</p>
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                        <StatusPill status={m.status} />
+                        <span style={{ fontSize: '12px', fontWeight: 800, color: T.orange, fontFamily: 'monospace' }}>{Number(m.loyalty_points || 0).toLocaleString()} pts</span>
+                      </div>
+                    </div>
+                    <span className="material-symbols-outlined" style={{ fontSize: '18px', color: T.textLight, flexShrink: 0 }}>chevron_right</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Footer */}
+              <div style={{ padding: '10px 16px', borderTop: `1px solid ${T.border}`, background: '#FAFBFC', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <p style={{ fontSize: '12px', color: T.textMuted, margin: 0 }}>
+                  Showing <strong style={{ color: T.text }}>{filteredMembers.length}</strong> of <strong style={{ color: T.text }}>{members.length}</strong> members
+                </p>
+                {searchQuery && <button onClick={() => setSearchQuery('')} style={{ fontSize: '12px', color: T.orange, fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer' }}>Clear filter</button>}
+              </div>
+            </>
           )}
         </div>
       </div>
 
-      {/* ── Members Table / List ─── */}
-      <div className="card overflow-hidden">
-        {loading ? (
-          <div className="p-6 space-y-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-4 animate-pulse">
-                <div className="w-10 h-10 rounded-full skeleton shrink-0" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 skeleton rounded-lg w-[35%]" />
-                  <div className="h-3 skeleton rounded-lg w-[25%]" />
-                </div>
-                <div className="hidden md:block w-24 h-5 skeleton rounded-full" />
-                <div className="hidden md:block w-16 h-5 skeleton rounded-lg" />
-              </div>
-            ))}
-          </div>
-        ) : filteredMembers.length === 0 ? (
-          <EmptyState
-            icon={searchQuery ? 'search_off' : 'person_off'}
-            title={searchQuery ? 'No results found' : 'No Members Yet'}
-            description={
-              searchQuery
-                ? `No customer matches "${searchQuery}". Try a different search term.`
-                : 'Add your first loyalty member to get started.'
-            }
-            actionLabel={!searchQuery ? 'Add First Member' : undefined}
-            onAction={!searchQuery ? () => navigate('/members/new') : undefined}
-          />
-        ) : (
-          <>
-            {/* Desktop Table */}
-            <div className="hidden md:block overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-outline-variant/40 bg-surface-container-low">
-                    <th className="px-5 py-3 text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">Customer</th>
-                    <th className="px-5 py-3 text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">Member Code</th>
-                    <th className="px-5 py-3 text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">Tier</th>
-                    <th className="px-5 py-3 text-[11px] font-bold text-on-surface-variant uppercase tracking-widest text-right">Points</th>
-                    <th className="px-5 py-3 text-[11px] font-bold text-on-surface-variant uppercase tracking-widest text-right">Visits</th>
-                    <th className="px-5 py-3 text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">Status</th>
-                    <th className="px-5 py-3 text-[11px] font-bold text-on-surface-variant uppercase tracking-widest text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-outline-variant/20">
-                  {filteredMembers.map(m => (
-                    <tr
-                      key={m.id}
-                      onClick={() => navigate(`/members/${m.id}`)}
-                      className="hover:bg-surface-container-low/50 transition-colors cursor-pointer group"
-                    >
-                      <td className="px-5 py-3.5">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${avatarColor(m.name)} flex items-center justify-center text-white font-bold text-[13px] shrink-0`}>
-                            {m.name.charAt(0).toUpperCase()}
-                          </div>
-                          <div>
-                            <p className="font-bold text-on-surface text-[14px] group-hover:text-accent transition-colors">
-                              {m.name}
-                            </p>
-                            <p className="text-[12px] text-on-surface-variant">{m.phone}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-5 py-3.5 font-mono text-[13px] font-bold text-on-surface-variant">
-                        #{m.member_code || '—'}
-                      </td>
-                      <td className="px-5 py-3.5">
-                        {m.membership_type ? (
-                          <MembershipBadge name={m.membership_type.name} />
-                        ) : (
-                          <span className="text-[12px] text-on-surface-variant/60">Standard</span>
-                        )}
-                      </td>
-                      <td className="px-5 py-3.5 text-right font-extrabold text-accent font-mono text-[14px]">
-                        {Number(m.loyalty_points || 0).toLocaleString()}
-                        <span className="text-[11px] text-on-surface-variant font-normal ml-0.5">pts</span>
-                      </td>
-                      <td className="px-5 py-3.5 text-right text-[14px] text-on-surface">
-                        {m.total_visits || 0}
-                      </td>
-                      <td className="px-5 py-3.5">
-                        <StatusBadge status={m.status} />
-                      </td>
-                      <td className="px-5 py-3.5 text-right">
-                        <button
-                          onClick={e => { e.stopPropagation(); navigate(`/members/${m.id}`); }}
-                          className="btn-outline !py-1.5 !px-3 !text-[12px]"
-                        >
-                          View
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile Card List */}
-            <div className="md:hidden divide-y divide-outline-variant/20">
-              {filteredMembers.map(m => (
-                <div
-                  key={m.id}
-                  onClick={() => navigate(`/members/${m.id}`)}
-                  className="p-4 flex items-center justify-between gap-3 hover:bg-surface-container-low/50 transition-colors cursor-pointer group"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className={`w-11 h-11 rounded-full bg-gradient-to-br ${avatarColor(m.name)} flex items-center justify-center text-white font-bold text-[15px] shrink-0`}>
-                      {m.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-bold text-on-surface text-[14px] truncate group-hover:text-accent transition-colors">{m.name}</p>
-                      <p className="text-[12px] text-on-surface-variant">{m.phone} · #{m.member_code}</p>
-                      <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                        <StatusBadge status={m.status} />
-                        <span className="text-[12px] font-extrabold text-accent font-mono">
-                          {Number(m.loyalty_points || 0).toLocaleString()} pts
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <span className="material-symbols-outlined text-on-surface-variant/50 text-[20px] shrink-0 group-hover:text-accent transition-colors">chevron_right</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Row count footer */}
-            <div className="px-5 py-3 border-t border-outline-variant/20 bg-surface-container-low/30 flex items-center justify-between">
-              <p className="text-[12px] text-on-surface-variant">
-                Showing <span className="font-bold text-on-surface">{filteredMembers.length}</span> of <span className="font-bold text-on-surface">{members.length}</span> members
-              </p>
-              {searchQuery && (
-                <button onClick={() => setSearchQuery('')} className="text-[12px] text-accent font-semibold hover:underline">
-                  Clear filter
-                </button>
-              )}
-            </div>
-          </>
-        )}
-      </div>
+      <style>{`
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        .members-table-desktop { display: block; }
+        .members-table-mobile { display: none; }
+        .btn-label { display: inline; }
+        @media (max-width: 767px) {
+          .members-table-desktop { display: none; }
+          .members-table-mobile { display: block; }
+          .btn-label { display: none; }
+        }
+        @media (max-width: 640px) {
+          div[style*="repeat(4, 1fr)"] { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+      `}</style>
     </div>
   );
 }

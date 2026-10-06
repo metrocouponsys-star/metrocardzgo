@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { StatCard } from '../../components/ui/StatCard';
 import { StatCardSkeleton } from '../../components/ui/Skeleton';
@@ -12,6 +12,7 @@ export default function AdminDashboardPage() {
   const { addToast } = useToastStore();
   const [stats, setStats] = useState<AdminDashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [statsError, setStatsError] = useState(false);
 
   // ── Change Password Modal ──────────────────────────────────────────────────
   const [showChangePwd, setShowChangePwd] = useState(false);
@@ -20,16 +21,21 @@ export default function AdminDashboardPage() {
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
 
-  useEffect(() => {
-    api.getAdminStats()
-      .then(s => {
-        setStats(s);
-        setLoading(false);
-      })
-      .catch(() => {
-        setLoading(false);
-      });
+  const loadStats = useCallback(async () => {
+    setLoading(true);
+    setStatsError(false);
+    try {
+      setStats(await api.getAdminStats());
+    } catch {
+      setStatsError(true);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    void loadStats();
+  }, [loadStats]);
 
   const handleChangePwd = async () => {
     if (pwdForm.newPwd.length < 8) {
@@ -93,7 +99,7 @@ export default function AdminDashboardPage() {
             </div>
           </div>
           <button
-            onClick={() => navigate('/admin/merchants')}
+            onClick={() => navigate('/portal/admin/merchants')}
             className="w-full sm:w-auto btn-primary flex items-center justify-center gap-1.5 !py-2 !px-4"
           >
             Review Requests
@@ -108,29 +114,44 @@ export default function AdminDashboardPage() {
           Array.from({ length: 5 }).map((_, i) => <StatCardSkeleton key={i} />)
         ) : stats ? (
           <>
-            <StatCard label="Total Merchants" value={stats.total_merchants} icon="storefront" onClick={() => navigate('/admin/merchants')} />
+            <StatCard label="Total Merchants" value={stats.total_merchants} icon="storefront" onClick={() => navigate('/portal/admin/merchants')} />
             <StatCard
               label="Pending Approval"
               value={stats.pending_approvals || 0}
               icon="pending_actions"
               variant={(stats.pending_approvals || 0) > 0 ? 'amber' : undefined}
-              onClick={() => navigate('/admin/merchants')}
+              onClick={() => navigate('/portal/admin/merchants')}
             />
-            <StatCard label="Total Members" value={stats.total_members.toLocaleString()} icon="groups" onClick={() => navigate('/admin/members')} />
-            <StatCard label="Redemptions Today" value={stats.redemptions_today} icon="receipt_long" onClick={() => navigate('/admin/reports')} />
-            <StatCard label="Active Merchants" value={`${stats.active_merchants} / ${stats.total_merchants}`} icon="check_circle" variant="teal" onClick={() => navigate('/admin/merchants')} />
+            <StatCard label="Total Members" value={stats.total_members.toLocaleString()} icon="groups" onClick={() => navigate('/portal/admin/members')} />
+            <StatCard label="Redemptions Today" value={stats.redemptions_today} icon="receipt_long" onClick={() => navigate('/portal/admin/reports')} />
+            <StatCard label="Active Merchants" value={`${stats.active_merchants} / ${stats.total_merchants}`} icon="check_circle" variant="teal" onClick={() => navigate('/portal/admin/merchants')} />
           </>
         ) : null}
       </section>
+
+      {!loading && statsError && (
+        <section className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4" role="alert">
+          <div className="flex items-start gap-3">
+            <span className="material-symbols-outlined text-red-600">cloud_off</span>
+            <div>
+              <h2 className="font-bold text-red-900 text-sm">Platform metrics are unavailable</h2>
+              <p className="text-red-800/80 text-sm mt-1">Your admin workspace is still available. Retry the stats request when your connection is ready.</p>
+            </div>
+          </div>
+          <button onClick={() => void loadStats()} className="btn-outline !border-red-200 !text-red-700 shrink-0">
+            <span className="material-symbols-outlined text-[16px] mr-1">refresh</span>Retry
+          </button>
+        </section>
+      )}
 
       {/* Quick Action links */}
       <section className="card p-5 space-y-4">
         <h3 className="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">Quick Actions</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {[
-            { icon: 'storefront', title: 'Manage Merchants', desc: 'Approve, suspend, or view users.', to: '/admin/merchants' },
-            { icon: 'credit_card', title: 'Card Inventory', desc: 'Batch generate or allocate cards.', to: '/admin/cards' },
-            { icon: 'pending_actions', title: 'Pending Requests', desc: 'Onboard and verify registrations.', to: '/admin/merchants' },
+            { icon: 'storefront', title: 'Manage Merchants', desc: 'Approve, suspend, or view users.', to: '/portal/admin/merchants' },
+            { icon: 'credit_card', title: 'Card Inventory', desc: 'Batch generate or allocate cards.', to: '/portal/admin/cards' },
+            { icon: 'pending_actions', title: 'Pending Requests', desc: 'Onboard and verify registrations.', to: '/portal/admin/merchants' },
           ].map(action => (
             <button
               key={action.title}

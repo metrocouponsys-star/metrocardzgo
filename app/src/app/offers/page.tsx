@@ -1,4 +1,2 @@
-'use client';
-import dynamic from 'next/dynamic';
-const MerchantApp = dynamic(() => import('@/views/MerchantApp'), { ssr: false });
-export default function OffersRoutePage() { return <MerchantApp />; }
+import { redirect } from 'next/navigation';
+export default function RedirectPage() { redirect('/portal/offers'); }

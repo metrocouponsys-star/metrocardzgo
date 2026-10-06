@@ -7,6 +7,8 @@ interface AuthState {
   token: string | null;
   originalAdminUser: AuthUser | null;
   isAuthenticated: boolean;
+  _hasHydrated: boolean;         // ← true once persist middleware finishes rehydrating
+  setHasHydrated: (v: boolean) => void;
   setAuth: (user: AuthUser, token: string) => void;
   updateUser: (partial: Partial<AuthUser>) => void;
   impersonate: (merchantId: string, merchantName: string) => void;
@@ -40,6 +42,8 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       originalAdminUser: null,
       isAuthenticated: false,
+      _hasHydrated: false,
+      setHasHydrated: (v) => set({ _hasHydrated: v }),
       setAuth: (user, token) => {
         const cleanUser = user ? { ...user, merchant_id: user.merchant_id ? user.merchant_id.trim() : user.merchant_id } : null;
         set({ user: cleanUser, token, isAuthenticated: true, originalAdminUser: null });
@@ -85,6 +89,11 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'metro-cardz-auth',
       storage: createJSONStorage(() => hybridStorage),
+      // Mark hydration complete so route guards don't flash-redirect before
+      // localStorage data is loaded into the store.
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
     }
   )
 );

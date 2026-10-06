@@ -26,6 +26,7 @@ export function getPartnerBadgeLabel(status: PartnerStatus): string {
 }
 
 // ── Badge visual config — colors defined here, not scattered across components ─
+// ── Badge visual config — classical modern light palette ─────────────────────
 export function getPartnerBadgeStyle(status: PartnerStatus): {
   bg: string;
   border: string;
@@ -35,29 +36,31 @@ export function getPartnerBadgeStyle(status: PartnerStatus): {
   switch (status) {
     case 'public_link':
       return {
-        bg:     'rgba(42,48,60,0.4)',
-        border: '#2A303C',
-        text:   '#9CA3AF',
+        bg:     '#F3F4F6',
+        border: '#E5E7EB',
+        text:   '#4B5563',
+        dot:    '#6B7280',
       };
     case 'affiliate':
       return {
-        bg:     'rgba(212,175,55,0.08)',
-        border: '#3F3722',
-        text:   '#E5C158',
+        bg:     '#EFF6FF',
+        border: '#BFDBFE',
+        text:   '#1D4ED8',
+        dot:    '#2563EB',
       };
     case 'authorised_partner':
       return {
-        bg:     'rgba(16,185,129,0.08)',
-        border: 'rgba(52,211,153,0.3)',
-        text:   '#34D399',
-        dot:    '#34D399',
+        bg:     '#ECFDF5',
+        border: '#A7F3D0',
+        text:   '#047857',
+        dot:    '#059669',
       };
     case 'direct_merchant':
       return {
-        bg:     '#1C212B',
-        border: '#D4AF37',
-        text:   '#FFF3D6',
-        dot:    '#D4AF37',
+        bg:     '#FEF3C7',
+        border: '#FDE68A',
+        text:   '#92400E',
+        dot:    '#B45309',
       };
   }
 }

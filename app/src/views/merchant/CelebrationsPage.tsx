@@ -142,7 +142,7 @@ export default function CelebrationsPage() {
         </div>
         <div className="flex items-center gap-2.5">
           <button
-            onClick={() => navigate('/campaigns')}
+            onClick={() => navigate('/portal/campaigns')}
             className="btn-outline flex items-center gap-2 text-label-md"
           >
             <span className="material-symbols-outlined text-[18px]">campaign</span>

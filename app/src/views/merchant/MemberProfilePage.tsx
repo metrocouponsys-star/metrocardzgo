@@ -116,7 +116,7 @@ export default function MemberProfilePage() {
       api.getScratchCards(m.id).then(setScratchCards).catch(() => { });
     } catch (e: any) {
       addToast('error', e.message || 'Member not found');
-      navigate('/members');
+      navigate('/portal/members');
     } finally {
       setLoading(false);
     }
@@ -406,7 +406,7 @@ export default function MemberProfilePage() {
   return (
     <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-5xl mx-auto space-y-6 animate-fade-in">
       {/* Back */}
-      <button onClick={() => navigate('/members')} className="flex items-center gap-1 text-on-surface-variant hover:text-on-surface text-body-md transition-colors mb-1">
+      <button onClick={() => navigate('/portal/members')} className="flex items-center gap-1 text-on-surface-variant hover:text-on-surface text-body-md transition-colors mb-1">
         <span className="material-symbols-outlined text-[18px]">arrow_back</span>
         Back to Search
       </button>

@@ -7,7 +7,6 @@ import * as api from '../../api';
 import { StatusBadge, MembershipBadge } from '../../components/ui/StatusBadge';
 
 const RECENT_KEY = 'mc_recent_searches';
-
 function getRecentSearches(): Member[] {
   try { return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]'); }
   catch { return []; }
@@ -17,343 +16,60 @@ function addRecentSearch(member: Member) {
   localStorage.setItem(RECENT_KEY, JSON.stringify([member, ...recent]));
 }
 
-export default function SearchMemberPage() {
-  const { user } = useAuthStore();
-  const { addToast } = useToastStore();
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const urlTab = searchParams.get('tab') as 'mobile' | 'membership' | 'qr' | 'card' | null;
-  const [tab, setTab] = useState<'mobile' | 'membership' | 'qr' | 'card'>(
-    urlTab && ['mobile', 'membership', 'qr', 'card'].includes(urlTab) ? urlTab : 'qr'
-  );
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<Member[]>([]);
-  const [searching, setSearching] = useState(false);
-  const [notFound, setNotFound] = useState(false);
-  const [recent, setRecent] = useState<Member[]>(getRecentSearches);
-  const inputRef = useRef<HTMLInputElement>(null);
+// ─── Tokens ───────────────────────────────────────────────────────────────────
+const T = {
+  bg: '#F8FAFC', white: '#FFFFFF', border: '#E2E8F0',
+  text: '#0F172A', textMuted: '#64748B', textLight: '#94A3B8',
+  orange: '#FF6B35', orangeLight: '#FFF4EF', orangeDark: '#E85A28',
+  shadow: '0 1px 3px rgba(15,23,42,0.04), 0 4px 12px rgba(15,23,42,0.03)',
+};
 
-  useEffect(() => {
-    if (urlTab && ['mobile', 'membership', 'qr', 'card'].includes(urlTab)) {
-      setTab(urlTab);
-    }
-  }, [urlTab]);
+// ─── Tabs config ──────────────────────────────────────────────────────────────
+const TABS = [
+  { key: 'mobile',     icon: 'smartphone',     label: 'Mobile No.' },
+  { key: 'membership', icon: 'badge',           label: 'Member No.' },
+  { key: 'card',       icon: 'credit_card',     label: 'Card No.' },
+  { key: 'qr',         icon: 'qr_code_scanner', label: 'Scan QR' },
+] as const;
+type TabKey = typeof TABS[number]['key'];
 
-  useEffect(() => { inputRef.current?.focus(); }, [tab]);
+const PLACEHOLDERS: Record<TabKey, string> = {
+  mobile: 'e.g. +91 98765 43210',
+  membership: 'e.g. SAL001',
+  card: 'e.g. 4821 6739 0012 3847',
+  qr: '',
+};
 
-  const [searchError, setSearchError] = useState(false);
-
-  const performSearch = async () => {
-    if (!query.trim()) return;
-    setSearching(true);
-    setNotFound(false);
-    setSearchError(false);
-    setResults([]);
-    try {
-      let found: Member[];
-      if (tab === 'card') {
-        const m = await api.searchMemberByCard(user?.merchant_id || '', query);
-        found = m ? [m] : [];
-      } else {
-        found = await api.searchMembers(user?.merchant_id || '', query);
-      }
-      if (found.length === 0) {
-        setNotFound(true);
-      } else if (found.length === 1) {
-        addRecentSearch(found[0]);
-        navigate(`/members/${found[0].id}`);
-      } else {
-        setResults(found);
-      }
-    } catch {
-      setSearchError(true);
-    } finally {
-      setSearching(false);
-    }
-  };
-
-  const goToMember = (member: Member) => {
-    addRecentSearch(member);
-    navigate(`/members/${member.id}`);
-  };
-
-  const TABS = [
-    { key: 'mobile',     icon: 'smartphone',    label: 'Mobile No.' },
-    { key: 'membership', icon: 'badge',          label: 'Member No.' },
-    { key: 'card',       icon: 'credit_card',    label: 'Card No.' },
-    { key: 'qr',         icon: 'qr_code_scanner', label: 'Scan QR' },
-  ] as const;
-
-  const PLACEHOLDERS = {
-    mobile:     'e.g. +91 98765 43210',
-    membership: 'e.g. SAL001',
-    card:       'e.g. 4821 6739 0012 3847',
-    qr:         '',
-  };
-
-  return (
-    <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-4xl mx-auto">
-      <div className="mb-5">
-        <h1 className="page-title">Customer Lookup</h1>
-        <p className="page-subtitle">Find a member to manage their benefits or process a redemption.</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-md">
-        {/* Search Card */}
-        <div className="md:col-span-8 card overflow-hidden">
-          {/* Tabs */}
-          <div className="flex border-b border-outline-variant/30">
-            {TABS.map(t => (
-              <button
-                key={t.key}
-                onClick={() => { setTab(t.key); setQuery(''); setResults([]); setNotFound(false); }}
-                className={`flex-1 py-3.5 text-[13px] font-bold flex items-center justify-center gap-1.5 transition-all border-b-2
-                  ${tab === t.key ? 'text-accent border-accent' : 'text-on-surface-variant border-transparent hover:bg-surface-container'}`}
-              >
-                <span className="material-symbols-outlined text-[18px]" style={tab === t.key ? { fontVariationSettings: "'FILL' 1" } : undefined}>{t.icon}</span>
-                <span className="hidden sm:inline">{t.label}</span>
-              </button>
-            ))}
-          </div>
-
-          <div className="p-lg">
-            {tab !== 'qr' ? (
-              <div className="space-y-4">
-                <div>
-                  <label className="form-label">
-                    {tab === 'mobile' ? 'Mobile Number' : tab === 'card' ? '16-Digit Card Number' : 'Membership Number'}
-                  </label>
-                  {tab === 'card' && (
-                    <p className="text-label-sm text-on-surface-variant mb-2">Enter or scan the number printed on the physical membership card.</p>
-                  )}
-                  <div className="flex gap-2">
-                    <input
-                      ref={inputRef}
-                      type={tab === 'mobile' ? 'tel' : 'text'}
-                      value={query}
-                      onChange={e => { setQuery(e.target.value); setNotFound(false); setResults([]); }}
-                      onKeyDown={e => e.key === 'Enter' && performSearch()}
-                      placeholder={PLACEHOLDERS[tab]}
-                      className="flex-1 h-14 bg-surface-container-low border border-outline-variant rounded-lg px-md text-headline-md focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                      autoFocus
-                    />
-                    <button
-                      onClick={performSearch}
-                      disabled={searching || !query.trim()}
-                      className="h-14 px-6 bg-accent text-white rounded-lg font-bold flex items-center gap-2 hover:bg-accent-hover transition-colors disabled:opacity-50 active-scale"
-                    >
-                      {searching ? (
-                        <span className="material-symbols-outlined animate-spin">progress_activity</span>
-                      ) : (
-                        <span className="material-symbols-outlined">search</span>
-                      )}
-                      Search
-                    </button>
-                  </div>
-                </div>
-
-                {/* Search Error */}
-                {searchError && (
-                  <div className="flex flex-col items-center py-8 text-center bg-error/10 rounded-xl border border-error/30 animate-fade-in">
-                    <div className="w-16 h-16 bg-error/20 rounded-full flex items-center justify-center mb-3">
-                      <span className="material-symbols-outlined text-error text-3xl">wifi_off</span>
-                    </div>
-                    <h3 className="text-headline-md text-on-surface mb-1">Search Failed</h3>
-                    <p className="text-body-md text-on-surface-variant mb-4">Could not connect to server. Please check connection & retry.</p>
-                    <button onClick={performSearch} className="btn-outline flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[18px]">refresh</span>
-                      Try Again
-                    </button>
-                  </div>
-                )}
-
-                {/* Not Found */}
-                {notFound && (
-                  <div className="flex flex-col items-center py-8 text-center bg-error-container/10 rounded-xl border border-dashed border-error/30 animate-fade-in">
-                    <div className="w-16 h-16 bg-error-container rounded-full flex items-center justify-center mb-3">
-                      <span className="material-symbols-outlined text-on-error-container text-3xl">person_off</span>
-                    </div>
-                    <h3 className="text-headline-md text-on-surface mb-1">Member Not Found</h3>
-                    <p className="text-body-md text-on-surface-variant mb-4">No member found for "{query}"</p>
-                    <button onClick={() => navigate('/members/new')} className="btn-primary flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[18px]">person_add</span>
-                      Add as New Member
-                    </button>
-                  </div>
-                )}
-
-                {/* Multiple Results */}
-                {results.length > 1 && (
-                  <div className="space-y-2 animate-fade-in">
-                    <p className="text-label-md text-on-surface-variant font-bold">{results.length} members found</p>
-                    {results.map(m => (
-                      <MemberResultRow key={m.id} member={m} onClick={() => goToMember(m)} />
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <QrScannerView onScan={async (scannedValue) => {
-                try {
-                  // ── Path 1: URL-based QR (https://metrocardz.in/m/{token}) ──────
-                  const urlMatch = scannedValue.match(/\/m\/([^/?#]+)/);
-                  const publicToken = urlMatch ? urlMatch[1] : null;
-
-                  if (publicToken) {
-                    const byToken = await api.getMemberByToken(publicToken);
-                    if (byToken) {
-                      navigate(`/members/${byToken.member_id}`);
-                      return;
-                    }
-                    addToast('error', 'QR token not found — member may have been removed');
-                    return;
-                  }
-
-                  // ── Path 2: METROCARDZ card QR ──────────────────────────────────
-                  // Strip the "METROCARDZ:" prefix printed by the card wizard,
-                  // e.g. "METROCARDZ:4899673900000100" → "4899673900000100"
-                  const cardNumber = scannedValue.replace(/^METROCARDZ:/i, '').trim();
-
-                  // First try the authenticated merchant lookup (fast path)
-                  const byCard = await api.searchMemberByCard(user?.merchant_id || '', cardNumber);
-                  if (byCard) {
-                    addRecentSearch(byCard);
-                    navigate(`/members/${byCard.id}`);
-                    return;
-                  }
-
-                  // ── Diagnostic fallback: use the public resolver to explain WHY ──
-                  // This tells us whether the card: doesn't exist / not allocated
-                  // to this merchant / exists but has no member linked yet.
-                  try {
-                    const resolved = await api.resolveCardNumber(cardNumber);
-                    if (!resolved) {
-                      addToast('error', `Card ${cardNumber} is not registered in the system. Add it via Admin → Card Inventory.`);
-                    } else if (!resolved.merchant_id) {
-                      addToast('error', `Card ${cardNumber} exists but has not been allocated to any merchant yet.`);
-                    } else if (resolved.merchant_id !== user?.merchant_id) {
-                      addToast('error', `Card ${cardNumber} belongs to a different merchant and cannot be used here.`);
-                    } else if (!resolved.member_id) {
-                      // Card is in this merchant's inventory but not linked to anyone
-                      addToast('error', `Card ${cardNumber} is in your inventory but not assigned to a member yet. Open the member's profile and assign this card.`);
-                    } else {
-                      addToast('error', 'No member found for this QR code');
-                    }
-                  } catch {
-                    // Public resolve also failed — card truly not in system
-                    addToast('error', `Card ${cardNumber} not found. Make sure it was added via Admin → Card Inventory → Card Wizard.`);
-                  }
-                } catch {
-                  addToast('error', 'QR scan failed — please try manual search');
-                }
-              }} />
-
-            )}
-          </div>
-        </div>
-
-        {/* Sidebar */}
-        <div className="md:col-span-4 space-y-md">
-          {/* Recent Searches */}
-          <div className="bg-surface-container-high/50 rounded-xl p-md border border-outline-variant/20">
-            <div className="flex items-center justify-between mb-md">
-              <h3 className="text-label-md font-bold text-on-surface-variant uppercase tracking-wider">Recent Searches</h3>
-              {recent.length > 0 && (
-                <button onClick={() => { localStorage.removeItem(RECENT_KEY); setRecent([]); }} className="text-label-sm text-primary hover:underline">
-                  Clear
-                </button>
-              )}
-            </div>
-            {recent.length === 0 ? (
-              <p className="text-body-md text-on-surface-variant text-center py-4">No recent searches</p>
-            ) : (
-              <div className="space-y-1">
-                {recent.map(m => (
-                  <button
-                    key={m.id}
-                    onClick={() => goToMember(m)}
-                    className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-white transition-all group text-left"
-                  >
-                    <div className="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center font-bold text-on-secondary-container">
-                      {m.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-label-md font-bold text-on-surface truncate">{m.name}</p>
-                      <p className="text-label-sm text-on-surface-variant truncate">{m.phone}</p>
-                    </div>
-                    <span className="material-symbols-outlined text-outline group-hover:text-primary transition-colors">chevron_right</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Quick Add */}
-          <div className="bg-primary p-lg rounded-xl text-white relative overflow-hidden">
-            <div className="relative z-10">
-              <h4 className="text-headline-md font-bold mb-1">New Member?</h4>
-              <p className="text-label-sm opacity-80 mb-md">Enroll a customer and generate their membership card in seconds.</p>
-              <button
-                onClick={() => navigate('/members/new')}
-                className="text-label-md bg-white text-primary px-4 py-2 rounded-lg font-bold hover:bg-primary-fixed transition-colors"
-              >
-                + Add Member
-              </button>
-            </div>
-            <span className="material-symbols-outlined absolute -right-4 -bottom-4 text-7xl opacity-10 rotate-12" style={{ fontVariationSettings: "'FILL' 1" }}>person_add</span>
-          </div>
-        </div>
-      </div>
-
-      {/* FAB */}
-      <button
-        className="fixed right-6 bottom-24 md:bottom-10 md:right-10 w-14 h-14 bg-primary text-white rounded-2xl shadow-elevated flex items-center justify-center group active-scale transition-all z-40"
-        onClick={() => navigate('/members/new')}
-      >
-        <span className="material-symbols-outlined text-3xl">person_add</span>
-        <span className="absolute right-full mr-4 bg-primary px-3 py-1.5 rounded-lg text-label-md font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-          New Member
-        </span>
-      </button>
-    </div>
-  );
-}
-
+// ─── MemberResultRow ──────────────────────────────────────────────────────────
 function MemberResultRow({ member, onClick }: { member: Member; onClick: () => void }) {
   return (
-    <button
-      onClick={onClick}
-      className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-surface-container-low transition-all text-left border border-outline-variant/30"
+    <button onClick={onClick} style={{
+      width: '100%', display: 'flex', alignItems: 'center', gap: '12px',
+      padding: '12px 14px', borderRadius: '12px', background: T.white,
+      border: `1px solid ${T.border}`, cursor: 'pointer', textAlign: 'left',
+      transition: 'background 0.1s',
+    }}
+      onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#FAFBFC'}
+      onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = T.white}
     >
-      <div className="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center font-bold text-on-secondary-container">
-        {member.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+      <div style={{ width: 38, height: 38, borderRadius: '50%', background: T.orangeLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, color: T.orange, flexShrink: 0 }}>
+        {member.name.charAt(0)}
       </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-0.5">
-          <p className="font-bold text-on-surface">{member.name}</p>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
+          <p style={{ fontWeight: 700, fontSize: '13px', color: T.text, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member.name}</p>
           {member.membership_type && <MembershipBadge name={member.membership_type.name} />}
         </div>
-        <p className="text-label-sm text-on-surface-variant">{member.phone} · #{member.member_code}</p>
+        <p style={{ fontSize: '12px', color: T.textMuted, margin: 0 }}>{member.phone} · #{member.member_code}</p>
       </div>
       <StatusBadge status={member.status} />
     </button>
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// QR Scanner — html5-qrcode backed, with image-upload fallback
-//
-// KEY FIX: The #mc-qr-scanner-region div must ALWAYS exist in the DOM before
-// new Html5Qrcode(id) is called. Conditionally rendering the div (only when
-// status==='active') means it doesn't exist when startScanner() runs because
-// React hasn't re-rendered yet → html5-qrcode throws, falls to generic error.
-// Solution: always render the div, toggle visibility via CSS only.
-//
-// CASCADE (most reliable → least):
-//   1. getCameras() device ID — most reliable on desktop/laptop
-//   2. facingMode: { ideal: 'environment' } — rear camera / mobile
-//   3. facingMode: 'user' — front camera / webcam fallback
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── QR Scanner ──────────────────────────────────────────────────────────────
+// KEY FIX: #mc-qr-scanner-region must ALWAYS exist in DOM before Html5Qrcode(id)
+// is called. Conditionally rendering it breaks html5-qrcode. Use CSS only to hide.
 type ScannerStatus = 'requesting' | 'active' | 'denied' | 'error';
 
 function QrScannerView({ onScan }: { onScan: (token: string) => void }) {
@@ -367,24 +83,19 @@ function QrScannerView({ onScan }: { onScan: (token: string) => void }) {
   const [activeCamIndex, setActiveCamIndex] = useState(0);
   const [fileScanning, setFileScanning] = useState(false);
   const scannedRef = useRef(false);
-
-  // Stable callback ref — scanner never re-mounts on parent re-renders
   const onScanRef = useRef(onScan);
   useEffect(() => { onScanRef.current = onScan; }, [onScan]);
 
-  // ── Stop & clean up ────────────────────────────────────────────────────────
   const stopScanner = useCallback(async () => {
     if (!scannerRef.current) return;
     try {
       const state = scannerRef.current.getState?.();
-      if (state === 2) await scannerRef.current.stop(); // 2 = SCANNING
+      if (state === 2) await scannerRef.current.stop();
       scannerRef.current.clear?.();
     } catch { /* ignore */ }
     scannerRef.current = null;
   }, []);
 
-  // ── Start with a specific constraint/deviceId ──────────────────────────────
-  // IMPORTANT: #mc-qr-scanner-region MUST already be in the DOM here.
   const startWithConstraint = useCallback(async (constraint: any) => {
     const { Html5Qrcode } = await import('html5-qrcode');
     await stopScanner();
@@ -399,96 +110,47 @@ function QrScannerView({ onScan }: { onScan: (token: string) => void }) {
       onScanRef.current(text);
       setTimeout(() => { scannedRef.current = false; }, 3000);
     };
-    await scanner.start(
-      constraint,
-      { fps: 10, qrbox: { width: 200, height: 200 } },
-      onDecoded,
-      () => { /* silent — no QR in frame */ },
-    );
+    await scanner.start(constraint, { fps: 10, qrbox: { width: 200, height: 200 } }, onDecoded, () => {});
   }, [stopScanner]);
 
-  // ── Main cascade start ─────────────────────────────────────────────────────
   const startScanner = useCallback(async () => {
     await stopScanner();
     scannedRef.current = false;
     setLastScanned(null);
     setStatus('requesting');
-
-    if (typeof navigator === 'undefined' || !navigator?.mediaDevices?.getUserMedia) {
-      setStatus('error');
-      return;
-    }
-
+    if (typeof navigator === 'undefined' || !navigator?.mediaDevices?.getUserMedia) { setStatus('error'); return; }
     try {
       const { Html5Qrcode } = await import('html5-qrcode');
-
-      // Enumerate cameras — works on desktop once permission is granted
       let deviceList: { id: string; label: string }[] = [];
-      try {
-        deviceList = await Html5Qrcode.getCameras();
-        if (deviceList?.length > 0) setCameras(deviceList);
-      } catch { /* may fail before permission */ }
-
-      // Attempt 1: real device ID (most compatible on desktop/laptop)
+      try { deviceList = await Html5Qrcode.getCameras(); if (deviceList?.length > 0) setCameras(deviceList); } catch {}
       if (deviceList.length > 0) {
-        try {
-          await startWithConstraint(deviceList[deviceList.length - 1].id);
-          setStatus('active');
-          return;
-        } catch (e) {
-          console.warn('[QR] deviceId failed, trying facingMode:', e);
-          await stopScanner();
-        }
+        try { await startWithConstraint(deviceList[deviceList.length - 1].id); setStatus('active'); return; }
+        catch { await stopScanner(); }
       }
-
-      // Attempt 2: environment (rear / mobile)
-      try {
-        await startWithConstraint({ facingMode: { ideal: 'environment' } });
-        setStatus('active');
-        return;
-      } catch (e) {
-        console.warn('[QR] environment failed, trying user:', e);
-        await stopScanner();
-      }
-
-      // Attempt 3: user (front / webcam)
-      try {
-        await startWithConstraint({ facingMode: 'user' });
-        setStatus('active');
-        return;
-      } catch (e) {
-        console.warn('[QR] All camera attempts exhausted:', e);
-        await stopScanner();
-      }
-
+      try { await startWithConstraint({ facingMode: { ideal: 'environment' } }); setStatus('active'); return; }
+      catch { await stopScanner(); }
+      try { await startWithConstraint({ facingMode: 'user' }); setStatus('active'); return; }
+      catch { await stopScanner(); }
       setStatus('error');
     } catch (err: any) {
       await stopScanner();
       const msg = (err?.message ?? '').toLowerCase();
       const name = err?.name ?? '';
-      if (name === 'NotAllowedError' || msg.includes('denied') || msg.includes('permission') || msg.includes('not allowed')) {
+      if (name === 'NotAllowedError' || msg.includes('denied') || msg.includes('permission')) {
         setStatus('denied');
-      } else {
-        setStatus('error');
-      }
+      } else { setStatus('error'); }
     }
   }, [stopScanner, startWithConstraint]);
 
-  // ── Switch camera ──────────────────────────────────────────────────────────
   const switchCamera = useCallback(async () => {
     if (cameras.length <= 1) return;
     const next = (activeCamIndex + 1) % cameras.length;
     setActiveCamIndex(next);
     setStatus('requesting');
-    try {
-      await startWithConstraint(cameras[next].id);
-      setStatus('active');
-    } catch {
-      setStatus('error');
-    }
+    try { await startWithConstraint(cameras[next].id); setStatus('active'); }
+    catch { setStatus('error'); }
   }, [cameras, activeCamIndex, startWithConstraint]);
 
-  // ── Upload a QR image and decode it ───────────────────────────────────────
   const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -496,186 +158,377 @@ function QrScannerView({ onScan }: { onScan: (token: string) => void }) {
     try {
       const { Html5Qrcode } = await import('html5-qrcode');
       const tempEl = fileTempRef.current;
-      if (!tempEl) { alert('Scanner not ready, please try again.'); return; }
+      if (!tempEl) { alert('Scanner not ready.'); return; }
       tempEl.innerHTML = '';
       const decoder = new Html5Qrcode(tempEl.id);
       const text = await decoder.scanFile(file, true);
-      try { decoder.clear(); } catch { /* ok */ }
+      try { decoder.clear(); } catch {}
       setLastScanned(text);
       onScanRef.current(text);
-    } catch {
-      alert('No QR code detected in the selected image. Please try a clearer photo of the QR code.');
-    } finally {
-      setFileScanning(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
+    } catch { alert('No QR code detected. Please try a clearer photo.'); }
+    finally { setFileScanning(false); if (fileInputRef.current) fileInputRef.current.value = ''; }
   }, []);
 
-  // ── Mount: 50ms delay so React paints the DOM first ───────────────────────
   useEffect(() => {
     const t = setTimeout(() => { startScanner(); }, 50);
     return () => { clearTimeout(t); stopScanner(); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const isHTTPS = typeof window !== 'undefined' &&
-    (window.location.protocol === 'https:' || window.location.hostname === 'localhost');
-
+  const isHTTPS = typeof window !== 'undefined' && (window.location.protocol === 'https:' || window.location.hostname === 'localhost');
   const showVideoPanel = status === 'active' || status === 'requesting';
 
   return (
-    <div className="flex flex-col items-center py-2 w-full gap-4">
-      {/* Always-present inputs — NEVER conditionally rendered */}
-      <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
-      <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileUpload} className="hidden" />
-      <div id="mc-qr-temp-decoder" ref={fileTempRef} className="hidden" />
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', padding: '8px 0', width: '100%' }}>
+      <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
+      <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileUpload} style={{ display: 'none' }} />
+      <div id="mc-qr-temp-decoder" ref={fileTempRef} style={{ display: 'none' }} />
 
-      {/* ── Non-HTTPS warning ─── */}
       {!isHTTPS && (
-        <div className="w-full px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2 text-amber-800 text-label-sm">
-          <span className="material-symbols-outlined text-[16px] shrink-0 mt-0.5">warning</span>
+        <div style={{ width: '100%', padding: '10px 14px', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: '10px', fontSize: '12px', color: '#92400E', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+          <span className="material-symbols-outlined" style={{ fontSize: '16px', flexShrink: 0, marginTop: '1px' }}>warning</span>
           Camera scanning requires HTTPS. This page is on HTTP — live scanning may not work.
         </div>
       )}
 
-      {/* ─────────────────────────────────────────────────────────────────────
-          VIDEO PANEL — ALWAYS in DOM so html5-qrcode can always find the div.
-          Hidden via CSS (not conditional JSX) when not in requesting/active.
-      ──────────────────────────────────────────────────────────────────────── */}
-      <div className={`w-full flex flex-col items-center gap-3 ${!showVideoPanel ? 'hidden' : ''}`}>
+      {/* Video panel — ALWAYS in DOM */}
+      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', visibility: showVideoPanel ? 'visible' : 'hidden', height: showVideoPanel ? 'auto' : 0, overflow: showVideoPanel ? 'visible' : 'hidden' }}>
         {status === 'requesting' && (
-          <div className="flex flex-col items-center gap-3 py-4 animate-fade-in">
-            <div className="w-14 h-14 rounded-full bg-primary-container/30 flex items-center justify-center relative">
-              <span className="material-symbols-outlined text-primary text-[28px]">camera_alt</span>
-              <span className="absolute inset-0 rounded-full border-2 border-primary/30 animate-ping" />
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', padding: '24px 0' }}>
+            <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: T.orangeLight, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '28px', color: T.orange }}>camera_alt</span>
             </div>
-            <p className="text-sm text-on-surface-variant text-center max-w-xs">
-              Starting camera… allow access when prompted.
-            </p>
+            <p style={{ fontSize: '13px', color: T.textMuted, textAlign: 'center', margin: 0 }}>Starting camera… allow access when prompted.</p>
           </div>
         )}
-
-        {/* The scanner div — always rendered, invisible during 'requesting' */}
-        <div className={`relative w-full max-w-[320px] ${status === 'requesting' ? 'invisible h-0 overflow-hidden' : ''}`}>
-          <div
-            id="mc-qr-scanner-region"
-            className="w-full rounded-2xl overflow-hidden shadow-2xl bg-black min-h-[260px]"
-          />
+        <div style={{ position: 'relative', width: '100%', maxWidth: '320px', visibility: status === 'requesting' ? 'hidden' : 'visible', height: status === 'requesting' ? 0 : 'auto', overflow: 'hidden' }}>
+          <div id="mc-qr-scanner-region" style={{ width: '100%', borderRadius: '16px', overflow: 'hidden', background: '#000', minHeight: '260px' }} />
           {status === 'active' && (
-            <div className="absolute inset-0 pointer-events-none rounded-2xl">
-              <div className="absolute top-3 left-3 w-7 h-7 border-t-2 border-l-2 border-primary rounded-tl-lg" />
-              <div className="absolute top-3 right-3 w-7 h-7 border-t-2 border-r-2 border-primary rounded-tr-lg" />
-              <div className="absolute bottom-3 left-3 w-7 h-7 border-b-2 border-l-2 border-primary rounded-bl-lg" />
-              <div className="absolute bottom-3 right-3 w-7 h-7 border-b-2 border-r-2 border-primary rounded-br-lg" />
+            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', borderRadius: '16px' }}>
+              <div style={{ position: 'absolute', top: '12px', left: '12px', width: '28px', height: '28px', borderTop: `2px solid ${T.orange}`, borderLeft: `2px solid ${T.orange}`, borderRadius: '4px 0 0 0' }} />
+              <div style={{ position: 'absolute', top: '12px', right: '12px', width: '28px', height: '28px', borderTop: `2px solid ${T.orange}`, borderRight: `2px solid ${T.orange}`, borderRadius: '0 4px 0 0' }} />
+              <div style={{ position: 'absolute', bottom: '12px', left: '12px', width: '28px', height: '28px', borderBottom: `2px solid ${T.orange}`, borderLeft: `2px solid ${T.orange}`, borderRadius: '0 0 0 4px' }} />
+              <div style={{ position: 'absolute', bottom: '12px', right: '12px', width: '28px', height: '28px', borderBottom: `2px solid ${T.orange}`, borderRight: `2px solid ${T.orange}`, borderRadius: '0 0 4px 0' }} />
               <div className="scanner-line" />
             </div>
           )}
         </div>
-
-        {/* Camera controls (active only) */}
         {status === 'active' && (
-          <div className="flex items-center gap-2 flex-wrap justify-center animate-fade-in">
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
             {cameras.length > 1 && (
-              <button onClick={switchCamera} className="btn-secondary text-label-sm py-1.5 px-3 flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[18px]">cameraswitch</span>
+              <button onClick={switchCamera} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 14px', border: `1px solid ${T.border}`, borderRadius: '8px', background: T.white, fontSize: '12px', fontWeight: 700, cursor: 'pointer', color: T.textMuted }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>cameraswitch</span>
                 Switch Camera
               </button>
             )}
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={fileScanning}
-              className="btn-outline text-label-sm py-1.5 px-3 flex items-center gap-1.5"
-            >
-              <span className="material-symbols-outlined text-[18px]">image</span>
+            <button onClick={() => fileInputRef.current?.click()} disabled={fileScanning} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 14px', border: `1px solid ${T.border}`, borderRadius: '8px', background: T.white, fontSize: '12px', fontWeight: 700, cursor: 'pointer', color: T.textMuted }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>image</span>
               {fileScanning ? 'Reading…' : 'Upload QR Image'}
             </button>
           </div>
         )}
-
         {status === 'active' && (
           lastScanned ? (
-            <div className="flex items-center gap-2 text-label-sm text-secondary bg-secondary/10 px-3 py-1.5 rounded-full animate-fade-in">
-              <span className="material-symbols-outlined text-[14px]">qr_code</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#E0FFF6', color: '#006B55', padding: '8px 14px', borderRadius: '9999px', fontSize: '12px', fontWeight: 700 }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>qr_code</span>
               QR detected — looking up member…
             </div>
           ) : (
-            <p className="text-sm text-on-surface-variant text-center max-w-xs">
-              Point camera at the QR code on the member's card.
-            </p>
+            <p style={{ fontSize: '13px', color: T.textMuted, textAlign: 'center', margin: 0 }}>Point camera at the QR code on the member's card.</p>
           )
         )}
       </div>
 
-      {/* ── Permission denied ─── */}
+      {/* Permission denied */}
       {status === 'denied' && (
-        <div className="flex flex-col items-center gap-4 py-4 animate-fade-in w-full">
-          <div className="w-14 h-14 rounded-full bg-error-container flex items-center justify-center">
-            <span className="material-symbols-outlined text-on-error-container text-[28px]">no_photography</span>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', padding: '16px 0', width: '100%' }}>
+          <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: '#FEF2F2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: '28px', color: '#EF4444' }}>no_photography</span>
           </div>
-          <div className="text-center">
-            <p className="font-bold text-on-surface mb-1">Camera Access Denied</p>
-            <p className="text-sm text-on-surface-variant max-w-xs">
-              Your browser blocked the camera. Upload a QR photo, or allow camera access.
-            </p>
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ fontWeight: 700, color: T.text, margin: '0 0 6px' }}>Camera Access Denied</p>
+            <p style={{ fontSize: '13px', color: T.textMuted, margin: 0, maxWidth: '280px' }}>Your browser blocked the camera. Upload a QR photo, or allow camera access.</p>
           </div>
-          <div className="flex gap-2 flex-wrap justify-center">
-            <button onClick={() => fileInputRef.current?.click()} disabled={fileScanning} className="btn-primary flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px]">upload_file</span>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
+            <button onClick={() => fileInputRef.current?.click()} disabled={fileScanning} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 18px', background: `linear-gradient(135deg, ${T.orange}, ${T.orangeDark})`, color: '#fff', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>upload_file</span>
               {fileScanning ? 'Reading…' : 'Upload QR Photo'}
             </button>
-            <button onClick={startScanner} className="btn-outline flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px]">refresh</span>
+            <button onClick={startScanner} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 18px', border: `1px solid ${T.border}`, background: T.white, borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', color: T.textMuted }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>refresh</span>
               Try Camera
             </button>
           </div>
-          <div className="w-full max-w-sm bg-surface-container-low rounded-xl p-3 text-xs text-on-surface-variant text-left space-y-1">
-            <p className="font-bold text-on-surface flex items-center gap-1 mb-1">
-              <span className="material-symbols-outlined text-[14px] text-primary">help_outline</span>
+          <div style={{ background: '#F8FAFC', borderRadius: '10px', padding: '12px 14px', fontSize: '12px', color: T.textMuted, maxWidth: '280px', width: '100%' }}>
+            <p style={{ fontWeight: 700, color: T.text, margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '14px', color: T.orange }}>help_outline</span>
               Allow camera in Chrome:
             </p>
-            <p>① Click the 🔒 icon in the address bar</p>
-            <p>② Site settings → Camera → Allow</p>
-            <p>③ Refresh and try again</p>
+            <p style={{ margin: '2px 0' }}>① Click the 🔒 in the address bar</p>
+            <p style={{ margin: '2px 0' }}>② Site settings → Camera → Allow</p>
+            <p style={{ margin: '2px 0' }}>③ Refresh and try again</p>
           </div>
         </div>
       )}
 
-      {/* ── Camera error — offer image upload ─── */}
+      {/* Camera error */}
       {status === 'error' && (
-        <div className="flex flex-col items-center gap-4 py-4 animate-fade-in w-full">
-          <div className="w-14 h-14 rounded-full bg-surface-container flex items-center justify-center">
-            <span className="material-symbols-outlined text-on-surface-variant text-[28px]">videocam_off</span>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', padding: '16px 0', width: '100%' }}>
+          <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: '28px', color: T.textLight }}>videocam_off</span>
           </div>
-          <div className="text-center">
-            <p className="font-bold text-on-surface mb-1">Live Camera Unavailable</p>
-            <p className="text-sm text-on-surface-variant max-w-xs">
-              Could not start the camera stream. Take a photo of the QR code and upload it below — it works the same way!
-            </p>
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ fontWeight: 700, color: T.text, margin: '0 0 6px' }}>Live Camera Unavailable</p>
+            <p style={{ fontSize: '13px', color: T.textMuted, margin: 0, maxWidth: '280px' }}>Take a photo of the QR code and upload it — it works the same way!</p>
           </div>
-          <div className="flex flex-col gap-2 w-full max-w-xs">
-            <button
-              onClick={() => cameraInputRef.current?.click()}
-              disabled={fileScanning}
-              className="btn-primary w-full py-3 flex items-center justify-center gap-2"
-            >
-              <span className="material-symbols-outlined text-[20px]">photo_camera</span>
-              {fileScanning ? 'Scanning Photo…' : '📷 Take Photo of QR Code'}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', maxWidth: '280px' }}>
+            <button onClick={() => cameraInputRef.current?.click()} disabled={fileScanning} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px', background: `linear-gradient(135deg, ${T.orange}, ${T.orangeDark})`, color: '#fff', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>photo_camera</span>
+              {fileScanning ? 'Scanning…' : '📷 Take Photo of QR Code'}
             </button>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={fileScanning}
-              className="btn-outline w-full py-2 flex items-center justify-center gap-2 text-sm"
-            >
-              <span className="material-symbols-outlined text-[18px]">image</span>
-              Upload QR Image from Gallery
+            <button onClick={() => fileInputRef.current?.click()} disabled={fileScanning} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px', border: `1px solid ${T.border}`, background: T.white, borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', color: T.textMuted }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>image</span>
+              Upload from Gallery
             </button>
-            <button onClick={startScanner} className="btn-outline w-full py-2 flex items-center justify-center gap-2 text-sm">
-              <span className="material-symbols-outlined text-[18px]">refresh</span>
+            <button onClick={startScanner} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px', border: `1px solid ${T.border}`, background: T.white, borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', color: T.textMuted }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>refresh</span>
               Retry Live Stream
             </button>
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
+export default function SearchMemberPage() {
+  const { user } = useAuthStore();
+  const { addToast } = useToastStore();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const urlTab = searchParams.get('tab') as TabKey | null;
+  const [tab, setTab] = useState<TabKey>(urlTab && ['mobile', 'membership', 'qr', 'card'].includes(urlTab) ? urlTab : 'qr');
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<Member[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [notFound, setNotFound] = useState(false);
+  const [searchError, setSearchError] = useState(false);
+  const [recent, setRecent] = useState<Member[]>(getRecentSearches);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (urlTab && ['mobile', 'membership', 'qr', 'card'].includes(urlTab)) setTab(urlTab);
+  }, [urlTab]);
+  useEffect(() => { inputRef.current?.focus(); }, [tab]);
+
+  const performSearch = async () => {
+    if (!query.trim()) return;
+    setSearching(true); setNotFound(false); setSearchError(false); setResults([]);
+    try {
+      let found: Member[];
+      if (tab === 'card') {
+        const m = await api.searchMemberByCard(user?.merchant_id || '', query);
+        found = m ? [m] : [];
+      } else {
+        found = await api.searchMembers(user?.merchant_id || '', query);
+      }
+      if (found.length === 0) { setNotFound(true); }
+      else if (found.length === 1) { addRecentSearch(found[0]); navigate(`/portal/members/${found[0].id}`); }
+      else { setResults(found); }
+    } catch { setSearchError(true); }
+    finally { setSearching(false); }
+  };
+
+  const goToMember = (member: Member) => {
+    addRecentSearch(member);
+    navigate(`/portal/members/${member.id}`);
+  };
+
+  return (
+    <div style={{ background: T.bg, minHeight: '100dvh', fontFamily: '"Inter", system-ui, sans-serif' }}>
+      <div style={{ maxWidth: '960px', margin: '0 auto', padding: '24px 20px 40px' }}>
+
+        {/* Header */}
+        <div style={{ marginBottom: '24px' }}>
+          <h1 style={{ fontSize: '22px', fontWeight: 800, color: T.text, margin: '0 0 4px', fontFamily: '"Plus Jakarta Sans", Inter, sans-serif' }}>Customer Lookup</h1>
+          <p style={{ fontSize: '13px', color: T.textMuted, margin: 0 }}>Find a member to manage benefits or process a redemption.</p>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '20px', alignItems: 'start' }} className="search-grid">
+
+          {/* Search Card */}
+          <div style={{ background: T.white, borderRadius: '16px', border: `1px solid ${T.border}`, boxShadow: T.shadow, overflow: 'hidden' }}>
+            {/* Tabs */}
+            <div style={{ display: 'flex', borderBottom: `1px solid ${T.border}` }}>
+              {TABS.map(t => (
+                <button key={t.key} onClick={() => { setTab(t.key); setQuery(''); setResults([]); setNotFound(false); }} style={{
+                  flex: 1, padding: '14px 8px', fontSize: '12px', fontWeight: 700,
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
+                  border: 'none', cursor: 'pointer', transition: 'all 0.15s',
+                  borderBottom: tab === t.key ? `2px solid ${T.orange}` : '2px solid transparent',
+                  background: tab === t.key ? T.orangeLight : 'transparent',
+                  color: tab === t.key ? T.orangeDark : T.textMuted,
+                  marginBottom: '-1px',
+                }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '20px', fontVariationSettings: tab === t.key ? "'FILL' 1" : "'FILL' 0" }}>{t.icon}</span>
+                  <span className="tab-label">{t.label}</span>
+                </button>
+              ))}
+            </div>
+
+            <div style={{ padding: '20px' }}>
+              {tab !== 'qr' ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: T.text, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      {tab === 'mobile' ? 'Mobile Number' : tab === 'card' ? '16-Digit Card Number' : 'Membership Number'}
+                    </label>
+                    {tab === 'card' && <p style={{ fontSize: '12px', color: T.textMuted, marginBottom: '8px', marginTop: 0 }}>Enter or scan the number printed on the physical membership card.</p>}
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      <input
+                        ref={inputRef}
+                        type={tab === 'mobile' ? 'tel' : 'text'}
+                        value={query}
+                        onChange={e => { setQuery(e.target.value); setNotFound(false); setResults([]); }}
+                        onKeyDown={e => e.key === 'Enter' && performSearch()}
+                        placeholder={PLACEHOLDERS[tab]}
+                        autoFocus
+                        style={{ flex: 1, height: '50px', padding: '0 14px', border: `1.5px solid ${T.border}`, borderRadius: '12px', fontSize: '15px', color: T.text, background: '#F8FAFC', outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.15s' }}
+                        onFocus={e => (e.target as HTMLInputElement).style.borderColor = T.orange}
+                        onBlur={e => (e.target as HTMLInputElement).style.borderColor = T.border}
+                      />
+                      <button onClick={performSearch} disabled={searching || !query.trim()} style={{
+                        height: '50px', padding: '0 20px',
+                        background: `linear-gradient(135deg, ${T.orange}, ${T.orangeDark})`,
+                        color: '#fff', border: 'none', borderRadius: '12px', fontWeight: 700, fontSize: '14px',
+                        cursor: searching || !query.trim() ? 'not-allowed' : 'pointer',
+                        opacity: searching || !query.trim() ? 0.6 : 1,
+                        display: 'flex', alignItems: 'center', gap: '8px',
+                        boxShadow: '0 3px 12px rgba(255,107,53,0.3)',
+                      }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: '18px', animation: searching ? 'spin 1s linear infinite' : 'none' }}>{searching ? 'progress_activity' : 'search'}</span>
+                        Search
+                      </button>
+                    </div>
+                  </div>
+
+                  {searchError && (
+                    <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: '32px', color: '#EF4444', display: 'block', marginBottom: '8px' }}>wifi_off</span>
+                      <p style={{ fontWeight: 700, color: T.text, margin: '0 0 4px', fontSize: '14px' }}>Search Failed</p>
+                      <p style={{ fontSize: '12px', color: T.textMuted, margin: '0 0 12px' }}>Could not connect to server.</p>
+                      <button onClick={performSearch} style={{ padding: '8px 16px', border: `1px solid ${T.border}`, borderRadius: '8px', background: T.white, fontSize: '12px', fontWeight: 700, cursor: 'pointer', color: T.textMuted }}>Try Again</button>
+                    </div>
+                  )}
+
+                  {notFound && (
+                    <div style={{ background: T.orangeLight, border: `1px dashed ${T.orange}40`, borderRadius: '12px', padding: '24px', textAlign: 'center' }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: '36px', color: T.textLight, display: 'block', marginBottom: '10px' }}>person_off</span>
+                      <p style={{ fontWeight: 700, color: T.text, margin: '0 0 4px', fontSize: '14px' }}>Member Not Found</p>
+                      <p style={{ fontSize: '12px', color: T.textMuted, margin: '0 0 14px' }}>No member found for "{query}"</p>
+                      <button onClick={() => navigate('/portal/members/new')} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '9px 18px', background: `linear-gradient(135deg, ${T.orange}, ${T.orangeDark})`, color: '#fff', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>person_add</span>
+                        Add as New Member
+                      </button>
+                    </div>
+                  )}
+
+                  {results.length > 1 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <p style={{ fontSize: '12px', fontWeight: 700, color: T.textMuted, margin: '0 0 4px' }}>{results.length} members found</p>
+                      {results.map(m => <MemberResultRow key={m.id} member={m} onClick={() => goToMember(m)} />)}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <QrScannerView onScan={async (scannedValue) => {
+                  try {
+                    const urlMatch = scannedValue.match(/\/m\/([^/?#]+)/);
+                    const publicToken = urlMatch ? urlMatch[1] : null;
+                    if (publicToken) {
+                      const byToken = await api.getMemberByToken(publicToken);
+                      if (byToken) { navigate(`/portal/members/${byToken.member_id}`); return; }
+                      addToast('error', 'QR token not found — member may have been removed');
+                      return;
+                    }
+                    const cardNumber = scannedValue.replace(/^METROCARDZ:/i, '').trim();
+                    const byCard = await api.searchMemberByCard(user?.merchant_id || '', cardNumber);
+                    if (byCard) { addRecentSearch(byCard); navigate(`/portal/members/${byCard.id}`); return; }
+                    try {
+                      const resolved = await api.resolveCardNumber(cardNumber);
+                      if (!resolved) addToast('error', `Card ${cardNumber} is not registered in the system.`);
+                      else if (!resolved.merchant_id) addToast('error', `Card ${cardNumber} exists but not allocated to any merchant.`);
+                      else if (resolved.merchant_id !== user?.merchant_id) addToast('error', `Card ${cardNumber} belongs to a different merchant.`);
+                      else if (!resolved.member_id) addToast('error', `Card ${cardNumber} is in your inventory but not yet assigned.`);
+                      else addToast('error', 'No member found for this QR code');
+                    } catch { addToast('error', `Card ${cardNumber} not found in system.`); }
+                  } catch { addToast('error', 'QR scan failed — please try manual search'); }
+                }} />
+              )}
+            </div>
+          </div>
+
+          {/* Sidebar */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {/* Recent Searches */}
+            <div style={{ background: T.white, borderRadius: '16px', border: `1px solid ${T.border}`, boxShadow: T.shadow, overflow: 'hidden' }}>
+              <div style={{ padding: '14px 16px 10px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <p style={{ fontSize: '11px', fontWeight: 700, color: T.textLight, textTransform: 'uppercase', letterSpacing: '0.08em', margin: 0 }}>Recent Searches</p>
+                {recent.length > 0 && <button onClick={() => { localStorage.removeItem(RECENT_KEY); setRecent([]); }} style={{ fontSize: '11px', color: T.orange, fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer' }}>Clear</button>}
+              </div>
+              {recent.length === 0 ? (
+                <p style={{ padding: '20px 16px', fontSize: '13px', color: T.textLight, textAlign: 'center', margin: 0 }}>No recent searches</p>
+              ) : (
+                recent.map((m, i) => (
+                  <button key={m.id} onClick={() => goToMember(m)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '11px 16px', border: 'none', borderBottom: i < recent.length - 1 ? `1px solid ${T.border}` : 'none', background: 'none', cursor: 'pointer', transition: 'background 0.1s', textAlign: 'left' }}
+                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#FAFBFC'}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'none'}>
+                    <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: T.orangeLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 800, color: T.orange, flexShrink: 0 }}>{m.name.charAt(0)}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: '13px', fontWeight: 700, color: T.text, margin: '0 0 1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.name}</p>
+                      <p style={{ fontSize: '11px', color: T.textLight, margin: 0 }}>{m.phone}</p>
+                    </div>
+                    <span className="material-symbols-outlined" style={{ fontSize: '16px', color: T.textLight }}>chevron_right</span>
+                  </button>
+                ))
+              )}
+            </div>
+
+            {/* Quick Add */}
+            <div style={{ background: T.text, borderRadius: '16px', padding: '20px', position: 'relative', overflow: 'hidden' }}>
+              <span className="material-symbols-outlined" style={{ position: 'absolute', right: '-8px', bottom: '-8px', fontSize: '80px', color: 'rgba(255,255,255,0.06)', fontVariationSettings: "'FILL' 1" }}>person_add</span>
+              <h4 style={{ fontSize: '15px', fontWeight: 800, color: '#fff', margin: '0 0 6px', position: 'relative', fontFamily: '"Plus Jakarta Sans", Inter, sans-serif' }}>New Member?</h4>
+              <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', margin: '0 0 14px', position: 'relative', lineHeight: 1.5 }}>Enroll a customer and generate their membership card instantly.</p>
+              <button onClick={() => navigate('/portal/members/new')} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '9px 16px', background: T.orange, color: '#fff', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', position: 'relative', boxShadow: '0 3px 12px rgba(255,107,53,0.4)' }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>person_add</span>
+                Add Member
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* FAB */}
+      <button onClick={() => navigate('/portal/members/new')} style={{
+        position: 'fixed', right: '20px', bottom: '88px', width: '52px', height: '52px',
+        background: `linear-gradient(135deg, ${T.orange}, ${T.orangeDark})`,
+        color: '#fff', border: 'none', borderRadius: '14px', cursor: 'pointer',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        boxShadow: '0 4px 20px rgba(255,107,53,0.4)', zIndex: 40,
+      }} className="search-fab">
+        <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>person_add</span>
+      </button>
+
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .tab-label { display: none; }
+        @media (min-width: 480px) { .tab-label { display: block; } }
+        @media (max-width: 767px) {
+          .search-grid { grid-template-columns: 1fr !important; }
+          .search-fab { bottom: 80px !important; }
+        }
+      `}</style>
     </div>
   );
 }

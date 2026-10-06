@@ -1,22 +1,31 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useToastStore } from '../../store/toastStore';
 import type { MembershipType, OfferTemplate } from '../../types';
 import * as api from '../../api';
 import { invalidateContaining } from '../../api/cache';
-import { Modal, ConfirmModal } from '../../components/ui/Modal';
 
-const TIER_COLORS = [
-  { bg: 'from-accent to-accent-hover', text: 'text-white', badge: 'bg-white/20 text-white' },
-  { bg: 'from-secondary to-emerald-600', text: 'text-white', badge: 'bg-white/20 text-white' },
-  { bg: 'from-tertiary to-amber-600', text: 'text-white', badge: 'bg-white/20 text-white' },
-  { bg: 'from-purple-500 to-purple-700', text: 'text-white', badge: 'bg-white/20 text-white' },
+const T = {
+  bg: '#F8FAFC',
+  white: '#FFFFFF',
+  border: '#E2E8F0',
+  text: '#0F172A',
+  textMuted: '#64748B',
+  textLight: '#94A3B8',
+  orange: '#FF6B35',
+  orangeLight: '#FFF4EF',
+  orangeDark: '#E85A28',
+  shadow: '0 1px 3px rgba(15,23,42,0.04), 0 4px 12px rgba(15,23,42,0.03)',
+  shadowMd: '0 4px 16px rgba(15,23,42,0.08)',
+};
+
+const TIER_PALETTES = [
+  { color: '#FF6B35', bg: '#FFF4EF', gradient: 'linear-gradient(135deg, #FF6B35 0%, #E85A28 100%)' },
+  { color: '#00D4AA', bg: '#E0FFF6', gradient: 'linear-gradient(135deg, #00D4AA 0%, #00B894 100%)' },
+  { color: '#2563EB', bg: '#EFF6FF', gradient: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)' },
+  { color: '#7C3AED', bg: '#F5F3FF', gradient: 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)' },
+  { color: '#F59E0B', bg: '#FEF3C7', gradient: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)' },
 ];
-
-interface BundledOfferFormItem {
-  offer_template_id: string;
-  default_qty: number;
-}
 
 export default function MembershipTypesPage() {
   const { user } = useAuthStore();
@@ -24,32 +33,22 @@ export default function MembershipTypesPage() {
   const [types, setTypes] = useState<MembershipType[]>([]);
   const [availableOffers, setAvailableOffers] = useState<OfferTemplate[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // Create / Edit modal state
-  const [showModal, setShowModal] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [editTarget, setEditTarget] = useState<MembershipType | null>(null);
-  const [form, setForm] = useState({
-    name: '',
-    description: '',
-    bundled_offers: [] as BundledOfferFormItem[],
-  });
+  const [draftName, setDraftName] = useState('');
+  const [draftDescription, setDraftDescription] = useState('');
   const [saving, setSaving] = useState(false);
-
-  // Delete modal state
-  const [deleteTarget, setDeleteTarget] = useState<MembershipType | null>(null);
-  const [deleting, setDeleting] = useState(false);
-
   const isOwner = user?.role === 'owner' || user?.role === 'super_admin';
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [t, o] = await Promise.all([
+      const [memberTypes, offers] = await Promise.all([
         api.getMembershipTypes(user?.merchant_id || ''),
         api.getOfferTemplates(user?.merchant_id || ''),
       ]);
-      setTypes(t);
-      setAvailableOffers(o.filter(item => item.active));
+      setTypes(memberTypes);
+      setAvailableOffers(offers.filter((item: OfferTemplate) => item.active));
     } catch {
       addToast('error', 'Failed to load membership types');
     } finally {
@@ -57,330 +56,214 @@ export default function MembershipTypesPage() {
     }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    fetchData();
+  }, [user?.merchant_id]);
 
   const openCreate = () => {
     setEditTarget(null);
-    setForm({ name: '', description: '', bundled_offers: [] });
-    setShowModal(true);
+    setDraftName('');
+    setDraftDescription('');
+    setShowForm(true);
   };
 
   const openEdit = (type: MembershipType) => {
     setEditTarget(type);
-    const bundled = (type.bundled_offers || type.offers || []).map((o: any) => ({
-      offer_template_id: o.offer_template_id || o.id,
-      default_qty: o.default_qty || 1,
-    }));
-    setForm({
-      name: type.name,
-      description: type.description || '',
-      bundled_offers: bundled,
-    });
-    setShowModal(true);
-  };
-
-  const toggleOfferBundle = (offerId: string) => {
-    setForm(prev => {
-      const exists = prev.bundled_offers.find(b => b.offer_template_id === offerId);
-      if (exists) {
-        return {
-          ...prev,
-          bundled_offers: prev.bundled_offers.filter(b => b.offer_template_id !== offerId),
-        };
-      } else {
-        return {
-          ...prev,
-          bundled_offers: [...prev.bundled_offers, { offer_template_id: offerId, default_qty: 1 }],
-        };
-      }
-    });
-  };
-
-  const updateOfferQty = (offerId: string, qty: number) => {
-    setForm(prev => ({
-      ...prev,
-      bundled_offers: prev.bundled_offers.map(b =>
-        b.offer_template_id === offerId ? { ...b, default_qty: Math.max(1, qty) } : b
-      ),
-    }));
+    setDraftName(type.name);
+    setDraftDescription(type.description || '');
+    setShowForm(true);
   };
 
   const save = async () => {
-    if (!form.name.trim()) { addToast('error', 'Type Name is required'); return; }
+    if (!draftName.trim()) {
+      addToast('error', 'Type name is required');
+      return;
+    }
+
     setSaving(true);
     try {
       const payload = {
-        name: form.name.trim(),
-        description: form.description.trim(),
-        bundled_offers: form.bundled_offers,
+        name: draftName.trim(),
+        description: draftDescription.trim(),
       };
+
       if (editTarget) {
         await api.updateMembershipType(user?.merchant_id || '', editTarget.id, payload as any);
-        addToast('success', `Membership type "${form.name}" updated`);
+        addToast('success', 'Membership type updated');
       } else {
         await api.createMembershipType(user?.merchant_id || '', payload as any);
-        addToast('success', `Membership type "${form.name}" created`);
+        addToast('success', 'Membership type created');
       }
-      // Bust all related caches so member profiles and offer pages see the new tier
+
       invalidateContaining('membership-types');
       invalidateContaining('member');
       invalidateContaining('offers');
-      setShowModal(false);
+      setShowForm(false);
       setEditTarget(null);
       fetchData();
-    } catch (err: any) {
-      addToast('error', err.message || 'Failed to save membership type');
+    } catch (error: any) {
+      addToast('error', error?.message || 'Failed to save membership type');
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDelete = async () => {
-    if (!deleteTarget) return;
-    setDeleting(true);
+  const deleteType = async (id: string) => {
     try {
-      await api.deleteMembershipType(user?.merchant_id || '', deleteTarget.id);
-      addToast('success', `Membership type "${deleteTarget.name}" deleted`);
+      await api.deleteMembershipType(user?.merchant_id || '', id);
+      addToast('success', 'Membership type deleted');
       invalidateContaining('membership-types');
-      invalidateContaining('member');
-      invalidateContaining('offers');
-      setDeleteTarget(null);
       fetchData();
-    } catch (err: any) {
-      addToast('error', err.message || 'Failed to delete membership type (check active members)');
-    } finally {
-      setDeleting(false);
+    } catch (error: any) {
+      addToast('error', error?.message || 'Failed to delete membership type');
     }
   };
 
   return (
-    <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-4xl mx-auto space-y-6 animate-fade-in">
-      <div className="flex items-start justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="page-title">Membership Types</h1>
-          <p className="page-subtitle">Create tiers like "Prime" or "Standard" and bundle exclusive offer packages into each tier.</p>
-        </div>
-        {isOwner && (
-          <button onClick={openCreate} className="btn-primary flex items-center gap-2">
-            <span className="material-symbols-outlined text-[18px]">add</span>
-            Add Type
-          </button>
-        )}
-      </div>
-
-      {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="card p-md h-52 animate-pulse bg-surface-container rounded-2xl" />
-          ))}
-        </div>
-      ) : types.length === 0 ? (
-        <div className="card p-lg flex flex-col items-center text-center py-16">
-          <div className="w-20 h-20 bg-primary-container/20 rounded-2xl flex items-center justify-center mb-4">
-            <span className="material-symbols-outlined text-primary text-[40px]">card_membership</span>
+    <div style={{ background: T.bg, minHeight: '100vh', fontFamily: 'Inter, system-ui, sans-serif' }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 20px 40px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
+          <div>
+            <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800, letterSpacing: '-0.05em', color: T.text }}>Membership Types</h1>
+            <p style={{ margin: '8px 0 0', color: T.textMuted, fontSize: 14 }}>Create member tiers and group offers into each level.</p>
           </div>
-          <h3 className="text-headline-md font-bold mb-2">No membership types yet</h3>
-          <p className="text-body-md text-on-surface-variant max-w-sm mb-6">
-            Create tiers like "Prime" or "Standard" to categorise your members and bundle exclusive offers.
-          </p>
-          {isOwner && (
-            <button onClick={openCreate} className="btn-primary flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px]">add</span>
-              Create First Type
-            </button>
-          )}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
-          {types.map((type, idx) => {
-            const color = TIER_COLORS[idx % TIER_COLORS.length];
-            const bundledList = type.bundled_offers || type.offers || [];
-            return (
-              <div
-                key={type.id}
-                className="relative rounded-2xl overflow-hidden shadow-tonal flex flex-col hover:shadow-elevated transition-all duration-200 group"
-              >
-                {/* Gradient Header */}
-                <div className={`bg-gradient-to-br ${color.bg} p-5 flex items-start justify-between`}>
-                  <div>
-                    <p className={`text-label-sm font-bold uppercase tracking-widest opacity-70 ${color.text}`}>Membership Tier</p>
-                    <h3 className={`text-headline-lg font-bold mt-1 ${color.text}`}>{type.name}</h3>
-                  </div>
-                  <div className={`px-2.5 py-1 rounded-full text-label-sm font-bold ${color.badge}`}>
-                    {type.member_count ?? 0} members
-                  </div>
-                </div>
-
-                {/* Body */}
-                <div className="bg-surface p-5 flex-1 flex flex-col gap-4">
-                  <p className="text-body-md text-on-surface-variant leading-relaxed">{type.description || 'No description provided.'}</p>
-
-                  {/* Bundled Offers */}
-                  {bundledList.length > 0 ? (
-                    <div>
-                      <p className="text-label-sm font-bold text-on-surface-variant uppercase tracking-wider mb-2">
-                        Bundled Offers ({bundledList.length})
-                      </p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {bundledList.map((o: any) => {
-                          const offerId = o.offer_template_id || o.id;
-                          const offerObj = availableOffers.find(item => item.id === offerId);
-                          const title = o.title || offerObj?.title || 'Offer';
-                          const qty = o.default_qty || 1;
-                          return (
-                            <span key={offerId} className="text-[11px] px-2.5 py-1 bg-secondary-container/50 text-secondary rounded-full font-bold flex items-center gap-1">
-                              <span className="material-symbols-outlined text-[12px]">local_offer</span>
-                              {qty > 1 ? `${qty}x ` : ''}{title}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 text-on-surface-variant text-label-sm">
-                      <span className="material-symbols-outlined text-[16px]">info</span>
-                      No offers bundled into this tier yet.
-                    </div>
-                  )}
-
-                  {/* Actions */}
-                  {isOwner && (
-                    <div className="mt-auto pt-2 flex items-center gap-2 border-t border-outline-variant/30">
-                      <button
-                        onClick={() => openEdit(type)}
-                        className="flex-1 py-2 rounded-xl border border-outline-variant text-on-surface-variant text-label-md hover:bg-surface-container hover:border-primary hover:text-primary transition-all flex items-center justify-center gap-1.5"
-                      >
-                        <span className="material-symbols-outlined text-[16px]">edit</span>
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => setDeleteTarget(type)}
-                        className="p-2 rounded-xl border border-outline-variant text-on-surface-variant hover:bg-error-container/30 hover:border-error hover:text-error transition-all"
-                        title="Delete Tier"
-                      >
-                        <span className="material-symbols-outlined text-[18px]">delete</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-
-        {/* Add New card */}
           {isOwner && (
             <button
               onClick={openCreate}
-              className="card border-dashed border-2 border-outline-variant/40 flex flex-col items-center justify-center gap-3 text-on-surface-variant hover:bg-surface-container-low hover:border-accent hover:text-accent transition-all min-h-[240px] rounded-2xl group"
+              style={{
+                background: 'linear-gradient(135deg, #FF6B35 0%, #E85A28 100%)',
+                border: 'none',
+                borderRadius: 12,
+                color: '#fff',
+                padding: '10px 16px',
+                fontWeight: 800,
+                cursor: 'pointer',
+                boxShadow: '0 8px 16px rgba(249,115,22,0.18)',
+              }}
             >
-              <div className="w-14 h-14 rounded-2xl bg-accent/10 group-hover:bg-accent/15 flex items-center justify-center transition-all">
-                <span className="material-symbols-outlined text-[28px] text-accent">add_circle</span>
-              </div>
-              <span className="text-[13px] font-bold">Add Membership Type</span>
+              + Add Type
             </button>
           )}
         </div>
-      )}
 
-      {/* Create / Edit Modal */}
-      <Modal isOpen={showModal} onClose={() => { setShowModal(false); setEditTarget(null); }} title={editTarget ? 'Edit Membership Type' : 'Add Membership Type'} maxWidth="max-w-lg">
-        <div className="space-y-4">
-          <div>
-            <label className="form-label">Tier Name *</label>
-            <input
-              className="input-field"
-              placeholder="e.g. Prime, Standard, Gold"
-              value={form.name}
-              onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-              autoFocus
-            />
-          </div>
-          <div>
-            <label className="form-label">Description</label>
-            <textarea
-              rows={2}
-              className="input-field h-auto py-3 resize-none"
-              placeholder="Briefly describe the benefits of this tier"
-              value={form.description}
-              onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-            />
-          </div>
+        {showForm && (
+          <div style={{ background: '#fff', border: `1px solid ${T.border}`, borderRadius: 18, padding: 20, marginBottom: 24 }}>
+            <h2 style={{ margin: '0 0 16px', fontSize: 20, color: T.text }}>{editTarget ? 'Edit Membership Type' : 'Add Membership Type'}</h2>
 
-          {/* Bundled Offers Selector */}
-          <div>
-            <label className="form-label mb-1">Bundle Offers into this Tier</label>
-            <p className="text-label-sm text-on-surface-variant mb-3">
-              Select offer templates auto-assigned to members who join this tier:
-            </p>
-            {availableOffers.length === 0 ? (
-              <div className="p-3 bg-surface-container rounded-xl text-body-sm text-on-surface-variant">
-                No active offer templates available. Create offers on the <strong>Offers</strong> page first.
+            <div style={{ display: 'grid', gap: 14 }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: 8, fontSize: 12, color: T.textMuted, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                  Tier name
+                </label>
+                <input
+                  value={draftName}
+                  onChange={(e) => setDraftName(e.target.value)}
+                  placeholder="e.g. Gold / Prime / Standard"
+                  style={{ width: '100%', height: 46, border: `1px solid ${T.border}`, borderRadius: 12, background: '#F8FAFC', padding: '0 14px', fontSize: 14 }}
+                />
               </div>
-            ) : (
-              <div className="space-y-2 max-h-56 overflow-y-auto pr-1 custom-scrollbar">
-                {availableOffers.map(offer => {
-                  const bundled = form.bundled_offers.find(b => b.offer_template_id === offer.id);
-                  const isSelected = !!bundled;
-                  return (
-                    <div
-                      key={offer.id}
-                      className={`p-3 rounded-xl border flex items-center justify-between transition-all ${
-                        isSelected ? 'border-accent bg-accent/5' : 'border-outline-variant/50 hover:bg-surface-container'
-                      }`}
-                    >
-                      <label className="flex items-center gap-3 cursor-pointer flex-1 min-w-0">
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => toggleOfferBundle(offer.id)}
-                          className="w-4 h-4 rounded text-primary border-outline-variant focus:ring-primary"
-                        />
-                        <div className="truncate">
-                          <p className="text-body-sm font-bold text-on-surface truncate">{offer.title}</p>
-                          <p className="text-label-xs text-on-surface-variant capitalize">{offer.offer_type.replace('_', ' ')} · Value: {offer.value}</p>
-                        </div>
-                      </label>
-                      {isSelected && (
-                        <div className="flex items-center gap-1.5 ml-2">
-                          <span className="text-label-xs text-on-surface-variant font-semibold">Qty:</span>
-                          <input
-                            type="number"
-                            min={1}
-                            max={100}
-                            value={bundled.default_qty}
-                            onChange={e => updateOfferQty(offer.id, parseInt(e.target.value) || 1)}
-                            className="w-16 px-2 py-1 bg-surface border border-outline-variant rounded-lg text-center text-body-sm font-bold outline-none focus:border-primary"
-                          />
-                        </div>
-                      )}
+
+              <div>
+                <label style={{ display: 'block', marginBottom: 8, fontSize: 12, color: T.textMuted, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                  Description
+                </label>
+                <textarea
+                  value={draftDescription}
+                  onChange={(e) => setDraftDescription(e.target.value)}
+                  rows={3}
+                  placeholder="Describe benefits and privileges for this member tier"
+                  style={{ width: '100%', border: `1px solid ${T.border}`, borderRadius: 12, background: '#F8FAFC', padding: '12px 14px', fontSize: 14, resize: 'vertical' }}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 18 }}>
+              <button
+                onClick={() => setShowForm(false)}
+                style={{ border: `1px solid ${T.border}`, background: '#fff', color: T.text, borderRadius: 10, padding: '10px 14px', cursor: 'pointer' }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={save}
+                disabled={saving || !draftName.trim()}
+                style={{
+                  background: 'linear-gradient(135deg, #FF6B35 0%, #E85A28 100%)',
+                  border: 'none',
+                  borderRadius: 10,
+                  color: '#fff',
+                  padding: '10px 16px',
+                  fontWeight: 800,
+                  cursor: saving || !draftName.trim() ? 'not-allowed' : 'pointer',
+                  opacity: saving || !draftName.trim() ? 0.6 : 1,
+                }}
+              >
+                {saving ? 'Saving...' : editTarget ? 'Save changes' : 'Create tier'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {loading ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>
+            {[1, 2, 3].map((item) => (
+              <div key={item} style={{ height: 220, borderRadius: 18, background: '#fff', border: `1px solid ${T.border}` }} />
+            ))}
+          </div>
+        ) : types.length === 0 ? (
+          <div style={{ background: '#fff', borderRadius: 18, border: `1px solid ${T.border}`, padding: '48px 20px', textAlign: 'center' }}>
+            <div style={{ fontSize: 42, marginBottom: 12 }}>🎟️</div>
+            <h3 style={{ margin: '0 0 8px', fontSize: 22, color: T.text }}>No membership types yet</h3>
+            <p style={{ margin: 0, color: T.textMuted }}>Create your first member tier to start organizing benefits and bundled offers.</p>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(270px, 1fr))', gap: 16 }}>
+            {types.map((type, index) => {
+              const palette = TIER_PALETTES[index % TIER_PALETTES.length];
+              const bundledCount = Array.isArray((type as any).bundled_offers) ? (type as any).bundled_offers.length : 0;
+
+              return (
+                <div key={type.id} style={{ background: '#fff', border: `1px solid ${T.border}`, borderRadius: 18, overflow: 'hidden', boxShadow: T.shadow }}>
+                  <div style={{ background: palette.gradient, padding: 18 }}>
+                    <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.8)' }}>
+                      Membership tier
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+                    <h3 style={{ margin: '10px 0 0', fontSize: 24, fontWeight: 800, color: '#fff' }}>{type.name}</h3>
+                  </div>
 
-          <div className="flex gap-3 pt-3 border-t border-outline-variant/30">
-            <button onClick={() => { setShowModal(false); setEditTarget(null); }} className="btn-secondary flex-1">Cancel</button>
-            <button onClick={save} disabled={saving || !form.name.trim()} className="btn-primary flex-1 flex items-center justify-center gap-2">
-              {saving && <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>}
-              {editTarget ? 'Save Changes' : 'Create Tier'}
-            </button>
-          </div>
-        </div>
-      </Modal>
+                  <div style={{ padding: 18 }}>
+                    <p style={{ margin: '0 0 14px', color: T.textMuted, lineHeight: 1.6, minHeight: 48 }}>
+                      {type.description || 'No description provided for this membership tier yet.'}
+                    </p>
 
-      {/* Delete Confirm Modal */}
-      <ConfirmModal
-        isOpen={!!deleteTarget}
-        onClose={() => setDeleteTarget(null)}
-        onConfirm={handleDelete}
-        title={`Delete "${deleteTarget?.name}" Tier?`}
-        description={`Are you sure you want to delete this membership tier? This action cannot be undone.`}
-        confirmLabel="Delete Tier"
-        danger
-        isLoading={deleting}
-      />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                      <span style={{ fontSize: 12, color: T.textMuted }}>Bundled offers</span>
+                      <span style={{ fontSize: 12, fontWeight: 800, color: palette.color }}>{bundledCount}</span>
+                    </div>
+
+                    {isOwner && (
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button
+                          onClick={() => openEdit(type)}
+                          style={{ flex: 1, border: `1px solid ${T.border}`, background: '#fff', borderRadius: 10, padding: '10px 12px', cursor: 'pointer', fontWeight: 700, color: T.text }}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => deleteType(type.id)}
+                          style={{ border: '1px solid #FECACA', background: '#fff', color: '#DC2626', borderRadius: 10, padding: '10px 12px', cursor: 'pointer', fontWeight: 700 }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

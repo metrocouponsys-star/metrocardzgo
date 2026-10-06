@@ -29,8 +29,7 @@ export interface DealCardProps {
 
 /**
  * DealCard — deal listing card for the category grid page.
- * Shows hero image, partner badge, rating, brand, offer, verified date, CTA.
- * Matches the filtered_deals_grid Stitch screen design.
+ * White/light theme — classical modern design.
  */
 export function DealCard({ id, offerTitle, offerPercentage, endDate, lastVerifiedDate, featured, heroImageUrl, brand, distance, rating }: DealCardProps) {
   const verifiedDaysAgo = Math.floor(
@@ -39,27 +38,35 @@ export function DealCard({ id, offerTitle, offerPercentage, endDate, lastVerifie
 
   const isExpiringSoon = (new Date(endDate).getTime() - Date.now()) < 3 * 24 * 60 * 60 * 1000;
 
+  const isFeatured = featured || brand.partnerStatus === 'direct_merchant';
+
   return (
     <article
       style={{
-        background:     featured ? '#1C212B' : '#14171F',
-        border:         `1px solid ${featured ? '#3F3722' : '#2A303C'}`,
-        borderRadius:   '16px',
-        overflow:       'hidden',
-        transition:     'box-shadow 0.2s, transform 0.2s',
+        background:   '#FFFFFF',
+        border:       `1px solid ${isFeatured ? '#FDE68A' : '#E5E7EB'}`,
+        borderRadius: '16px',
+        overflow:     'hidden',
+        boxShadow:    isFeatured
+          ? '0 4px 20px rgba(197,155,39,0.12)'
+          : '0 1px 6px rgba(0,0,0,0.06)',
+        transition:   'box-shadow 0.2s, transform 0.2s',
       }}
-      className="animate-card-reveal"
       onMouseEnter={(e) => {
-        (e.currentTarget as HTMLElement).style.boxShadow = featured
-          ? '0 0 20px -2px rgba(212,175,55,0.25)'
-          : '0 8px 32px -4px rgba(0,0,0,0.6)';
+        (e.currentTarget as HTMLElement).style.boxShadow = isFeatured
+          ? '0 8px 32px rgba(197,155,39,0.2)'
+          : '0 6px 24px rgba(0,0,0,0.1)';
+        (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)';
       }}
       onMouseLeave={(e) => {
-        (e.currentTarget as HTMLElement).style.boxShadow = 'none';
+        (e.currentTarget as HTMLElement).style.boxShadow = isFeatured
+          ? '0 4px 20px rgba(197,155,39,0.12)'
+          : '0 1px 6px rgba(0,0,0,0.06)';
+        (e.currentTarget as HTMLElement).style.transform = 'none';
       }}
     >
       {/* Hero image */}
-      <div style={{ position: 'relative', aspectRatio: '16/9', background: '#0D0F12' }}>
+      <div style={{ position: 'relative', aspectRatio: '16/9', background: '#F3F4F6' }}>
         {heroImageUrl ? (
           <Image
             src={heroImageUrl}
@@ -73,11 +80,13 @@ export function DealCard({ id, offerTitle, offerPercentage, endDate, lastVerifie
             style={{
               position:   'absolute',
               inset:      0,
-              background: 'linear-gradient(135deg, #1C212B 0%, #0D0F12 100%)',
+              background: isFeatured
+                ? 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)'
+                : 'linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%)',
               display:    'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color:      '#2A303C',
+              color:      isFeatured ? '#C59B27' : '#D1D5DB',
             }}
           >
             <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true">
@@ -88,12 +97,12 @@ export function DealCard({ id, offerTitle, offerPercentage, endDate, lastVerifie
           </div>
         )}
 
-        {/* Gradient overlay for text readability */}
+        {/* Light gradient overlay */}
         <div
           style={{
             position:   'absolute',
             inset:      0,
-            background: 'linear-gradient(to bottom, rgba(13,15,18,0.1) 0%, rgba(13,15,18,0.7) 100%)',
+            background: 'linear-gradient(to bottom, rgba(0,0,0,0) 50%, rgba(0,0,0,0.25) 100%)',
           }}
           aria-hidden="true"
         />
@@ -107,19 +116,38 @@ export function DealCard({ id, offerTitle, offerPercentage, endDate, lastVerifie
         {rating && (
           <div
             style={{
-              position:      'absolute',
-              bottom:        '10px',
-              left:          '10px',
-              display:       'flex',
-              alignItems:    'center',
-              gap:           '4px',
-              background:    'rgba(13,15,18,0.7)',
-              borderRadius:  '9999px',
-              padding:       '2px 8px',
+              position:     'absolute',
+              bottom:       '10px',
+              left:         '10px',
+              display:      'flex',
+              alignItems:   'center',
+              gap:          '4px',
+              background:   'rgba(255,255,255,0.92)',
+              borderRadius: '9999px',
+              padding:      '2px 8px',
+              border:       '1px solid rgba(0,0,0,0.08)',
             }}
           >
-            <span style={{ color: '#E5C158', fontSize: '12px' }}>★</span>
-            <span style={{ color: '#FFFFFF', fontSize: '12px', fontWeight: 600 }}>{rating.toFixed(1)}</span>
+            <span style={{ color: '#C59B27', fontSize: '12px' }}>★</span>
+            <span style={{ color: '#111827', fontSize: '12px', fontWeight: 600 }}>{rating.toFixed(1)}</span>
+          </div>
+        )}
+
+        {/* Expiring soon badge */}
+        {isExpiringSoon && (
+          <div style={{ position: 'absolute', top: '10px', right: '10px' }}>
+            <span style={{
+              background:    '#FEF3C7',
+              border:        '1px solid #FDE68A',
+              color:         '#92400E',
+              fontSize:      '10px',
+              fontWeight:    700,
+              padding:       '2px 8px',
+              borderRadius:  '9999px',
+              letterSpacing: '0.04em',
+            }}>
+              ENDS SOON
+            </span>
           </div>
         )}
       </div>
@@ -132,7 +160,7 @@ export function DealCard({ id, offerTitle, offerPercentage, endDate, lastVerifie
             <path d="M6 1C4.34 1 3 2.34 3 4c0 2.5 3 7 3 7s3-4.5 3-7c0-1.66-1.34-3-3-3z" stroke="#6B7280" strokeWidth="1.2" />
             <circle cx="6" cy="4" r="1" stroke="#6B7280" strokeWidth="1" />
           </svg>
-          <span style={{ fontSize: '11px', color: '#6B7280', fontFamily: '"Plus Jakarta Sans", sans-serif' }}>
+          <span style={{ fontSize: '11px', color: '#6B7280', fontFamily: '"Inter", sans-serif' }}>
             {brand.city}{distance ? ` • ${distance}` : ''}
           </span>
         </div>
@@ -140,12 +168,12 @@ export function DealCard({ id, offerTitle, offerPercentage, endDate, lastVerifie
         {/* Brand name */}
         <h3
           style={{
-            fontFamily:   'Syne, sans-serif',
+            fontFamily:   '"Syne", sans-serif',
             fontSize:     '17px',
-            fontWeight:   600,
-            color:        '#FFFFFF',
+            fontWeight:   700,
+            color:        '#111827',
             lineHeight:   '24px',
-            marginBottom: '6px',
+            marginBottom: '4px',
           }}
         >
           {brand.name}
@@ -154,27 +182,26 @@ export function DealCard({ id, offerTitle, offerPercentage, endDate, lastVerifie
         {/* Offer title */}
         <p
           style={{
-            fontFamily:   '"Plus Jakarta Sans", sans-serif',
-            fontSize:     '14px',
+            fontFamily:   '"Inter", sans-serif',
+            fontSize:     '13px',
             fontWeight:   600,
-            color:        '#E5C158',
+            color:        '#B45309',
             lineHeight:   '20px',
             marginBottom: '10px',
           }}
         >
-          {offerPercentage ? `${offerTitle}` : offerTitle}
+          {offerPercentage ? `${offerPercentage}% — ${offerTitle}` : offerTitle}
         </p>
 
         {/* Verified date */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-          <span style={{ fontSize: '11px', color: verifiedDaysAgo <= 3 ? '#34D399' : '#6B7280', fontFamily: '"Plus Jakarta Sans", sans-serif' }}>
+          <span style={{
+            fontSize:  '11px',
+            color:     verifiedDaysAgo <= 3 ? '#047857' : '#6B7280',
+            fontFamily: '"Inter", sans-serif',
+          }}>
             {verifiedDaysAgo === 0 ? '✓ Verified today' : `✓ Verified ${verifiedDaysAgo}d ago`}
           </span>
-          {isExpiringSoon && (
-            <span style={{ fontSize: '11px', color: '#F59E0B', fontWeight: 600, fontFamily: '"Plus Jakarta Sans", sans-serif' }}>
-              Expiring soon
-            </span>
-          )}
         </div>
 
         {/* CTA button */}
@@ -187,14 +214,14 @@ export function DealCard({ id, offerTitle, offerPercentage, endDate, lastVerifie
             width:          '100%',
             height:         '44px',
             background:     brand.partnerStatus === 'direct_merchant'
-              ? 'linear-gradient(135deg, #E5C158 0%, #D4AF37 100%)'
-              : '#1C212B',
-            border:         `1px solid ${brand.partnerStatus === 'direct_merchant' ? 'transparent' : '#2A303C'}`,
-            borderRadius:   '9999px',
-            color:          brand.partnerStatus === 'direct_merchant' ? '#0D0F12' : '#F8FAFC',
+              ? 'linear-gradient(135deg, #C59B27 0%, #B45309 100%)'
+              : '#F9FAFB',
+            border:         `1px solid ${brand.partnerStatus === 'direct_merchant' ? 'transparent' : '#E5E7EB'}`,
+            borderRadius:   '10px',
+            color:          brand.partnerStatus === 'direct_merchant' ? '#FFFFFF' : '#374151',
             fontSize:       '13px',
             fontWeight:     600,
-            fontFamily:     '"Plus Jakarta Sans", sans-serif',
+            fontFamily:     '"Inter", sans-serif',
             textDecoration: 'none',
             transition:     'opacity 0.15s, transform 0.15s',
           }}

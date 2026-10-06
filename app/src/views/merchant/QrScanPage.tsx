@@ -138,27 +138,28 @@ export default function QrScanPage() {
   const s = {
     container: {
       minHeight: '100dvh',
-      background: 'linear-gradient(135deg, #0f0c29 0%, #1a1740 100%)',
+      background: '#F6F3EE',
       fontFamily: "'Plus Jakarta Sans','Inter',sans-serif",
       padding: '0',
     } as React.CSSProperties,
     header: {
-      background: 'rgba(255,255,255,0.05)',
+      background: 'rgba(255,255,255,0.94)',
       backdropFilter: 'blur(20px)',
-      borderBottom: '1px solid rgba(255,255,255,0.08)',
+      borderBottom: '1px solid #EAE3DD',
       padding: '14px 16px',
       display: 'flex', alignItems: 'center', gap: '12px',
     } as React.CSSProperties,
     backBtn: {
-      background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '10px',
-      color: '#fff', fontSize: '14px', fontWeight: 600, cursor: 'pointer',
+      background: '#FFF4EF', border: '1px solid #F8D7C0', borderRadius: '10px',
+      color: '#C2410C', fontSize: '14px', fontWeight: 700, cursor: 'pointer',
       padding: '8px 14px',
     } as React.CSSProperties,
     body: { padding: '24px 16px', maxWidth: '480px', margin: '0 auto' } as React.CSSProperties,
     card: {
-      background: 'rgba(255,255,255,0.07)',
-      border: '1px solid rgba(255,255,255,0.12)',
+      background: '#FFFFFF',
+      border: '1px solid #EAE3DD',
       borderRadius: '20px', padding: '24px', marginBottom: '16px',
+      boxShadow: '0 12px 24px rgba(17,24,39,0.05)',
     } as React.CSSProperties,
   };
 
@@ -166,12 +167,12 @@ export default function QrScanPage() {
     <div style={s.container}>
       {/* Header */}
       <div style={s.header}>
-        <button style={s.backBtn} onClick={() => navigate('/dashboard')}>← Back</button>
+        <button style={s.backBtn} onClick={() => navigate('/portal/dashboard')}>← Back</button>
         <div>
-          <h1 style={{ margin: 0, color: '#fff', fontSize: '18px', fontWeight: 800 }}>
+          <h1 style={{ margin: 0, color: '#111827', fontSize: '18px', fontWeight: 800 }}>
             📷 QR Scanner
           </h1>
-          <p style={{ margin: 0, color: 'rgba(255,255,255,0.45)', fontSize: '12px' }}>
+          <p style={{ margin: 0, color: '#6B7280', fontSize: '12px' }}>
             Scan member QR to validate & redeem
           </p>
         </div>
@@ -183,10 +184,10 @@ export default function QrScanPage() {
           <div style={s.card}>
             <div style={{ textAlign: 'center', padding: '24px 0' }}>
               <div style={{ fontSize: '64px', marginBottom: '16px' }}>📷</div>
-              <h2 style={{ color: '#fff', fontSize: '20px', fontWeight: 700, margin: '0 0 8px' }}>
+              <h2 style={{ color: '#111827', fontSize: '20px', fontWeight: 700, margin: '0 0 8px' }}>
                 Ready to Scan
               </h2>
-              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px', marginBottom: '24px' }}>
+              <p style={{ color: '#6B7280', fontSize: '14px', marginBottom: '24px' }}>
                 Ask the customer to show their Metro Cardz QR code
               </p>
               {errorMsg && (
@@ -204,10 +205,10 @@ export default function QrScanPage() {
                 disabled={!scannerReady}
                 style={{
                   padding: '14px 32px', borderRadius: '14px', border: 'none',
-                  background: !scannerReady ? 'rgba(99,102,241,0.3)' : 'linear-gradient(135deg,#6366f1,#a855f7)',
-                  color: !scannerReady ? 'rgba(255,255,255,0.4)' : '#fff',
+                  background: !scannerReady ? '#FDBA74' : 'linear-gradient(135deg,#FF8A3D,#EA580C)',
+                  color: '#fff',
                   fontSize: '16px', fontWeight: 700, cursor: !scannerReady ? 'not-allowed' : 'pointer',
-                  boxShadow: scannerReady ? '0 8px 24px rgba(99,102,241,0.4)' : 'none',
+                  boxShadow: scannerReady ? '0 8px 24px rgba(234,88,12,0.24)' : 'none',
                 }}
               >
                 {scannerReady ? '🔍 Start Scanning' : '⏳ Loading camera…'}
@@ -223,16 +224,16 @@ export default function QrScanPage() {
             <div style={{ textAlign: 'center', padding: '12px 0 24px' }}>
               <div style={{
                 display: 'inline-flex', alignItems: 'center', gap: '8px',
-                background: 'rgba(99,102,241,0.2)', padding: '8px 16px', borderRadius: '20px',
+                background: '#FFF7ED', padding: '8px 16px', borderRadius: '20px', border: '1px solid #FED7AA',
                 marginBottom: '16px',
               }}>
                 <div style={{
                   width: '8px', height: '8px', borderRadius: '50%',
-                  background: '#6366f1', animation: 'pulse 1s infinite',
+                  background: '#EA580C', animation: 'pulse 1s infinite',
                 }} />
-                <span style={{ color: '#818cf8', fontSize: '13px', fontWeight: 600 }}>Scanning…</span>
+                <span style={{ color: '#C2410C', fontSize: '13px', fontWeight: 700 }}>Scanning…</span>
               </div>
-              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', marginBottom: '16px' }}>
+              <p style={{ color: '#6B7280', fontSize: '13px', marginBottom: '16px' }}>
                 Point camera at the customer's QR code
               </p>
             </div>
@@ -241,8 +242,8 @@ export default function QrScanPage() {
               onClick={() => { stopScanner(); setScanState('idle'); }}
               style={{
                 marginTop: '16px', width: '100%', padding: '12px', borderRadius: '12px',
-                background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)',
-                color: 'rgba(255,255,255,0.6)', fontSize: '14px', fontWeight: 600, cursor: 'pointer',
+                background: '#fff', border: '1px solid #EAE3DD',
+                color: '#4B5563', fontSize: '14px', fontWeight: 600, cursor: 'pointer',
               }}
             >
               Cancel
@@ -262,10 +263,10 @@ export default function QrScanPage() {
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                 <div>
-                  <h2 style={{ color: '#fff', fontSize: '20px', fontWeight: 800, margin: '0 0 4px' }}>
+                  <h2 style={{ color: '#111827', fontSize: '20px', fontWeight: 800, margin: '0 0 4px' }}>
                     {member.name}
                   </h2>
-                  <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', margin: 0 }}>
+                  <p style={{ color: '#6B7280', fontSize: '13px', margin: 0 }}>
                     {member.memberCode} · {member.membershipTypeName ?? 'Standard'}
                   </p>
                 </div>
@@ -286,11 +287,11 @@ export default function QrScanPage() {
                   { label: 'Expires', value: member.expiryDate ? new Date(member.expiryDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' }) : '—' },
                 ].map(({ label, value }) => (
                   <div key={label} style={{
-                    background: 'rgba(255,255,255,0.05)', borderRadius: '12px', padding: '10px',
+                    background: '#F9F7F5', border: '1px solid #F1E7DF', borderRadius: '12px', padding: '10px',
                     textAlign: 'center',
                   }}>
-                    <p style={{ margin: '0 0 2px', color: 'rgba(255,255,255,0.45)', fontSize: '11px', fontWeight: 600 }}>{label}</p>
-                    <p style={{ margin: 0, color: '#fff', fontSize: '16px', fontWeight: 800 }}>{value}</p>
+                    <p style={{ margin: '0 0 2px', color: '#6B7280', fontSize: '11px', fontWeight: 600 }}>{label}</p>
+                    <p style={{ margin: 0, color: '#111827', fontSize: '16px', fontWeight: 800 }}>{value}</p>
                   </div>
                 ))}
               </div>
@@ -298,7 +299,7 @@ export default function QrScanPage() {
               {/* Offer selector */}
               {member.offers && member.offers.length > 0 && member.status === 'active' && (
                 <div style={{ marginBottom: '14px' }}>
-                  <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '12px', fontWeight: 600, marginBottom: '6px' }}>
+                  <label style={{ display: 'block', color: '#4B5563', fontSize: '12px', fontWeight: 600, marginBottom: '6px' }}>
                     Select Offer (optional)
                   </label>
                   <select
@@ -307,8 +308,8 @@ export default function QrScanPage() {
                     onChange={e => setSelectedOffer(e.target.value)}
                     style={{
                       width: '100%', height: '44px', padding: '0 12px',
-                      borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)',
-                      background: 'rgba(255,255,255,0.07)', color: '#fff', fontSize: '14px',
+                      borderRadius: '10px', border: '1px solid #EAE3DD',
+                      background: '#FFFFFF', color: '#111827', fontSize: '14px',
                     }}
                   >
                     <option value="">— No specific offer —</option>
@@ -323,7 +324,7 @@ export default function QrScanPage() {
 
               {/* Amount */}
               <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '12px', fontWeight: 600, marginBottom: '6px' }}>
+                <label style={{ display: 'block', color: '#4B5563', fontSize: '12px', fontWeight: 600, marginBottom: '6px' }}>
                   Bill Amount ₹ (optional)
                 </label>
                 <input
@@ -334,8 +335,8 @@ export default function QrScanPage() {
                   placeholder="Enter bill amount"
                   style={{
                     width: '100%', height: '44px', padding: '0 12px',
-                    borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)',
-                    background: 'rgba(255,255,255,0.07)', color: '#fff',
+                    borderRadius: '10px', border: '1px solid #EAE3DD',
+                    background: '#FFFFFF', color: '#111827',
                     fontSize: '15px', boxSizing: 'border-box',
                   }}
                 />
@@ -345,8 +346,8 @@ export default function QrScanPage() {
                 <button
                   onClick={() => { setScanState('idle'); setMember(null); }}
                   style={{
-                    padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.12)',
-                    background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.7)',
+                    padding: '12px', borderRadius: '12px', border: '1px solid #EAE3DD',
+                    background: '#fff', color: '#4B5563',
                     fontSize: '14px', fontWeight: 600, cursor: 'pointer',
                   }}
                 >
@@ -362,10 +363,10 @@ export default function QrScanPage() {
                       ? 'rgba(248,113,113,0.3)'
                       : scanState === 'redeeming'
                       ? 'rgba(99,102,241,0.5)'
-                      : 'linear-gradient(135deg,#6366f1,#a855f7)',
+                      : 'linear-gradient(135deg,#FF8A3D,#EA580C)',
                     color: '#fff', fontSize: '14px', fontWeight: 700,
                     cursor: member.status !== 'active' || scanState === 'redeeming' ? 'not-allowed' : 'pointer',
-                    boxShadow: member.status === 'active' && scanState !== 'redeeming' ? '0 4px 16px rgba(99,102,241,0.4)' : 'none',
+                    boxShadow: member.status === 'active' && scanState !== 'redeeming' ? '0 4px 16px rgba(234,88,12,0.24)' : 'none',
                   }}
                 >
                   {scanState === 'redeeming' ? '⏳ Processing…' : member.status !== 'active' ? '❌ Inactive' : '✅ Redeem'}
@@ -382,7 +383,7 @@ export default function QrScanPage() {
             <h2 style={{ color: '#4ade80', fontSize: '22px', fontWeight: 800, margin: '0 0 8px' }}>
               Redemption Successful!
             </h2>
-            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px', marginBottom: '24px' }}>
+            <p style={{ color: '#6B7280', fontSize: '14px', marginBottom: '24px' }}>
               {successMsg}
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
@@ -390,18 +391,18 @@ export default function QrScanPage() {
                 onClick={() => { setScanState('idle'); setMember(null); setSuccessMsg(''); setSelectedOffer(''); setAmount(''); }}
                 style={{
                   padding: '12px', borderRadius: '12px', border: 'none',
-                  background: 'linear-gradient(135deg,#6366f1,#a855f7)',
+                  background: 'linear-gradient(135deg,#FF8A3D,#EA580C)',
                   color: '#fff', fontSize: '14px', fontWeight: 700, cursor: 'pointer',
-                  boxShadow: '0 4px 16px rgba(99,102,241,0.4)',
+                  boxShadow: '0 4px 16px rgba(234,88,12,0.24)',
                 }}
               >
                 📷 Next Scan
               </button>
               <button
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate('/portal/dashboard')}
                 style={{
-                  padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.12)',
-                  background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.7)',
+                  padding: '12px', borderRadius: '12px', border: '1px solid #EAE3DD',
+                  background: '#fff', color: '#4B5563',
                   fontSize: '14px', fontWeight: 600, cursor: 'pointer',
                 }}
               >
@@ -414,11 +415,11 @@ export default function QrScanPage() {
 
       <style>{`
         @keyframes pulse { 0%,100%{opacity:0.5;} 50%{opacity:1;} }
-        input::placeholder { color: rgba(255,255,255,0.3); }
-        input:focus, select:focus { outline: none; border-color: #6366f1 !important; }
+        input::placeholder { color: #9CA3AF; }
+        input:focus, select:focus { outline: none; border-color: #FF6B35 !important; box-shadow: 0 0 0 3px rgba(255,107,53,0.12); }
         #qr-reader { border-radius: 16px; overflow: hidden; }
         #qr-reader video { border-radius: 16px; }
-        #qr-reader__dashboard_section_swaplink { color: #818cf8 !important; }
+        #qr-reader__dashboard_section_swaplink { color: #C2410C !important; }
       `}</style>
     </div>
   );

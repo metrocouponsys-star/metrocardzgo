@@ -1,21 +1,42 @@
 'use client';
 
-import dynamic from 'next/dynamic';
-
-// Mount the full merchant SPA (BrowserRouter + all routes) as a client-only component
-const MerchantApp = dynamic(
-  () => import('@/views/MerchantApp'),
-  {
-    ssr: false,
-    loading: () => (
-      <div style={{ background: '#f9f9ff', minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: 32, height: 32, border: '3px solid #e7eefe', borderTopColor: '#00236f', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      </div>
-    ),
-  }
-);
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function LoginPage() {
-  return <MerchantApp />;
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace('/go/login');
+  }, [router]);
+
+  return (
+    <div
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#F7F7F5',
+        color: '#18181B',
+        fontFamily: 'Inter, system-ui, sans-serif',
+      }}
+    >
+      <div style={{ textAlign: 'center' }}>
+        <div
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: '50%',
+            border: '3px solid #FDE7D9',
+            borderTopColor: '#F97316',
+            margin: '0 auto 12px',
+            animation: 'spin 0.7s linear infinite',
+          }}
+        />
+        <div style={{ fontSize: 13, color: '#6B7280', fontWeight: 600 }}>Redirecting to Metro Cardz GO…</div>
+      </div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
 }

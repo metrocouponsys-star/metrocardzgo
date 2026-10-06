@@ -9,10 +9,7 @@ interface CityFilterProps {
 
 /**
  * CityFilter — horizontal scrolling city filter chips.
- * "All Regions" chip appears first, then city chips.
- * Selected chip: gold border + specular text.
- * Unselected: obsidian surface + muted text.
- * Matches the filtered_deals_grid Stitch screen design.
+ * White/light theme — classical modern design.
  */
 export function CityFilter({ cities, selected, onChange, className = '' }: CityFilterProps) {
   return (
@@ -45,14 +42,13 @@ export function CityFilter({ cities, selected, onChange, className = '' }: CityF
               <span
                 aria-hidden="true"
                 style={{
-                  width:           '5px',
-                  height:          '5px',
-                  borderRadius:    '50%',
-                  background:      '#D4AF37',
-                  display:         'inline-block',
-                  marginRight:     '4px',
-                  boxShadow:       '0 0 4px rgba(212,175,55,0.8)',
-                  flexShrink:      0,
+                  width:        '5px',
+                  height:       '5px',
+                  borderRadius: '50%',
+                  background:   '#B45309',
+                  display:      'inline-block',
+                  marginRight:  '4px',
+                  flexShrink:   0,
                 }}
               />
             )}
@@ -66,20 +62,21 @@ export function CityFilter({ cities, selected, onChange, className = '' }: CityF
 
 function chipStyle(active: boolean): React.CSSProperties {
   return {
-    display:        'inline-flex',
-    alignItems:     'center',
-    height:         '36px',
-    padding:        '0 14px',
-    borderRadius:   '9999px',
-    fontSize:       '13px',
-    fontWeight:     active ? 600 : 400,
-    fontFamily:     '"Plus Jakarta Sans", sans-serif',
-    background:     active ? '#1C212B' : '#14171F',
-    border:         `1px solid ${active ? '#D4AF37' : '#2A303C'}`,
-    color:          active ? '#FFF3D6' : '#9CA3AF',
-    cursor:         'pointer',
-    whiteSpace:     'nowrap' as const,
-    boxShadow:      active ? '0 0 8px rgba(212,175,55,0.15)' : 'none',
-    minWidth:       '0',
+    display:      'inline-flex',
+    alignItems:   'center',
+    height:       '36px',
+    padding:      '0 14px',
+    borderRadius: '9999px',
+    fontSize:     '13px',
+    fontWeight:   active ? 600 : 400,
+    fontFamily:   '"Inter", sans-serif',
+    background:   active ? '#FEF3C7' : '#FFFFFF',
+    border:       `1px solid ${active ? '#FDE68A' : '#E5E7EB'}`,
+    color:        active ? '#92400E' : '#4B5563',
+    cursor:       'pointer',
+    whiteSpace:   'nowrap' as const,
+    boxShadow:    active ? '0 1px 4px rgba(197,155,39,0.2)' : '0 1px 2px rgba(0,0,0,0.04)',
+    minWidth:     '0',
+    transition:   'all 0.15s',
   };
 }

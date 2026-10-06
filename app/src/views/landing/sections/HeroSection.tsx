@@ -1,23 +1,21 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { CSSCard3D, GoldMemberCardFace } from '../components/CSSCard3D';
 
-// Floating gold particles
 const Particles: React.FC = () => {
-  const particles = Array.from({ length: 28 }, (_, i) => ({
+  const particles = Array.from({ length: 26 }, (_, i) => ({
     id: i,
     x: Math.random() * 100,
     y: Math.random() * 100,
     size: 1 + Math.random() * 2,
-    duration: 6 + Math.random() * 8,
-    delay: Math.random() * 5,
-    opacity: 0.2 + Math.random() * 0.4,
+    duration: 8 + Math.random() * 8,
+    delay: Math.random() * 4,
+    opacity: 0.18 + Math.random() * 0.22,
   }));
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {particles.map(p => (
+      {particles.map((p) => (
         <div
           key={p.id}
           className="absolute rounded-full"
@@ -26,7 +24,7 @@ const Particles: React.FC = () => {
             top: `${p.y}%`,
             width: p.size,
             height: p.size,
-            background: '#C9A227',
+            background: '#F59E0B',
             opacity: p.opacity,
             animation: `float ${p.duration}s ease-in-out ${p.delay}s infinite`,
           }}
@@ -41,8 +39,7 @@ export const HeroSection: React.FC = () => {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Slight delay so HTML paints before heavy card rig
-    const t = setTimeout(() => setMounted(true), 100);
+    const t = setTimeout(() => setMounted(true), 120);
     return () => clearTimeout(t);
   }, []);
 
@@ -58,179 +55,158 @@ export const HeroSection: React.FC = () => {
       id="hero"
       ref={sectionRef}
       className="relative min-h-screen flex items-center overflow-hidden"
-      style={{ background: 'radial-gradient(ellipse at 60% 40%, #1a120040 0%, #0D0D0D 70%)' }}
+      style={{ background: 'linear-gradient(180deg, #fffdfb 0%, #fff7f2 24%, #fff 100%)' }}
     >
-      {/* Background radial glows */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/4 right-1/3 w-96 h-96 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #C9A227 0%, transparent 70%)', filter: 'blur(40px)' }} />
-        <div className="absolute bottom-1/4 left-1/4 w-64 h-64 rounded-full opacity-8" style={{ background: 'radial-gradient(circle, #D4AF37 0%, transparent 70%)', filter: 'blur(60px)' }} />
+        <div className="absolute top-24 right-0 w-96 h-96 rounded-full opacity-30" style={{ background: 'radial-gradient(circle, rgba(249, 115, 22, 0.18) 0%, transparent 70%)', filter: 'blur(50px)' }} />
+        <div className="absolute bottom-10 left-0 w-80 h-80 rounded-full opacity-25" style={{ background: 'radial-gradient(circle, rgba(251, 146, 60, 0.18) 0%, transparent 70%)', filter: 'blur(50px)' }} />
       </div>
 
-      {/* Grid texture */}
-      <div className="absolute inset-0 opacity-[0.03]" style={{
-        backgroundImage: 'linear-gradient(rgba(201,162,39,1) 1px, transparent 1px), linear-gradient(90deg, rgba(201,162,39,1) 1px, transparent 1px)',
-        backgroundSize: '60px 60px',
+      <div className="absolute inset-0 opacity-[0.04]" style={{
+        backgroundImage: 'linear-gradient(rgba(234,88,12,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(234,88,12,0.4) 1px, transparent 1px)',
+        backgroundSize: '54px 54px',
       }} />
 
       <Particles />
 
-      <div className="relative max-w-7xl mx-auto px-6 lg:px-10 py-24 w-full grid lg:grid-cols-2 gap-12 items-center">
-        {/* Left — copy */}
+      <div className="relative max-w-7xl mx-auto px-6 lg:px-10 py-24 w-full grid lg:grid-cols-[1.08fr_0.92fr] gap-12 items-center">
         <div className="text-center lg:text-left order-2 lg:order-1">
-          {/* Tag */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-6 glass-gold">
-            <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
-            <span className="text-gold text-xs font-semibold tracking-widest uppercase">Premium Membership Cards</span>
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-6" style={{ background: '#FFF7ED', border: '1px solid #F9D2B0', color: '#C2410C' }}>
+            <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
+            <span className="text-xs font-semibold tracking-widest uppercase">Premium membership experiences</span>
           </div>
 
-          {/* Headline */}
-          <h1 className="font-poppins font-black text-5xl sm:text-6xl xl:text-7xl leading-[0.95] tracking-tight text-warm-white mb-5">
-            MAKE UR OWN
-            <br />
-            <span className="text-gold-gradient">MEMBERSHIP</span>
-            <br />
-            CARDS
+          <h1 className="font-poppins font-black mb-5 leading-[0.95] tracking-tight" style={{ fontSize: 'clamp(3rem, 6vw, 6rem)', color: '#111827' }}>
+            Discover deals
+            <span style={{ display: 'block', color: '#EA580C' }}>that feel premium.</span>
           </h1>
 
-          {/* Tagline */}
-          <p className="text-warm-grey text-lg sm:text-xl font-light tracking-wide italic mb-8">
-            Your Card.&nbsp; Your Identity.&nbsp; Your Advantage.
+          <p className="text-lg sm:text-xl font-light mb-8" style={{ color: '#52525B' }}>
+            Members save on dining, travel, wellness, and weekend escapes with a cleaner, smarter loyalty journey.
           </p>
 
-          {/* Body */}
-          <p className="text-warm-white/60 text-base max-w-md mx-auto lg:mx-0 mb-10 leading-relaxed">
-            Premium custom plastic cards for retail, restaurants, gyms, salons, hospitals and more — with foil, QR, chip, and your brand.
+          <p className="max-w-md mx-auto lg:mx-0 mb-10 leading-relaxed" style={{ color: '#475569', fontSize: '1rem' }}>
+            Metro Cardz GO brings city discovery, instant redemption, and curated offers into one elegant lifestyle app experience.
           </p>
 
-          {/* CTAs */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
             <button
               onClick={scrollToContact}
-              className="px-8 py-4 rounded-full font-poppins font-bold text-base text-rich-black transition-all duration-200 hover:scale-105 active:scale-95 animate-glow-pulse"
-              style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #C9A227 50%, #7A5C12 100%)', boxShadow: '0 0 30px rgba(201,162,39,0.4)' }}
+              className="px-8 py-4 rounded-full font-poppins font-bold text-base transition-all duration-200 hover:scale-105 active:scale-95"
+              style={{ background: 'linear-gradient(135deg, #FF8A3D 0%, #EA580C 100%)', boxShadow: '0 18px 30px rgba(234,88,12,0.16)', color: '#fff' }}
             >
-              ✦ Design My Card
+              Design my card
             </button>
             <button
               onClick={scrollToCards}
-              className="px-8 py-4 rounded-full font-poppins font-semibold text-base text-gold border border-gold/40 hover:border-gold hover:bg-gold/5 transition-all duration-200"
+              className="px-8 py-4 rounded-full font-poppins font-semibold text-base border transition-all duration-200"
+              style={{ background: '#fff', borderColor: '#E2E8F0', color: '#111827' }}
             >
-              See Sample Cards →
+              View sample deals →
             </button>
           </div>
 
-          {/* Portal Quick Access High-Visibility Pill Buttons */}
-          <div className="mt-8 pt-4 border-t border-warm-white/10 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3">
-            <span className="text-xs font-bold uppercase tracking-widest text-warm-white/40 text-center sm:text-left self-center mr-1">
-              Quick Portals:
+          <div className="mt-10 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3">
+            <span className="text-xs font-bold uppercase tracking-widest text-center sm:text-left self-center mr-1" style={{ color: '#64748B' }}>
+              Quick access
             </span>
 
-            {/* Check Membership Points Button */}
             <a
               href="/check-membership"
-              className="group relative inline-flex items-center justify-center gap-2.5 px-5 py-2.5 rounded-xl bg-gradient-to-r from-gold/20 via-gold/10 to-transparent border border-gold/50 hover:border-gold hover:bg-gold/20 transition-all duration-300 shadow-sm hover:shadow-gold/20 hover:scale-[1.02] active:scale-95"
+              className="group relative inline-flex items-center justify-center gap-2.5 px-5 py-2.5 rounded-xl border transition-all duration-300 hover:scale-[1.02] active:scale-95"
+              style={{ borderColor: '#F9D2B0', background: '#FFF7ED' }}
             >
-              <span className="w-7 h-7 rounded-lg bg-gold/20 flex items-center justify-center text-gold group-hover:bg-gold group-hover:text-black transition-colors">
+              <span className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#fff', color: '#EA580C' }}>
                 <span className="material-symbols-outlined text-[18px]">qr_code_scanner</span>
               </span>
               <div className="text-left">
-                <div className="text-[11px] text-gold/80 font-medium leading-none">Customer Access</div>
-                <div className="text-sm font-bold text-warm-white group-hover:text-gold transition-colors">
-                  Check Membership Points
-                </div>
+                <div className="text-[11px] font-medium leading-none" style={{ color: '#C2410C' }}>Member access</div>
+                <div className="text-sm font-bold" style={{ color: '#111827' }}>Check points</div>
               </div>
-              <span className="material-symbols-outlined text-[16px] text-gold/60 group-hover:translate-x-1 group-hover:text-gold transition-all ml-1">
-                arrow_forward
-              </span>
             </a>
 
-            {/* Merchant Portal Login Button */}
             <a
-              href="/login"
-              className="group relative inline-flex items-center justify-center gap-2.5 px-5 py-2.5 rounded-xl bg-warm-white/5 border border-warm-white/20 hover:border-gold/60 hover:bg-warm-white/10 transition-all duration-300 shadow-sm hover:scale-[1.02] active:scale-95"
+              href="/go/login"
+              className="group relative inline-flex items-center justify-center gap-2.5 px-5 py-2.5 rounded-xl border transition-all duration-300 hover:scale-[1.02] active:scale-95"
+              style={{ borderColor: '#E2E8F0', background: '#fff' }}
             >
-              <span className="w-7 h-7 rounded-lg bg-warm-white/10 flex items-center justify-center text-warm-white group-hover:bg-gold group-hover:text-black transition-colors">
+              <span className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#FFF7ED', color: '#EA580C' }}>
                 <span className="material-symbols-outlined text-[18px]">storefront</span>
               </span>
               <div className="text-left">
-                <div className="text-[11px] text-warm-white/50 font-medium leading-none">Business Owner</div>
-                <div className="text-sm font-bold text-warm-white group-hover:text-gold transition-colors">
-                  Merchant Portal Login
-                </div>
+                <div className="text-[11px] font-medium leading-none" style={{ color: '#64748B' }}>Business</div>
+                <div className="text-sm font-bold" style={{ color: '#111827' }}>GO portal</div>
               </div>
-              <span className="material-symbols-outlined text-[16px] text-warm-white/40 group-hover:translate-x-1 group-hover:text-gold transition-all ml-1">
-                login
-              </span>
             </a>
           </div>
 
-          {/* Trust stats */}
           <div className="mt-10 flex gap-8 justify-center lg:justify-start">
             {[
               { num: '500+', label: 'Businesses' },
-              { num: '10K+', label: 'Cards Printed' },
-              { num: '15+', label: 'Industries' },
-            ].map(s => (
+              { num: '10K+', label: 'Cards printed' },
+              { num: '15+', label: 'Categories' },
+            ].map((s) => (
               <div key={s.label} className="text-center lg:text-left">
-                <p className="font-poppins font-black text-2xl text-gold">{s.num}</p>
-                <p className="text-warm-white/50 text-xs tracking-wider uppercase">{s.label}</p>
+                <p className="font-poppins font-black text-2xl" style={{ color: '#EA580C' }}>{s.num}</p>
+                <p className="text-xs tracking-wider uppercase" style={{ color: '#64748B' }}>{s.label}</p>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Right — Hero Dashboard & App Showcase */}
         <div className="relative order-1 lg:order-2 flex items-center justify-center">
-          {/* Ambient glow ring */}
-          <div className="absolute w-72 h-72 sm:w-96 sm:h-96 rounded-full opacity-25 animate-glow-pulse pointer-events-none" style={{ background: 'radial-gradient(circle, #C9A227, transparent 70%)', filter: 'blur(40px)' }} />
+          <div className="absolute w-72 h-72 sm:w-96 sm:h-96 rounded-full opacity-30" style={{ background: 'radial-gradient(circle, rgba(249, 115, 22, 0.28) 0%, transparent 70%)', filter: 'blur(45px)' }} />
 
-          {/* Main Hero Image Showcase */}
-          <div className="relative z-10 w-full max-w-[580px] group transition-transform duration-500 hover:scale-[1.02]">
-            <img
-              src="/images/hero-dashboard.png"
-              alt="Metro Cardz Dashboard and Mobile App"
-              className="w-full h-auto rounded-2xl shadow-2xl border border-gold/20 object-cover backdrop-blur-md"
+          <div className="relative z-10 w-full max-w-[580px] transition-transform duration-500 hover:scale-[1.02]">
+            <div
               style={{
-                boxShadow: '0 25px 60px -15px rgba(201,162,39,0.25), 0 0 40px rgba(0,0,0,0.8)',
+                background: '#fff',
+                borderRadius: 28,
+                border: '1px solid #F1E7DF',
+                boxShadow: '0 28px 50px rgba(15, 23, 42, 0.08)',
+                overflow: 'hidden',
               }}
-            />
+            >
+              <div style={{ position: 'relative', height: 430, backgroundImage: 'linear-gradient(180deg, rgba(17,24,39,0.12), rgba(17,24,39,0.28)), url(https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.28) 100%)' }} />
+                <div style={{ position: 'absolute', left: 20, right: 20, bottom: 22 }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', padding: '8px 10px', borderRadius: 999, background: 'rgba(255,255,255,0.18)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700 }}>
+                    Curated offers
+                  </div>
+                  <h2 style={{ margin: '16px 0 6px', fontSize: '2.1rem', lineHeight: 1.05, letterSpacing: '-0.06em', color: '#fff' }}>Weekend wins<br />made easy</h2>
+                </div>
+              </div>
 
-            {/* Subtle floating 3D Gold Card Overlay */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12, padding: 18, background: '#fff' }}>
+                {[
+                  { label: 'Dining', value: '8 offers', tone: '#FFF7ED', color: '#EA580C' },
+                  { label: 'Stay', value: '12 stays', tone: '#F5F3FF', color: '#7C3AED' },
+                  { label: 'Family', value: '14 deals', tone: '#ECFEFF', color: '#0F766E' },
+                ].map((item) => (
+                  <div key={item.label} style={{ background: item.tone, borderRadius: 16, padding: '12px 10px', textAlign: 'center', border: '1px solid rgba(226, 232, 240, 0.8)' }}>
+                    <div style={{ fontSize: 11, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>{item.label}</div>
+                    <div style={{ marginTop: 8, fontSize: 15, fontWeight: 800, color: item.color }}>{item.value}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {mounted && (
-              <div className="absolute -bottom-6 -left-6 hidden sm:block perspective-card w-48 h-28 lg:w-56 lg:h-32 animate-float" style={{ filter: 'drop-shadow(0 20px 30px rgba(0,0,0,0.6))' }}>
-                <CSSCard3D
-                  interactive={true}
-                  maxTilt={12}
-                  style={{ width: '100%', height: '100%' }}
-                  frontContent={<GoldMemberCardFace className="w-full h-full" />}
-                />
+              <div style={{ position: 'absolute', left: -30, bottom: 20, width: 180, transform: 'rotate(-10deg)' }}>
+                <div style={{ borderRadius: 18, background: 'linear-gradient(135deg, #FFEDD5 0%, #fff 100%)', border: '1px solid #F8D7C0', boxShadow: '0 18px 28px rgba(15, 23, 42, 0.08)', padding: 12 }}>
+                  <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#C2410C' }}>Member card</div>
+                  <div style={{ marginTop: 10, fontSize: 20, fontWeight: 800, color: '#111827' }}>Metro</div>
+                  <div style={{ fontSize: 10, color: '#64748B' }}>Wallet • Rewards • Offers</div>
+                </div>
               </div>
             )}
-
-            {/* Floating feature badges */}
-            {[
-              { label: 'Real-time Dashboard', x: '-left-4 -top-4', delay: '0s' },
-              { label: 'Customer Mobile App', x: '-right-4 -bottom-4', delay: '0.8s' },
-            ].map(badge => (
-              <div
-                key={badge.label}
-                className={`absolute ${badge.x} glass-dark px-3.5 py-2 rounded-xl hidden sm:block shadow-xl z-20`}
-                style={{ animation: `float 5s ease-in-out ${badge.delay} infinite`, border: '1px solid rgba(201,162,39,0.3)' }}
-              >
-                <p className="text-gold text-xs font-semibold flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-gold animate-pulse" />
-                  {badge.label}
-                </p>
-              </div>
-            ))}
           </div>
         </div>
       </div>
 
-      {/* Scroll indicator */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-40">
-        <span className="text-warm-white text-xs tracking-widest uppercase">Scroll</span>
-        <div className="w-px h-10 bg-gradient-to-b from-warm-white/60 to-transparent" />
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-60">
+        <span className="text-xs tracking-widest uppercase" style={{ color: '#64748B' }}>Scroll</span>
+        <div className="w-px h-10 bg-gradient-to-b from-slate-400 to-transparent" />
       </div>
     </section>
   );

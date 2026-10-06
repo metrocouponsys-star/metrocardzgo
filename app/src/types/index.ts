@@ -202,14 +202,25 @@ export interface MessageLog {
 }
 
 export interface DashboardStats {
-  total_active_members: number;
+  // Legacy / older mock shape
+  total_active_members?: number;
   total_cards_assigned?: number;
-  redemptions_today: number;
-  expiring_this_month: number;
+  redemptions_today?: number;
+  expiring_this_month?: number;
   expiring_this_week?: number;
-  wallet_points_issued_month: number;
+  wallet_points_issued_month?: number;
   recent_redemptions: Redemption[];
-  today_celebrations?: number;  // count of members with birthday/anniversary today
+  today_celebrations?: number;
+
+  // Current API shape used by merchant dashboard and backend stats routes
+  total_members?: number;
+  active_today?: number;
+  new_members_today?: number;
+  redemptions_this_month?: number;
+  total_points_issued?: number;
+  total_loyalty_points_issued?: number;
+  total_redemptions?: number;
+  new_members_this_month?: number;
 }
 
 export interface CelebrationMember {

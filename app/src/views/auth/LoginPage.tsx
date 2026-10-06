@@ -12,13 +12,14 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [focused, setFocused] = useState<'email' | 'password' | null>(null);
 
   const { setAuth } = useAuthStore();
   const { addToast } = useToastStore();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const t = setTimeout(() => setMounted(true), 50);
+    const t = setTimeout(() => setMounted(true), 60);
     return () => clearTimeout(t);
   }, []);
 
@@ -31,196 +32,321 @@ export default function LoginPage() {
     try {
       const authResult = await api.login(val, password);
       setAuth(authResult.user, authResult.token);
-      addToast('success', `Welcome, ${authResult.user.name}! 👋`);
+      addToast('success', `Welcome back, ${authResult.user.name}! 👋`);
       const targetRoute =
         authResult.user.role === 'super_admin'
-          ? '/admin'
+          ? '/portal/admin'
           : authResult.user.role === 'staff'
-          ? '/members/search?tab=qr'
-          : '/dashboard';
+          ? '/portal/members/search?tab=qr'
+          : '/portal/dashboard';
       navigate(targetRoute);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Login failed');
+      setError(e instanceof Error ? e.message : 'Login failed. Check your credentials.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row bg-surface">
+    <div style={{
+      minHeight: '100dvh',
+      display: 'flex',
+      fontFamily: '"Inter", system-ui, sans-serif',
+      background: '#F8FAFC',
+    }}>
 
-      {/* ── Left Panel — Brand Info (light, warm gradient accent) ── */}
-      <div className="hidden lg:flex lg:w-[45%] relative bg-gradient-to-br from-surface-container-low to-surface overflow-hidden items-center justify-center border-r border-outline-variant/40">
-        {/* Soft decorative circles */}
-        <div className="absolute top-[-80px] right-[-80px] w-72 h-72 rounded-full" style={{ background: 'radial-gradient(circle, rgba(255,107,53,0.08) 0%, transparent 70%)' }} />
-        <div className="absolute bottom-[-60px] left-[-60px] w-56 h-56 rounded-full" style={{ background: 'radial-gradient(circle, rgba(0,212,170,0.07) 0%, transparent 70%)' }} />
-        <div className="absolute top-1/2 left-0 w-40 h-40 rounded-full -translate-y-1/2" style={{ background: 'radial-gradient(circle, rgba(245,158,11,0.05) 0%, transparent 70%)' }} />
+      {/* ── Left Brand Panel ─────────────────────────────────────────── */}
+      <div style={{
+        display: 'none',
+        width: '44%',
+        background: '#0F172A',
+        position: 'relative',
+        overflow: 'hidden',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        padding: '48px',
+      }} className="login-left-panel">
 
-        {/* Content */}
-        <div className={`relative z-10 max-w-md px-10 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          {/* Logo */}
-          <div className="mb-8">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent to-accent-hover flex items-center justify-center shadow-glow-accent mb-6">
-              <span className="material-symbols-outlined text-white text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>credit_card</span>
+        {/* Subtle grid pattern overlay */}
+        <div style={{
+          position: 'absolute', inset: 0, opacity: 0.04,
+          backgroundImage: 'linear-gradient(rgba(255,255,255,.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.6) 1px, transparent 1px)',
+          backgroundSize: '32px 32px',
+        }} />
+
+        {/* Warm glow accents */}
+        <div style={{ position: 'absolute', top: '-80px', right: '-80px', width: '320px', height: '320px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,107,53,0.18) 0%, transparent 70%)' }} />
+        <div style={{ position: 'absolute', bottom: '80px', left: '-60px', width: '240px', height: '240px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,212,170,0.12) 0%, transparent 70%)' }} />
+
+        {/* Brand */}
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '60px' }}>
+            <div style={{
+              width: '42px', height: '42px', borderRadius: '12px',
+              background: 'linear-gradient(135deg, #FF6B35 0%, #E85A28 100%)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 4px 16px rgba(255,107,53,0.4)',
+            }}>
+              <span className="material-symbols-outlined" style={{ color: '#fff', fontSize: '22px', fontVariationSettings: "'FILL' 1" }}>credit_card</span>
             </div>
-            <h2 className="text-4xl font-extrabold text-on-surface font-display leading-tight tracking-tight mb-3">
-              Metro Cardz
-            </h2>
-            <p className="text-lg text-on-surface-variant leading-relaxed">
-              The complete loyalty & membership platform for modern businesses across India.
-            </p>
+            <div>
+              <p style={{ color: '#fff', fontWeight: 800, fontSize: '16px', margin: 0, fontFamily: '"Plus Jakarta Sans", Inter, sans-serif' }}>Metro Cardz</p>
+              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', margin: 0 }}>Merchant Platform</p>
+            </div>
           </div>
 
-          {/* Feature highlights */}
-          <div className="space-y-3">
-            {[
-              { icon: 'qr_code_scanner', title: 'Scan & Reward', desc: 'Instant QR-based member verification', color: 'text-accent', bg: 'bg-accent/[0.08]' },
-              { icon: 'trending_up',     title: 'Real-time Analytics', desc: 'Track redemptions, growth & engagement', color: 'text-secondary', bg: 'bg-secondary/[0.08]' },
-              { icon: 'campaign',        title: 'Smart Campaigns', desc: 'Birthday, anniversary & custom automations', color: 'text-tertiary', bg: 'bg-tertiary/[0.08]' },
-            ].map((f, i) => (
-              <div
-                key={f.icon}
-                className={`flex items-start gap-4 p-4 rounded-xl bg-white border border-outline-variant/40 shadow-card transition-all duration-500 ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-6'}`}
-                style={{ transitionDelay: `${300 + i * 100}ms` }}
-              >
-                <div className={`w-10 h-10 rounded-xl ${f.bg} flex items-center justify-center shrink-0`}>
-                  <span className={`material-symbols-outlined ${f.color} text-[20px]`} style={{ fontVariationSettings: "'FILL' 1" }}>{f.icon}</span>
-                </div>
-                <div>
-                  <p className="text-[14px] font-bold text-on-surface font-display">{f.title}</p>
-                  <p className="text-[13px] text-on-surface-variant">{f.desc}</p>
-                </div>
+          <h1 style={{
+            color: '#fff', fontFamily: '"Plus Jakarta Sans", Inter, sans-serif',
+            fontSize: '36px', fontWeight: 800, lineHeight: 1.2,
+            margin: '0 0 16px',
+            opacity: mounted ? 1 : 0,
+            transform: mounted ? 'none' : 'translateY(16px)',
+            transition: 'opacity 0.6s ease, transform 0.6s ease',
+          }}>
+            India's smartest<br />
+            <span style={{ color: '#FF6B35' }}>loyalty platform</span>
+          </h1>
+          <p style={{
+            color: 'rgba(255,255,255,0.55)', fontSize: '15px', lineHeight: 1.65, margin: 0,
+            opacity: mounted ? 1 : 0,
+            transform: mounted ? 'none' : 'translateY(12px)',
+            transition: 'opacity 0.6s 0.1s ease, transform 0.6s 0.1s ease',
+          }}>
+            Manage your members, rewards, QR scans<br />and campaigns — all in one place.
+          </p>
+        </div>
+
+        {/* Feature Chips */}
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          {[
+            { icon: 'qr_code_scanner', label: 'Instant QR Scan & Verify', color: '#FF6B35' },
+            { icon: 'trending_up',     label: 'Real-time Redemption Analytics', color: '#00D4AA' },
+            { icon: 'campaign',        label: 'Birthday & Campaign Automation', color: '#F59E0B' },
+            { icon: 'groups',          label: 'Full Member Lifecycle View', color: '#818CF8' },
+          ].map((f, i) => (
+            <div key={f.icon} style={{
+              display: 'flex', alignItems: 'center', gap: '14px',
+              padding: '14px 16px', borderRadius: '12px',
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              marginBottom: '8px',
+              opacity: mounted ? 1 : 0,
+              transform: mounted ? 'none' : 'translateX(-16px)',
+              transition: `opacity 0.5s ${0.2 + i * 0.08}s ease, transform 0.5s ${0.2 + i * 0.08}s ease`,
+            }}>
+              <div style={{
+                width: '34px', height: '34px', borderRadius: '8px', flexShrink: 0,
+                background: `${f.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '18px', color: f.color, fontVariationSettings: "'FILL' 1" }}>{f.icon}</span>
               </div>
-            ))}
-          </div>
+              <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', fontWeight: 500 }}>{f.label}</span>
+            </div>
+          ))}
 
-          {/* Trust stats */}
-          <div className="mt-10 flex gap-8">
-            {[
-              { num: '500+', label: 'Businesses' },
-              { num: '10K+', label: 'Members' },
-              { num: '99.9%', label: 'Uptime' },
-            ].map(s => (
-              <div key={s.label}>
-                <p className="font-display font-extrabold text-xl text-accent">{s.num}</p>
-                <p className="text-on-surface-variant text-[11px] tracking-wider uppercase mt-0.5">{s.label}</p>
+          {/* Stats row */}
+          <div style={{ display: 'flex', gap: '32px', marginTop: '28px', paddingTop: '24px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+            {[{ n: '500+', l: 'Businesses' }, { n: '10K+', l: 'Members' }, { n: '99.9%', l: 'Uptime' }].map(s => (
+              <div key={s.l}>
+                <p style={{ color: '#FF6B35', fontWeight: 800, fontSize: '20px', margin: '0 0 2px', fontFamily: '"Plus Jakarta Sans", Inter, sans-serif' }}>{s.n}</p>
+                <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', margin: 0 }}>{s.l}</p>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* ── Right Panel — Login Form ── */}
-      <div className="flex-1 flex flex-col justify-center items-center px-5 py-12 bg-surface">
-        {/* Light decorative bg for mobile */}
-        <div className="lg:hidden fixed top-0 left-0 w-full h-[180px] -z-10 overflow-hidden pointer-events-none">
-          <div className="absolute -top-[40%] -right-[10%] w-[50%] h-[200%] rounded-full bg-accent/[0.05] blur-[60px]" />
-        </div>
+      {/* ── Right Login Panel ────────────────────────────────────────── */}
+      <div style={{
+        flex: 1, display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        padding: '32px 20px',
+        background: '#F8FAFC',
+      }}>
+        <div style={{
+          width: '100%', maxWidth: '400px',
+          opacity: mounted ? 1 : 0,
+          transform: mounted ? 'none' : 'translateY(20px)',
+          transition: 'opacity 0.5s ease, transform 0.5s ease',
+        }}>
 
-        <div className={`w-full max-w-[400px] transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
-          {/* Mobile logo */}
-          <div className="lg:hidden mb-8 text-center">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent to-accent-hover text-white flex items-center justify-center mx-auto mb-4 shadow-glow-accent">
-              <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>credit_card</span>
+          {/* Mobile logo (hidden on desktop) */}
+          <div className="login-mobile-logo" style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <div style={{
+              width: '52px', height: '52px', borderRadius: '14px', margin: '0 auto 12px',
+              background: 'linear-gradient(135deg, #FF6B35 0%, #E85A28 100%)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 4px 20px rgba(255,107,53,0.35)',
+            }}>
+              <span className="material-symbols-outlined" style={{ color: '#fff', fontSize: '26px', fontVariationSettings: "'FILL' 1" }}>credit_card</span>
             </div>
-            <h1 className="text-[22px] font-extrabold text-on-surface font-display">Metro Cardz</h1>
-            <p className="text-body-sm text-on-surface-variant mt-1">Merchant Loyalty Platform</p>
+            <h1 style={{ fontSize: '20px', fontWeight: 800, color: '#0F172A', margin: '0 0 4px', fontFamily: '"Plus Jakarta Sans", Inter, sans-serif' }}>Metro Cardz</h1>
+            <p style={{ fontSize: '13px', color: '#64748B', margin: 0 }}>Merchant Loyalty Platform</p>
           </div>
 
-          {/* Welcome heading */}
-          <div className="mb-7">
-            <h1 className="text-[28px] font-extrabold text-on-surface font-display tracking-tight mb-1.5">
-              Welcome back 👋
-            </h1>
-            <p className="text-[15px] text-on-surface-variant">
-              Sign in to your merchant or staff account.
+          {/* Heading */}
+          <div style={{ marginBottom: '28px' }}>
+            <h2 style={{ fontSize: '26px', fontWeight: 800, color: '#0F172A', margin: '0 0 6px', fontFamily: '"Plus Jakarta Sans", Inter, sans-serif', letterSpacing: '-0.3px' }}>
+              Sign in to your account
+            </h2>
+            <p style={{ fontSize: '14px', color: '#64748B', margin: 0 }}>
+              Enter your credentials to access the merchant dashboard.
             </p>
           </div>
 
           {/* Form Card */}
-          <div className="bg-white rounded-2xl p-6 shadow-card border border-outline-variant/40">
+          <div style={{
+            background: '#FFFFFF', borderRadius: '20px', padding: '28px',
+            border: '1px solid #E2E8F0',
+            boxShadow: '0 4px 24px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04)',
+          }}>
             <form onSubmit={handleLogin} noValidate>
+
               {/* Email field */}
-              <div className="mb-4">
-                <label htmlFor="login-email" className="form-label">Email or Mobile Number</label>
-                <div className="relative">
-                  <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant/50 text-[18px] pointer-events-none">person</span>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#374151', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Email or Mobile
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <span className="material-symbols-outlined" style={{
+                    position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)',
+                    fontSize: '18px', color: focused === 'email' ? '#FF6B35' : '#94A3B8', pointerEvents: 'none',
+                    transition: 'color 0.2s',
+                  }}>person</span>
                   <input
                     id="login-email"
                     type="text"
                     autoComplete="username"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
+                    onFocus={() => setFocused('email')}
+                    onBlur={() => setFocused(null)}
                     disabled={loading}
                     placeholder="e.g. 9876543210 or email@domain.com"
-                    className="input-field pl-11 pr-4"
+                    style={{
+                      width: '100%', height: '48px', paddingLeft: '44px', paddingRight: '16px',
+                      border: `1.5px solid ${focused === 'email' ? '#FF6B35' : '#E2E8F0'}`,
+                      borderRadius: '12px', fontSize: '14px', background: '#F8FAFC',
+                      color: '#0F172A', outline: 'none', boxSizing: 'border-box',
+                      transition: 'border-color 0.2s, box-shadow 0.2s',
+                      boxShadow: focused === 'email' ? '0 0 0 3px rgba(255,107,53,0.12)' : 'none',
+                    }}
                   />
                 </div>
               </div>
 
               {/* Password field */}
-              <div className="mb-5">
-                <label htmlFor="login-password" className="form-label">Password</label>
-                <div className="relative">
-                  <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant/50 text-[18px] pointer-events-none">lock</span>
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#374151', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Password
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <span className="material-symbols-outlined" style={{
+                    position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)',
+                    fontSize: '18px', color: focused === 'password' ? '#FF6B35' : '#94A3B8', pointerEvents: 'none',
+                    transition: 'color 0.2s',
+                  }}>lock</span>
                   <input
                     id="login-password"
                     type={showPassword ? 'text' : 'password'}
                     autoComplete="current-password"
                     value={password}
                     onChange={e => setPassword(e.target.value)}
+                    onFocus={() => setFocused('password')}
+                    onBlur={() => setFocused(null)}
                     disabled={loading}
                     placeholder="Enter your password"
-                    className="input-field pl-11 pr-12"
+                    style={{
+                      width: '100%', height: '48px', paddingLeft: '44px', paddingRight: '48px',
+                      border: `1.5px solid ${focused === 'password' ? '#FF6B35' : '#E2E8F0'}`,
+                      borderRadius: '12px', fontSize: '14px', background: '#F8FAFC',
+                      color: '#0F172A', outline: 'none', boxSizing: 'border-box',
+                      transition: 'border-color 0.2s, box-shadow 0.2s',
+                      boxShadow: focused === 'password' ? '0 0 0 3px rgba(255,107,53,0.12)' : 'none',
+                    }}
                   />
                   <button
                     type="button"
                     tabIndex={-1}
                     onClick={() => setShowPassword(v => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50 hover:text-on-surface transition-colors p-1 rounded-lg hover:bg-surface-container"
+                    style={{
+                      position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                      background: 'none', border: 'none', cursor: 'pointer', padding: '4px',
+                      color: '#94A3B8', display: 'flex', alignItems: 'center', borderRadius: '6px',
+                    }}
                   >
-                    <span className="material-symbols-outlined text-[18px]">{showPassword ? 'visibility_off' : 'visibility'}</span>
+                    <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>{showPassword ? 'visibility_off' : 'visibility'}</span>
                   </button>
                 </div>
               </div>
 
               {/* Error */}
               {error && (
-                <div className="mb-4 bg-error-container rounded-xl p-3.5 border border-error/15 flex items-start gap-2.5 animate-shake">
-                  <span className="material-symbols-outlined text-error text-[18px] mt-0.5 shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>error</span>
-                  <p className="text-[13px] text-on-error-container font-medium">{error}</p>
+                <div style={{
+                  marginBottom: '16px', padding: '12px 14px',
+                  background: '#FEF2F2', border: '1px solid rgba(239,68,68,0.2)',
+                  borderRadius: '10px', display: 'flex', alignItems: 'flex-start', gap: '10px',
+                }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#EF4444', flexShrink: 0, marginTop: '1px', fontVariationSettings: "'FILL' 1" }}>error</span>
+                  <p style={{ fontSize: '13px', color: '#991B1B', margin: 0, lineHeight: 1.5 }}>{error}</p>
                 </div>
               )}
 
-              {/* Sign In button */}
+              {/* Sign In Button */}
               <button
                 id="email-login-btn"
                 type="submit"
                 disabled={loading || !email.trim() || !password}
-                className="w-full h-12 rounded-xl btn-primary text-[15px] flex items-center justify-center gap-2"
+                style={{
+                  width: '100%', height: '50px', borderRadius: '12px', border: 'none',
+                  background: loading || !email.trim() || !password
+                    ? '#E2E8F0'
+                    : 'linear-gradient(135deg, #FF6B35 0%, #E85A28 100%)',
+                  color: loading || !email.trim() || !password ? '#94A3B8' : '#fff',
+                  fontSize: '15px', fontWeight: 700, cursor: loading || !email.trim() || !password ? 'not-allowed' : 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                  fontFamily: '"Plus Jakarta Sans", Inter, sans-serif',
+                  boxShadow: loading || !email.trim() || !password ? 'none' : '0 4px 14px rgba(255,107,53,0.35)',
+                  transition: 'all 0.2s ease',
+                }}
               >
                 {loading ? (
-                  <span className="material-symbols-outlined animate-spin text-[20px]">progress_activity</span>
+                  <>
+                    <div style={{ width: '18px', height: '18px', border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+                    Signing in…
+                  </>
                 ) : (
                   <>
                     Sign In
-                    <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                    <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>arrow_forward</span>
                   </>
                 )}
               </button>
             </form>
 
-            <p className="text-center text-[13px] text-on-surface-variant mt-5">
-              Not a merchant yet?{' '}
-              <a href="/#contact" className="text-accent font-semibold hover:underline">Get started →</a>
+            <p style={{ textAlign: 'center', fontSize: '13px', color: '#64748B', marginTop: '20px', marginBottom: 0 }}>
+              Not a merchant?{' '}
+              <a href="/#contact" style={{ color: '#FF6B35', fontWeight: 700, textDecoration: 'none' }}>Get started →</a>
             </p>
           </div>
 
-          <p className="text-center text-[11px] text-on-surface-variant/50 mt-6">
-            © {new Date().getFullYear()} Metro Cardz · Secure Login
+          <p style={{ textAlign: 'center', fontSize: '11px', color: '#94A3B8', marginTop: '24px', lineHeight: 1.6 }}>
+            © {new Date().getFullYear()} Metro Cardz · Secure Login · v2.0
           </p>
         </div>
       </div>
+
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (min-width: 1024px) {
+          .login-left-panel { display: flex !important; }
+          .login-mobile-logo { display: none !important; }
+        }
+
+        input::placeholder { color: #94A3B8; }
+        input:disabled { opacity: 0.6; cursor: not-allowed; }
+      `}</style>
     </div>
   );
 }

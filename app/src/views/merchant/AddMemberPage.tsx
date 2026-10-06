@@ -210,7 +210,7 @@ export default function AddMemberPage() {
   return (
     <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-2xl mx-auto animate-fade-in">
       <div className="flex items-center justify-between mb-6">
-        <button onClick={() => navigate('/members')} className="flex items-center gap-1 text-on-surface-variant hover:text-on-surface text-body-md transition-colors">
+        <button onClick={() => navigate('/portal/members')} className="flex items-center gap-1 text-on-surface-variant hover:text-on-surface text-body-md transition-colors">
           <span className="material-symbols-outlined text-[18px]">arrow_back</span>
           Back
         </button>
@@ -653,7 +653,7 @@ export default function AddMemberPage() {
 
         {/* Actions */}
         <div className="flex gap-3 pt-2">
-          <button type="button" onClick={() => navigate('/members')} className="btn-secondary flex-1">Cancel</button>
+          <button type="button" onClick={() => navigate('/portal/members')} className="btn-secondary flex-1">Cancel</button>
           <button
             type="submit"
             disabled={loading}

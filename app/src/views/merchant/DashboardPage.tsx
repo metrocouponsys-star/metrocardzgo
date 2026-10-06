@@ -1,39 +1,105 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
-import { StatCard } from '../../components/ui/StatCard';
-import { StatCardSkeleton } from '../../components/ui/Skeleton';
-import { EmptyState } from '../../components/ui/EmptyState';
 import type { DashboardStats, CelebrationMember } from '../../types';
 import * as api from '../../api';
 import { cached } from '../../api/cache';
-import { formatDistanceToNow, format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 
-const OFFER_ICONS: Record<string, string> = {
-  percent_off: 'percent', flat_off: 'sell', buy_1_get_1: 'card_giftcard', free_service: 'spa', wallet_points: 'account_balance_wallet',
-  referral: 'people', birthday: 'cake', unknown: 'star',
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+const REFRESH_MS = 60_000;
+
+function greeting() {
+  const h = new Date().getHours();
+  return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+}
+
+// ─── Inline design tokens (no Tailwind bleed) ────────────────────────────────
+const T = {
+  bg: '#F8FAFC',
+  white: '#FFFFFF',
+  border: '#E2E8F0',
+  borderLight: 'rgba(226,232,240,0.6)',
+  text: '#0F172A',
+  textMuted: '#64748B',
+  textLight: '#94A3B8',
+  orange: '#FF6B35',
+  orangeLight: '#FFF4EF',
+  orangeDark: '#E85A28',
+  teal: '#00D4AA',
+  tealLight: '#E0FFF6',
+  amber: '#F59E0B',
+  amberLight: '#FEF3C7',
+  shadow: '0 1px 3px rgba(15,23,42,0.04), 0 4px 12px rgba(15,23,42,0.03)',
+  shadowMd: '0 4px 16px rgba(15,23,42,0.08)',
+  shadowLg: '0 8px 32px rgba(15,23,42,0.1)',
 };
 
-const REFRESH_INTERVAL_MS = 60_000; // auto-refresh every 60 s
-
-function formatCelebrationDate(isoDateStr?: string) {
-  if (!isoDateStr) return '';
-  try {
-    const d = new Date(isoDateStr.includes('T') ? isoDateStr : `${isoDateStr}T00:00:00`);
-    return format(d, 'dd MMM yyyy');
-  } catch {
-    return isoDateStr;
-  }
+// ─── Mini components ─────────────────────────────────────────────────────────
+function Pill({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button onClick={onClick} style={{
+      padding: '5px 14px', borderRadius: '9999px', fontSize: '12px', fontWeight: 600,
+      border: `1.5px solid ${active ? T.orange : T.border}`,
+      background: active ? T.orangeLight : T.white,
+      color: active ? T.orangeDark : T.textMuted,
+      cursor: 'pointer', transition: 'all 0.15s ease', whiteSpace: 'nowrap',
+    }}>{label}</button>
+  );
 }
 
-// Time-based greeting
-function getGreeting() {
-  const hour = new Date().getHours();
-  if (hour < 12) return 'Good morning';
-  if (hour < 17) return 'Good afternoon';
-  return 'Good evening';
+function StatBlock({ icon, label, value, sub, color, bg, onClick }: {
+  icon: string; label: string; value: string | number; sub?: string;
+  color: string; bg: string; onClick?: () => void;
+}) {
+  return (
+    <div onClick={onClick} style={{
+      background: T.white, borderRadius: '16px', padding: '20px 22px',
+      border: `1px solid ${T.border}`, boxShadow: T.shadow,
+      cursor: onClick ? 'pointer' : 'default',
+      transition: 'transform 0.15s, box-shadow 0.15s',
+      position: 'relative', overflow: 'hidden',
+    }}
+      onMouseEnter={e => { if (onClick) { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLElement).style.boxShadow = T.shadowMd; } }}
+      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ''; (e.currentTarget as HTMLElement).style.boxShadow = T.shadow; }}
+    >
+      {/* Left color stripe */}
+      <div style={{ position: 'absolute', top: 0, left: 0, width: '3px', height: '100%', background: color, borderRadius: '0 2px 2px 0' }} />
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
+        <div style={{ width: '42px', height: '42px', background: bg, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <span className="material-symbols-outlined" style={{ fontSize: '20px', color, fontVariationSettings: "'FILL' 1" }}>{icon}</span>
+        </div>
+        <div style={{ minWidth: 0 }}>
+          <p style={{ fontSize: '12px', fontWeight: 600, color: T.textLight, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 4px' }}>{label}</p>
+          <p style={{ fontSize: '26px', fontWeight: 800, color: T.text, margin: '0 0 2px', lineHeight: 1, fontFamily: '"Plus Jakarta Sans", Inter, sans-serif' }}>{typeof value === 'number' ? value.toLocaleString() : value}</p>
+          {sub && <p style={{ fontSize: '12px', color: T.textLight, margin: 0 }}>{sub}</p>}
+        </div>
+      </div>
+    </div>
+  );
 }
 
+function QuickAction({ icon, label, color, bg, onClick }: {
+  icon: string; label: string; color: string; bg: string; onClick: () => void;
+}) {
+  return (
+    <button onClick={onClick} style={{
+      background: T.white, border: `1px solid ${T.border}`, borderRadius: '14px',
+      padding: '16px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center',
+      gap: '10px', cursor: 'pointer', transition: 'all 0.15s ease', boxShadow: T.shadow,
+    }}
+      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLElement).style.boxShadow = T.shadowMd; }}
+      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ''; (e.currentTarget as HTMLElement).style.boxShadow = T.shadow; }}
+    >
+      <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span className="material-symbols-outlined" style={{ fontSize: '22px', color, fontVariationSettings: "'FILL' 1" }}>{icon}</span>
+      </div>
+      <span style={{ fontSize: '12px', fontWeight: 700, color: T.text, textAlign: 'center', lineHeight: 1.3 }}>{label}</span>
+    </button>
+  );
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const { user } = useAuthStore();
   const navigate = useNavigate();
@@ -45,504 +111,277 @@ export default function DashboardPage() {
   const [error, setError] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  // Celebrations
   const [celebrations, setCelebrations] = useState<CelebrationMember[]>([]);
   const [celebrationsLoading, setCelebrationsLoading] = useState(true);
-  const [celebrationFilter, setCelebrationFilter] = useState<'all' | 'today' | '1day' | '7days' | '1month'>('all');
+  const [celebFilter, setCelebFilter] = useState<'all' | 'today' | '7days'>('all');
 
   const fetchStats = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
     setError(false);
-    const cacheKey = `dashboard/${user?.merchant_id}`;
+    const key = `dashboard/${user?.merchant_id}`;
     try {
-      const s = await cached(
-        cacheKey,
-        () => api.getDashboardStats(user?.merchant_id || ''),
-        // onUpdate: called when background refresh brings fresh data
-        (fresh) => {
-          setStats(fresh);
-          setLastUpdated(new Date());
-          setSecondsSince(0);
-        },
-      );
-      setStats(s);
-      setLastUpdated(new Date());
-      setSecondsSince(0);
-    } catch {
-      setError(true);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
+      const s = await cached(key, () => api.getDashboardStats(user?.merchant_id || ''), (fresh) => {
+        setStats(fresh); setLastUpdated(new Date()); setSecondsSince(0);
+      });
+      setStats(s); setLastUpdated(new Date()); setSecondsSince(0);
+    } catch { setError(true); }
+    finally { setLoading(false); setRefreshing(false); }
   }, [user?.merchant_id]);
 
-  // Initial load
   useEffect(() => {
     fetchStats();
-    // Load celebrations (birthday/anniversary up to 30 days) on mount
     api.getCelebrations(30).then(setCelebrations).catch(() => setCelebrations([]))
       .finally(() => setCelebrationsLoading(false));
   }, [fetchStats]);
 
-  // Auto-refresh — pauses when tab is hidden (visibility API)
   useEffect(() => {
-    const startInterval = () => {
-      intervalRef.current = setInterval(() => {
-        if (document.visibilityState === 'visible') fetchStats(true);
-      }, REFRESH_INTERVAL_MS);
-    };
-    startInterval();
-    const handleVisibility = () => {
+    intervalRef.current = setInterval(() => {
       if (document.visibilityState === 'visible') fetchStats(true);
-    };
-    document.addEventListener('visibilitychange', handleVisibility);
+    }, REFRESH_MS);
+    const onVisibility = () => { if (document.visibilityState === 'visible') fetchStats(true); };
+    document.addEventListener('visibilitychange', onVisibility);
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
-      document.removeEventListener('visibilitychange', handleVisibility);
+      document.removeEventListener('visibilitychange', onVisibility);
     };
   }, [fetchStats]);
 
-  // "Updated X seconds ago" ticker
   useEffect(() => {
     tickRef.current = setInterval(() => setSecondsSince(s => s + 1), 1000);
     return () => { if (tickRef.current) clearInterval(tickRef.current); };
   }, []);
 
   const updatedLabel = lastUpdated
-    ? secondsSince < 5
-      ? 'Just updated'
-      : secondsSince < 60
-        ? `Updated ${secondsSince}s ago`
-        : `Updated ${formatDistanceToNow(lastUpdated)} ago`
+    ? secondsSince < 5 ? 'Just updated'
+      : secondsSince < 60 ? `${secondsSince}s ago`
+      : `${formatDistanceToNow(lastUpdated)} ago`
     : null;
 
+  const filteredCelebs = celebrations.filter(c => {
+    if (celebFilter === 'all') return true;
+    const targetDate = c.event_date;
+    if (!targetDate) return false;
+    const today = new Date();
+    const d = new Date(targetDate.includes('T') ? targetDate : `${targetDate}T00:00:00`);
+    const daysAway = Math.ceil((d.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    if (celebFilter === 'today') return daysAway <= 0 && daysAway > -1;
+    if (celebFilter === '7days') return daysAway >= 0 && daysAway <= 7;
+    return true;
+  });
+
+  // ─── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-5xl mx-auto space-y-6">
+    <div style={{ background: T.bg, minHeight: '100dvh', fontFamily: '"Inter", system-ui, sans-serif' }}>
+      <div style={{ maxWidth: '1080px', margin: '0 auto', padding: '24px 20px 40px' }}>
 
-      {/* ── Welcome Banner ─── */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-accent/[0.07] via-surface to-secondary/[0.05] p-6 md:p-8 border border-accent/[0.12]">
-        {/* Decorative glow */}
-        <div className="absolute top-0 right-0 w-48 h-48 rounded-full opacity-30" style={{ background: 'radial-gradient(circle, #FF6B35 0%, transparent 70%)', filter: 'blur(50px)' }} />
-        <div className="absolute bottom-0 left-1/4 w-32 h-32 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #00D4AA 0%, transparent 70%)', filter: 'blur(40px)' }} />
-
-        <div className="relative z-10">
-          <p className="text-accent text-[13px] font-bold tracking-wide mb-1">
-            {new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 17 ? 'Good afternoon' : 'Good evening'} 👋
-          </p>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-on-surface font-display tracking-tight mb-1.5">
-            {user?.name || 'Welcome'}
-          </h1>
-          <p className="text-on-surface-variant text-[14px] max-w-md">
-            Here&apos;s what&apos;s happening with your loyalty program today.
-          </p>
-        </div>
-      </section>
-
-      {/* ── Scan / Search CTA ─── */}
-      <section
-        className="flex items-center gap-4 p-4 bg-white rounded-2xl shadow-card border border-outline-variant/30 cursor-pointer hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 active:scale-[0.99] md:hidden"
-        onClick={() => navigate('/members/search?tab=qr')}
-      >
-        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center shrink-0">
-          <span className="material-symbols-outlined text-accent text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>qr_code_scanner</span>
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[14px] font-bold text-on-surface font-display">Scan / Search Customer</p>
-          <p className="text-[12px] text-on-surface-variant truncate">Redeem offers, add points, check member status</p>
-        </div>
-        <span className="material-symbols-outlined text-on-surface-variant text-[20px]">chevron_right</span>
-      </section>
-
-      {/* Desktop scan card */}
-      <section
-        className="hidden md:flex items-center gap-4 p-5 bg-white rounded-2xl shadow-card border border-outline-variant/30 cursor-pointer hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200"
-        onClick={() => navigate('/members/search?tab=qr')}
-      >
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center shrink-0">
-          <span className="material-symbols-outlined text-accent text-[26px]" style={{ fontVariationSettings: "'FILL' 1" }}>qr_code_scanner</span>
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[16px] font-bold text-on-surface font-display">Scan / Search Customer</p>
-          <p className="text-[13px] text-on-surface-variant">Redeem offers, add points, or check member status</p>
-        </div>
-        <span className="material-symbols-outlined text-on-surface-variant text-[22px]">chevron_right</span>
-      </section>
-
-      {/* ── Quick Actions ─── */}
-      <section className="grid grid-cols-3 gap-3">
-        {[
-          { icon: 'person_add', label: 'Add Member', route: '/members/new', gradient: 'from-accent/10 to-accent/5', iconColor: 'text-accent' },
-          { icon: 'groups', label: 'Members', route: '/members', gradient: 'from-secondary/10 to-secondary/5', iconColor: 'text-secondary' },
-          { icon: 'credit_card', label: 'Cards', route: '/cards', gradient: 'from-tertiary/10 to-tertiary/5', iconColor: 'text-tertiary' },
-        ].map((action) => (
-          <button
-            key={action.route}
-            onClick={() => navigate(action.route)}
-            className="flex flex-col items-center gap-2.5 py-4 px-3 rounded-2xl bg-white shadow-card border border-outline-variant/30 hover:shadow-card-hover hover:-translate-y-1 transition-all duration-200 group active:scale-[0.97]"
-          >
-            <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${action.gradient} flex items-center justify-center group-hover:scale-110 transition-transform`}>
-              <span className={`material-symbols-outlined ${action.iconColor} text-[22px]`} style={{ fontVariationSettings: "'FILL' 1" }}>{action.icon}</span>
-            </div>
-            <span className="text-[12px] font-bold text-on-surface">{action.label}</span>
-          </button>
-        ))}
-      </section>
-
-      {/* ── Stats Grid ─── */}
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-[17px] font-extrabold text-on-surface font-display">Overview</h3>
-          {/* Refresh badge */}
-          <div className="flex items-center gap-2">
+        {/* ── Page Header ── */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '24px', gap: '16px' }}>
+          <div>
+            <p style={{ fontSize: '13px', color: T.orange, fontWeight: 700, margin: '0 0 4px', letterSpacing: '0.02em' }}>
+              {greeting()} 👋
+            </p>
+            <h1 style={{ fontSize: '24px', fontWeight: 800, color: T.text, margin: '0 0 4px', fontFamily: '"Plus Jakarta Sans", Inter, sans-serif', letterSpacing: '-0.3px' }}>
+              {user?.merchant_name || user?.name || 'Dashboard'}
+            </h1>
+            <p style={{ fontSize: '13px', color: T.textMuted, margin: 0 }}>
+              {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
+            </p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
             {updatedLabel && !loading && (
-              <span className="text-[11px] text-on-surface-variant flex items-center gap-1.5 animate-fade-in font-medium">
-                {refreshing
-                  ? <span className="material-symbols-outlined text-[13px] animate-spin-slow text-accent">refresh</span>
-                  : <span className="w-1.5 h-1.5 rounded-full bg-secondary inline-block" />
-                }
-                {refreshing ? 'Refreshing…' : updatedLabel}
+              <span style={{ fontSize: '11px', color: T.textLight }}>
+                {refreshing ? '⟳ Refreshing…' : `↑ ${updatedLabel}`}
               </span>
             )}
             <button
               onClick={() => fetchStats(true)}
-              disabled={refreshing || loading}
-              title="Refresh stats"
-              className="w-8 h-8 rounded-xl flex items-center justify-center text-on-surface-variant hover:bg-accent/[0.06] hover:text-accent transition-all disabled:opacity-40"
+              disabled={refreshing}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px',
+                background: T.white, border: `1px solid ${T.border}`, borderRadius: '10px',
+                fontSize: '12px', fontWeight: 700, color: T.textMuted, cursor: 'pointer',
+                boxShadow: T.shadow, transition: 'all 0.15s',
+              }}
             >
-              <span className={`material-symbols-outlined text-[18px] ${refreshing ? 'animate-spin-slow' : ''}`}>refresh</span>
+              <span className="material-symbols-outlined" style={{ fontSize: '15px', animation: refreshing ? 'spin 1s linear infinite' : 'none' }}>refresh</span>
+              Refresh
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
+        {/* ── Scan Bar — always-visible primary CTA ── */}
+        <button
+          onClick={() => navigate('/portal/members/search?tab=qr')}
+          style={{
+            width: '100%', display: 'flex', alignItems: 'center', gap: '16px',
+            padding: '18px 22px', background: T.text, borderRadius: '16px',
+            border: 'none', cursor: 'pointer', marginBottom: '24px',
+            boxShadow: `0 4px 20px rgba(15,23,42,0.15)`,
+            transition: 'transform 0.15s, box-shadow 0.15s',
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 32px rgba(15,23,42,0.2)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ''; (e.currentTarget as HTMLElement).style.boxShadow = `0 4px 20px rgba(15,23,42,0.15)`; }}
+        >
+          <div style={{ width: '46px', height: '46px', background: 'rgba(255,107,53,0.2)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: '24px', color: T.orange, fontVariationSettings: "'FILL' 1" }}>qr_code_scanner</span>
+          </div>
+          <div style={{ flex: 1, textAlign: 'left' }}>
+            <p style={{ fontSize: '15px', fontWeight: 800, color: '#fff', margin: '0 0 2px', fontFamily: '"Plus Jakarta Sans", Inter, sans-serif' }}>Scan / Search Customer</p>
+            <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', margin: 0 }}>Verify QR, redeem offers, add points</p>
+          </div>
+          <span className="material-symbols-outlined" style={{ fontSize: '20px', color: 'rgba(255,255,255,0.4)' }}>arrow_forward_ios</span>
+        </button>
+
+        {/* ── Quick Actions ── */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '12px', marginBottom: '28px' }}>
+          <QuickAction icon="person_add" label="Add Member" color={T.orange} bg={T.orangeLight} onClick={() => navigate('/portal/members/new')} />
+          <QuickAction icon="groups" label="Members" color="#2563EB" bg="#EFF6FF" onClick={() => navigate('/portal/members')} />
+          <QuickAction icon="credit_card" label="Cards" color="#7C3AED" bg="#F5F3FF" onClick={() => navigate('/portal/cards')} />
+          <QuickAction icon="cake" label="Birthdays" color={T.teal} bg={T.tealLight} onClick={() => navigate('/portal/celebrations')} />
+        </div>
+
+        {/* ── Stats ── */}
+        <div style={{ marginBottom: '28px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+            <h2 style={{ fontSize: '16px', fontWeight: 800, color: T.text, margin: 0, fontFamily: '"Plus Jakarta Sans", Inter, sans-serif' }}>Overview</h2>
+          </div>
+
+          {error && (
+            <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '12px', padding: '14px 16px', fontSize: '13px', color: '#DC2626', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '18px', fontVariationSettings: "'FILL' 1" }}>error</span>
+              Could not load stats. Check your connection.
+            </div>
+          )}
+
           {loading ? (
-            Array.from({ length: 3 }).map((_, i) => <StatCardSkeleton key={i} />)
-          ) : error ? (
-            <div className="col-span-full flex flex-col items-center gap-3 py-8 text-center">
-              <div className="w-14 h-14 rounded-2xl bg-error-container flex items-center justify-center">
-                <span className="material-symbols-outlined text-[28px] text-error">cloud_off</span>
-              </div>
-              <p className="text-body-md text-on-surface-variant">Failed to load stats.</p>
-              <button onClick={() => fetchStats()} className="btn-primary flex items-center gap-2">
-                <span className="material-symbols-outlined text-[18px]">refresh</span>
-                Retry
-              </button>
-            </div>
-          ) : stats ? (
-            <>
-              <StatCard
-                label="Active Members"
-                value={`${stats.total_active_members} / ${stats.total_cards_assigned || stats.total_active_members}`}
-                trend={`${stats.total_active_members} Active / ${stats.total_cards_assigned || stats.total_active_members} Cards`}
-                icon="groups"
-                variant="accent"
-                className="stagger-item"
-                onClick={() => navigate('/members')}
-              />
-              <StatCard
-                label="Redemptions Today"
-                value={stats.redemptions_today}
-                trend="All handled"
-                icon="check_circle"
-                variant="teal"
-                className="stagger-item"
-                onClick={() => navigate('/reports')}
-              />
-              <StatCard
-                label="Points Issued"
-                value={stats.wallet_points_issued_month}
-                trend="This month"
-                icon="stars"
-                variant="amber"
-                className="stagger-item"
-                onClick={() => navigate('/rewards')}
-              />
-            </>
-          ) : null}
-        </div>
-      </section>
-
-      {/* ── Recent Activity ─── */}
-      <section className="space-y-3">
-        <div className="flex justify-between items-center">
-          <h3 className="text-[17px] font-extrabold text-on-surface font-display">Recent Activity</h3>
-          <button onClick={() => navigate('/reports')} className="text-accent text-[13px] font-bold hover:underline flex items-center gap-1 transition-colors">
-            View All
-            <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
-          </button>
-        </div>
-
-        {loading ? (
-          <div className="bg-white rounded-2xl shadow-card border border-outline-variant/30 divide-y divide-outline-variant/30">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-4 p-4" style={{ animationDelay: `${i * 60}ms` }}>
-                <div className="w-10 h-10 rounded-xl skeleton shrink-0" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 skeleton rounded-lg w-1/3" />
-                  <div className="h-3 skeleton rounded-lg w-1/2" />
-                </div>
-                <div className="w-16 h-4 skeleton rounded-lg" />
-              </div>
-            ))}
-          </div>
-        ) : stats && stats.recent_redemptions.length > 0 ? (
-          <div className="bg-white rounded-2xl shadow-card border border-outline-variant/30 overflow-hidden">
-            {stats.recent_redemptions.map((r, idx) => (
-              <div
-                key={r.id}
-                className={`flex items-center justify-between px-4 py-3.5 hover:bg-surface-container/50 transition-colors cursor-pointer group animate-slide-up ${
-                  idx > 0 ? 'border-t border-outline-variant/30' : ''
-                }`}
-                style={{ animationDelay: `${idx * 50}ms` }}
-                onClick={() => navigate(`/members/${r.member_id}`)}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/10 flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-accent text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                      {OFFER_ICONS[r.offer?.offer_type || 'unknown'] || 'star'}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-[14px] font-bold text-on-surface group-hover:text-accent transition-colors">{r.member?.name}</p>
-                    <p className="text-[12px] text-on-surface-variant">{r.offer?.title}</p>
-                  </div>
-                </div>
-                <div className="text-right shrink-0 flex flex-col items-end gap-1">
-                  <p className="text-[11px] text-on-surface-variant font-medium">
-                    {formatDistanceToNow(new Date(r.created_at), { addSuffix: true })}
-                  </p>
-                  <span className="chip chip--teal">
-                    <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                    Success
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <EmptyState
-            icon="group_add"
-            title="Welcome to Metro Cardz!"
-            description="Add your first member to start tracking redemptions and loyalty activity."
-            actionLabel="Add First Member"
-            onAction={() => navigate('/members/new')}
-          />
-        )}
-      </section>
-
-      {/* ── 🎉 Birthday & Anniversary Celebrations ─── */}
-      {(() => {
-        const todayCelebrations = celebrations.filter(c => c.days_until === 0);
-        const in1DayCelebrations = celebrations.filter(c => c.days_until === 1);
-        const in7DaysCelebrations = celebrations.filter(c => c.days_until >= 1 && c.days_until <= 7);
-        const in1MonthCelebrations = celebrations.filter(c => c.days_until >= 8 && c.days_until <= 30);
-        const allUpcoming = celebrations.filter(c => c.days_until >= 0);
-
-        const displayedCelebrations = celebrationFilter === 'today'
-          ? todayCelebrations
-          : celebrationFilter === '1day'
-          ? in1DayCelebrations
-          : celebrationFilter === '7days'
-          ? in7DaysCelebrations
-          : celebrationFilter === '1month'
-          ? in1MonthCelebrations
-          : allUpcoming;
-
-        if (celebrationsLoading) {
-          return (
-            <section className="bg-white rounded-2xl shadow-card border border-outline-variant/30 p-4 animate-pulse">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-lg bg-surface-container-high" />
-                  <div className="h-4 w-48 bg-surface-container-high rounded-lg" />
-                </div>
-                <div className="h-3 w-16 bg-surface-container-high rounded-lg" />
-              </div>
-              <div className="space-y-2">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="flex items-center gap-3 p-3 bg-surface-container/30 rounded-xl">
-                    <div className="w-9 h-9 rounded-lg bg-surface-container-high shrink-0" />
-                    <div className="flex-1 space-y-1">
-                      <div className="h-3 w-32 bg-surface-container-high rounded" />
-                      <div className="h-2 w-24 bg-surface-container-high rounded" />
-                    </div>
-                    <div className="h-6 w-20 bg-surface-container-high rounded-full" />
-                  </div>
-                ))}
-              </div>
-            </section>
-          );
-        }
-
-        return (
-          <section className="bg-white rounded-2xl shadow-card border border-outline-variant/30 overflow-hidden space-y-0">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 border-b border-outline-variant/30 bg-surface-container-low/40">
-              <div className="flex items-center gap-2.5">
-                <span className="text-[22px]">🎉</span>
-                <div>
-                  <h3 className="text-[16px] font-extrabold text-on-surface font-display flex items-center gap-2">
-                    Celebrations
-                    {todayCelebrations.length > 0 && (
-                      <span className="chip chip--accent animate-pulse">
-                        {todayCelebrations.length} Today!
-                      </span>
-                    )}
-                  </h3>
-                  <p className="text-[12px] text-on-surface-variant">
-                    Upcoming birthdays & anniversaries for the next 30 days
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 self-start sm:self-auto">
-                <button
-                  onClick={() => navigate('/celebrations')}
-                  className="text-accent text-[12px] font-bold hover:underline flex items-center gap-1"
-                >
-                  <span className="material-symbols-outlined text-[16px]">open_in_new</span>
-                  View All
-                </button>
-                <button
-                  onClick={() => navigate('/campaigns')}
-                  className="text-on-surface-variant text-[12px] font-medium hover:underline flex items-center gap-1"
-                >
-                  <span className="material-symbols-outlined text-[16px]">campaign</span>
-                  Auto-Reminders
-                </button>
-              </div>
-            </div>
-
-            {/* Filter Tabs */}
-            <div className="flex items-center gap-1.5 p-3 overflow-x-auto border-b border-outline-variant/20 bg-surface">
-              {[
-                { key: 'all', label: 'All Upcoming', count: allUpcoming.length },
-                { key: 'today', label: 'Today', count: todayCelebrations.length },
-                { key: '1day', label: 'In 1 Day', count: in1DayCelebrations.length },
-                { key: '7days', label: 'In 7 Days', count: in7DaysCelebrations.length },
-                { key: '1month', label: 'In 1 Month', count: in1MonthCelebrations.length },
-              ].map(t => (
-                <button
-                  key={t.key}
-                  onClick={() => setCelebrationFilter(t.key as any)}
-                  className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${
-                    celebrationFilter === t.key
-                      ? 'bg-accent text-white shadow-sm'
-                      : 'bg-surface-container/60 text-on-surface-variant hover:bg-surface-container'
-                  }`}
-                >
-                  <span>{t.label}</span>
-                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                    celebrationFilter === t.key ? 'bg-white/25 text-white' : 'bg-surface-container-high text-on-surface'
-                  }`}>
-                    {t.count}
-                  </span>
-                </button>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '14px' }}>
+              {[...Array(4)].map((_, i) => (
+                <div key={i} style={{ height: '100px', background: 'linear-gradient(90deg, #F1F5F9 0%, #E2E8F0 40%, #F1F5F9 80%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s linear infinite', borderRadius: '16px', border: `1px solid ${T.border}` }} />
               ))}
             </div>
+          ) : stats ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '14px' }}>
+              <StatBlock icon="groups" label="Total Members" value={stats.total_members ?? 0} sub="All time" color={T.orange} bg={T.orangeLight} onClick={() => navigate('/portal/members')} />
+              <StatBlock icon="trending_up" label="Active Today" value={stats.active_today ?? stats.new_members_today ?? 0} sub="Checked in today" color="#2563EB" bg="#EFF6FF" />
+              <StatBlock icon="redeem" label="Redemptions" value={stats.redemptions_this_month ?? 0} sub="This month" color={T.teal} bg={T.tealLight} />
+              <StatBlock icon="workspace_premium" label="Points Issued" value={stats.total_points_issued ?? 0} sub="This month" color={T.amber} bg={T.amberLight} />
+            </div>
+          ) : null}
+        </div>
 
-            {/* Content List */}
-            {displayedCelebrations.length === 0 ? (
-              <div className="py-10 px-4 text-center">
-                <div className="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center mx-auto mb-2 text-on-surface-variant text-[22px]">
-                  🎂
-                </div>
-                <p className="text-[14px] font-bold text-on-surface font-display">No celebrations found</p>
-                <p className="text-[12px] text-on-surface-variant max-w-sm mx-auto mt-0.5">
-                  {celebrationFilter === 'today'
-                    ? 'No member birthdays or anniversaries today.'
-                    : celebrationFilter === '1day'
-                    ? 'No celebrations tomorrow.'
-                    : celebrationFilter === '7days'
-                    ? 'No celebrations in the next 7 days.'
-                    : celebrationFilter === '1month'
-                    ? 'No celebrations in the next 30 days.'
-                    : 'No member birthdays or anniversaries registered.'}
-                </p>
+        {/* ── Two-column layout ── */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '20px', alignItems: 'start' }}>
+
+          {/* Recent Activity */}
+          <div>
+            <div style={{ background: T.white, borderRadius: '16px', border: `1px solid ${T.border}`, boxShadow: T.shadow, overflow: 'hidden' }}>
+              <div style={{ padding: '18px 20px 14px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: 800, color: T.text, margin: 0, fontFamily: '"Plus Jakarta Sans", Inter, sans-serif' }}>Recent Redemptions</h3>
+                <button onClick={() => navigate('/portal/reports')} style={{ fontSize: '12px', color: T.orange, fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer' }}>View all →</button>
               </div>
-            ) : (
-              <div className="divide-y divide-outline-variant/20">
-                {displayedCelebrations.map(m => {
-                  const isToday = m.days_until === 0;
-                  const isTomorrow = m.days_until === 1;
-                  const isBirthday = m.event_type === 'birthday';
-
-                  return (
-                    <div
-                      key={`${m.event_type}-${m.member_id}`}
-                      onClick={() => navigate(`/members/${m.member_id}`)}
-                      className={`flex items-center justify-between gap-3 px-4 py-3.5 hover:bg-surface-container/50 cursor-pointer transition-colors group ${
-                        isToday ? (isBirthday ? 'bg-accent-soft/40' : 'bg-purple-50/40') : ''
-                      }`}
+              {stats?.recent_redemptions && stats.recent_redemptions.length > 0 ? (
+                <div>
+                  {stats.recent_redemptions.slice(0, 6).map((r: any, i: number) => (
+                    <div key={i} style={{
+                      display: 'flex', alignItems: 'center', gap: '12px',
+                      padding: '12px 20px', borderBottom: i < 5 ? `1px solid ${T.border}` : 'none',
+                      transition: 'background 0.1s',
+                    }}
+                      onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#FAFBFC'}
+                      onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = ''}
                     >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-[20px] ${
-                          isBirthday ? 'bg-accent-soft text-accent' : 'bg-purple-100 text-purple-700'
-                        }`}>
+                      <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: T.tealLight, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: '16px', color: T.teal, fontVariationSettings: "'FILL' 1" }}>redeem</span>
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: '13px', fontWeight: 700, color: T.text, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.member_name || 'Customer'}</p>
+                        <p style={{ fontSize: '12px', color: T.textLight, margin: 0 }}>{r.offer_name || 'Offer redeemed'}</p>
+                      </div>
+                      <p style={{ fontSize: '11px', color: T.textLight, flexShrink: 0, margin: 0 }}>
+                        {r.redeemed_at ? format(new Date(r.redeemed_at), 'dd MMM, hh:mm a') : ''}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '36px', color: T.textLight, display: 'block', marginBottom: '8px' }}>receipt_long</span>
+                  <p style={{ fontSize: '13px', color: T.textMuted, margin: 0 }}>No recent redemptions</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Celebrations Sidebar */}
+          <div>
+            <div style={{ background: T.white, borderRadius: '16px', border: `1px solid ${T.border}`, boxShadow: T.shadow, overflow: 'hidden' }}>
+              <div style={{ padding: '16px 18px 12px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: 800, color: T.text, margin: 0, display: 'flex', alignItems: 'center', gap: '6px', fontFamily: '"Plus Jakarta Sans", Inter, sans-serif' }}>
+                  🎂 Celebrations
+                </h3>
+                <button onClick={() => navigate('/portal/celebrations')} style={{ fontSize: '12px', color: T.orange, fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer' }}>All →</button>
+              </div>
+              {/* Filter pills */}
+              <div style={{ padding: '10px 14px', display: 'flex', gap: '6px', overflowX: 'auto', borderBottom: `1px solid ${T.border}` }}>
+                {(['all', 'today', '7days'] as const).map(f => (
+                  <Pill key={f} label={f === 'all' ? 'All' : f === 'today' ? 'Today' : '7 Days'} active={celebFilter === f} onClick={() => setCelebFilter(f)} />
+                ))}
+              </div>
+              <div style={{ maxHeight: '380px', overflowY: 'auto' }}>
+                {celebrationsLoading ? (
+                  <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {[...Array(4)].map((_, i) => (
+                      <div key={i} style={{ height: '52px', borderRadius: '10px', background: 'linear-gradient(90deg, #F1F5F9 0%, #E2E8F0 40%, #F1F5F9 80%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s linear infinite' }} />
+                    ))}
+                  </div>
+                ) : filteredCelebs.length > 0 ? (
+                  filteredCelebs.slice(0, 8).map((c, i) => {
+                    const isBirthday = c.event_type === 'birthday';
+                    return (
+                      <div key={`${c.member_id}-${c.event_type}`} style={{
+                        display: 'flex', alignItems: 'center', gap: '10px', padding: '11px 16px',
+                        borderBottom: i < filteredCelebs.length - 1 ? `1px solid rgba(226,232,240,0.5)` : 'none',
+                        cursor: 'pointer', transition: 'background 0.1s',
+                      }}
+                        onClick={() => navigate(`/portal/members/${c.member_id}`)}
+                        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#FAFBFC'}
+                        onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = ''}
+                      >
+                        <div style={{
+                          width: '34px', height: '34px', borderRadius: '50%', flexShrink: 0,
+                          background: isBirthday ? '#FFF4EF' : '#F0FDF4',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px',
+                        }}>
                           {isBirthday ? '🎂' : '💍'}
                         </div>
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <p className="text-[13px] font-bold text-on-surface group-hover:text-accent transition-colors truncate">
-                              {m.name}
-                            </p>
-                            <span className={`chip ${isBirthday ? 'chip--accent' : ''} capitalize`}
-                              style={!isBirthday ? { background: '#F3E8FF', color: '#7C3AED' } : undefined}>
-                              {isBirthday ? 'Birthday' : 'Anniversary'}
-                            </span>
-                          </div>
-                          <p className="text-[11px] text-on-surface-variant mt-0.5 flex items-center gap-2 flex-wrap">
-                            <span>#{m.member_code}</span>
-                            {m.phone && <span>· {m.phone}</span>}
-                            <span className="font-semibold text-accent">
-                              · 📅 {formatCelebrationDate(m.event_date)}
-                            </span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontSize: '13px', fontWeight: 700, color: T.text, margin: '0 0 1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</p>
+                          <p style={{ fontSize: '11px', color: T.textLight, margin: 0 }}>
+                            {isBirthday ? 'Birthday' : 'Anniversary'} · {c.phone}
                           </p>
                         </div>
                       </div>
-
-                      <div className="text-right shrink-0 flex flex-col items-end gap-1">
-                        {isToday ? (
-                          <span className="chip chip--accent animate-bounce">
-                            🎁 Give Gift Today!
-                          </span>
-                        ) : isTomorrow ? (
-                          <span className="chip chip--amber">
-                            In 1 Day (Tomorrow)
-                          </span>
-                        ) : m.days_until <= 7 ? (
-                          <span className="chip chip--teal">
-                            In {m.days_until} days
-                          </span>
-                        ) : (
-                          <span className="chip chip--neutral">
-                            In {m.days_until} days
-                          </span>
-                        )}
-                        <span className="text-[10px] text-on-surface-variant group-hover:text-accent transition-colors flex items-center gap-0.5">
-                          View profile <span className="material-symbols-outlined text-[12px]">chevron_right</span>
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                ) : (
+                  <div style={{ padding: '32px 16px', textAlign: 'center' }}>
+                    <p style={{ fontSize: '13px', color: T.textMuted, margin: 0 }}>No celebrations {celebFilter !== 'all' ? 'in this period' : 'upcoming'}</p>
+                  </div>
+                )}
               </div>
-            )}
-          </section>
-        );
-      })()}
+            </div>
+          </div>
+        </div>
+      </div>
 
-      {/* ── FAB ─── */}
-      <button
-        className="fixed bottom-24 right-4 md:right-12 md:bottom-8 w-14 h-14 bg-gradient-to-br from-accent to-accent-hover text-white rounded-2xl shadow-lg shadow-accent/30 flex items-center justify-center active-scale hover:scale-105 z-40 transition-all group hover:shadow-xl hover:shadow-accent/40"
-        onClick={() => navigate('/members/new')}
-        title="Add new member"
-      >
-        <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>person_add</span>
-        {/* Tooltip */}
-        <span className="absolute right-full mr-3 bg-sidebar text-white text-[11px] font-bold px-3 py-1.5 rounded-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-lg">
-          Add Member
-        </span>
-      </button>
+      <style>{`
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @media (max-width: 768px) {
+          .dash-two-col { grid-template-columns: 1fr !important; }
+          .dash-actions { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+      `}</style>
     </div>
   );
 }
