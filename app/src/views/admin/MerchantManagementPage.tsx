@@ -138,9 +138,10 @@ export default function MerchantManagementPage() {
   };
 
   const filtered = merchants.filter(m => {
-    const matchesSearch =
-      m.business_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      m.category.toLowerCase().includes(searchQuery.toLowerCase());
+    const q = (searchQuery || '').trim().toLowerCase();
+    const bName = (m.business_name || '').toLowerCase();
+    const cat = (m.category || '').toLowerCase();
+    const matchesSearch = !q || bName.includes(q) || cat.includes(q);
     
     const approvalStatus = m.approval_status || 'approved'; // default safety
     if (activeTab === 'all') return matchesSearch;
@@ -230,15 +231,15 @@ export default function MerchantManagementPage() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
                         <div className="w-9 h-9 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container font-bold text-headline-sm">
-                          {m.business_name.charAt(0)}
+                          {(m.business_name || 'M').charAt(0)}
                         </div>
                         <div>
-                          <p className="font-bold text-body-md text-on-surface">{m.business_name}</p>
-                          <p className="text-label-sm text-on-surface-variant font-mono">{m.whatsapp_number}</p>
+                          <p className="font-bold text-body-md text-on-surface">{m.business_name || 'Unnamed Merchant'}</p>
+                          <p className="text-label-sm text-on-surface-variant font-mono">{m.whatsapp_number || '—'}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-body-md text-on-surface-variant">{m.category}</td>
+                    <td className="px-4 py-3 text-body-md text-on-surface-variant">{m.category || 'General'}</td>
                     <td className="px-4 py-3">
                       <span className="text-label-sm bg-primary-container/30 text-primary border border-primary/20 px-2 py-0.5 rounded-full">{m.plan_tier}</span>
                     </td>

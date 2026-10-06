@@ -116,8 +116,13 @@ async function request<T>(
       }
     } catch {
       useAuthStore.getState().logout();
-      if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
-        window.location.href = '/login?expired=1';
+      if (typeof window !== 'undefined') {
+        const path = window.location.pathname;
+        if (path.startsWith('/portal')) {
+          window.location.href = '/login?expired=1';
+        } else if (path.startsWith('/admin')) {
+          window.location.href = '/admin/login?expired=1';
+        }
       }
       throw new Error('Session expired. Please log in again.');
     }

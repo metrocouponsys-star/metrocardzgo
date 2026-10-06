@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 const categories = [
   { name: 'Water Parks', tag: 'Up to 40% Off', count: '18 offers', icon: 'pool' },
@@ -71,6 +71,22 @@ const perks = [
 
 export function GoLandingClient() {
   const [query, setQuery] = useState('');
+  const [member, setMember] = useState<{ name?: string; phone?: string } | null>(null);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('mc_member') || localStorage.getItem('mc_go_member');
+      if (raw) {
+        setMember(JSON.parse(raw));
+      }
+    } catch {}
+  }, []);
+
+  const handleSignOut = () => {
+    localStorage.removeItem('mc_member');
+    localStorage.removeItem('mc_go_member');
+    setMember(null);
+  };
 
   const filteredDeals = useMemo(() => {
     if (!query.trim()) return deals;
@@ -171,24 +187,61 @@ export function GoLandingClient() {
                   Explore deals
                 </button>
               </Link>
-              <Link href="/go/login" style={{ textDecoration: 'none' }}>
-                <button
-                  style={{
-                    border: '1px solid #E5E7EB',
-                    background: '#fff',
-                    color: '#374151',
-                    padding: '7px 12px',
-                    borderRadius: 999,
-                    fontWeight: 600,
-                    fontSize: 12,
-                    cursor: 'pointer',
-                    boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  Sign in
-                </button>
-              </Link>
+              {member ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div
+                    style={{
+                      background: '#FFF7ED',
+                      border: '1px solid #FFEDD5',
+                      color: '#EA580C',
+                      padding: '5px 10px',
+                      borderRadius: 999,
+                      fontWeight: 700,
+                      fontSize: 12,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4,
+                    }}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: 14 }}>account_circle</span>
+                    {member.name || 'Member'}
+                  </div>
+                  <button
+                    onClick={handleSignOut}
+                    style={{
+                      border: '1px solid #E5E7EB',
+                      background: '#fff',
+                      color: '#6B7280',
+                      padding: '5px 9px',
+                      borderRadius: 999,
+                      fontWeight: 600,
+                      fontSize: 11,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <Link href="/go/login" style={{ textDecoration: 'none' }}>
+                  <button
+                    style={{
+                      border: '1px solid #E5E7EB',
+                      background: '#fff',
+                      color: '#374151',
+                      padding: '7px 12px',
+                      borderRadius: 999,
+                      fontWeight: 600,
+                      fontSize: 12,
+                      cursor: 'pointer',
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    Sign in
+                  </button>
+                </Link>
+              )}
             </div>
           </div>
         </header>
@@ -766,9 +819,9 @@ export function GoLandingClient() {
             }}
           >
             {[
-              { label: 'Explore', href: '/go/discover', icon: 'explore', active: true },
-              { label: 'Offers', href: '/go/discover', icon: 'local_offer', active: false },
-              { label: 'My Card', href: '/check-membership', icon: 'credit_card', active: false },
+              { label: 'Home', href: '/go', icon: 'home', active: true },
+              { label: 'Explore', href: '/go/discover', icon: 'explore', active: false },
+              { label: 'My Pass', href: '/go/login', icon: 'credit_card', active: false },
             ].map((item) => (
               <Link
                 key={item.label}
