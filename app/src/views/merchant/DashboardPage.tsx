@@ -233,11 +233,11 @@ export default function DashboardPage() {
         </button>
 
         {/* ── Quick Actions ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '12px', marginBottom: '28px' }}>
-          <QuickAction icon="person_add" label="Add Member" color={T.orange} bg={T.orangeLight} onClick={() => navigate('/portal/members/new')} />
-          <QuickAction icon="groups" label="Members" color="#2563EB" bg="#EFF6FF" onClick={() => navigate('/portal/members')} />
-          <QuickAction icon="credit_card" label="Cards" color="#7C3AED" bg="#F5F3FF" onClick={() => navigate('/portal/cards')} />
-          <QuickAction icon="cake" label="Birthdays" color={T.teal} bg={T.tealLight} onClick={() => navigate('/portal/celebrations')} />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px', marginBottom: '28px' }}>
+          <QuickAction icon="person_add" label="+ Add Member" color={T.orange} bg={T.orangeLight} onClick={() => navigate('/portal/members/new')} />
+          <QuickAction icon="credit_card" label="Assign / Issue Card" color="#7C3AED" bg="#F5F3FF" onClick={() => navigate('/portal/cards')} />
+          <QuickAction icon="groups" label="Regd. Members" color="#2563EB" bg="#EFF6FF" onClick={() => navigate('/portal/members')} />
+          <QuickAction icon="cake" label="Upcoming Birthdays" color={T.teal} bg={T.tealLight} onClick={() => navigate('/portal/celebrations')} />
         </div>
 
         {/* ── Stats ── */}
@@ -261,10 +261,10 @@ export default function DashboardPage() {
             </div>
           ) : stats ? (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '14px' }}>
-              <StatBlock icon="groups" label="Total Members" value={stats.total_members ?? 0} sub="All time" color={T.orange} bg={T.orangeLight} onClick={() => navigate('/portal/members')} />
-              <StatBlock icon="trending_up" label="Active Today" value={stats.active_today ?? stats.new_members_today ?? 0} sub="Checked in today" color="#2563EB" bg="#EFF6FF" />
+              <StatBlock icon="groups" label="Regd. Members" value={stats.total_members ?? 0} sub="Registered members" color={T.orange} bg={T.orangeLight} onClick={() => navigate('/portal/members')} />
+              <StatBlock icon="trending_up" label="Active Today" value={stats.active_today ?? stats.new_members_today ?? 0} sub="Store check-ins today" color="#2563EB" bg="#EFF6FF" />
               <StatBlock icon="redeem" label="Redemptions" value={stats.redemptions_this_month ?? 0} sub="This month" color={T.teal} bg={T.tealLight} />
-              <StatBlock icon="workspace_premium" label="Points Issued" value={stats.total_points_issued ?? 0} sub="This month" color={T.amber} bg={T.amberLight} />
+              <StatBlock icon="workspace_premium" label="Total Points Issued" value={stats.total_points_issued ?? 0} sub="All-time loyalty points" color={T.amber} bg={T.amberLight} />
             </div>
           ) : null}
         </div>
@@ -317,7 +317,7 @@ export default function DashboardPage() {
             <div style={{ background: T.white, borderRadius: '16px', border: `1px solid ${T.border}`, boxShadow: T.shadow, overflow: 'hidden' }}>
               <div style={{ padding: '16px 18px 12px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <h3 style={{ fontSize: '14px', fontWeight: 800, color: T.text, margin: 0, display: 'flex', alignItems: 'center', gap: '6px', fontFamily: '"Plus Jakarta Sans", Inter, sans-serif' }}>
-                  🎂 Celebrations
+                  🎂 Upcoming Celebrations
                 </h3>
                 <button onClick={() => navigate('/portal/celebrations')} style={{ fontSize: '12px', color: T.orange, fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer' }}>All →</button>
               </div>
@@ -337,13 +337,16 @@ export default function DashboardPage() {
                 ) : filteredCelebs.length > 0 ? (
                   filteredCelebs.slice(0, 8).map((c, i) => {
                     const isBirthday = c.event_type === 'birthday';
+                    const cleanPhone = (c.phone || '').replace(/\D/g, '');
+                    const waText = encodeURIComponent(`Dear ${c.name}, Wishing you a very Happy ${isBirthday ? 'Birthday 🎂' : 'Anniversary 🎊'} from ${user?.merchant_name || 'our store'}! Visit us to enjoy special celebration discounts on your loyalty pass.`);
+                    const waLink = `https://wa.me/${cleanPhone.startsWith('91') ? cleanPhone : '91' + cleanPhone}?text=${waText}`;
+
                     return (
                       <div key={`${c.member_id}-${c.event_type}`} style={{
                         display: 'flex', alignItems: 'center', gap: '10px', padding: '11px 16px',
                         borderBottom: i < filteredCelebs.length - 1 ? `1px solid rgba(226,232,240,0.5)` : 'none',
-                        cursor: 'pointer', transition: 'background 0.1s',
+                        transition: 'background 0.1s',
                       }}
-                        onClick={() => navigate(`/portal/members/${c.member_id}`)}
                         onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#FAFBFC'}
                         onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = ''}
                       >
@@ -354,12 +357,30 @@ export default function DashboardPage() {
                         }}>
                           {isBirthday ? '🎂' : '💍'}
                         </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ flex: 1, minWidth: 0, cursor: 'pointer' }} onClick={() => navigate(`/portal/members/${c.member_id}`)}>
                           <p style={{ fontSize: '13px', fontWeight: 700, color: T.text, margin: '0 0 1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</p>
                           <p style={{ fontSize: '11px', color: T.textLight, margin: 0 }}>
                             {isBirthday ? 'Birthday' : 'Anniversary'} · {c.phone}
                           </p>
                         </div>
+                        {cleanPhone && (
+                          <a
+                            href={waLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={e => e.stopPropagation()}
+                            style={{
+                              display: 'inline-flex', alignItems: 'center', gap: '4px',
+                              padding: '5px 8px', borderRadius: '8px', background: '#25D366',
+                              color: '#fff', fontSize: '11px', fontWeight: 700, textDecoration: 'none',
+                              boxShadow: '0 2px 6px rgba(37,211,102,0.25)', flexShrink: 0
+                            }}
+                            title="Send WhatsApp Greeting"
+                          >
+                            <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>send</span>
+                            Wish
+                          </a>
+                        )}
                       </div>
                     );
                   })

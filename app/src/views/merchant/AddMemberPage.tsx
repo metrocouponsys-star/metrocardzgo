@@ -437,10 +437,10 @@ export default function AddMemberPage() {
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div>
                 <label className="form-label mb-0" htmlFor="card_search">
-                  Assign Physical Card
+                  Assign Physical Card · Assigning Order
                 </label>
                 <p className="text-label-xs text-on-surface-variant">
-                  {availableCards.length} cards available in inventory · sequential order
+                  {availableCards.length} cards available in inventory · Sequential order allocation
                 </p>
               </div>
               {availableCards[0] && (

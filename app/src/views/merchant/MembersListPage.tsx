@@ -61,7 +61,7 @@ export default function MembersListPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'expired' | 'deactivated'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'expiring_soon' | 'expired' | 'deactivated'>('all');
 
   useEffect(() => { fetchMembers(); }, []);
 
@@ -69,14 +69,26 @@ export default function MembersListPage() {
     setLoading(true);
     const cacheKey = `members/${user?.merchant_id}`;
     try {
-      const data = await cached(cacheKey, () => api.getMembers(user?.merchant_id || ''), (fresh) => setMembers(fresh));
+      const data = await api.getMembers(user?.merchant_id || '');
       setMembers(data);
     } catch { addToast('error', 'Failed to load customer list'); }
     finally { setLoading(false); }
   };
 
+  const isExpiringSoon = (expiryDate?: string) => {
+    if (!expiryDate) return false;
+    const now = new Date();
+    const exp = new Date(expiryDate);
+    const diff = (exp.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+    return diff > 0 && diff <= 30;
+  };
+
   const filteredMembers = useMemo(() => members.filter(m => {
-    if (statusFilter !== 'all' && m.status !== statusFilter) return false;
+    if (statusFilter === 'active' && m.status !== 'active') return false;
+    if (statusFilter === 'expired' && m.status !== 'expired') return false;
+    if (statusFilter === 'deactivated' && m.status !== 'deactivated') return false;
+    if (statusFilter === 'expiring_soon' && !isExpiringSoon(m.expiry_date)) return false;
+
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       return m.name.toLowerCase().includes(q) || m.phone.includes(q) || (m.member_code || '').toLowerCase().includes(q) || (m.physical_card_number || '').includes(q);
@@ -85,8 +97,9 @@ export default function MembersListPage() {
   }), [members, statusFilter, searchQuery]);
 
   const counts = useMemo(() => ({
-    total: members.length,
+    registered: members.length,
     active: members.filter(m => m.status === 'active').length,
+    expiringSoon: members.filter(m => isExpiringSoon(m.expiry_date)).length,
     expired: members.filter(m => m.status === 'expired').length,
     deactivated: members.filter(m => m.status === 'deactivated').length,
     totalPoints: members.reduce((s, m) => s + Number(m.loyalty_points || 0), 0),
@@ -109,10 +122,11 @@ export default function MembersListPage() {
   };
 
   const STATUS_TABS = [
-    { key: 'all',         label: 'All',      count: counts.total },
-    { key: 'active',      label: 'Active',   count: counts.active },
-    { key: 'expired',     label: 'Expired',  count: counts.expired },
-    { key: 'deactivated', label: 'Inactive', count: counts.deactivated },
+    { key: 'all',           label: 'All Status',     count: counts.registered },
+    { key: 'active',        label: 'Active',         count: counts.active },
+    { key: 'expiring_soon', label: 'Expiring Soon',  count: counts.expiringSoon },
+    { key: 'expired',       label: 'Expired',        count: counts.expired },
+    { key: 'deactivated',   label: 'Inactive',       count: counts.deactivated },
   ] as const;
 
   const Btn = ({ label, icon, onClick, variant = 'ghost', disabled = false }: any) => (
@@ -154,10 +168,10 @@ export default function MembersListPage() {
         {/* ── Summary Stat Cards ── */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px', marginBottom: '22px' }}>
           {[
-            { label: 'Total', value: counts.total, icon: 'groups', color: T.orange, bg: T.orangeLight, filter: 'all' as const },
+            { label: 'Regd. Members', value: counts.registered, icon: 'badge', color: T.orange, bg: T.orangeLight, filter: 'all' as const },
             { label: 'Active', value: counts.active, icon: 'check_circle', color: '#16A34A', bg: '#F0FDF4', filter: 'active' as const },
             { label: 'Expired', value: counts.expired, icon: 'schedule', color: '#D97706', bg: '#FEF3C7', filter: 'expired' as const },
-            { label: 'Points', value: counts.totalPoints.toLocaleString(), icon: 'stars', color: T.violet, bg: T.violetLight, filter: 'all' as const },
+            { label: 'Points Issued', value: counts.totalPoints.toLocaleString(), icon: 'stars', color: T.violet, bg: T.violetLight, filter: 'all' as const },
           ].map(c => (
             <button key={c.label} onClick={() => setStatusFilter(c.filter)} style={{
               background: 'linear-gradient(180deg, #ffffff 0%, #fffaf7 100%)', borderRadius: '18px', padding: '16px 18px', border: `1px solid ${statusFilter === c.filter && c.filter !== 'all' ? c.color + '40' : T.border}`,
@@ -244,7 +258,7 @@ export default function MembersListPage() {
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ borderBottom: `1px solid ${T.border}`, background: '#FAFBFC' }}>
-                      {['Customer', 'Member Code', 'Tier', 'Points', 'Visits', 'Status', ''].map(h => (
+                      {['Customer', 'Card No. / Code', 'Tier', 'Points', 'Visits', 'Status', ''].map(h => (
                         <th key={h} style={{ padding: '11px 16px', fontSize: '11px', fontWeight: 700, color: T.textLight, textTransform: 'uppercase', letterSpacing: '0.07em', textAlign: h === 'Points' || h === 'Visits' ? 'right' : 'left' }}>{h}</th>
                       ))}
                     </tr>
@@ -263,7 +277,14 @@ export default function MembersListPage() {
                             </div>
                           </div>
                         </td>
-                        <td style={{ padding: '12px 16px', fontFamily: 'monospace', fontSize: '12px', fontWeight: 700, color: T.textMuted }}>#{m.member_code || '—'}</td>
+                        <td style={{ padding: '12px 16px' }}>
+                          <p style={{ fontFamily: 'monospace', fontSize: '12px', fontWeight: 800, color: T.text, margin: '0 0 2px' }}>
+                            {m.physical_card_number ? m.physical_card_number : `#{m.member_code || '—'}`}
+                          </p>
+                          {m.physical_card_number && (
+                            <span style={{ fontSize: '10px', color: T.textLight, fontFamily: 'monospace' }}>Code: #{m.member_code}</span>
+                          )}
+                        </td>
                         <td style={{ padding: '12px 16px' }}>
                           {m.membership_type ? (
                             <span style={{ fontSize: '11px', fontWeight: 700, background: T.orangeLight, color: T.orangeDark, padding: '3px 10px', borderRadius: '9999px' }}>{m.membership_type.name}</span>

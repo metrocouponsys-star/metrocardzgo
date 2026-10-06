@@ -27,14 +27,14 @@ const T = {
 };
 
 const OFFER_TYPES = [
-  { value: 'birthday_anniversary', label: '🎂 Birthday & Anniversary Benefit' },
-  { value: 'flat_off', label: '₹ Flat Off (Cash Discount)' },
+  { value: 'birthday_anniversary', label: '🎂 Birthday & Anniversary Flat Off' },
   { value: 'wallet_points', label: '💰 Cash Back / Wallet Points' },
   { value: 'buy_1_get_1', label: '🎁 Buy 1 Get 1 Free (BOGO)' },
-  { value: 'percent_off', label: '% Off (Percentage Discount)' },
-  { value: 'free_service', label: 'Free Service / Reward' },
-  { value: 'birthday', label: 'Birthday Benefit' },
-  { value: 'referral', label: 'Referral Bonus' },
+  { value: 'flat_off', label: '₹ Flat Off (Direct Cash Discount)' },
+  { value: 'percent_off', label: '% Percentage Discount (% Off)' },
+  { value: 'free_service', label: '✨ Free Service / Gift' },
+  { value: 'birthday', label: '🎉 Birthday Benefit' },
+  { value: 'referral', label: '🤝 Referral Reward' },
   { value: 'points_redemption', label: '🏆 Points Redemption Reward' },
 ];
 
@@ -262,7 +262,7 @@ export default function OffersPage() {
             }}
           >
             <span className="material-symbols-outlined" style={{ fontSize: 18, marginRight: 8, verticalAlign: 'middle', fontVariationSettings: "'FILL' 1" }}>bolt</span>
-            Set Points
+            Point Rule = Set Point
           </button>
         </div>
 

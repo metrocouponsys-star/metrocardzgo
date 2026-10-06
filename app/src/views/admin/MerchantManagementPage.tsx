@@ -141,7 +141,9 @@ export default function MerchantManagementPage() {
     const q = (searchQuery || '').trim().toLowerCase();
     const bName = (m.business_name || '').toLowerCase();
     const cat = (m.category || '').toLowerCase();
-    const matchesSearch = !q || bName.includes(q) || cat.includes(q);
+    const phone = (m.whatsapp_number || '').replace(/\D/g, '');
+    const address = (m.address || '').toLowerCase();
+    const matchesSearch = !q || bName.includes(q) || cat.includes(q) || phone.includes(q) || address.includes(q);
     
     const approvalStatus = m.approval_status || 'approved'; // default safety
     if (activeTab === 'all') return matchesSearch;
@@ -188,7 +190,7 @@ export default function MerchantManagementPage() {
           <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-[18px]">search</span>
           <input
             className="input-field pl-9 h-10 text-body-sm"
-            placeholder="Search by business name..."
+            placeholder="Search merchant, phone, category (e.g. Kanku Jewellers)..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
           />
@@ -271,11 +273,19 @@ export default function MerchantManagementPage() {
                             </button>
                           </>
                         ) : (
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 items-center flex-wrap">
+                            <a
+                              href={`/portal/admin/inventory?merchant=${m.id}`}
+                              className="text-label-sm bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 px-2.5 py-1 rounded-lg transition-colors font-bold inline-flex items-center gap-1"
+                              title="Allocate Physical Cards to Merchant"
+                            >
+                              <span className="material-symbols-outlined text-[14px]">credit_card</span>
+                              Allocate Cards
+                            </a>
                             <button
                               onClick={() => setSuspendTarget(m)}
                               disabled={isActioning}
-                              className={`text-label-md px-3 py-1 rounded-lg transition-colors font-bold border
+                              className={`text-label-sm px-2.5 py-1 rounded-lg transition-colors font-bold border
                                 ${m.status === 'active'
                                   ? 'text-red-600 bg-red-50 hover:bg-red-100 border-red-200'
                                   : 'text-green-600 bg-green-50 hover:bg-green-100 border-green-200'}`}
@@ -285,7 +295,7 @@ export default function MerchantManagementPage() {
                             {m.status === 'active' && (
                               <button
                                 onClick={() => { impersonate(m.id, m.business_name); addToast('success', `Impersonating ${m.business_name}`); }}
-                                className="text-label-md bg-primary text-white hover:bg-primary-dark px-3 py-1 rounded-lg transition-colors font-bold shadow-sm"
+                                className="text-label-sm bg-primary text-white hover:bg-primary-dark px-2.5 py-1 rounded-lg transition-colors font-bold shadow-sm"
                                 style={{ minHeight: 'auto' }}
                               >
                                 Impersonate

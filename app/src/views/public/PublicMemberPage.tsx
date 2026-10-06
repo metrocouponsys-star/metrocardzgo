@@ -323,6 +323,17 @@ export default function PublicMemberPage() {
               </div>
             </div>
 
+            {/* Formatted Membership Card Number */}
+            <div className="bg-slate-950 rounded-xl p-3.5 text-slate-100 flex items-center justify-between text-xs font-mono font-bold tracking-widest shadow-inner border border-slate-800 mb-4">
+              <span className="flex items-center gap-1.5 text-amber-400">
+                <span className="material-symbols-outlined text-[16px]">credit_card</span>
+                Card Number
+              </span>
+              <span className="text-white tracking-widest font-mono text-xs sm:text-sm">
+                {data.physical_card_number || `MC-CARD-${data.member_code}`}
+              </span>
+            </div>
+
             {/* Google Wallet */}
             {!isExpired && (
               <div className="border-t border-outline-variant/20 pt-4">

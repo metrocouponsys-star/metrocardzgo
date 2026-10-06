@@ -8,7 +8,7 @@ import * as api from '../../api';
 export default function SettingsPage() {
   const { user, updateUser } = useAuthStore();
   const { addToast } = useToastStore();
-  const [tab, setTab] = useState<'profile' | 'staff' | 'billing' | 'integrations'>('profile');
+  const [tab, setTab] = useState<'profile' | 'staff' | 'billing' | 'agreement' | 'integrations'>('profile');
   const [merchant, setMerchant] = useState<Merchant | null>(null);
   const [staffList, setStaffList] = useState<MerchantUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -145,7 +145,8 @@ export default function SettingsPage() {
   const TABS = [
     { k: 'profile', l: 'Business Profile', icon: 'store' },
     { k: 'staff', l: 'Staff Accounts', icon: 'manage_accounts' },
-    { k: 'billing', l: 'Plan & Billing', icon: 'payments' },
+    { k: 'billing', l: 'Starter Plan & Validity', icon: 'payments' },
+    { k: 'agreement', l: 'Policy = Bond - Agreement', icon: 'gavel' },
     { k: 'integrations', l: 'Integrations', icon: 'extension' },
   ] as const;
 
@@ -355,23 +356,27 @@ export default function SettingsPage() {
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-headline-md font-bold text-on-surface">{merchant?.plan_tier || 'Enterprise'} Plan</h3>
+                  <h3 className="text-headline-md font-bold text-on-surface">{merchant?.plan_tier || 'Starter'} Plan</h3>
                   <span className={`text-label-xs px-2.5 py-0.5 rounded-full font-bold ${
                     isExpired ? 'bg-error-container text-on-error-container' : 'bg-primary-container/40 text-primary'
                   }`}>
-                    {isExpired ? 'Expired' : 'Active'}
+                    {isExpired ? 'Expired' : 'Active SaaS License'}
                   </span>
                 </div>
-                <p className="text-body-sm text-on-surface-variant mt-0.5">Commercial Software License & System Validity</p>
+                <p className="text-body-sm text-on-surface-variant mt-0.5">Commercial Software License, Validity & Allocated Cards</p>
               </div>
             </div>
 
             {/* Software Validity Details (16 Months, 5 Days) */}
             <div className="bg-surface-container-low border border-outline-variant/60 rounded-2xl p-5 space-y-4">
-              <div className="flex items-center justify-between border-b border-outline-variant/30 pb-3">
+              <div className="flex items-center justify-between border-b border-outline-variant/30 pb-3 flex-wrap gap-2">
                 <div>
                   <p className="text-label-xs font-semibold text-on-surface-variant uppercase tracking-wider">License Validity Period</p>
                   <p className="text-headline-sm font-black text-primary mt-0.5">16 Months, 5 Days</p>
+                </div>
+                <div>
+                  <p className="text-label-xs font-semibold text-on-surface-variant uppercase tracking-wider">Software Charges</p>
+                  <p className="text-headline-sm font-black text-on-surface mt-0.5">₹4,999 <span className="text-label-xs font-medium text-on-surface-variant">/ term</span></p>
                 </div>
                 <div className="text-right">
                   <p className="text-label-xs font-semibold text-on-surface-variant uppercase tracking-wider">Status</p>
@@ -381,14 +386,18 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-body-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-body-sm">
                 <div className="p-3 rounded-xl bg-surface border border-outline-variant/30">
                   <span className="text-label-xs text-on-surface-variant block">Activation Date</span>
                   <strong className="text-on-surface">{start.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</strong>
                 </div>
                 <div className="p-3 rounded-xl bg-surface border border-outline-variant/30">
-                  <span className="text-label-xs text-on-surface-variant block">Valid Until (Auto-Close Date)</span>
+                  <span className="text-label-xs text-on-surface-variant block">Valid Until (Auto-Close)</span>
                   <strong className="text-on-surface text-primary">{expiry.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</strong>
+                </div>
+                <div className="p-3 rounded-xl bg-surface border border-outline-variant/30">
+                  <span className="text-label-xs text-on-surface-variant block">Card Allocation</span>
+                  <strong className="text-on-surface text-secondary">500 Physical Cards</strong>
                 </div>
               </div>
 
@@ -402,8 +411,16 @@ export default function SettingsPage() {
             </div>
 
             <div className="bg-surface-container rounded-xl p-4 space-y-2">
-              <p className="text-label-xs font-bold text-on-surface uppercase tracking-wider mb-1">Included in Your License</p>
-              {['Digital Membership & Card Scanning Engine', '16 Months 5 Days Cloud Hosting & Upgrades', 'Unlimited Member Check-ins & Redemptions', 'Points Rules & Reward Catalog Management', 'Direct WhatsApp Wishes & Auto-Reminders'].map(f => (
+              <p className="text-label-xs font-bold text-on-surface uppercase tracking-wider mb-1">Included in Starter Plan License</p>
+              {[
+                'Digital Membership Pass & Real-Time Balance Check',
+                '16 Months 5 Days Cloud Hosting & 99.9% Uptime SLA',
+                '500 Pre-allocated QR/NFC Physical Membership Cards',
+                'Unlimited Customer Directory & Registered Member Records',
+                'Custom Point Rule = Set Point Configuration',
+                'Upcoming Birthday & Anniversary Campaign Auto-Wishes',
+                'Metro Cardz Brand Co-Marketing & Discovery Network'
+              ].map(f => (
                 <div key={f} className="flex items-center gap-2 text-body-md">
                   <span className="material-symbols-outlined text-secondary text-[18px]">check_circle</span>
                   {f}
@@ -418,6 +435,101 @@ export default function SettingsPage() {
           </div>
         );
       })()}
+
+      {/* Policy = Bond - Agreement Tab */}
+      {tab === 'agreement' && (
+        <div className="card p-lg space-y-6">
+          <div className="flex items-start justify-between flex-wrap gap-4 border-b border-outline-variant/30 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-600 border border-amber-300 flex items-center justify-center font-bold">
+                <span className="material-symbols-outlined text-[26px]" style={{ fontVariationSettings: "'FILL' 1" }}>gavel</span>
+              </div>
+              <div>
+                <h3 className="text-headline-sm font-bold text-on-surface">Policy = Bond - Agreement</h3>
+                <p className="text-label-sm text-on-surface-variant">Merchant Service Legal Bond & SaaS Operating Terms</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800 border border-green-200">
+                <span className="w-2 h-2 rounded-full bg-green-600 animate-pulse" />
+                Bond Active & Enforceable
+              </span>
+              <button
+                onClick={() => window.print()}
+                className="btn-outline !py-1.5 !px-3 text-label-sm flex items-center gap-1.5"
+                style={{ minHeight: 'auto' }}
+              >
+                <span className="material-symbols-outlined text-[16px]">print</span>
+                Print Agreement
+              </button>
+            </div>
+          </div>
+
+          {/* Bond Document Box */}
+          <div className="bg-surface-container-low border border-outline-variant/60 rounded-2xl p-6 space-y-5 text-on-surface font-sans">
+            <div className="flex justify-between items-center border-b border-outline-variant/30 pb-3">
+              <div>
+                <p className="font-mono text-xs font-bold text-amber-700 uppercase tracking-widest">Bond Ref: MC-SLA-BOND-2024</p>
+                <p className="text-body-sm font-bold text-on-surface mt-0.5">Service Level Agreement & Merchant Guarantee Bond</p>
+              </div>
+              <div className="text-right text-label-xs text-on-surface-variant font-mono">
+                Jurisdiction: Commercial Courts of India
+              </div>
+            </div>
+
+            <div className="space-y-4 text-body-sm leading-relaxed">
+              <div className="p-3 bg-white rounded-xl border border-outline-variant/40">
+                <h4 className="font-bold text-on-surface text-[14px] mb-1">1. Parties & SaaS Platform Authorization</h4>
+                <p className="text-on-surface-variant text-xs">
+                  This Agreement and Performance Bond is entered into between <strong>Metro Cardz SaaS Platform</strong> ("Service Provider") and <strong>{merchant?.business_name || profileForm.business_name || 'Merchant Partner'}</strong> ("Merchant"). The Merchant is granted an authorized license to utilize the digital loyalty ecosystem, card verification APIs, and member pass portal.
+                </p>
+              </div>
+
+              <div className="p-3 bg-white rounded-xl border border-outline-variant/40">
+                <h4 className="font-bold text-on-surface text-[14px] mb-1">2. Software Validity Bond (16 Months, 5 Days)</h4>
+                <p className="text-on-surface-variant text-xs">
+                  The SaaS software license is issued for a guaranteed validity period of <strong>16 months and 5 days</strong> from activation. Service Provider warrants a 99.9% uptime SLA. In accordance with mutual terms, automatic software closure and renewal reminders shall take effect upon term expiry unless renewed.
+                </p>
+              </div>
+
+              <div className="p-3 bg-white rounded-xl border border-outline-variant/40">
+                <h4 className="font-bold text-on-surface text-[14px] mb-1">3. Physical Cards Allocation & Stack Order Policy</h4>
+                <p className="text-on-surface-variant text-xs">
+                  All pre-printed NFC and QR-encoded physical membership cards allocated to the Merchant remain serial-tracked inventory. Cards must be assigned sequentially to registered members. Replacement of defective or lost blank cards is provided under warranty within 14 business days.
+                </p>
+              </div>
+
+              <div className="p-3 bg-white rounded-xl border border-outline-variant/40">
+                <h4 className="font-bold text-on-surface text-[14px] mb-1">4. Data Privacy, Customer Confidentiality & DPDP Compliance</h4>
+                <p className="text-on-surface-variant text-xs">
+                  Customer records (including phone numbers, birth dates, and purchase transaction history) are held in strict compliance with the Digital Personal Data Protection (DPDP) Act. All customer data is the exclusive proprietary property of the Merchant and shall never be shared or cross-marketed to competitors.
+                </p>
+              </div>
+
+              <div className="p-3 bg-white rounded-xl border border-outline-variant/40">
+                <h4 className="font-bold text-on-surface text-[14px] mb-1">5. Loyalty Point Rule Guarantee & Redemption Bond</h4>
+                <p className="text-on-surface-variant text-xs">
+                  The Merchant covenants to honor points and promotional vouchers issued through the system in good faith as per the active Point Rule (Set Point) schedule configured on the merchant portal.
+                </p>
+              </div>
+            </div>
+
+            {/* Signatures & Execution Seal */}
+            <div className="pt-4 border-t border-outline-variant/30 grid grid-cols-2 gap-4">
+              <div className="p-3 rounded-xl bg-surface border border-outline-variant/30 text-xs">
+                <p className="text-[10px] uppercase font-bold text-on-surface-variant mb-1">Authorized Service Provider</p>
+                <p className="font-bold text-on-surface">Metro Cardz Technologies</p>
+                <p className="text-[11px] text-emerald-700 font-bold mt-1">✓ Digitally Signed & Stamped</p>
+              </div>
+              <div className="p-3 rounded-xl bg-surface border border-outline-variant/30 text-xs">
+                <p className="text-[10px] uppercase font-bold text-on-surface-variant mb-1">Merchant Partner</p>
+                <p className="font-bold text-on-surface">{merchant?.business_name || profileForm.business_name || 'Partner Merchant'}</p>
+                <p className="text-[11px] text-emerald-700 font-bold mt-1">✓ Verified Account Holder</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Integrations Tab */}
       {tab === 'integrations' && (

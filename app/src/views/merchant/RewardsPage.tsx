@@ -12,7 +12,7 @@ const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: 'catalog',      label: 'Reward Catalog',  icon: 'card_giftcard' },
   { key: 'coupons',      label: 'Coupon Codes',     icon: 'confirmation_number' },
   { key: 'vouchers',     label: 'Gift Vouchers',    icon: 'wallet' },
-  { key: 'points_rules', label: 'Set Point',        icon: 'bolt' },
+  { key: 'points_rules', label: 'Point Rule = Set Point', icon: 'bolt' },
 ];
 
 export default function RewardsPage() {

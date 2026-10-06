@@ -3,11 +3,23 @@
  * Ultra-Premium Digital Member Pass & Balance Enquiry Portal
  */
 import React, { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import type { PublicMemberView } from '../../types';
 import * as api from '../../api';
 import { StatusBadge } from '../../components/ui/StatusBadge';
 import { format } from 'date-fns';
+
+function formatCardNumber(num?: string | null): string {
+  if (!num) return 'MC •••• •••• ••••';
+  const clean = num.replace(/\s+/g, '');
+  if (clean.length === 16) {
+    return `${clean.slice(0, 4)} ${clean.slice(4, 8)} ${clean.slice(8, 12)} ${clean.slice(12, 16)}`;
+  }
+  if (clean.length >= 8) {
+    return clean.match(/.{1,4}/g)?.join(' ') || clean;
+  }
+  return `MC-CARD-${clean}`;
+}
 
 const OFFER_ICONS: Record<string, string> = {
   percent_off: 'percent',
@@ -55,6 +67,12 @@ function LookupForm({
 }: {
   onResult: (data: PublicMemberView) => void;
 }) {
+  const [searchParams] = useSearchParams();
+  const merchantQuery = searchParams.get('merchant') || searchParams.get('store');
+  const storeName = merchantQuery
+    ? (merchantQuery.toLowerCase().includes('kanku') ? 'Kanku Jewellers' : merchantQuery)
+    : null;
+
   const [identifier, setIdentifier] = useState('');
   const [last4, setLast4] = useState('');
   const [loading, setLoading] = useState(false);
@@ -97,12 +115,18 @@ function LookupForm({
 
       <div className="w-full max-w-md space-y-6 relative z-10 animate-fade-in">
 
-        {/* Customer Membership Portal Header (Metro Cardz Logo Removed) */}
+        {/* Customer Membership Portal Header with Merchant Branding */}
         <div className="text-center space-y-3">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center mx-auto shadow-md text-white">
-            <span className="material-symbols-outlined text-[30px]" style={{ fontVariationSettings: "'FILL' 1" }}>credit_card</span>
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center mx-auto shadow-md text-white border-2 border-white">
+            <span className="material-symbols-outlined text-[32px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
           </div>
           <div>
+            {storeName && (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-xs font-black mb-2">
+                <span className="material-symbols-outlined text-[15px] text-amber-700">storefront</span>
+                {storeName}
+              </div>
+            )}
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">
               Customer <span className="text-amber-600">Points & Membership</span>
             </h1>
@@ -111,10 +135,13 @@ function LookupForm({
           <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed font-medium">
             View your points balance, benefits & active store coupons — no login required.
           </p>
-          <span className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 rounded-full px-3.5 py-1 text-xs font-bold text-amber-800">
-            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-            Balance & Rewards Enquiry
-          </span>
+          <div className="flex items-center justify-center gap-2">
+            <span className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 rounded-full px-3.5 py-1 text-xs font-bold text-amber-800">
+              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+              Customer Check Points
+            </span>
+            <span className="text-[11px] text-slate-400 font-bold">· Powered by Metro Cardz</span>
+          </div>
         </div>
 
         {/* Form Card */}
@@ -352,15 +379,29 @@ function MembershipResult({
             </div>
           </div>
 
-          {data.physical_card_number && (
-            <div className="bg-slate-900 rounded-xl p-3 text-slate-100 flex items-center justify-between text-xs font-mono font-bold tracking-widest shadow-inner">
-              <span className="flex items-center gap-1.5 text-amber-400">
-                <span className="material-symbols-outlined text-[16px]">credit_card</span>
-                Card Number
-              </span>
-              <span className="text-white">{data.physical_card_number}</span>
+          {/* Formatted Membership Card Number */}
+          <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 rounded-2xl p-4 text-slate-100 flex items-center justify-between shadow-md border border-slate-800">
+            <div>
+              <p className="text-[10px] uppercase font-bold text-amber-400 tracking-wider flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[15px]">credit_card</span>
+                Membership Card Number
+              </p>
+              <p className="text-base font-mono font-black tracking-widest text-white mt-1">
+                {formatCardNumber(data.physical_card_number || data.member_code)}
+              </p>
             </div>
-          )}
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[24px] text-amber-400/80">contactless</span>
+              <button
+                type="button"
+                onClick={() => copyCoupon(data.physical_card_number || data.member_code)}
+                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-all text-xs"
+                title="Copy card number"
+              >
+                <span className="material-symbols-outlined text-[16px]">{copiedCode === (data.physical_card_number || data.member_code) ? 'done' : 'content_copy'}</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* ── Tabbed View Container ── */}
