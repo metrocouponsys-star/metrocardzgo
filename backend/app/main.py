@@ -233,10 +233,10 @@ async def startup_event():
         # 1. DB connectivity check + table creation (single operation)
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
-        print(f"✅ Database connection OK ({time.time()-t0:.1f}s)")
+        print(f"[OK] Database connection OK ({time.time()-t0:.1f}s)")
 
         Base.metadata.create_all(bind=engine)
-        print(f"✅ Tables verified ({time.time()-t0:.1f}s)")
+        print(f"[OK] Tables verified ({time.time()-t0:.1f}s)")
 
         # 2. Idempotent column migrations — each in its own transaction so a
         #    pre-existing column (MySQL error 1060) silently skips without rollback.
@@ -257,7 +257,7 @@ async def startup_event():
             except Exception:
                 pass  # Column already exists — expected on warm restarts
 
-        print(f"✅ Migrations OK ({time.time()-t0:.1f}s)")
+        print(f"[OK] Migrations OK ({time.time()-t0:.1f}s)")
 
         # 3. Seed only if the merchants table is empty (skip on warm restarts)
         try:
@@ -267,14 +267,14 @@ async def startup_event():
             if count == 0:
                 from seed_db import seed
                 seed()
-                print(f"✅ Seed completed ({time.time()-t0:.1f}s)")
+                print(f"[OK] Seed completed ({time.time()-t0:.1f}s)")
             else:
-                print(f"✅ Seed skipped (DB has {count} merchants) ({time.time()-t0:.1f}s)")
+                print(f"[OK] Seed skipped (DB has {count} merchants) ({time.time()-t0:.1f}s)")
         except Exception as seed_err:
-            print(f"⚠️ Seeding notice: {seed_err}")
+            print(f"[WARN] Seeding notice: {seed_err}")
 
-        print(f"🚀 Startup complete in {time.time()-t0:.1f}s")
+        print(f"[INFO] Startup complete in {time.time()-t0:.1f}s")
     except Exception as e:
-        print(f"❌ Database startup FAILED: {e}")
+        print(f"[ERROR] Database startup FAILED: {e}")
         # Don't crash on startup — let the app start and fail per-request
 

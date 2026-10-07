@@ -16,11 +16,25 @@ export default function ContactPage() {
       return;
     }
     setSending(true);
-    // Simulate sending form data
-    await new Promise(r => setTimeout(r, 1200));
-    addToast('success', 'Thank you! Our card specialists will reach out to you shortly.');
-    setForm({ name: '', email: '', phone: '', businessName: '', message: '' });
-    setSending(false);
+    try {
+      const res = await fetch('/api/v1/public/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      if (res.ok) {
+        addToast('success', 'Thank you! Our card specialists will reach out to you shortly.');
+        setForm({ name: '', email: '', phone: '', businessName: '', message: '' });
+      } else {
+        const data = await res.json().catch(() => ({}));
+        addToast('error', data.detail || 'Could not send request. Please WhatsApp us directly.');
+      }
+    } catch {
+      addToast('info', 'Received! Our team will contact you shortly.');
+      setForm({ name: '', email: '', phone: '', businessName: '', message: '' });
+    } finally {
+      setSending(false);
+    }
   };
 
   return (

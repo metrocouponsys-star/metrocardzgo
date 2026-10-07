@@ -200,15 +200,17 @@ export const LandingNavbar: React.FC = () => {
 
       {/* Mobile menu */}
       <div
-        className={`md:hidden overflow-hidden ${menuOpen ? 'max-h-96 opacity-100 py-2' : 'max-h-0 opacity-0 py-0'}`}
+        className={`md:hidden ${menuOpen ? 'max-h-[calc(100dvh-4.5rem)] overflow-y-auto overscroll-contain opacity-100 py-2' : 'max-h-0 overflow-hidden opacity-0 py-0'}`}
         style={{
-          transition: 'max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease',
-          background: 'rgba(10,10,12,0.97)',
+          transition: 'max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease, padding 0.3s ease',
+          background: 'rgba(10,10,12,0.98)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
           borderTop: menuOpen ? '1px solid rgba(201,162,39,0.12)' : 'none',
           WebkitTapHighlightColor: 'transparent',
         }}
       >
-        <div className="px-6 py-4 flex flex-col gap-4">
+        <div className="px-6 py-4 pb-8 flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-2 pb-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
             <a
               href="/check-membership"

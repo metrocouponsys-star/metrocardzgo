@@ -85,23 +85,23 @@ export const TrustStripSection: React.FC = () => {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-px bg-gold" />
 
       <div className="max-w-7xl mx-auto px-6 lg:px-10">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8 lg:gap-6">
           {features.map((f, i) => (
             <div
               key={f.id}
               ref={el => { itemsRef.current[i] = el; }}
-              className="reveal-up flex flex-col items-center text-center gap-4 px-4"
+              className="reveal-up flex flex-col items-center text-center gap-2.5 sm:gap-4 px-1 sm:px-4"
             >
               {/* Icon with gold ring */}
               <div
-                className="w-16 h-16 rounded-full flex items-center justify-center"
+                className="w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center"
                 style={{ background: 'rgba(201,162,39,0.08)', border: '1px solid rgba(201,162,39,0.25)' }}
               >
                 {f.icon}
               </div>
               <div>
-                <h3 className="font-poppins font-bold text-warm-white text-base mb-1">{f.headline}</h3>
-                <p className="text-warm-grey text-sm leading-relaxed">{f.desc}</p>
+                <h3 className="font-poppins font-bold text-warm-white text-sm sm:text-base mb-1 leading-snug">{f.headline}</h3>
+                <p className="text-warm-grey text-xs sm:text-sm leading-relaxed">{f.desc}</p>
               </div>
             </div>
           ))}

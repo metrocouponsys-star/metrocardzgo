@@ -16,6 +16,8 @@
 
   html {
     scroll-behavior: smooth;
+    overflow-x: clip;
+    max-width: 100vw;
   }
 
   body {

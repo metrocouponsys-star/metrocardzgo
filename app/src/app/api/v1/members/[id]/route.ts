@@ -14,8 +14,12 @@ export async function GET(request: NextRequest, { params }: Params) {
   const { id } = await params;
   const merchantId = getMerchantId(auth, request);
 
+  if (auth.role !== 'super_admin' && !merchantId) {
+    return NextResponse.json({ detail: 'Merchant ID required' }, { status: 400 });
+  }
+
   const member = await prisma.member.findFirst({
-    where: { id, ...(merchantId ? { merchantId } : {}) },
+    where: { id, ...(auth.role !== 'super_admin' ? { merchantId: merchantId! } : {}) },
     include: {
       membershipType: true,
       offerStates: { include: { offerTemplate: true } },
@@ -27,17 +31,22 @@ export async function GET(request: NextRequest, { params }: Params) {
   return NextResponse.json(member);
 }
 
-export async function PUT(request: NextRequest, { params }: Params) {
+async function handleUpdate(request: NextRequest, { params }: Params) {
   const auth = await requireAuth(request);
   if (auth instanceof NextResponse) return auth;
   const { id } = await params;
   const merchantId = getMerchantId(auth, request);
-  const body = await request.json();
+
+  if (auth.role !== 'super_admin' && !merchantId) {
+    return NextResponse.json({ detail: 'Merchant ID required' }, { status: 400 });
+  }
 
   const existing = await prisma.member.findFirst({
-    where: { id, ...(merchantId ? { merchantId } : {}) },
+    where: { id, ...(auth.role !== 'super_admin' ? { merchantId: merchantId! } : {}) },
   });
   if (!existing) return NextResponse.json({ detail: 'Member not found' }, { status: 404 });
+
+  const body = await request.json();
 
   const updated = await prisma.member.update({
     where: { id },
@@ -61,14 +70,26 @@ export async function PUT(request: NextRequest, { params }: Params) {
   return NextResponse.json(updated);
 }
 
+export async function PUT(request: NextRequest, context: Params) {
+  return handleUpdate(request, context);
+}
+
+export async function PATCH(request: NextRequest, context: Params) {
+  return handleUpdate(request, context);
+}
+
 export async function DELETE(request: NextRequest, { params }: Params) {
   const auth = await requireAuth(request);
   if (auth instanceof NextResponse) return auth;
   const { id } = await params;
   const merchantId = getMerchantId(auth, request);
 
+  if (auth.role !== 'super_admin' && !merchantId) {
+    return NextResponse.json({ detail: 'Merchant ID required' }, { status: 400 });
+  }
+
   const existing = await prisma.member.findFirst({
-    where: { id, ...(merchantId ? { merchantId } : {}) },
+    where: { id, ...(auth.role !== 'super_admin' ? { merchantId: merchantId! } : {}) },
   });
   if (!existing) return NextResponse.json({ detail: 'Member not found' }, { status: 404 });
 

@@ -59,15 +59,15 @@ const CardBack: React.FC = () => (
   <div className="w-full h-full rounded-2xl relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #0f0f0f, #1a1a1a)' }}>
     <div className="absolute inset-0 rounded-2xl" style={{ border: '1.5px solid rgba(201,162,39,0.4)' }} />
     {/* Magnetic stripe */}
-    <div className="absolute top-8 left-0 right-0 h-9" style={{ background: 'linear-gradient(180deg, #1a1a1a, #0d0d0d, #1a1a1a)' }} />
+    <div className="absolute top-4 sm:top-6 left-0 right-0 h-6 sm:h-8" style={{ background: 'linear-gradient(180deg, #1a1a1a, #0d0d0d, #1a1a1a)' }} />
     {/* Signature strip */}
-    <div className="absolute top-20 left-6 right-6 h-8 rounded flex items-center px-3" style={{ background: 'linear-gradient(90deg, #f5f5f5, #eeeeee)', border: '1px solid #ddd' }}>
-      <p className="text-black/30 text-xs italic font-light">John Doe</p>
+    <div className="absolute top-12 sm:top-16 left-4 sm:left-6 right-4 sm:right-6 h-6 sm:h-7 rounded flex items-center px-2.5 sm:px-3" style={{ background: 'linear-gradient(90deg, #f5f5f5, #eeeeee)', border: '1px solid #ddd' }}>
+      <p className="text-black/40 text-[10px] sm:text-xs italic font-light">John Doe</p>
     </div>
 
     {/* QR Code */}
-    <div className="absolute bottom-6 right-6 flex flex-col items-center gap-1">
-      <div className="w-16 h-16 rounded-md p-1.5" style={{ background: '#fff' }}>
+    <div className="absolute bottom-6 sm:bottom-7 right-4 sm:right-6 flex flex-col items-center gap-0.5 sm:gap-1">
+      <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-md p-1" style={{ background: '#fff' }}>
         <div className="w-full h-full grid grid-cols-7 gap-px">
           {[...Array(49)].map((_, i) => {
             const isCorner = (r: number, c: number) => (r < 2 && c < 2) || (r < 2 && c >= 5) || (r >= 5 && c < 2);
@@ -77,29 +77,29 @@ const CardBack: React.FC = () => (
           })}
         </div>
       </div>
-      <p className="text-warm-white/30 text-[9px] tracking-wider">SCAN ME</p>
+      <p className="text-warm-white/30 text-[8px] sm:text-[9px] tracking-wider">SCAN ME</p>
     </div>
 
     {/* Offer icons grid */}
-    <div className="absolute left-6 bottom-6 grid grid-cols-3 gap-3">
+    <div className="absolute left-4 sm:left-6 bottom-6 sm:bottom-7 grid grid-cols-3 gap-1.5 sm:gap-2">
       {['10%', '20%', '₹50', '5%', 'FREE', '2X'].map((offer, i) => (
-        <div key={i} className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'rgba(201,162,39,0.1)', border: '1px solid rgba(201,162,39,0.25)' }}>
-          <span className="text-gold font-poppins font-bold text-[10px]">{offer}</span>
+        <div key={i} className="w-7 h-7 sm:w-9 sm:h-9 rounded-md sm:rounded-lg flex items-center justify-center" style={{ background: 'rgba(201,162,39,0.1)', border: '1px solid rgba(201,162,39,0.25)' }}>
+          <span className="text-gold font-poppins font-bold text-[8px] sm:text-[10px]">{offer}</span>
         </div>
       ))}
     </div>
 
     {/* Terms strip */}
-    <div className="absolute bottom-0 left-0 right-0 px-4 py-2" style={{ background: 'rgba(201,162,39,0.05)', borderTop: '1px solid rgba(201,162,39,0.1)' }}>
-      <p className="text-warm-white/20 text-[8px] leading-tight">
+    <div className="absolute bottom-0 left-0 right-0 px-3 sm:px-4 py-1" style={{ background: 'rgba(201,162,39,0.05)', borderTop: '1px solid rgba(201,162,39,0.1)' }}>
+      <p className="text-warm-white/20 text-[7px] sm:text-[8px] leading-tight truncate">
         Terms &amp; Conditions apply. Card is non-transferable.{' '}
-        <span className="text-gold/40">Check balance: metrocardz.in/check-membership</span>
+        <span className="text-gold/40">Check: metrocardz.in/check-membership</span>
       </p>
     </div>
 
     {/* Back label */}
-    <div className="absolute top-3 left-6">
-      <p className="text-warm-white/30 text-xs tracking-widest uppercase">Back</p>
+    <div className="absolute top-1.5 sm:top-2 left-4 sm:left-6">
+      <p className="text-warm-white/30 text-[9px] sm:text-xs tracking-widest uppercase">Back</p>
     </div>
   </div>
 );
@@ -125,7 +125,7 @@ export const FlipDemoSection: React.FC = () => {
         <div className="flex justify-center">
           <div
             className="perspective-card cursor-pointer relative"
-            style={{ width: 'min(380px, 90vw)', height: 'min(240px, 56vw)' }}
+            style={{ width: 'min(380px, calc(100vw - 3rem))', aspectRatio: '1.586 / 1' }}
             onClick={() => setFlipped(f => !f)}
           >
             {/* Ambient glow */}

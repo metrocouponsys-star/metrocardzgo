@@ -307,9 +307,8 @@ def validate_coupon(
     else:
         discount = (payload.purchase_amount * coupon.value / 100).quantize(Decimal("0.01"))
 
-    # Increment usage count
-    coupon.used_count += 1
-    db.commit()
+    # Validation is a read-only check — do NOT burn usage count during validation.
+    # Usage count is incremented atomically when the purchase/redemption is submitted.
 
     return CouponValidateOut(
         valid=True,
@@ -373,39 +372,51 @@ def redeem_voucher(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_active_user),
 ):
-    voucher = db.query(GiftVoucher).filter(
-        GiftVoucher.merchant_id == merchant_id,
-        GiftVoucher.code == payload.code.upper(),
-    ).first()
-    if not voucher:
-        raise HTTPException(404, "Voucher not found")
-    if voucher.is_redeemed:
-        raise HTTPException(400, "Voucher has already been redeemed")
-    if voucher.expires_at and voucher.expires_at < date.today():
-        raise HTTPException(400, "Voucher has expired")
+    try:
+        # Atomic row-level lock on voucher to prevent double-redemption race conditions
+        voucher = db.query(GiftVoucher).filter(
+            GiftVoucher.merchant_id == merchant_id,
+            GiftVoucher.code == payload.code.upper(),
+        ).with_for_update().first()
+        if not voucher:
+            raise HTTPException(404, "Voucher not found")
+        if voucher.is_redeemed:
+            raise HTTPException(400, "Voucher has already been redeemed")
+        if voucher.expires_at and voucher.expires_at < date.today():
+            raise HTTPException(400, "Voucher has expired")
 
-    member = db.query(Member).filter(Member.id == payload.member_id, Member.merchant_id == merchant_id).first()
-    if not member:
-        raise HTTPException(404, "Member not found")
+        # Atomic row-level lock on member
+        member = db.query(Member).filter(
+            Member.id == payload.member_id,
+            Member.merchant_id == merchant_id
+        ).with_for_update().first()
+        if not member:
+            raise HTTPException(404, "Member not found")
 
-    voucher.is_redeemed = True
-    voucher.redeemed_by_member_id = member.id
-    voucher.redeemed_at = datetime.now(timezone.utc)
+        voucher.is_redeemed = True
+        voucher.redeemed_by_member_id = member.id
+        voucher.redeemed_at = datetime.now(timezone.utc)
 
-    # Credit points equivalent to voucher value to member
-    member.loyalty_points = Decimal(str(member.loyalty_points or 0)) + voucher.value
-    txn = LoyaltyTransaction(
-        merchant_id=merchant_id,
-        member_id=member.id,
-        type="earn",
-        points=voucher.value,
-        note=f"Gift voucher redeemed: {voucher.code}",
-        balance_after=member.loyalty_points,
-    )
-    db.add(txn)
-    db.commit()
-    db.refresh(voucher)
-    return voucher
+        # Credit points equivalent to voucher value to member
+        member.loyalty_points = Decimal(str(member.loyalty_points or 0)) + voucher.value
+        txn = LoyaltyTransaction(
+            merchant_id=merchant_id,
+            member_id=member.id,
+            type="earn",
+            points=voucher.value,
+            note=f"Gift voucher redeemed: {voucher.code}",
+            balance_after=member.loyalty_points,
+        )
+        db.add(txn)
+        db.commit()
+        db.refresh(voucher)
+        return voucher
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception:
+        db.rollback()
+        raise
 
 
 @vouchers_router.delete("/{voucher_id}", status_code=204)

@@ -8,7 +8,10 @@ from app.core.security import decode_token
 def test_health_check(client):
     response = client.get("/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok", "service": "Metro Cardz API"}
+    data = response.json()
+    assert data["status"] == "ok"
+    assert data["service"] == "Metro Cardz API"
+    assert data["db_ok"] is True
 
 
 def test_auth_login_success(client, seeded_merchant):

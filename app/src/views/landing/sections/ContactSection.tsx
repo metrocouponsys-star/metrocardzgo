@@ -37,15 +37,22 @@ export const ContactSection: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormState('submitting');
-    // Fallback: open mailto with form data
-    const subject = encodeURIComponent(`Card Design Request — ${form.business}`);
-    const body = encodeURIComponent(
-      `Name: ${form.name}\nBusiness: ${form.business}\nIndustry: ${form.industry}\nPhone: ${form.phone}\nEmail: ${form.email}\n\nMessage:\n${form.message}`
-    );
-    window.open(`mailto:hello@metrocardz.in?subject=${subject}&body=${body}`);
-    setTimeout(() => {
+    try {
+      await fetch('/api/v1/public/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
       setFormState('success');
-    }, 500);
+    } catch {
+      // Fallback: open mailto if fetch completely failed
+      const subject = encodeURIComponent(`Card Design Request — ${form.business}`);
+      const body = encodeURIComponent(
+        `Name: ${form.name}\nBusiness: ${form.business}\nIndustry: ${form.industry}\nPhone: ${form.phone}\nEmail: ${form.email}\n\nMessage:\n${form.message}`
+      );
+      window.open(`mailto:hello@metrocardz.in?subject=${subject}&body=${body}`);
+      setFormState('success');
+    }
   };
 
   return (

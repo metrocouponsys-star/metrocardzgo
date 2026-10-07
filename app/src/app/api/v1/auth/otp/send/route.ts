@@ -13,10 +13,34 @@ export async function POST(request: NextRequest) {
   try {
     const { phone } = await request.json();
     const cleanPhone = (phone ?? '').replace(/\s/g, '');
+    const digitsOnly = cleanPhone.replace(/\D/g, '');
 
-    // Always return 200 — never reveal if the user exists
+    if (!digitsOnly || digitsOnly.length < 10) {
+      return NextResponse.json({ detail: 'Valid 10-digit mobile number required' }, { status: 400 });
+    }
+    const last10 = digitsOnly.slice(-10);
+
+    // 1. Rate limiting: enforce 60s cooldown between OTP requests for the same number
+    const existingRecent = await prisma.otpCode.findFirst({
+      where: {
+        OR: [
+          { phone: cleanPhone },
+          { phone: digitsOnly },
+        ],
+        createdAt: { gte: new Date(Date.now() - 60 * 1000) },
+      },
+    });
+
+    if (existingRecent) {
+      return NextResponse.json(
+        { detail: 'Please wait 60 seconds before requesting another OTP' },
+        { status: 429 }
+      );
+    }
+
+    // Always check user by last 10 digits
     const user = await prisma.merchantUser.findFirst({
-      where: { phone: { endsWith: cleanPhone.slice(-10) } },
+      where: { phone: { endsWith: last10 } },
     });
     if (!user) {
       return NextResponse.json({ message: 'OTP sent if number is registered' });
@@ -26,8 +50,15 @@ export async function POST(request: NextRequest) {
     const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000);
 
     // Delete any existing OTPs for this phone before inserting new one
-    await prisma.otpCode.deleteMany({ where: { phone: cleanPhone } });
-    await prisma.otpCode.create({ data: { phone: cleanPhone, code: otp, expiresAt } });
+    await prisma.otpCode.deleteMany({
+      where: {
+        OR: [
+          { phone: cleanPhone },
+          { phone: digitsOnly },
+        ],
+      },
+    });
+    await prisma.otpCode.create({ data: { phone: digitsOnly, code: otp, expiresAt } });
 
     await sendOtpSms(cleanPhone, otp);
 

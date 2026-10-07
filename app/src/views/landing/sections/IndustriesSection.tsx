@@ -348,20 +348,20 @@ const IndustryTile = React.forwardRef<
       <div className="absolute top-3 right-4 left-12 text-right" style={{ zIndex: 3 }}>
         <p className="font-poppins font-bold text-warm-white text-sm leading-tight text-right">{ind.label}</p>
 
-        {/* "Custom Cards Available" — fades out; "View Cards →" fades in on hover */}
+        {/* "Custom Cards" — fades out; "View Cards →" fades in on hover */}
         <div style={{ position: 'relative', height: 16, marginTop: 4, overflow: 'hidden' }}>
           <p
-            className="text-xs tracking-wider absolute inset-0 text-right"
+            className="text-[10px] sm:text-xs tracking-wider absolute inset-0 text-right truncate"
             style={{
               color: 'rgba(201,162,39,0.55)',
               opacity: hovered ? 0 : 1,
               transition: 'opacity 0.18s ease',
             }}
           >
-            Custom Cards Available
+            Custom Cards
           </p>
           <p
-            className="text-xs font-semibold absolute inset-0 text-right"
+            className="text-[10px] sm:text-xs font-semibold absolute inset-0 text-right"
             style={{
               color: '#C9A227',
               opacity: hovered ? 1 : 0,

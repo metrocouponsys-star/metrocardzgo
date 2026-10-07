@@ -833,7 +833,10 @@ def record_member_purchase(
 
         # 2. Redeem Offer if provided
         offer_redeemed_title = None
+        points_earned = Decimal("0")
+
         if payload.offer_state_id:
+            pts_before = member.loyalty_points or Decimal("0")
             try:
                 redemption = redeem_offer_atomic(
                     db=db,
@@ -841,71 +844,70 @@ def record_member_purchase(
                     offer_state_id=payload.offer_state_id,
                     merchant_id=merchant_id,
                     actor_id=current_user.id,
+                    client_ip=None,
                     amount=net_amount,
                 )
                 if redemption and redemption.offer_template:
                     offer_redeemed_title = redemption.offer_template.title
+                # Points from offer and active rules were credited atomically inside redeem_offer_atomic
+                points_earned = (member.loyalty_points or Decimal("0")) - pts_before
             except ServiceError as e:
                 raise HTTPException(e.status_hint, detail=e.message)
-
-
-        # 3. Calculate Points via configured PointsRules
-        points_rules = db.query(PointsRule).filter(
-            PointsRule.merchant_id == merchant_id,
-            PointsRule.is_active == True,
-        ).all()
-
-        points_earned = Decimal("0")
-        if points_rules:
-            for rule in points_rules:
-                if rule.rule_type == "per_rupee":
-                    spend_unit = rule.spend_unit or Decimal("1")
-                    if spend_unit > Decimal("0"):
-                        earned = (net_amount / spend_unit) * rule.points_value
-                        points_earned += Decimal(str(int(earned)))
-                elif rule.rule_type == "per_visit":
-                    points_earned += rule.points_value
         else:
-            # Default points rule fallback: 1 point per ₹10 spent + 10 points for the visit
-            earned_rupee = net_amount / Decimal("10")
-            points_earned = Decimal(str(int(earned_rupee))) + Decimal("10")
+            # 3. Calculate Points via configured PointsRules when no offer redeemed
+            points_rules = db.query(PointsRule).filter(
+                PointsRule.merchant_id == merchant_id,
+                PointsRule.is_active == True,
+            ).all()
 
-        # 4. Credit points & log loyalty transaction
-        member.loyalty_points = Decimal(str(member.loyalty_points or 0)) + points_earned
-        member.total_visits = (member.total_visits or 0) + 1
+            if points_rules:
+                for rule in points_rules:
+                    if rule.rule_type == "per_rupee":
+                        spend_unit = rule.spend_unit or Decimal("1")
+                        if spend_unit > Decimal("0"):
+                            earned = (net_amount / spend_unit) * rule.points_value
+                            points_earned += Decimal(str(int(earned)))
+                    elif rule.rule_type == "per_visit":
+                        points_earned += rule.points_value
+            else:
+                # Default points rule fallback: 1 point per ₹10 spent + 10 points for the visit
+                earned_rupee = net_amount / Decimal("10")
+                points_earned = Decimal(str(int(earned_rupee))) + Decimal("10")
 
-        # Format audit note
-        note_parts = [f"Purchase ₹{gross_amount:.2f}"]
-        if coupon_obj:
-            note_parts.append(f"Coupon: {coupon_obj.code} (-₹{discount_amount:.2f})")
-        if offer_redeemed_title:
-            note_parts.append(f"Offer: {offer_redeemed_title}")
-        if payload.note:
-            note_parts.append(f"Note: {payload.note}")
+            # 4. Credit points & log loyalty transaction
+            member.loyalty_points = Decimal(str(member.loyalty_points or 0)) + points_earned
+            member.total_visits = (member.total_visits or 0) + 1
 
-        audit_note = " | ".join(note_parts)
+            # Format audit note
+            note_parts = [f"Purchase ₹{gross_amount:.2f}"]
+            if coupon_obj:
+                note_parts.append(f"Coupon: {coupon_obj.code} (-₹{discount_amount:.2f})")
+            if payload.note:
+                note_parts.append(f"Note: {payload.note}")
 
-        txn = LoyaltyTransaction(
-            merchant_id=merchant_id,
-            member_id=member_id,
-            type="earn",
-            points=points_earned,
-            balance_after=member.loyalty_points,
-            note=audit_note,
-        )
-        db.add(txn)
+            audit_note = " | ".join(note_parts)
 
-        emit(
-            db,
-            merchant_id,
-            POINTS_EARNED,
-            {
-                "member_id": member_id,
-                "points": float(points_earned),
-                "new_balance": float(member.loyalty_points),
-            },
-            member_id=member_id,
-        )
+            txn = LoyaltyTransaction(
+                merchant_id=merchant_id,
+                member_id=member_id,
+                type="earn",
+                points=points_earned,
+                balance_after=member.loyalty_points,
+                note=audit_note,
+            )
+            db.add(txn)
+
+            emit(
+                db,
+                merchant_id,
+                POINTS_EARNED,
+                {
+                    "member_id": member_id,
+                    "points": float(points_earned),
+                    "new_balance": float(member.loyalty_points),
+                },
+                member_id=member_id,
+            )
 
         db.commit()
         db.refresh(member)

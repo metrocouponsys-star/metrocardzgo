@@ -16,15 +16,35 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { member_id, offer_template_id, amount } = body;
+    const { member_id, amount } = body;
+    let offer_template_id = body.offer_template_id;
+    const offer_state_id = body.offer_state_id;
+
+    if (!member_id) {
+      return NextResponse.json({ detail: 'Member ID required' }, { status: 400 });
+    }
+
+    // If offer_state_id was provided instead of offer_template_id (e.g. from realClient)
+    if (!offer_template_id && offer_state_id) {
+      const stateLookup = await prisma.memberOfferState.findUnique({
+        where: { id: offer_state_id },
+      });
+      if (stateLookup) {
+        offer_template_id = stateLookup.offerTemplateId;
+      }
+    }
+
+    if (!offer_template_id) {
+      return NextResponse.json({ detail: 'Offer Template ID or Offer State ID required' }, { status: 400 });
+    }
 
     // 1. Fetch member and verify belongs to merchant
     const member = await prisma.member.findFirst({
       where: { id: member_id, merchantId },
     });
     if (!member) return NextResponse.json({ detail: 'Member not found' }, { status: 404 });
-    if (member.status === 'expired') {
-      return NextResponse.json({ detail: 'Member membership has expired' }, { status: 403 });
+    if (member.status === 'expired' || member.status === 'deactivated') {
+      return NextResponse.json({ detail: `Member membership is ${member.status}` }, { status: 403 });
     }
 
     // 2. Fetch offer template
@@ -33,15 +53,36 @@ export async function POST(request: NextRequest) {
     });
     if (!offer) return NextResponse.json({ detail: 'Offer not found or inactive' }, { status: 404 });
 
-    // 3. Check offer state (qty remaining)
-    const offerState = await prisma.memberOfferState.findFirst({
-      where: { memberId: member_id, offerTemplateId: offer_template_id },
-    });
-    if (offerState?.status === 'exhausted') {
-      return NextResponse.json({ detail: 'Offer exhausted for this member' }, { status: 400 });
-    }
+    // Validate amount (must be positive finite number or null)
+    const validAmount = amount !== undefined && amount !== null && !isNaN(Number(amount)) && Number(amount) >= 0
+      ? Number(amount)
+      : null;
 
+    // 3. Execute redemption inside atomic ACID transaction to prevent double spending
     await prisma.$transaction(async (tx) => {
+      // Re-fetch offer state inside transaction to prevent race conditions
+      const freshOfferState = await tx.memberOfferState.findFirst({
+        where: { memberId: member_id, offerTemplateId: offer_template_id },
+      });
+
+      if (freshOfferState) {
+        if (freshOfferState.status === 'exhausted' || (freshOfferState.remainingQty !== null && Number(freshOfferState.remainingQty) <= 0)) {
+          throw new Error('OFFER_EXHAUSTED');
+        }
+
+        // Deduct qty
+        if (freshOfferState.remainingQty !== null) {
+          const newQty = Number(freshOfferState.remainingQty) - 1;
+          await tx.memberOfferState.update({
+            where: { id: freshOfferState.id },
+            data: {
+              remainingQty: newQty,
+              status: newQty <= 0 ? 'exhausted' : 'active',
+            },
+          });
+        }
+      }
+
       // 4. Log redemption
       const redemptionId = crypto.randomUUID();
       await tx.redemptionLog.create({
@@ -50,26 +91,18 @@ export async function POST(request: NextRequest) {
           memberId: member_id,
           offerTemplateId: offer_template_id,
           merchantUserId: auth.userId,
-          amount: amount ? parseFloat(amount) : null,
+          amount: validAmount,
           ipAddress: request.headers.get('x-forwarded-for') ?? null,
         },
       });
 
-      // 5. Deduct qty if applicable
-      if (offerState && offerState.remainingQty !== null) {
-        const newQty = Number(offerState.remainingQty) - 1;
-        await tx.memberOfferState.update({
-          where: { id: offerState.id },
-          data: {
-            remainingQty: newQty,
-            status: newQty <= 0 ? 'exhausted' : 'active',
-          },
-        });
-      }
+      // 5. Credit loyalty points if offer earns points (read fresh member balance inside transaction)
+      const freshMember = await tx.member.findUniqueOrThrow({
+        where: { id: member_id },
+      });
 
-      // 6. Credit loyalty points if offer earns points
       if (offer.loyaltyPointsEarn && Number(offer.loyaltyPointsEarn) > 0) {
-        const currentPoints = Number(member.loyaltyPoints ?? 0);
+        const currentPoints = Number(freshMember.loyaltyPoints ?? 0);
         const earned = Number(offer.loyaltyPointsEarn);
         const newBalance = currentPoints + earned;
 
@@ -100,7 +133,10 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ message: 'Offer redeemed successfully' }, { status: 201 });
-  } catch (err) {
+  } catch (err: any) {
+    if (err?.message === 'OFFER_EXHAUSTED') {
+      return NextResponse.json({ detail: 'Offer exhausted for this member' }, { status: 400 });
+    }
     console.error('[redemptions POST]', err);
     return NextResponse.json({ detail: 'Internal server error' }, { status: 500 });
   }

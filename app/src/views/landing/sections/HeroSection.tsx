@@ -370,13 +370,7 @@ export const HeroSection: React.FC = () => {
             {/* Floating card badge */}
             {mounted && (
               <div
-                style={{
-                  position: 'absolute',
-                  left: -24,
-                  bottom: 24,
-                  width: 170,
-                  transform: 'rotate(-8deg)',
-                }}
+                className="absolute left-2 sm:-left-6 bottom-4 sm:bottom-6 w-36 sm:w-44 -rotate-3 sm:-rotate-8 pointer-events-none transition-all duration-300"
               >
                 <div
                   style={{

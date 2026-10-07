@@ -225,11 +225,11 @@ export default function AboutUsPage() {
               Recognizing this shift, we spent the last four years researching digital platforms like Groupon, Nearbuy, Zomato, EazyDiner, and Dineout, and analyzing consumer dynamics. The result is a scalable, future-ready digital ecosystem—Metro Cardz—designed to help merchants attract, engage, reward, and retain customers more effectively than ever before.
             </p>
           </div>
-          <div className="flex items-center gap-3 pt-3">
-            <a href="/login" className="btn-primary">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-3 w-full sm:w-auto">
+            <a href="/login" className="btn-primary text-center">
               Access Portal
             </a>
-            <a href="/contact" className="btn-outline">
+            <a href="/contact" className="btn-outline text-center">
               Join as Partner / Investor
             </a>
           </div>
