@@ -8,6 +8,8 @@ import type { PublicMemberView } from '../../types';
 import * as api from '../../api';
 import { StatusBadge } from '../../components/ui/StatusBadge';
 import { format } from 'date-fns';
+import { InteractiveFlipCard } from '../../components/cards/InteractiveFlipCard';
+import { loadSavedCardDesign } from '../../types/cardDesign';
 
 function formatCardNumber(num?: string | null): string {
   if (!num) return 'MC •••• •••• ••••';
@@ -80,6 +82,7 @@ function LookupForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     setError(null);
 
     const trimId = identifier.trim();
@@ -259,6 +262,14 @@ function MembershipResult({
   const pointsVal = Number(data.loyalty_points) || 0;
   const points = useCountUp(pointsVal, 1200, dataReady);
 
+  const merchantDesign = React.useMemo(() => {
+    const loaded = loadSavedCardDesign((data as any).merchant_id || 'mer-001', 'store_loyalty');
+    if (data.merchant_name) {
+      loaded.brandName = data.merchant_name.toUpperCase();
+    }
+    return loaded;
+  }, [data.merchant_name, (data as any).merchant_id]);
+
   useEffect(() => {
     const t = setTimeout(() => setDataReady(true), 120);
     return () => clearTimeout(t);
@@ -326,25 +337,26 @@ function MembershipResult({
       {/* Main Container */}
       <div className="max-w-md mx-auto px-4 pt-6 space-y-5">
 
+        {/* ── 3D Interactive Merchant-Designed Member Pass ── */}
+        <div className="space-y-2">
+          <InteractiveFlipCard
+            design={merchantDesign}
+            memberName={data.member_name}
+            cardNumber={formatCardNumber(data.physical_card_number || data.member_code)}
+            validThru={format(new Date(data.expiry_date), 'MM/yy')}
+            tier={data.membership_type_name}
+            points={pointsVal}
+            qrValue={`https://metrocardz.in/m/${data.member_code}`}
+            interactive={true}
+          />
+          <p className="text-center text-[11px] text-slate-400 font-medium flex items-center justify-center gap-1.5 pt-1">
+            <span className="material-symbols-outlined text-[15px] text-amber-500">touch_app</span>
+            Tap card to flip · View scannable Barcode & QR Code on back
+          </p>
+        </div>
+
         {/* ── Light Modern Digital Member Card ── */}
         <div className="rounded-3xl p-6 bg-white border border-slate-200 shadow-sm space-y-6 relative overflow-hidden">
-
-          {/* Card Header */}
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-400 text-slate-950 font-black text-xl flex items-center justify-center shadow-md">
-                {data.member_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
-              </div>
-              <div>
-                <h2 className="text-lg font-black text-slate-900">{data.member_name}</h2>
-                <p className="text-xs font-mono font-bold text-amber-700">#{data.member_code}</p>
-              </div>
-            </div>
-
-            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black bg-amber-100 border border-amber-300 text-amber-900">
-              {data.membership_type_name}
-            </span>
-          </div>
 
           {/* Hero Loyalty Points Card */}
           <div className="bg-gradient-to-br from-amber-500 via-amber-500 to-amber-600 rounded-2xl p-5 text-slate-950 shadow-md flex items-center justify-between">

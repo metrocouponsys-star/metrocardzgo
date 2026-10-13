@@ -50,6 +50,33 @@ function getClientIP(request: NextRequest): string {
   );
 }
 
+function getValidCorsOrigin(request: NextRequest): string {
+  const origin = request.headers.get('origin');
+  if (!origin) return BASE_URL;
+  try {
+    const url = new URL(origin);
+    const host = url.hostname.toLowerCase();
+    // Allow metrocardz domains (both .com, .in, and subdomains like www, app, portal)
+    if (
+      host === 'metrocardz.com' || host.endsWith('.metrocardz.com') ||
+      host === 'metrocardz.in' || host.endsWith('.metrocardz.in') ||
+      host.endsWith('.hostingersite.com') ||
+      host === 'localhost' || host === '127.0.0.1' ||
+      host.startsWith('192.168.') || host.startsWith('10.')
+    ) {
+      return origin;
+    }
+    // Also allow if it matches the current request's host header
+    const reqHost = request.headers.get('host')?.split(':')[0]?.toLowerCase();
+    if (reqHost && host === reqHost) {
+      return origin;
+    }
+  } catch {
+    return BASE_URL;
+  }
+  return BASE_URL;
+}
+
 function addBaseSecurityHeaders(response: NextResponse): NextResponse {
   const h = response.headers;
   h.set('X-Content-Type-Options', 'nosniff');
@@ -102,13 +129,16 @@ export function middleware(request: NextRequest) {
     );
   }
 
-  // ── 5. OPTIONS preflight — return CORS headers ───────────────────────────
+  // ── 5. OPTIONS preflight — return dynamic CORS headers ───────────────────
   if (method === 'OPTIONS') {
+    const corsOrigin = getValidCorsOrigin(request);
     const response = new NextResponse(null, { status: 204 });
-    response.headers.set('Access-Control-Allow-Origin', BASE_URL);
+    response.headers.set('Access-Control-Allow-Origin', corsOrigin);
+    response.headers.set('Access-Control-Allow-Credentials', 'true');
     response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-    response.headers.set('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Request-ID');
+    response.headers.set('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Request-ID, X-Cron-Key');
     response.headers.set('Access-Control-Max-Age', '86400');
+    response.headers.set('Vary', 'Origin');
     return addBaseSecurityHeaders(response);
   }
 
@@ -150,8 +180,16 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // ── 7. Pass through with security headers ────────────────────────────────
+  // ── 7. Pass through with security and dynamic CORS headers ───────────────
   const response = NextResponse.next();
+  if (pathname.startsWith('/api/')) {
+    const corsOrigin = getValidCorsOrigin(request);
+    response.headers.set('Access-Control-Allow-Origin', corsOrigin);
+    response.headers.set('Access-Control-Allow-Credentials', 'true');
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    response.headers.set('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Request-ID, X-Cron-Key');
+    response.headers.set('Vary', 'Origin');
+  }
   return addBaseSecurityHeaders(response);
 }
 

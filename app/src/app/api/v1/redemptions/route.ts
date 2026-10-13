@@ -5,7 +5,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth, getMerchantId } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { prisma, runTransactionWithRetry } from '@/lib/prisma';
 import crypto from 'crypto';
 
 export async function POST(request: NextRequest) {
@@ -58,8 +58,8 @@ export async function POST(request: NextRequest) {
       ? Number(amount)
       : null;
 
-    // 3. Execute redemption inside atomic ACID transaction to prevent double spending
-    await prisma.$transaction(async (tx) => {
+    // 3. Execute redemption inside atomic ACID transaction with automatic retry
+    await runTransactionWithRetry(async (tx) => {
       // Re-fetch offer state inside transaction to prevent race conditions
       const freshOfferState = await tx.memberOfferState.findFirst({
         where: { memberId: member_id, offerTemplateId: offer_template_id },
@@ -138,7 +138,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ detail: 'Offer exhausted for this member' }, { status: 400 });
     }
     console.error('[redemptions POST]', err);
-    return NextResponse.json({ detail: 'Internal server error' }, { status: 500 });
+    const detail = process.env.NODE_ENV !== 'production'
+      ? (err?.message || 'Transaction could not be completed')
+      : 'Transaction could not be processed. Please retry or verify membership.';
+    return NextResponse.json({ detail }, { status: 500 });
   }
 }
 

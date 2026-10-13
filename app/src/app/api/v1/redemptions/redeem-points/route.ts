@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth, getMerchantId } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { prisma, runTransactionWithRetry } from '@/lib/prisma';
 import crypto from 'crypto';
 
 export async function POST(request: NextRequest) {
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ detail: `Member is ${member.status}` }, { status: 403 });
     }
 
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await runTransactionWithRetry(async (tx) => {
       const freshMember = await tx.member.findUniqueOrThrow({
         where: { id: member_id },
       });
@@ -110,6 +110,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ detail: 'Insufficient points balance' }, { status: 400 });
     }
     console.error('[redemptions/redeem-points POST]', err);
-    return NextResponse.json({ detail: 'Internal server error' }, { status: 500 });
+    const detail = process.env.NODE_ENV !== 'production'
+      ? (err?.message || 'Points redemption failed')
+      : 'Points redemption could not be completed. Please retry.';
+    return NextResponse.json({ detail }, { status: 500 });
   }
 }

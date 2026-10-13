@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
     plan_tier: merchant.planTier,
     whatsapp_number: merchant.whatsappNumber,
     logo_url: merchant.logoUrl,
+    card_design_url: merchant.cardDesignUrl,
     address: merchant.address,
     status: merchant.status,
     approval_status: merchant.approvalStatus,
@@ -46,6 +47,7 @@ export async function PATCH(request: NextRequest) {
   if (body.category !== undefined) updateData.category = body.category;
   if (body.whatsapp_number !== undefined) updateData.whatsappNumber = body.whatsapp_number;
   if (body.address !== undefined) updateData.address = body.address;
+  if (body.card_design_url !== undefined) updateData.cardDesignUrl = body.card_design_url;
   if (body.referral_bonus_points !== undefined) updateData.referralBonusPoints = body.referral_bonus_points;
 
   const updated = await prisma.merchant.update({
@@ -63,6 +65,7 @@ export async function PATCH(request: NextRequest) {
     plan_tier: updated.planTier,
     whatsapp_number: updated.whatsappNumber,
     logo_url: updated.logoUrl,
+    card_design_url: updated.cardDesignUrl,
     address: updated.address,
     status: updated.status,
     approval_status: updated.approvalStatus,

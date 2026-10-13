@@ -62,6 +62,7 @@ const MERCHANT_NAV = [
   { to: '/portal/members',               icon: 'groups',            label: 'Members',      roles: ['owner', 'staff'], group: 'core' },
   { to: '/portal/members/search?tab=qr', icon: 'qr_code_scanner',   label: 'Scan QR',      roles: ['owner', 'staff'], group: 'core' },
   { to: '/portal/cards',                 icon: 'credit_card',       label: 'Cards',        roles: ['owner'],          group: 'manage' },
+  { to: '/portal/card-design',           icon: 'palette',           label: 'Card Studio',  roles: ['owner'],          group: 'manage' },
   { to: '/portal/celebrations',          icon: 'cake',              label: 'Celebrations', roles: ['owner', 'staff'], group: 'manage' },
   { to: '/portal/offers',                icon: 'local_offer',       label: 'Offers',       roles: ['owner'],          group: 'manage' },
   { to: '/portal/membership-types',      icon: 'card_membership',   label: 'Memberships',  roles: ['owner'],          group: 'manage' },

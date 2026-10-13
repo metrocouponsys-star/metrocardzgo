@@ -3,6 +3,15 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import {
+  getActiveCustomer,
+  getCustomerData,
+  saveCustomerData,
+  logoutCustomer,
+  getRemainingOffersCount,
+} from '@/lib/goStore';
+import { InteractiveFlipCard } from '@/components/cards/InteractiveFlipCard';
+import { loadSavedCardDesign } from '@/types/cardDesign';
 
 export default function GoLoginPage() {
   const router = useRouter();
@@ -27,13 +36,13 @@ export default function GoLoginPage() {
   const [activePass, setActivePass] = useState<any | null>(null);
 
   // Existing logged-in user check
-  const [loggedInMember, setLoggedInMember] = useState<any | null>(null);
+  const [customer, setCustomer] = useState<any | null>(null);
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem('mc_member') || localStorage.getItem('mc_go_member');
-      if (raw) {
-        setLoggedInMember(JSON.parse(raw));
+      const active = getActiveCustomer();
+      if (active) {
+        setCustomer(active);
       }
     } catch {}
   }, []);
@@ -106,17 +115,18 @@ export default function GoLoginPage() {
         return;
       }
 
-      const memberObj = {
+      const digits = phone.replace(/\D/g, '');
+      const cust = getCustomerData(digits, {
+        id: data.user?.id || `user_${digits}`,
         name: data.user?.name || name.trim() || 'GO Member',
-        token: data.access_token,
-        id: data.user?.id,
-        phone: phone.replace(/\D/g, ''),
-        memberCode: data.user?.member_code,
-      };
+        phone: digits,
+        memberCode: data.user?.member_code || `MC-${digits.slice(-4)}`,
+        tier: 'Gold Tier',
+        points: 500,
+      });
 
-      localStorage.setItem('mc_member', JSON.stringify(memberObj));
-      localStorage.setItem('mc_go_member', JSON.stringify(memberObj));
-      setLoggedInMember(memberObj);
+      saveCustomerData(cust);
+      setCustomer(cust);
       setStep('verified');
 
       setTimeout(() => {
@@ -157,16 +167,17 @@ export default function GoLoginPage() {
       const data = await res.json();
       setActivePass(data);
 
-      const memberObj = {
-        name: data.name || 'GO Member',
+      const cust = getCustomerData(data.phone || trimCode, {
         id: data.id,
+        name: data.name || 'GO Member',
+        phone: data.phone,
         memberCode: data.member_code || trimCode,
-        points: data.points_balance || 0,
-        tier: data.tier_name || 'Active Pass',
-      };
-      localStorage.setItem('mc_member', JSON.stringify(memberObj));
-      localStorage.setItem('mc_go_member', JSON.stringify(memberObj));
-      setLoggedInMember(memberObj);
+        points: data.points_balance || 1250,
+        tier: data.tier_name || 'Gold Member',
+      });
+
+      saveCustomerData(cust);
+      setCustomer(cust);
     } catch {
       setPassError('Unable to connect to service. Please try again.');
     } finally {
@@ -175,9 +186,8 @@ export default function GoLoginPage() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('mc_member');
-    localStorage.removeItem('mc_go_member');
-    setLoggedInMember(null);
+    logoutCustomer();
+    setCustomer(null);
     setActivePass(null);
     setStep('phone');
     setPhone('');
@@ -315,40 +325,41 @@ export default function GoLoginPage() {
                 boxShadow: '0 4px 24px rgba(0,0,0,0.05)',
               }}
             >
-              {loggedInMember ? (
+              {customer ? (
                 /* Already Logged In Card View */
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16, textAlign: 'center' }}>
-                  <div
-                    style={{
-                      background: 'linear-gradient(135deg, #FF8A3D 0%, #EA580C 100%)',
-                      borderRadius: 16,
-                      padding: '20px 18px',
-                      color: '#fff',
-                      textAlign: 'left',
-                      boxShadow: '0 8px 20px rgba(234,88,12,0.25)',
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                      <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', opacity: 0.9 }}>
-                        Metro Cardz GO Member
-                      </span>
-                      <span className="material-symbols-outlined" style={{ fontSize: 22, opacity: 0.9 }}>
-                        verified
-                      </span>
+                  {/* 3D Interactive Flippable GO Pass */}
+                  <div style={{ textAlign: 'left' }}>
+                    <InteractiveFlipCard
+                      design={loadSavedCardDesign('mer-001', 'go_pass')}
+                      memberName={customer.name || 'ACTIVE MEMBER'}
+                      cardNumber={`MC-GO-${customer.memberCode || '8842'}`}
+                      validThru="12/28"
+                      tier={customer.tier || 'Gold Member'}
+                      points={customer.points}
+                      qrValue={`https://metrocardz.in/go/c/${customer.memberCode}`}
+                      interactive={true}
+                    />
+                    <p style={{ textAlign: 'center', fontSize: 11, color: '#9CA3AF', fontWeight: 600, marginTop: 8 }}>
+                      Tap card to flip 3D · View scannable deal authorization QR
+                    </p>
+                  </div>
+
+                  {/* Quick Metric Tiles */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                    <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 12, padding: '10px' }}>
+                      <div style={{ fontSize: 10, textTransform: 'uppercase', color: '#64748B', fontWeight: 800 }}>Points Balance</div>
+                      <div style={{ fontSize: 20, fontWeight: 900, color: '#EA580C', marginTop: 2 }}>{(customer.points || 0).toLocaleString()}</div>
                     </div>
-                    <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>
-                      {loggedInMember.name || 'Active Member'}
+                    <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 12, padding: '10px' }}>
+                      <div style={{ fontSize: 10, textTransform: 'uppercase', color: '#64748B', fontWeight: 800 }}>Total Saved</div>
+                      <div style={{ fontSize: 20, fontWeight: 900, color: '#059669', marginTop: 2 }}>₹{(customer.totalSavedMoney || 0).toLocaleString()}</div>
                     </div>
-                    {loggedInMember.memberCode && (
-                      <div style={{ fontSize: 12, fontFamily: 'monospace', opacity: 0.85, letterSpacing: '0.05em' }}>
-                        ID: {loggedInMember.memberCode}
-                      </div>
-                    )}
-                    {loggedInMember.points !== undefined && (
-                      <div style={{ marginTop: 14, fontSize: 13, fontWeight: 700 }}>
-                        Points Balance: <span style={{ fontSize: 16 }}>{loggedInMember.points}</span>
-                      </div>
-                    )}
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#64748B', padding: '0 4px' }}>
+                    <span>Claimed: <strong style={{ color: '#1E293B' }}>{customer.claimedOffers?.length || 0} passes</strong></span>
+                    <span>Remaining: <strong style={{ color: '#1E293B' }}>{getRemainingOffersCount(customer)} available</strong></span>
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -366,7 +377,7 @@ export default function GoLoginPage() {
                           cursor: 'pointer',
                         }}
                       >
-                        Explore & Claim Deals →
+                        Explore & Claim Deals ({getRemainingOffersCount(customer)} Remaining) →
                       </button>
                     </Link>
                     <button
@@ -382,7 +393,7 @@ export default function GoLoginPage() {
                         cursor: 'pointer',
                       }}
                     >
-                      Sign Out / Switch Account
+                      Sign Out / Switch Customer Account
                     </button>
                   </div>
                 </div>

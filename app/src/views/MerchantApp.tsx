@@ -27,6 +27,7 @@ import ReportsPage from './merchant/ReportsPage';
 import CampaignsPage from './merchant/CampaignsPage';
 import SettingsPage from './merchant/SettingsPage';
 import CardInventoryMerchantPage from './merchant/CardInventoryMerchantPage';
+import CardDesignerStudio from './merchant/CardDesignerStudio';
 import RewardsPage from './merchant/RewardsPage';
 import CelebrationsPage from './merchant/CelebrationsPage';
 
@@ -110,6 +111,7 @@ export default function MerchantApp() {
         <Route path="/portal/campaigns" element={<ProtectedRoute roles={['owner']}><AppShell><CampaignsPage /></AppShell></ProtectedRoute>} />
         <Route path="/portal/settings" element={<ProtectedRoute roles={['owner']}><AppShell><SettingsPage /></AppShell></ProtectedRoute>} />
         <Route path="/portal/cards" element={<ProtectedRoute roles={['owner']}><AppShell><CardInventoryMerchantPage /></AppShell></ProtectedRoute>} />
+        <Route path="/portal/card-design" element={<ProtectedRoute roles={['owner']}><AppShell><CardDesignerStudio /></AppShell></ProtectedRoute>} />
         <Route path="/portal/rewards" element={<ProtectedRoute roles={['owner']}><AppShell><RewardsPage /></AppShell></ProtectedRoute>} />
         <Route path="/portal/celebrations" element={<ProtectedRoute roles={['owner', 'staff']}><AppShell><CelebrationsPage /></AppShell></ProtectedRoute>} />
 

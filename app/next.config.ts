@@ -124,14 +124,13 @@ const nextConfig: NextConfig = {
         ],
       },
 
-      // ── API routes — no cache, CORS for same domain ─────────────────
+      // ── API routes — no cache, dynamic CORS handled in middleware ─────────────────
       {
         source: '/api/(.*)',
         headers: [
           { key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' },
-          { key: 'Access-Control-Allow-Origin',   value: BASE_URL },
           { key: 'Access-Control-Allow-Methods',  value: 'GET, POST, PUT, PATCH, DELETE, OPTIONS' },
-          { key: 'Access-Control-Allow-Headers',  value: 'Authorization, Content-Type, X-Request-ID' },
+          { key: 'Access-Control-Allow-Headers',  value: 'Authorization, Content-Type, X-Request-ID, X-Cron-Key' },
           { key: 'Access-Control-Allow-Credentials', value: 'true' },
         ],
       },

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth, getMerchantId } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { prisma, runTransactionWithRetry } from '@/lib/prisma';
 import crypto from 'crypto';
 
 export async function POST(request: NextRequest) {
@@ -27,8 +27,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 2. Perform redemption in ACID transaction to prevent double spending
-    const redeemed = await prisma.$transaction(async (tx) => {
+    // 2. Perform redemption in ACID transaction with retry to prevent double spending
+    const redeemed = await runTransactionWithRetry(async (tx) => {
       const voucher = await tx.giftVoucher.findFirst({
         where: {
           merchantId,
@@ -94,6 +94,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ detail: 'This voucher has expired' }, { status: 400 });
     }
     console.error('[vouchers/redeem POST]', err);
-    return NextResponse.json({ detail: 'Internal server error' }, { status: 500 });
+    const detail = process.env.NODE_ENV !== 'production'
+      ? (err?.message || 'Voucher redemption failed')
+      : 'Voucher redemption could not be completed. Please retry.';
+    return NextResponse.json({ detail }, { status: 500 });
   }
 }

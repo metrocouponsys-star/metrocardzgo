@@ -182,13 +182,16 @@ export async function verifyOtp(phone: string, otp: string): Promise<{ user: Aut
 
 export async function refreshAccessToken(): Promise<{ user: AuthUser; token: string }> {
   const refreshToken = typeof window !== 'undefined'
-    ? (sessionStorage.getItem('metro-cardz-refresh') || localStorage.getItem('metro-cardz-refresh'))
+    ? (localStorage.getItem('metro-cardz-refresh') || sessionStorage.getItem('metro-cardz-refresh'))
     : null;
   if (!refreshToken) throw new Error('No refresh token');
-  const res = await post<{ user: AuthUser; access_token: string; refresh_token: string }>(
+  const res = await post<{ user: AuthUser; access_token: string; refresh_token?: string }>(
     '/auth/refresh', { refresh_token: refreshToken }, true,
   );
-  if (typeof window !== 'undefined') {
+  if (!res || !res.access_token) {
+    throw new Error('Session invalid or expired');
+  }
+  if (typeof window !== 'undefined' && res.refresh_token) {
     sessionStorage.setItem('metro-cardz-refresh', res.refresh_token);
     localStorage.setItem('metro-cardz-refresh', res.refresh_token);
   }

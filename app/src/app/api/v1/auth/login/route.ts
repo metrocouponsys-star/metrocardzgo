@@ -42,6 +42,9 @@ export async function POST(request: NextRequest) {
     }
 
     const response = await buildLoginResponse(user.id);
+    if (!response) {
+      return NextResponse.json({ detail: 'User account error — unable to build session' }, { status: 500 });
+    }
     return NextResponse.json(response);
   } catch (err) {
     console.error('[auth/login]', err);

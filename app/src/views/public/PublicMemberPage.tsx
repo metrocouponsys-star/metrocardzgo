@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom';
 import type { PublicMemberView } from '../../types';
 import * as api from '../../api';
 import { format } from 'date-fns';
+import { InteractiveFlipCard } from '../../components/cards/InteractiveFlipCard';
+import { loadSavedCardDesign } from '../../types/cardDesign';
 
 // ── Offer icons ───────────────────────────────────────────────────────────
 const OFFER_ICONS: Record<string, string> = {
@@ -243,6 +245,24 @@ export default function PublicMemberPage() {
             </div>
           </div>
         )}
+
+        {/* ── 3D Interactive Flippable Physical Card Pass ── */}
+        <div className="space-y-2">
+          <InteractiveFlipCard
+            design={loadSavedCardDesign(data.merchant_id || 'mer-001', 'store_loyalty')}
+            memberName={data.member_name}
+            cardNumber={`•••• •••• •••• ${data.member_code?.slice(-4) || '8842'}`}
+            validThru={data.expiry_date ? format(new Date(data.expiry_date), 'MM/yy') : '12/28'}
+            tier={tierData?.tier_name || data.membership_type_name}
+            points={data.loyalty_points}
+            qrValue={`https://metrocardz.in/m/${data.member_code}`}
+            interactive={true}
+          />
+          <p className="text-center text-[11px] text-slate-400 font-medium flex items-center justify-center gap-1.5 pt-1">
+            <span className="material-symbols-outlined text-[15px] text-amber-500">touch_app</span>
+            Tap card to flip 3D · View scannable Barcode & QR Code
+          </p>
+        </div>
 
         {/* ── Digital Member Card ─────────────────────────────────────── */}
         <div className="bg-white rounded-2xl shadow-card border border-outline-variant/30 overflow-hidden">

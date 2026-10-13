@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth, getMerchantId } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { prisma, runTransactionWithRetry } from '@/lib/prisma';
 import crypto from 'crypto';
 
 type Params = { params: Promise<{ id: string }> };
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest, { params }: Params) {
   }
 
   try {
-    const claimResult = await prisma.$transaction(async (tx) => {
+    const claimResult = await runTransactionWithRetry(async (tx) => {
       // 1. Fetch reward with ownership check
       const reward = await tx.rewardCatalog.findFirst({
         where: { id: rewardId, merchantId, isActive: true },
@@ -124,6 +124,9 @@ export async function POST(request: NextRequest, { params }: Params) {
       return NextResponse.json({ detail: 'Insufficient loyalty points balance' }, { status: 400 });
     }
     console.error('[rewards/claim POST]', err);
-    return NextResponse.json({ detail: 'Internal server error' }, { status: 500 });
+    const detail = process.env.NODE_ENV !== 'production'
+      ? (err?.message || 'Reward claim failed')
+      : 'Reward claim could not be processed. Please retry.';
+    return NextResponse.json({ detail }, { status: 500 });
   }
 }

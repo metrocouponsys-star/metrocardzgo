@@ -7,8 +7,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
 
   const routes = [
-    // Core marketing pages — highest priority
+    // Core marketing & Platform discovery pages — highest priority
     { url: `${SITE_URL}/`, changeFrequency: 'weekly' as const, priority: 1.0 },
+    { url: `${SITE_URL}/go/`, changeFrequency: 'daily' as const, priority: 0.95 },
+    { url: `${SITE_URL}/go/discover/`, changeFrequency: 'daily' as const, priority: 0.90 },
+    { url: `${SITE_URL}/check-membership/`, changeFrequency: 'weekly' as const, priority: 0.90 },
+    { url: `${SITE_URL}/browse/`, changeFrequency: 'daily' as const, priority: 0.85 },
+    { url: `${SITE_URL}/live-offers/`, changeFrequency: 'daily' as const, priority: 0.85 },
+    { url: `${SITE_URL}/join/`, changeFrequency: 'monthly' as const, priority: 0.85 },
     { url: `${SITE_URL}/features/`, changeFrequency: 'monthly' as const, priority: 0.95 },
     { url: `${SITE_URL}/how-it-works/`, changeFrequency: 'monthly' as const, priority: 0.90 },
     { url: `${SITE_URL}/roi-calculator/`, changeFrequency: 'monthly' as const, priority: 0.85 },

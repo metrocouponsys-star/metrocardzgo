@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { NFCCardReplica } from '@/components/deals/NFCCardReplica';
+import { InteractiveFlipCard } from '@/components/cards/InteractiveFlipCard';
+import { loadSavedCardDesign } from '@/types/cardDesign';
 import { PartnerBadge } from '@/components/deals/PartnerBadge';
 import { BottomNav } from '@/components/deals/BottomNav';
 
@@ -128,13 +130,19 @@ export default function MyCardPage() {
           </div>
         </div>
 
-        {/* NFC Card Replica */}
+        {/* 3D Interactive Flip Card Pass */}
         <div style={{ marginBottom: '16px' }}>
-          <NFCCardReplica
+          <InteractiveFlipCard
+            design={loadSavedCardDesign('mer-001', 'store_loyalty')}
             memberName={DEMO_MEMBER.name}
-            serialNumber={DEMO_MEMBER.cardSerial}
+            cardNumber={`•••• •••• •••• ${DEMO_MEMBER.serialLast}`}
             validThru={DEMO_MEMBER.validThru}
             tier={DEMO_MEMBER.tier}
+            points={DEMO_MEMBER.points}
+            qrValue="https://metrocardz.in/m/SAL001"
+            isFlipped={showQr}
+            onFlip={setShowQr}
+            interactive={true}
           />
         </div>
 

@@ -1,7 +1,7 @@
 /** GET/POST /api/v1/rewards — RewardCatalog CRUD + claim */
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth, getMerchantId } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { prisma, runTransactionWithRetry } from '@/lib/prisma';
 import crypto from 'crypto';
 
 export async function GET(request: NextRequest) {
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ detail: 'Insufficient loyalty points' }, { status: 400 });
     }
 
-    await prisma.$transaction(async (tx) => {
+    await runTransactionWithRetry(async (tx) => {
       const newBalance = Number(member.loyaltyPoints) - Number(reward.pointsCost);
       await tx.member.update({ where: { id: member.id }, data: { loyaltyPoints: newBalance } });
       await tx.rewardClaim.create({

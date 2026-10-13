@@ -17,8 +17,9 @@ const REFRESH_SECRET = new TextEncoder().encode(
   process.env.JWT_REFRESH_SECRET ?? 'change-me-in-production-refresh'
 );
 
-const ACCESS_TTL  = '15m';   // 15 minutes  (same as Python backend)
-const REFRESH_TTL = '30d';   // 30 days
+// Resilient token lifetimes for uninterrupted mobile POS & staff operation
+const ACCESS_TTL  = '24h';   // 24 hours (prevents session drop mid-day)
+const REFRESH_TTL = '60d';   // 60 days
 
 // ── Token Payload Shape ───────────────────────────────────────────────────────
 export interface TokenPayload extends JWTPayload {

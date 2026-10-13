@@ -10,6 +10,13 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: '*',
         allow: [
           '/',
+          '/go/',
+          '/go/discover/',
+          '/check-membership/',
+          '/my-card/',
+          '/browse/',
+          '/join/',
+          '/live-offers/',
           '/gym-membership-cards/',
           '/salon-membership-cards/',
           '/restaurant-loyalty-cards/',
@@ -19,6 +26,7 @@ export default function robots(): MetadataRoute.Robots {
           '/corporate-id-cards/',
         ],
         disallow: [
+          '/portal/',
           '/dashboard/',
           '/admin/',
           '/members/',

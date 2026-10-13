@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useToastStore } from '../../store/toastStore';
 import { ConfirmModal } from '../../components/ui/Modal';
 import type { CardInventoryItem, Member } from '../../types';
 import * as api from '../../api';
 import { format } from 'date-fns';
+import CardDesignerStudio from './CardDesignerStudio';
 
 const STATUS_CFG = {
   merchant_allocated: { cls: 'bg-primary-container/30 text-primary', label: 'Available', icon: 'check_circle' },
@@ -16,6 +17,8 @@ export default function CardInventoryMerchantPage() {
   const { user } = useAuthStore();
   const { addToast } = useToastStore();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentTab = searchParams.get('tab') === 'inventory' ? 'inventory' : 'design';
   const merchantId = user?.merchant_id || '';
 
   const [cards, setCards] = useState<CardInventoryItem[]>([]);
@@ -105,16 +108,46 @@ export default function CardInventoryMerchantPage() {
   const isOwner = user?.role === 'owner';
 
   return (
-    <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-5xl mx-auto space-y-xl animate-fade-in">
+    <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-5xl mx-auto space-y-6 animate-fade-in">
+      {/* ── Top Module Tab Switcher ── */}
+      <div className="bg-slate-100 p-1.5 rounded-2xl flex items-center gap-2 max-w-md border border-slate-200">
+        <button
+          onClick={() => setSearchParams({ tab: 'design' })}
+          className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+            currentTab === 'design'
+              ? 'bg-white text-slate-900 shadow-sm'
+              : 'text-slate-500 hover:text-slate-900'
+          }`}
+        >
+          <span className="material-symbols-outlined text-[18px] text-amber-500">palette</span>
+          Card Design Studio
+        </button>
 
-      {/* Header */}
-      <div className="page-header">
-        <h2 className="page-title flex items-center gap-2">
-          <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>credit_card</span>
-          My Card Inventory
-        </h2>
-        <p className="page-subtitle">Physical membership cards allocated to your store. Link each card to a member so they can use it for redemption.</p>
+        <button
+          onClick={() => setSearchParams({ tab: 'inventory' })}
+          className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+            currentTab === 'inventory'
+              ? 'bg-white text-slate-900 shadow-sm'
+              : 'text-slate-500 hover:text-slate-900'
+          }`}
+        >
+          <span className="material-symbols-outlined text-[18px] text-primary">credit_card</span>
+          Physical Inventory ({cards.length})
+        </button>
       </div>
+
+      {currentTab === 'design' ? (
+        <CardDesignerStudio />
+      ) : (
+        <>
+          {/* Header */}
+          <div className="page-header">
+            <h2 className="page-title flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>credit_card</span>
+              My Card Inventory
+            </h2>
+            <p className="page-subtitle">Physical membership cards allocated to your store. Link each card to a member so they can use it for redemption.</p>
+          </div>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-md">
@@ -357,6 +390,8 @@ export default function CardInventoryMerchantPage() {
           </div>
         }
       />
+        </>
+      )}
     </div>
   );
 }

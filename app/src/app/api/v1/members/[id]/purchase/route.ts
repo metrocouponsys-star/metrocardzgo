@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth, getMerchantId } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { prisma, runTransactionWithRetry } from '@/lib/prisma';
 import crypto from 'crypto';
 
 type Params = { params: Promise<{ id: string }> };
@@ -82,8 +82,8 @@ export async function POST(request: NextRequest, { params }: Params) {
       pointsEarned = Math.floor(finalAmount / 10);
     }
 
-    // 4. Atomic transaction update
-    const result = await prisma.$transaction(async (tx) => {
+    // 4. Atomic transaction update with retry
+    const result = await runTransactionWithRetry(async (tx) => {
       const freshMember = await tx.member.findUniqueOrThrow({
         where: { id: memberId },
       });
@@ -133,8 +133,11 @@ export async function POST(request: NextRequest, { params }: Params) {
     });
 
     return NextResponse.json(result, { status: 201 });
-  } catch (err) {
+  } catch (err: any) {
     console.error('[members/purchase POST]', err);
-    return NextResponse.json({ detail: 'Internal server error' }, { status: 500 });
+    const detail = process.env.NODE_ENV !== 'production'
+      ? (err?.message || 'Transaction could not be recorded')
+      : 'Transaction could not be completed. Please retry.';
+    return NextResponse.json({ detail }, { status: 500 });
   }
 }

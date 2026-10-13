@@ -9,7 +9,11 @@ export async function POST(request: NextRequest) {
     if (!payload || payload.type !== 'refresh') {
       return NextResponse.json({ detail: 'Invalid refresh token' }, { status: 401 });
     }
-    return NextResponse.json(await buildLoginResponse(payload.sub!));
+    const loginRes = await buildLoginResponse(payload.sub!);
+    if (!loginRes) {
+      return NextResponse.json({ detail: 'User session not found or inactive' }, { status: 401 });
+    }
+    return NextResponse.json(loginRes);
   } catch (err) {
     console.error('[auth/refresh]', err);
     return NextResponse.json({ detail: 'Internal server error' }, { status: 500 });

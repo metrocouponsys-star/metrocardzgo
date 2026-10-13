@@ -64,6 +64,9 @@ export async function POST(request: NextRequest) {
     }
 
     const loginResponse = await buildLoginResponse(user.id);
+    if (!loginResponse) {
+      return NextResponse.json({ detail: 'User account error — unable to build session' }, { status: 500 });
+    }
     return NextResponse.json(loginResponse);
   } catch (err) {
     console.error('[otp/verify]', err);

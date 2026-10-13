@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth, getMerchantId } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { prisma, runTransactionWithRetry } from '@/lib/prisma';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest, { params }: Params) {
 
     const linkedMemberId = card.linkedMemberId;
 
-    const updated = await prisma.$transaction(async (tx) => {
+    const updated = await runTransactionWithRetry(async (tx) => {
       const c = await tx.cardInventoryItem.update({
         where: { id: cardId },
         data: {
@@ -44,8 +44,11 @@ export async function POST(request: NextRequest, { params }: Params) {
     });
 
     return NextResponse.json(updated);
-  } catch (err) {
+  } catch (err: any) {
     console.error('[merchant/cards/unlink POST]', err);
-    return NextResponse.json({ detail: 'Internal server error' }, { status: 500 });
+    const detail = process.env.NODE_ENV !== 'production'
+      ? (err?.message || 'Failed to unlink card')
+      : 'Card unlinking could not be completed. Please retry.';
+    return NextResponse.json({ detail }, { status: 500 });
   }
 }

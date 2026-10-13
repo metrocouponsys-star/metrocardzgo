@@ -128,7 +128,7 @@ export default function MemberProfilePage() {
   }, [id, user?.merchant_id]);
 
   const handleClaimReward = async (reward: any) => {
-    if (!member) return;
+    if (!member || claimingRewardId) return;
     if (member.loyalty_points < reward.points_cost) {
       addToast('error', `Insufficient points. Requires ${reward.points_cost} pts`);
       return;
@@ -151,7 +151,7 @@ export default function MemberProfilePage() {
 
 
   const handleRedeem = async () => {
-    if (!redeemState || !member || !user) return;
+    if (!redeemState || !member || !user || redeeming) return;
     setRedeeming(true);
     const amt = Number(purchaseAmount) || undefined;
     try {
@@ -301,7 +301,7 @@ export default function MemberProfilePage() {
 
   const handleRecordPurchase = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!member || !user) return;
+    if (!member || !user || recordingPurchase) return;
     const amt = Number(purchaseForm.amount);
     if (isNaN(amt) || amt <= 0) {
       addToast('error', 'Please enter a valid purchase amount');
