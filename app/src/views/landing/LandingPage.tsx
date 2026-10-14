@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import { LandingNavbar } from './components/LandingNavbar';
 import { LandingFooter } from './components/LandingFooter';
 import { HeroSection } from './sections/HeroSection';
+import { DualPlatformSection } from './sections/DualPlatformSection';
 import { TrustStripSection } from './sections/TrustStripSection';
 import { BenefitsSection } from './sections/BenefitsSection';
 import { CardShowcaseSection } from './sections/CardShowcaseSection';
@@ -62,6 +63,7 @@ export const LandingPage: React.FC = () => {
 
       <main>
         <HeroSection />
+        <DualPlatformSection />
         <TrustStripSection />
         <BenefitsSection />
         <CardShowcaseSection />

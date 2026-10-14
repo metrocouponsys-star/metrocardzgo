@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { logPIIAccess } from '@/lib/dpdp';
+import { logPIIAccess, PIIField, PII_FIELDS } from '@/lib/dpdp';
 import { rateLimit, getClientIP, addSecurityHeaders, addRequestId } from '@/lib/security';
 import { requireAuth, getMerchantId } from '@/lib/auth';
 
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
       reason: 'dpdp_right_to_correction',
       memberId: member.id,
       merchantId: member.merchantId,
-      fieldsAccessed: correctedFields,
+      fieldsAccessed: correctedFields.filter((f): f is PIIField => (PII_FIELDS as readonly string[]).includes(f)),
       performedBy: actor,
       ip: clientIp,
     });

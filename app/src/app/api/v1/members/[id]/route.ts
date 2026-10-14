@@ -116,8 +116,8 @@ export async function DELETE(request: NextRequest, { params }: Params) {
 
   // 2. Unlink any assigned physical card in card inventory so it doesn't point to erased member
   await prisma.cardInventoryItem.updateMany({
-    where: { assignedMemberId: existing.id },
-    data: { assignedMemberId: null, status: 'merchant_allocated' },
+    where: { linkedMemberId: existing.id },
+    data: { linkedMemberId: null, status: 'merchant_allocated' },
   }).catch(() => {});
 
   // 3. Scrub and anonymise personal identifying fields while preserving non-PII metrics for statutory accounting

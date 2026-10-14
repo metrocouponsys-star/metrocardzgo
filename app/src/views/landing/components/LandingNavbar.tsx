@@ -116,72 +116,98 @@ export const LandingNavbar: React.FC = () => {
           ))}
         </ul>
 
-        {/* Desktop CTA */}
-        <div className="hidden md:flex items-center gap-2.5">
+        {/* Desktop CTA — Multi-Platform Gateway */}
+        <div className="hidden md:flex items-center gap-2">
+          {/* 1. Merchant Login Platform */}
+          <a
+            href="/login"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border text-xs font-bold transition-all duration-200 hover:scale-105 active:scale-95 hover:border-amber-400/50"
+            style={{
+              borderColor: 'rgba(255,255,255,0.18)',
+              background: 'rgba(255,255,255,0.06)',
+              color: '#FAFAFA',
+            }}
+            title="Merchant Portal Login — Store POS & Loyalty Management"
+          >
+            <span className="material-symbols-outlined text-[15px]" style={{ color: '#D4AF37' }}>storefront</span>
+            Merchant Login
+          </a>
+
+          {/* 2. Member Check My Points */}
           <a
             href="/check-membership"
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border text-xs font-bold transition-all duration-200"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border text-xs font-bold transition-all duration-200 hover:scale-105 active:scale-95"
             style={{
-              borderColor: 'rgba(201,162,39,0.35)',
+              borderColor: 'rgba(201,162,39,0.38)',
               background: 'rgba(201,162,39,0.08)',
               color: '#D4AF37',
             }}
+            title="Check Your Card Loyalty Points & Offers (No Login Required)"
           >
-            <span className="material-symbols-outlined text-[14px]">qr_code_scanner</span>
-            Check Points
+            <span className="material-symbols-outlined text-[15px]">qr_code_scanner</span>
+            Check My Points
           </a>
+
+          {/* 3. Button to Load GO Page */}
           <a
-            href="/go/login"
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border text-xs font-bold transition-all duration-200"
-            style={{
-              borderColor: 'rgba(255,255,255,0.1)',
-              background: 'rgba(255,255,255,0.05)',
-              color: 'rgba(250,250,250,0.7)',
-            }}
-          >
-            <span className="material-symbols-outlined text-[14px]">storefront</span>
-            GO Portal
-          </a>
-          <button
-            onClick={() => handleNav('#contact')}
-            className="px-5 py-1.5 rounded-full text-xs font-bold transition-all duration-200 hover:scale-105 active:scale-95 ml-1"
+            href="/go"
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-black tracking-wide transition-all duration-200 hover:scale-105 active:scale-95 shadow-md"
             style={{
               background: 'linear-gradient(135deg, #D4AF37 0%, #C9A227 100%)',
               color: '#0C0C0E',
-              border: 'none',
-              cursor: 'pointer',
-              boxShadow: '0 6px 18px rgba(201,162,39,0.2)',
+              boxShadow: '0 4px 16px rgba(201,162,39,0.35)',
             }}
+            title="Load Metro Cardz GO Platform — 40% OFF Dining, Resorts & Lifestyle"
           >
-            Get Free Mockup
+            <span className="material-symbols-outlined text-[16px]">bolt</span>
+            Load GO Page
+          </a>
+
+          {/* Free Mockup Button */}
+          <button
+            onClick={() => handleNav('#contact')}
+            className="hidden xl:inline-flex px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 hover:bg-white/10 active:scale-95 text-white/70 border-white/15"
+          >
+            Get Mockup
           </button>
         </div>
 
         {/* Mobile controls */}
         <div className="md:hidden flex items-center gap-1.5">
           <a
+            href="/login"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-bold active:scale-95"
+            style={{ borderColor: 'rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.05)', color: '#FAFAFA' }}
+            title="Merchant Login"
+          >
+            <span className="material-symbols-outlined text-[14px]" style={{ color: '#D4AF37' }}>storefront</span>
+            Merchant
+          </a>
+          <a
             href="/check-membership"
             className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-bold active:scale-95"
             style={{ borderColor: 'rgba(201,162,39,0.3)', background: 'rgba(201,162,39,0.08)', color: '#D4AF37' }}
+            title="Check Points"
           >
             <span className="material-symbols-outlined text-[14px]">qr_code_scanner</span>
             Points
           </a>
           <a
-            href="/go/login"
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-bold active:scale-95"
-            style={{ borderColor: 'rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: 'rgba(250,250,250,0.7)' }}
+            href="/go"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-black active:scale-95"
+            style={{ background: 'linear-gradient(135deg, #D4AF37, #C9A227)', color: '#0C0C0E' }}
+            title="Load GO Page"
           >
-            <span className="material-symbols-outlined text-[14px]">storefront</span>
+            <span className="material-symbols-outlined text-[14px]">bolt</span>
             GO
           </a>
           <button
             type="button"
-            className="flex flex-col justify-center items-center gap-1.5 p-2 rounded-lg cursor-pointer touch-manipulation select-none"
+            className="flex flex-col justify-center items-center gap-1.5 p-2 rounded-lg cursor-pointer touch-manipulation select-none ml-0.5"
             style={{
               WebkitTapHighlightColor: 'transparent',
-              minWidth: '40px',
-              minHeight: '40px',
+              minWidth: '38px',
+              minHeight: '38px',
               background: 'rgba(255,255,255,0.06)',
             }}
             onClick={(e) => {
@@ -211,22 +237,31 @@ export const LandingNavbar: React.FC = () => {
         }}
       >
         <div className="px-6 py-4 pb-8 flex flex-col gap-4">
-          <div className="grid grid-cols-2 gap-2 pb-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+          {/* Quick-Launch Multi-Platform Cards */}
+          <div className="grid grid-cols-3 gap-2 pb-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
             <a
-              href="/check-membership"
-              className="flex flex-col items-center justify-center p-3 rounded-xl border text-center active:scale-95 transition-transform"
-              style={{ borderColor: 'rgba(201,162,39,0.3)', background: 'rgba(201,162,39,0.08)', color: '#D4AF37' }}
+              href="/login"
+              className="flex flex-col items-center justify-center p-2.5 rounded-xl border text-center active:scale-95 transition-transform"
+              style={{ borderColor: 'rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.05)', color: '#FAFAFA' }}
             >
-              <span className="material-symbols-outlined text-[22px] mb-1">qr_code_scanner</span>
-              <span className="text-xs font-bold leading-tight">Check Points</span>
+              <span className="material-symbols-outlined text-[20px] mb-1" style={{ color: '#D4AF37' }}>storefront</span>
+              <span className="text-[11px] font-bold leading-tight">Merchant Login</span>
             </a>
             <a
-              href="/go/login"
-              className="flex flex-col items-center justify-center p-3 rounded-xl border text-center active:scale-95 transition-transform"
-              style={{ borderColor: 'rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: 'rgba(250,250,250,0.7)' }}
+              href="/check-membership"
+              className="flex flex-col items-center justify-center p-2.5 rounded-xl border text-center active:scale-95 transition-transform"
+              style={{ borderColor: 'rgba(201,162,39,0.3)', background: 'rgba(201,162,39,0.08)', color: '#D4AF37' }}
             >
-              <span className="material-symbols-outlined text-[22px] mb-1">storefront</span>
-              <span className="text-xs font-bold leading-tight">GO Portal</span>
+              <span className="material-symbols-outlined text-[20px] mb-1">qr_code_scanner</span>
+              <span className="text-[11px] font-bold leading-tight">Check Points</span>
+            </a>
+            <a
+              href="/go"
+              className="flex flex-col items-center justify-center p-2.5 rounded-xl text-center active:scale-95 transition-transform font-black"
+              style={{ background: 'linear-gradient(135deg, #D4AF37, #C9A227)', color: '#0C0C0E' }}
+            >
+              <span className="material-symbols-outlined text-[20px] mb-1">bolt</span>
+              <span className="text-[11px] font-black leading-tight">Load GO</span>
             </a>
           </div>
 

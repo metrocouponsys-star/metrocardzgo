@@ -141,88 +141,182 @@ export const HeroSection: React.FC = () => {
             Design, print, and manage loyalty programs for restaurants, salons, gyms, retail stores, and hospitals — all from one platform.
           </p>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+          {/* High-Impact Multi-Platform Initiating Buttons */}
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3 justify-center lg:justify-start">
+            {/* 1. Button to Load GO Page */}
+            <a
+              href="/go"
+              className="px-6 py-3.5 rounded-full font-poppins font-bold text-sm sm:text-base inline-flex items-center justify-center gap-2.5 transition-all duration-300 hover:scale-105 active:scale-95 shadow-xl group cursor-pointer"
+              style={{
+                background: 'linear-gradient(135deg, #FFD700 0%, #D4AF37 50%, #C9A227 100%)',
+                boxShadow: '0 16px 36px rgba(212,175,55,0.35)',
+                color: '#08080A',
+              }}
+              title="Load Metro Cardz GO — Lifestyle Deals, Dining & Water Parks"
+            >
+              <span className="material-symbols-outlined text-[20px] transition-transform duration-300 group-hover:rotate-12">bolt</span>
+              <span>Load GO Page</span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-black/20 text-black">
+                40% OFF
+              </span>
+            </a>
+
+            {/* 2. Merchant Login */}
+            <a
+              href="/login"
+              className="px-6 py-3.5 rounded-full font-poppins font-semibold text-sm sm:text-base inline-flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105 active:scale-95 border cursor-pointer hover:border-amber-400/60"
+              style={{
+                background: 'rgba(255,255,255,0.06)',
+                borderColor: 'rgba(212,175,55,0.3)',
+                color: '#FAFAFA',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.35)',
+              }}
+              title="Merchant Portal Login — Store Counter POS & Loyalty Management"
+            >
+              <span className="material-symbols-outlined text-[19px]" style={{ color: '#D4AF37' }}>storefront</span>
+              <span>Merchant Login</span>
+            </a>
+
+            {/* 3. Member Check My Points */}
+            <a
+              href="/check-membership"
+              className="px-6 py-3.5 rounded-full font-poppins font-semibold text-sm sm:text-base inline-flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105 active:scale-95 border cursor-pointer hover:border-amber-400/60"
+              style={{
+                background: 'rgba(212,175,55,0.1)',
+                borderColor: 'rgba(212,175,55,0.25)',
+                color: '#FAFAFA',
+              }}
+              title="Member Points Lookup — Instant Balance & Digital Card Pass"
+            >
+              <span className="material-symbols-outlined text-[19px]" style={{ color: '#D4AF37' }}>stars</span>
+              <span>Check My Points</span>
+            </a>
+          </div>
+
+          {/* Secondary Quick Action Links */}
+          <div className="mt-4 flex flex-wrap items-center justify-center lg:justify-start gap-4 text-xs">
             <button
               onClick={scrollToContact}
-              className="px-8 py-4 rounded-full font-poppins font-bold text-base transition-all duration-200 hover:scale-105 active:scale-95"
-              style={{
-                background: 'linear-gradient(135deg, #D4AF37 0%, #C9A227 100%)',
-                boxShadow: '0 18px 30px rgba(201,162,39,0.2)',
-                color: '#0C0C0E',
-              }}
+              className="text-white/60 hover:text-amber-300 transition-colors inline-flex items-center gap-1 cursor-pointer"
             >
-              Get Free Mockup
+              <span>Get Free Custom Card Mockup</span>
+              <span className="text-[10px]">↗</span>
             </button>
+            <span className="text-white/20">•</span>
             <button
               onClick={scrollToCards}
-              className="px-8 py-4 rounded-full font-poppins font-semibold text-base border transition-all duration-200 hover:bg-white/5 active:scale-95"
-              style={{
-                background: 'transparent',
-                borderColor: 'rgba(255,255,255,0.15)',
-                color: 'rgba(250,250,250,0.85)',
-              }}
+              className="text-white/60 hover:text-white transition-colors inline-flex items-center gap-1 cursor-pointer"
             >
-              View card designs →
+              <span>Explore 8+ Luxury Finishes</span>
+              <span className="text-[10px]">↓</span>
             </button>
           </div>
 
-          {/* Quick Access Links */}
-          <div className="mt-10 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3">
-            <span
-              className="text-xs font-bold uppercase tracking-widest text-center sm:text-left self-center mr-1"
-              style={{ color: 'rgba(255,255,255,0.3)' }}
-            >
-              Quick access
-            </span>
-
-            <a
-              href="/check-membership"
-              className="inline-flex items-center justify-center gap-2.5 px-5 py-2.5 rounded-xl border transition-all duration-300 hover:scale-[1.02] active:scale-95"
-              style={{
-                borderColor: 'rgba(201,162,39,0.3)',
-                background: 'rgba(201,162,39,0.07)',
-              }}
-            >
-              <span
-                className="w-7 h-7 rounded-lg flex items-center justify-center"
-                style={{ background: 'rgba(212,175,55,0.15)', color: '#D4AF37' }}
-              >
-                <span className="material-symbols-outlined text-[18px]">qr_code_scanner</span>
-              </span>
-              <div className="text-left">
-                <div className="text-[11px] font-medium leading-none" style={{ color: 'rgba(212,175,55,0.8)' }}>
-                  Member access
-                </div>
-                <div className="text-sm font-bold" style={{ color: '#FAFAFA' }}>
-                  Check points
-                </div>
+          {/* Dedicated 3-Card Multi-Platform Initiator Launchpad */}
+          <div className="mt-8 pt-6 border-t border-white/10">
+            <div className="flex items-center justify-between mb-3.5">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-[11px] font-bold uppercase tracking-widest text-white/50">
+                  Select Your Platform
+                </span>
               </div>
-            </a>
-
-            <a
-              href="/go/login"
-              className="inline-flex items-center justify-center gap-2.5 px-5 py-2.5 rounded-xl border transition-all duration-300 hover:scale-[1.02] active:scale-95"
-              style={{
-                borderColor: 'rgba(255,255,255,0.1)',
-                background: 'rgba(255,255,255,0.04)',
-              }}
-            >
-              <span
-                className="w-7 h-7 rounded-lg flex items-center justify-center"
-                style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)' }}
-              >
-                <span className="material-symbols-outlined text-[18px]">storefront</span>
+              <span className="text-[11px] text-amber-400/80 font-medium hidden sm:inline">
+                Instant access • No delays
               </span>
-              <div className="text-left">
-                <div className="text-[11px] font-medium leading-none" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                  Deals platform
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {/* Card 1: Merchant Platform */}
+              <a
+                href="/login"
+                className="group relative p-3.5 rounded-2xl border text-left transition-all duration-300 hover:-translate-y-1 hover:border-amber-400/50 hover:bg-white/[0.07] active:scale-98"
+                style={{
+                  background: 'rgba(255,255,255,0.03)',
+                  borderColor: 'rgba(255,255,255,0.1)',
+                  backdropFilter: 'blur(12px)',
+                }}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span
+                    className="w-8 h-8 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
+                    style={{ background: 'rgba(212,175,55,0.18)', color: '#D4AF37' }}
+                  >
+                    <span className="material-symbols-outlined text-[19px]">storefront</span>
+                  </span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-400/10 text-amber-300 border border-amber-400/20">
+                    B2B Suite
+                  </span>
                 </div>
-                <div className="text-sm font-bold" style={{ color: '#FAFAFA' }}>
-                  GO portal
+                <div className="text-sm font-bold text-white group-hover:text-amber-300 transition-colors flex items-center gap-1">
+                  Merchant Login
+                  <span className="text-xs transition-transform group-hover:translate-x-1">→</span>
                 </div>
-              </div>
-            </a>
+                <p className="text-[11px] mt-1 leading-snug text-white/50">
+                  POS counter login, issue member cards &amp; automate WhatsApp rewards.
+                </p>
+              </a>
+
+              {/* Card 2: Check My Points */}
+              <a
+                href="/check-membership"
+                className="group relative p-3.5 rounded-2xl border text-left transition-all duration-300 hover:-translate-y-1 hover:border-amber-400/50 hover:bg-amber-400/[0.06] active:scale-98"
+                style={{
+                  background: 'rgba(212,175,55,0.04)',
+                  borderColor: 'rgba(212,175,55,0.22)',
+                  backdropFilter: 'blur(12px)',
+                }}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span
+                    className="w-8 h-8 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
+                    style={{ background: 'rgba(212,175,55,0.25)', color: '#FFD700' }}
+                  >
+                    <span className="material-symbols-outlined text-[19px]">qr_code_scanner</span>
+                  </span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    No Login Req.
+                  </span>
+                </div>
+                <div className="text-sm font-bold text-white group-hover:text-amber-300 transition-colors flex items-center gap-1">
+                  Check My Points
+                  <span className="text-xs transition-transform group-hover:translate-x-1">→</span>
+                </div>
+                <p className="text-[11px] mt-1 leading-snug text-white/50">
+                  Lookup live points balance, card tier &amp; available cashback offers.
+                </p>
+              </a>
+
+              {/* Card 3: Button to Load GO Page */}
+              <a
+                href="/go"
+                className="group relative p-3.5 rounded-2xl border text-left transition-all duration-300 hover:-translate-y-1 hover:border-amber-400/60 hover:bg-gradient-to-br hover:from-amber-400/10 hover:to-transparent active:scale-98"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(212,175,55,0.08) 0%, rgba(0,0,0,0.4) 100%)',
+                  borderColor: 'rgba(212,175,55,0.3)',
+                  backdropFilter: 'blur(12px)',
+                }}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span
+                    className="w-8 h-8 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 shadow-lg"
+                    style={{ background: 'linear-gradient(135deg, #FFD700 0%, #C9A227 100%)', color: '#08080A' }}
+                  >
+                    <span className="material-symbols-outlined text-[19px] font-bold">bolt</span>
+                  </span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-200 border border-amber-400/30">
+                    ⚡ 40% OFF
+                  </span>
+                </div>
+                <div className="text-sm font-bold text-white group-hover:text-amber-300 transition-colors flex items-center gap-1">
+                  Load GO Page
+                  <span className="text-xs transition-transform group-hover:translate-x-1">⚡</span>
+                </div>
+                <p className="text-[11px] mt-1 leading-snug text-white/50">
+                  Exclusive dining, luxury resorts &amp; water parks passes across Mumbai.
+                </p>
+              </a>
+            </div>
           </div>
 
           {/* Stats */}

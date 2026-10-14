@@ -272,7 +272,10 @@ export type PIIAccessReason =
   | 'member_self_view'
   | 'data_export_request'
   | 'erasure_processing'
-  | 'system_cron';
+  | 'dpdp_right_to_correction'
+  | 'dpdp_data_portability_export'
+  | 'system_cron'
+  | (string & {});
 
 /**
  * Log every time decrypted PII is accessed (DPDP audit requirement).
@@ -282,7 +285,7 @@ export function logPIIAccess(event: {
   reason: PIIAccessReason;
   memberId: string;
   merchantId: string;
-  fieldsAccessed: PIIField[];
+  fieldsAccessed: (PIIField | string)[];
   performedBy: 'system' | string; // 'system' or user ID
   ip?: string;
 }) {

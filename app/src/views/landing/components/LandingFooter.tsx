@@ -97,8 +97,26 @@ export const LandingFooter: React.FC = () => {
 
           {/* Quick links */}
           <div>
-            <h4 className="font-poppins font-bold text-warm-white text-sm tracking-widest uppercase mb-4">Platform</h4>
+            <h4 className="font-poppins font-bold text-warm-white text-sm tracking-widest uppercase mb-4">Portals &amp; Platforms</h4>
             <ul className="space-y-2.5">
+              <li>
+                <a href="/go" className="inline-flex items-center gap-1.5 text-amber-300 font-semibold text-sm hover:underline">
+                  <span className="material-symbols-outlined text-[16px]">bolt</span>
+                  <span>Metro Cardz GO (Deals) ⚡</span>
+                </a>
+              </li>
+              <li>
+                <a href="/login" className="inline-flex items-center gap-1.5 text-white/90 font-medium text-sm hover:text-amber-300 transition-colors">
+                  <span className="material-symbols-outlined text-[16px] text-amber-400">storefront</span>
+                  <span>Merchant Portal Login</span>
+                </a>
+              </li>
+              <li>
+                <a href="/check-membership" className="inline-flex items-center gap-1.5 text-white/90 font-medium text-sm hover:text-amber-300 transition-colors">
+                  <span className="material-symbols-outlined text-[16px] text-amber-400">stars</span>
+                  <span>Check My Points</span>
+                </a>
+              </li>
               {[
                 { label: 'Features', href: '/features' },
                 { label: 'How It Works', href: '/how-it-works' },
@@ -108,8 +126,6 @@ export const LandingFooter: React.FC = () => {
                 { label: 'System Status', href: '/status' },
                 { label: 'About Us', href: '/about-us' },
                 { label: 'Company Info', href: '/company-info' },
-                { label: '✦ Check My Balance', href: '/check-membership' },
-                { label: 'Merchant Login', href: '/login' },
               ].map(link => (
                 <li key={link.href}>
                   <a href={link.href} className="text-warm-grey hover:text-gold text-sm transition-colors duration-200">
