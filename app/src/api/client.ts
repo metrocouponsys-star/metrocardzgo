@@ -62,6 +62,39 @@ export async function getMerchantProfile(): Promise<Merchant> {
   return db.merchants[0];
 }
 
+let mockDpaAccepted: any = {
+  accepted: true,
+  accepted_at: new Date('2024-01-15T10:00:00Z').toISOString(),
+  signatory_name: 'Rahul Sharma',
+  signatory_role: 'Owner & Managing Director',
+  agreement_version: 'v1.0-DPDP-2023',
+  bond_ref: 'MC-DPA-MER001-2024',
+  ip_address: '103.21.244.12',
+  legal_status: 'executed_and_enforceable',
+  statutory_basis: 'IT Act 2000 Section 43A & DPDP Act 2023',
+};
+
+export async function getMerchantDpa(): Promise<any> {
+  await delay(FAKE_DELAY);
+  return mockDpaAccepted;
+}
+
+export async function signMerchantDpa(data: { signatory_name: string; signatory_role: string }): Promise<any> {
+  await delay(FAKE_DELAY);
+  mockDpaAccepted = {
+    accepted: true,
+    accepted_at: new Date().toISOString(),
+    signatory_name: data.signatory_name,
+    signatory_role: data.signatory_role,
+    agreement_version: 'v1.0-DPDP-2023',
+    bond_ref: 'MC-DPA-MOCK-2024',
+    ip_address: '127.0.0.1',
+    legal_status: 'executed_and_enforceable',
+    statutory_basis: 'IT Act 2000 Section 43A & DPDP Act 2023',
+  };
+  return mockDpaAccepted;
+}
+
 export async function verifyOtp(_phone: string, otp: string): Promise<{ user: AuthUser; token: string }> {
   await delay(FAKE_DELAY);
   if (otp === '000000') throw new Error('Invalid OTP');

@@ -1090,31 +1090,43 @@ export default function MemberProfilePage() {
             </label>
           </div>
 
-          {/* Bottom Actions Row: Edit / PDF / Wallet / Delete */}
+          {/* Bottom Actions Row: Edit / PDF / DPDP Export / Wallet / Delete */}
           {isOwner && (
             <div className="flex flex-col gap-2">
-              <div className="flex gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <button
                   onClick={handleOpenEditModal}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-outline-variant text-on-surface-variant hover:bg-surface-container text-label-md transition-colors font-medium active:scale-95"
+                  className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-outline-variant text-on-surface-variant hover:bg-surface-container text-label-md transition-colors font-medium active:scale-95"
                 >
                   <span className="material-symbols-outlined text-[18px]">edit</span>
                   Edit Member
                 </button>
                 <button
                   onClick={handleDownloadCard}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-outline-variant text-on-surface-variant hover:bg-surface-container text-label-md transition-colors font-medium active:scale-95"
+                  className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-outline-variant text-on-surface-variant hover:bg-surface-container text-label-md transition-colors font-medium active:scale-95"
                 >
                   <span className="material-symbols-outlined text-[18px]">download</span>
                   Download PDF
                 </button>
+                <button
+                  onClick={() => {
+                    if (!member) return;
+                    window.open(`/api/v1/dpdp/export?member_id=${member.id}&download=true`, '_blank');
+                    addToast('success', 'DPDP Data export generated');
+                  }}
+                  className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-outline-variant text-on-surface-variant hover:bg-surface-container text-label-md transition-colors font-medium active:scale-95"
+                  title="Export complete member personal & transaction data in portable JSON (DPDP Act Section 11)"
+                >
+                  <span className="material-symbols-outlined text-[18px]">file_download</span>
+                  DPDP Export
+                </button>
                 {walletUrl ? (
                   <a
                     href={walletUrl} target="_blank" rel="noopener noreferrer"
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-outline-variant text-on-surface-variant hover:bg-surface-container text-label-md transition-colors no-underline font-medium active:scale-95"
+                    className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-outline-variant text-on-surface-variant hover:bg-surface-container text-label-md transition-colors no-underline font-medium active:scale-95"
                   >
                     <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>add_to_wallet</span>
-                    View in Wallet
+                    Wallet Pass
                   </a>
                 ) : (
                   <button
@@ -1133,7 +1145,7 @@ export default function MemberProfilePage() {
                         setWalletLoading(false);
                       }
                     }}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-outline-variant text-on-surface-variant hover:bg-surface-container text-label-md transition-colors disabled:opacity-50 font-medium active:scale-95"
+                    className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-outline-variant text-on-surface-variant hover:bg-surface-container text-label-md transition-colors disabled:opacity-50 font-medium active:scale-95"
                   >
                     <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>add_to_wallet</span>
                     {walletLoading ? 'Generating…' : 'Add to Wallet'}
@@ -1146,7 +1158,7 @@ export default function MemberProfilePage() {
                 className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 text-label-md transition-colors font-medium active:scale-95 active:bg-red-100"
               >
                 <span className="material-symbols-outlined text-[18px]">person_remove</span>
-                Delete Member
+                Delete & Anonymise Member (DPDP Erasure)
               </button>
             </div>
           )}
@@ -1474,23 +1486,24 @@ export default function MemberProfilePage() {
         isOpen={showDeleteModal}
         onClose={() => !deletingMember && setShowDeleteModal(false)}
         onConfirm={handleDeleteMember}
-        title="Delete Member"
+        title="Delete & Anonymise Member (DPDP Section 13)"
         danger={true}
-        confirmLabel="Yes, Delete Member"
+        confirmLabel="Yes, Erase & Anonymise"
         cancelLabel="Keep Member"
         isLoading={deletingMember}
         description={
           <div className="space-y-3">
             <p className="text-on-surface text-[15px]">
-              This will permanently remove <strong>{member?.name}</strong> from the system, including all their:
+              This will execute a statutory <strong>Right to Erasure (DPDP Act 2023 Section 13)</strong> for <strong>{member?.name}</strong>:
             </p>
             <ul className="list-disc list-inside text-[14px] text-on-surface-variant space-y-1">
-              <li>Loyalty points and transaction history</li>
-              <li>Active offers and redemption records</li>
-              <li>Membership details and card assignment</li>
+              <li>All personal identifiers (name, mobile number, birth dates, notes) will be permanently scrubbed and anonymised.</li>
+              <li>Physical card allocation will be released back to unassigned merchant inventory.</li>
+              <li>Digital pass and public QR tokens will be immediately invalidated.</li>
+              <li>Non-identifiable transaction metrics are archived for statutory tax and accounting audits.</li>
             </ul>
             <p className="text-[14px] font-bold text-red-700">
-              This cannot be undone. The member will need to re-enroll if this was done by mistake.
+              This action is permanent, logged in the immutable audit trail, and cannot be reversed.
             </p>
           </div>
         }

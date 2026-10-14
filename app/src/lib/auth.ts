@@ -150,15 +150,18 @@ export function getMerchantId(
   auth: AuthContext,
   request: NextRequest
 ): string | null {
-  const headerMerchantId = request.headers.get('x-merchant-id')?.trim();
-  if (headerMerchantId) return headerMerchantId;
-
+  // IT Act 2000 Section 43/43A & DPDP Act Tenant Isolation:
+  // Only super_admin may switch merchant context via header or query param.
+  // Store owners and staff are strictly locked to their authenticated merchant_id.
   if (auth.role === 'super_admin') {
+    const headerMerchantId = request.headers.get('x-merchant-id')?.trim();
+    if (headerMerchantId) return headerMerchantId;
     const url = new URL(request.url);
     return url.searchParams.get('merchant_id') ?? auth.merchantId;
   }
   return auth.merchantId;
 }
+
 
 // ── Build Login Response ──────────────────────────────────────────────────────
 export async function buildLoginResponse(userId: string) {

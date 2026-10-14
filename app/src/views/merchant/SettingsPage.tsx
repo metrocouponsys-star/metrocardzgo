@@ -70,7 +70,39 @@ export default function SettingsPage() {
     });
     // Load wallet class status async
     api.getMerchantWalletClass().then(setWalletClass).catch(() => setWalletClass(null));
+    // Load DPA execution status
+    api.getMerchantDpa().then(setDpaStatus).catch(() => setDpaStatus(null));
   }, []);
+
+  const [dpaStatus, setDpaStatus] = useState<any | null>(null);
+  const [signingDpa, setSigningDpa] = useState(false);
+  const [signatoryName, setSignatoryName] = useState(user?.name || '');
+  const [signatoryRole, setSignatoryRole] = useState('Owner / Managing Director');
+  const [dpaAgreed, setDpaAgreed] = useState(false);
+
+  const handleSignDpa = async () => {
+    if (!signatoryName.trim()) {
+      addToast('error', 'Please enter your full legal name as authorized signatory');
+      return;
+    }
+    if (!dpaAgreed) {
+      addToast('error', 'Please check the box confirming your agreement to terms');
+      return;
+    }
+    setSigningDpa(true);
+    try {
+      const res = await api.signMerchantDpa({
+        signatory_name: signatoryName.trim(),
+        signatory_role: signatoryRole.trim(),
+      });
+      setDpaStatus(res);
+      addToast('success', 'Data Processing Agreement digitally signed and legally recorded in audit trail!');
+    } catch (err: any) {
+      addToast('error', err.message || 'Failed to sign DPA');
+    } finally {
+      setSigningDpa(false);
+    }
+  };
 
 
   const saveProfile = async () => {
@@ -445,15 +477,22 @@ export default function SettingsPage() {
                 <span className="material-symbols-outlined text-[26px]" style={{ fontVariationSettings: "'FILL' 1" }}>gavel</span>
               </div>
               <div>
-                <h3 className="text-headline-sm font-bold text-on-surface">Policy = Bond - Agreement</h3>
-                <p className="text-label-sm text-on-surface-variant">Merchant Service Legal Bond & SaaS Operating Terms</p>
+                <h3 className="text-headline-sm font-bold text-on-surface">Merchant Data Processing Agreement (DPA) & Service Bond</h3>
+                <p className="text-label-sm text-on-surface-variant">Statutory compliance under IT Act 2000 (Sec 43A, 72, 72A) & DPDP Act 2023</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800 border border-green-200">
-                <span className="w-2 h-2 rounded-full bg-green-600 animate-pulse" />
-                Bond Active & Enforceable
-              </span>
+              {dpaStatus?.accepted ? (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800 border border-green-200">
+                  <span className="w-2 h-2 rounded-full bg-green-600 animate-pulse" />
+                  DPA Executed & Enforceable
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                  <span className="w-2 h-2 rounded-full bg-amber-600" />
+                  Action Required: Pending Execution
+                </span>
+              )}
               <button
                 onClick={() => window.print()}
                 className="btn-outline !py-1.5 !px-3 text-label-sm flex items-center gap-1.5"
@@ -465,68 +504,189 @@ export default function SettingsPage() {
             </div>
           </div>
 
+          {/* Compliance Status Alert */}
+          {!dpaStatus?.accepted && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3 text-amber-900">
+              <span className="material-symbols-outlined text-amber-600 text-[22px] shrink-0">warning</span>
+              <div className="text-body-sm leading-relaxed">
+                <p className="font-bold">Digital Signature Required (DPDP Act 2023 & IT Act Section 43A)</p>
+                <p className="text-xs text-amber-800 mt-0.5">
+                  As a Merchant collecting customer data, you operate as the <strong>Data Fiduciary</strong>. Metro Cardz processes data as your <strong>Data Processor</strong>. To satisfy statutory compliance and avoid legal exposure, please review the clauses below and digitally execute this agreement.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Bond Document Box */}
           <div className="bg-surface-container-low border border-outline-variant/60 rounded-2xl p-6 space-y-5 text-on-surface font-sans">
-            <div className="flex justify-between items-center border-b border-outline-variant/30 pb-3">
+            <div className="flex justify-between items-center border-b border-outline-variant/30 pb-3 flex-wrap gap-2">
               <div>
-                <p className="font-mono text-xs font-bold text-amber-700 uppercase tracking-widest">Bond Ref: MC-SLA-BOND-2024</p>
-                <p className="text-body-sm font-bold text-on-surface mt-0.5">Service Level Agreement & Merchant Guarantee Bond</p>
+                <p className="font-mono text-xs font-bold text-amber-700 uppercase tracking-widest">
+                  Bond Ref: {dpaStatus?.bond_ref || `MC-DPA-${(merchant?.id || 'MER001').slice(0, 8).toUpperCase()}-2024`}
+                </p>
+                <p className="text-body-sm font-bold text-on-surface mt-0.5">Data Processing Agreement & Merchant Guarantee Bond</p>
               </div>
               <div className="text-right text-label-xs text-on-surface-variant font-mono">
-                Jurisdiction: Commercial Courts of India
+                Jurisdiction: Commercial Courts of India · IT Act 2000 & DPDP Act 2023
               </div>
             </div>
 
             <div className="space-y-4 text-body-sm leading-relaxed">
               <div className="p-3 bg-white rounded-xl border border-outline-variant/40">
-                <h4 className="font-bold text-on-surface text-[14px] mb-1">1. Parties & SaaS Platform Authorization</h4>
+                <h4 className="font-bold text-on-surface text-[14px] mb-1">1. Statutory Roles & SaaS Authorization (DPDP Act 2023)</h4>
                 <p className="text-on-surface-variant text-xs">
-                  This Agreement and Performance Bond is entered into between <strong>Metro Cardz SaaS Platform</strong> ("Service Provider") and <strong>{merchant?.business_name || profileForm.business_name || 'Merchant Partner'}</strong> ("Merchant"). The Merchant is granted an authorized license to utilize the digital loyalty ecosystem, card verification APIs, and member pass portal.
+                  This Agreement is entered into between <strong>Metro Cardz Technologies</strong> ("Data Processor / Service Provider") and <strong>{merchant?.business_name || profileForm.business_name || 'Merchant Partner'}</strong> ("Data Fiduciary / Merchant"). The Merchant determines the purpose of customer loyalty data collection. Metro Cardz processes customer data strictly on the Merchant&apos;s authorized instructions to operate membership passes, transaction points, and reward redemptions.
                 </p>
               </div>
 
               <div className="p-3 bg-white rounded-xl border border-outline-variant/40">
                 <h4 className="font-bold text-on-surface text-[14px] mb-1">2. Software Validity Bond (16 Months, 5 Days)</h4>
                 <p className="text-on-surface-variant text-xs">
-                  The SaaS software license is issued for a guaranteed validity period of <strong>16 months and 5 days</strong> from activation. Service Provider warrants a 99.9% uptime SLA. In accordance with mutual terms, automatic software closure and renewal reminders shall take effect upon term expiry unless renewed.
+                  The SaaS software license is issued for a guaranteed validity period of <strong>16 months and 5 days</strong> from platform activation. Service Provider warrants a 99.9% uptime SLA. In accordance with mutual terms, automatic renewal notices shall take effect upon term expiry.
                 </p>
               </div>
 
               <div className="p-3 bg-white rounded-xl border border-outline-variant/40">
-                <h4 className="font-bold text-on-surface text-[14px] mb-1">3. Physical Cards Allocation & Stack Order Policy</h4>
+                <h4 className="font-bold text-on-surface text-[14px] mb-1">3. Physical Cards Allocation & Sequential Tracking Policy</h4>
                 <p className="text-on-surface-variant text-xs">
-                  All pre-printed NFC and QR-encoded physical membership cards allocated to the Merchant remain serial-tracked inventory. Cards must be assigned sequentially to registered members. Replacement of defective or lost blank cards is provided under warranty within 14 business days.
+                  All pre-printed NFC and QR-encoded physical membership cards allocated to the Merchant remain serial-tracked inventory. Cards are assigned sequentially to registered members. Replacement of defective or lost blank cards is provided under warranty within 14 business days.
                 </p>
               </div>
 
               <div className="p-3 bg-white rounded-xl border border-outline-variant/40">
-                <h4 className="font-bold text-on-surface text-[14px] mb-1">4. Data Privacy, Customer Confidentiality & DPDP Compliance</h4>
+                <h4 className="font-bold text-on-surface text-[14px] mb-1">4. Zero Commercialization & Confidentiality Bond (IT Act Sec 72 & 72A)</h4>
                 <p className="text-on-surface-variant text-xs">
-                  Customer records (including phone numbers, birth dates, and purchase transaction history) are held in strict compliance with the Digital Personal Data Protection (DPDP) Act. All customer data is the exclusive proprietary property of the Merchant and shall never be shared or cross-marketed to competitors.
+                  In strict compliance with <strong>Sections 72 and 72A of the Information Technology Act, 2000</strong>, Metro Cardz covenants that it shall NEVER sell, rent, monetize, or disclose customer phone numbers, names, or transaction records to third parties, advertisers, or competing businesses. All customer data remains the exclusive proprietary property of the Merchant.
                 </p>
               </div>
 
               <div className="p-3 bg-white rounded-xl border border-outline-variant/40">
-                <h4 className="font-bold text-on-surface text-[14px] mb-1">5. Loyalty Point Rule Guarantee & Redemption Bond</h4>
+                <h4 className="font-bold text-on-surface text-[14px] mb-1">5. Technical Security Standards & Tenant Isolation (IT Act Sec 43A)</h4>
                 <p className="text-on-surface-variant text-xs">
-                  The Merchant covenants to honor points and promotional vouchers issued through the system in good faith as per the active Point Rule (Set Point) schedule configured on the merchant portal.
+                  Service Provider maintains &quot;reasonable security practices&quot; satisfying Section 43A of the IT Act: (a) AES-256-GCM encryption for sensitive demographic data at rest, (b) TLS 1.2+ encryption in transit, (c) cryptographically signed, non-sequential HMAC-SHA256 QR membership tokens, and (d) strict tenant isolation at database query boundaries preventing unauthorized cross-tenant data access.
+                </p>
+              </div>
+
+              <div className="p-3 bg-white rounded-xl border border-outline-variant/40">
+                <h4 className="font-bold text-on-surface text-[14px] mb-1">6. Data Subject Rights SLA (DPDP Act Sections 11, 12, 13)</h4>
+                <p className="text-on-surface-variant text-xs">
+                  Metro Cardz provides automated technical mechanisms enabling the Merchant to honor statutory customer rights: (a) <strong>Right to Access & Data Portability</strong> (JSON export via <code>/api/v1/dpdp/export</code>), (b) <strong>Right to Correction</strong> (via member profile editor and <code>/api/v1/dpdp/correction</code>), and (c) <strong>Right to Erasure / Right to be Forgotten</strong> (anonymising personal identifiers while retaining necessary tax/accounting summaries).
+                </p>
+              </div>
+
+              <div className="p-3 bg-white rounded-xl border border-outline-variant/40">
+                <h4 className="font-bold text-on-surface text-[14px] mb-1">7. Data Breach Notification Protocol (DPDP Act Sec 8(6))</h4>
+                <p className="text-on-surface-variant text-xs">
+                  In the event of a confirmed or suspected security incident involving customer personal data, Metro Cardz commits to notifying the Merchant within <strong>24 hours</strong> of discovery, providing incident details to enable timely statutory filing with the Data Protection Board of India (DPBI) within the statutory 72-hour window.
+                </p>
+              </div>
+
+              <div className="p-3 bg-white rounded-xl border border-outline-variant/40">
+                <h4 className="font-bold text-on-surface text-[14px] mb-1">8. Data Retention & Post-Termination Purge</h4>
+                <p className="text-on-surface-variant text-xs">
+                  Member data is retained strictly for the duration of the active loyalty program. Members inactive for &gt;24 months are subject to automated storage limitation archiving. Upon formal merchant account termination, all member personal identifiers are permanently scrubbed from production within 30 days.
                 </p>
               </div>
             </div>
 
-            {/* Signatures & Execution Seal */}
-            <div className="pt-4 border-t border-outline-variant/30 grid grid-cols-2 gap-4">
-              <div className="p-3 rounded-xl bg-surface border border-outline-variant/30 text-xs">
-                <p className="text-[10px] uppercase font-bold text-on-surface-variant mb-1">Authorized Service Provider</p>
-                <p className="font-bold text-on-surface">Metro Cardz Technologies</p>
-                <p className="text-[11px] text-emerald-700 font-bold mt-1">✓ Digitally Signed & Stamped</p>
+            {/* Execution Certificate (if signed) */}
+            {dpaStatus?.accepted ? (
+              <div className="pt-4 border-t border-outline-variant/30 space-y-3">
+                <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-950">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="material-symbols-outlined text-emerald-600 text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+                    <h5 className="font-bold text-sm">Certificate of Digital Execution</h5>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                    <div>
+                      <p className="text-emerald-800/70 uppercase text-[10px] font-bold">Signatory Name</p>
+                      <p className="font-bold text-emerald-950">{dpaStatus.signatory_name}</p>
+                    </div>
+                    <div>
+                      <p className="text-emerald-800/70 uppercase text-[10px] font-bold">Designation / Role</p>
+                      <p className="font-bold text-emerald-950">{dpaStatus.signatory_role}</p>
+                    </div>
+                    <div>
+                      <p className="text-emerald-800/70 uppercase text-[10px] font-bold">Executed Timestamp</p>
+                      <p className="font-mono text-emerald-950">{new Date(dpaStatus.accepted_at).toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-emerald-800/70 uppercase text-[10px] font-bold">Audit IP / Ref</p>
+                      <p className="font-mono text-emerald-950">{dpaStatus.ip_address || '127.0.0.1'} · {dpaStatus.bond_ref}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-3 rounded-xl bg-surface border border-outline-variant/30 text-xs">
+                    <p className="text-[10px] uppercase font-bold text-on-surface-variant mb-1">Authorized Service Provider</p>
+                    <p className="font-bold text-on-surface">Metro Cardz Technologies</p>
+                    <p className="text-[11px] text-emerald-700 font-bold mt-1">✓ Digitally Signed & Stamped</p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-surface border border-outline-variant/30 text-xs">
+                    <p className="text-[10px] uppercase font-bold text-on-surface-variant mb-1">Merchant Partner</p>
+                    <p className="font-bold text-on-surface">{merchant?.business_name || profileForm.business_name || 'Partner Merchant'}</p>
+                    <p className="text-[11px] text-emerald-700 font-bold mt-1">✓ Legally Executed via Audit Log</p>
+                  </div>
+                </div>
               </div>
-              <div className="p-3 rounded-xl bg-surface border border-outline-variant/30 text-xs">
-                <p className="text-[10px] uppercase font-bold text-on-surface-variant mb-1">Merchant Partner</p>
-                <p className="font-bold text-on-surface">{merchant?.business_name || profileForm.business_name || 'Partner Merchant'}</p>
-                <p className="text-[11px] text-emerald-700 font-bold mt-1">✓ Verified Account Holder</p>
+            ) : (
+              /* Digital Execution Form (if not signed) */
+              <div className="pt-4 border-t border-outline-variant/30 space-y-4">
+                <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-300 space-y-3">
+                  <h5 className="font-bold text-sm text-on-surface flex items-center gap-2">
+                    <span className="material-symbols-outlined text-amber-600 text-[18px]">draw</span>
+                    Execute Merchant Data Processing Agreement
+                  </h5>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="form-label text-label-xs">Authorized Signatory Full Name</label>
+                      <input
+                        type="text"
+                        className="input-field text-body-sm"
+                        placeholder="e.g. Rahul Sharma"
+                        value={signatoryName}
+                        onChange={e => setSignatoryName(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="form-label text-label-xs">Capacity / Designation</label>
+                      <input
+                        type="text"
+                        className="input-field text-body-sm"
+                        placeholder="e.g. Proprietor / Managing Director"
+                        value={signatoryRole}
+                        onChange={e => setSignatoryRole(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <label className="flex items-start gap-2.5 cursor-pointer pt-1">
+                    <input
+                      type="checkbox"
+                      checked={dpaAgreed}
+                      onChange={e => setDpaAgreed(e.target.checked)}
+                      className="mt-1 h-4 w-4 rounded border-outline text-primary focus:ring-primary cursor-pointer"
+                    />
+                    <span className="text-body-sm text-on-surface leading-snug">
+                      I confirm that I am an authorized signatory of <strong>{merchant?.business_name || 'this Business'}</strong>. I have read, understood, and hereby digitally sign and execute this Data Processing Agreement & Service Bond under the IT Act 2000 and DPDP Act 2023. We warrant that customer consent is obtained lawfully prior to enrollment.
+                    </span>
+                  </label>
+
+                  <div className="flex justify-end pt-2">
+                    <button
+                      type="button"
+                      disabled={signingDpa || !dpaAgreed || !signatoryName.trim()}
+                      onClick={handleSignDpa}
+                      className="btn-primary flex items-center gap-2"
+                    >
+                      {signingDpa && <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>}
+                      {signingDpa ? 'Executing Agreement...' : 'Digitally Sign & Execute DPA'}
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       )}

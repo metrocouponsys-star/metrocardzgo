@@ -94,6 +94,64 @@ export async function DELETE(request: NextRequest, { params }: Params) {
   });
   if (!existing) return NextResponse.json({ detail: 'Member not found' }, { status: 404 });
 
-  await prisma.member.update({ where: { id }, data: { status: 'deactivated' } });
-  return NextResponse.json({ message: 'Member deactivated' });
+  // DPDP Act 2023 Section 13 — Statutory Erasure & PII Anonymisation
+  const erasureId = `ER-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+
+  // 1. Record formal Erasure Request
+  await prisma.erasureRequest.create({
+    data: {
+      id: erasureId,
+      memberId: existing.id,
+      merchantId: existing.merchantId,
+      reason: 'Merchant operator initiated member deletion and DPDP erasure',
+      status: 'completed',
+      processedAt: new Date(),
+      processedBy: auth.userId,
+      anonymisedFields: JSON.stringify([
+        'name', 'phone', 'email', 'dateOfBirth', 'anniversaryDate',
+        'familyDob1', 'familyDob2', 'familyDob3', 'notes', 'publicToken'
+      ]),
+    },
+  }).catch(() => {});
+
+  // 2. Unlink any assigned physical card in card inventory so it doesn't point to erased member
+  await prisma.cardInventoryItem.updateMany({
+    where: { assignedMemberId: existing.id },
+    data: { assignedMemberId: null, status: 'merchant_allocated' },
+  }).catch(() => {});
+
+  // 3. Scrub and anonymise personal identifying fields while preserving non-PII metrics for statutory accounting
+  await prisma.member.update({
+    where: { id },
+    data: {
+      name: '[ERASED]',
+      phone: `[ERASED-${existing.id.slice(0, 8)}]`,
+      email: null,
+      dateOfBirth: null,
+      anniversaryDate: null,
+      familyDob1: null,
+      familyDob2: null,
+      familyDob3: null,
+      physicalCardNumber: null,
+      notes: null,
+      publicToken: `ERASED-${erasureId}`,
+      status: 'deactivated',
+      referralCode: null,
+    },
+  });
+
+  // 4. Record audit log
+  await prisma.adminAuditLog.create({
+    data: {
+      adminUserId: auth.userId,
+      merchantId: existing.merchantId,
+      action: 'member_erasure_dpdp',
+      detail: `Scrubbed PII and deactivated member ${existing.memberCode} under DPDP Act Section 13.`,
+    },
+  }).catch(() => {});
+
+  return NextResponse.json({
+    message: 'Member personal data scrubbed and erased under DPDP Act Section 13.',
+    erasure_id: erasureId,
+  });
 }

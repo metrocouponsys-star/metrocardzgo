@@ -84,10 +84,68 @@ export default function CompliancePage() {
 
         {/* Data Residency */}
         <section className="bg-[#111111] border border-gold/15 p-7 rounded-2xl space-y-4">
-          <h2 className="font-poppins font-bold text-gold text-lg">Data Residency</h2>
+          <h2 className="font-poppins font-bold text-gold text-lg">Data Residency & Infrastructure Security</h2>
           <p className="text-warm-grey text-sm leading-relaxed">
-            Metro Cardz databases are hosted on managed PostgreSQL infrastructure located in India (Asia-South region). Member data does not leave India's borders during normal platform operation. Third-party integrations (WhatsApp via AiSensy, SMS via Msg91) process only the minimum required data (phone number + message text) through India-based API endpoints.
+            Metro Cardz databases are hosted in managed Tier-4 data centers located in India (Asia-South region). Member demographic data does not leave India&apos;s borders during normal platform operation. Multi-tenant database queries are strictly isolated per merchant at the API boundary, satisfying Section 43A of the Information Technology Act, 2000.
           </p>
+        </section>
+
+        {/* DPDP Section 8(6) Data Breach Protocol */}
+        <section className="bg-[#111111] border border-gold/15 p-7 rounded-2xl space-y-4">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-gold text-[22px]">notification_important</span>
+            <h2 className="font-poppins font-bold text-gold text-lg">Data Breach Response Protocol (DPDP Act Sec 8(6))</h2>
+          </div>
+          <p className="text-warm-grey text-sm leading-relaxed">
+            Metro Cardz maintains a documented 24-to-72 hour Incident Response Plan (IRP) in full alignment with India&apos;s Digital Personal Data Protection Act, 2023:
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+            <div className="p-4 bg-black/40 border border-gold/10 rounded-xl space-y-2">
+              <span className="text-xs font-mono font-bold text-gold uppercase tracking-wider block">Hours 0 – 24</span>
+              <h4 className="font-bold text-warm-white text-sm">Containment & Forensics</h4>
+              <p className="text-warm-grey text-xs">Immediate token revocation, secret rotation, and server firewall IP isolation to neutralize exposure.</p>
+            </div>
+            <div className="p-4 bg-black/40 border border-gold/10 rounded-xl space-y-2">
+              <span className="text-xs font-mono font-bold text-gold uppercase tracking-wider block">Hours 24 – 48</span>
+              <h4 className="font-bold text-warm-white text-sm">Data Fiduciary Briefing</h4>
+              <p className="text-warm-grey text-xs">Direct escalation and formal briefing to affected store merchants (Data Fiduciaries) regarding affected record scopes.</p>
+            </div>
+            <div className="p-4 bg-black/40 border border-gold/10 rounded-xl space-y-2">
+              <span className="text-xs font-mono font-bold text-gold uppercase tracking-wider block">Hours 48 – 72</span>
+              <h4 className="font-bold text-warm-white text-sm">DPBI Statutory Filing</h4>
+              <p className="text-warm-grey text-xs">Statutory notification filed with the Data Protection Board of India (DPBI) and affected data principals with remediation measures.</p>
+            </div>
+          </div>
+        </section>
+
+        {/* Merchant Data Processing Agreement (DPA) */}
+        <section className="bg-[#111111] border border-gold/15 p-7 rounded-2xl space-y-4">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-gold text-[22px]">gavel</span>
+            <h2 className="font-poppins font-bold text-gold text-lg">Merchant Data Processing Agreement & Confidentiality Bond</h2>
+          </div>
+          <p className="text-warm-grey text-sm leading-relaxed">
+            Every merchant operating on Metro Cardz executes a legally binding Data Processing Agreement (DPA) under IT Act Sections 43A, 72, and 72A. Metro Cardz covenants under penalty of law:
+          </p>
+          <ul className="list-disc pl-5 space-y-2 text-warm-grey text-xs leading-relaxed">
+            <li><strong>Zero Third-Party Monetization:</strong> Member phone numbers and purchase records are NEVER shared, rented, or cross-marketed to competitors or advertising brokers.</li>
+            <li><strong>Data Portability:</strong> Merchants and members can download machine-readable JSON data exports at any time (DPDP Section 11).</li>
+            <li><strong>Right to Erasure:</strong> Member personal identifiers are scrubbed and anonymised upon demand (DPDP Section 13).</li>
+            <li><strong>Storage Limitation:</strong> Inactive member profiles exceeding 24 months are subject to automated storage limitation archiving (DPDP Section 8(7)).</li>
+          </ul>
+        </section>
+
+        {/* Data Grievance Officer */}
+        <section className="bg-[#111111] border border-gold/15 p-7 rounded-2xl space-y-4">
+          <h2 className="font-poppins font-bold text-gold text-lg">Data Protection & Grievance Officer</h2>
+          <p className="text-warm-grey text-sm leading-relaxed">
+            In accordance with Section 8(9) of the Digital Personal Data Protection Act, 2023, data principals and merchant partners may direct any data privacy inquiries, consent revocations, or statutory grievance notices to:
+          </p>
+          <div className="p-4 bg-black/40 border border-gold/15 rounded-xl space-y-1 text-xs">
+            <p className="font-bold text-warm-white">Data Protection Grievance Officer</p>
+            <p className="text-warm-grey">Metro Cardz Technologies · Legal & Compliance Division</p>
+            <p className="text-warm-grey">Email: <a href="mailto:privacy@metrocardz.in" className="text-gold hover:underline">privacy@metrocardz.in</a> | Response window: &le; 30 business days</p>
+          </div>
         </section>
 
         {/* Responsible Disclosure */}

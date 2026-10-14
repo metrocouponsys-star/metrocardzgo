@@ -125,6 +125,47 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // DPDP Act 2023 Section 6 — Record immutable statutory consent upon enrollment
+    const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+                     request.headers.get('x-real-ip') ||
+                     '127.0.0.1';
+    const userAgent = request.headers.get('user-agent')?.slice(0, 500) || null;
+
+    await prisma.memberConsent.createMany({
+      data: [
+        {
+          memberId: member.id,
+          merchantId,
+          purpose: 'membership',
+          granted: true,
+          ipAddress: clientIp,
+          userAgent,
+          policyVersion: 'v1.0',
+        },
+        {
+          memberId: member.id,
+          merchantId,
+          purpose: 'marketing',
+          granted: body.marketing_consent !== false,
+          ipAddress: clientIp,
+          userAgent,
+          policyVersion: 'v1.0',
+        },
+        {
+          memberId: member.id,
+          merchantId,
+          purpose: 'whatsapp',
+          granted: body.whatsapp_consent !== false,
+          ipAddress: clientIp,
+          userAgent,
+          policyVersion: 'v1.0',
+        },
+      ],
+      skipDuplicates: true,
+    }).catch(err => {
+      console.error('[DPDP] Consent auto-record error:', err);
+    });
+
     return NextResponse.json(normalizeMemberData(member), { status: 201 });
   } catch (err: any) {
     console.error('[members/create]', err);

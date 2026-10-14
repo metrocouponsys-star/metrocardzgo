@@ -442,6 +442,26 @@ export async function getMerchantProfile(): Promise<Merchant> {
   return get<Merchant>('/merchant/profile');
 }
 
+export interface MerchantDpaStatus {
+  accepted: boolean;
+  accepted_at?: string;
+  signatory_name?: string;
+  signatory_role?: string;
+  agreement_version?: string;
+  bond_ref?: string;
+  ip_address?: string;
+  legal_status?: string;
+  statutory_basis?: string;
+}
+
+export async function getMerchantDpa(): Promise<MerchantDpaStatus> {
+  return get<MerchantDpaStatus>('/merchant/dpa');
+}
+
+export async function signMerchantDpa(data: { signatory_name: string; signatory_role: string }): Promise<MerchantDpaStatus> {
+  return post<MerchantDpaStatus>('/merchant/dpa', data);
+}
+
 export async function updateMerchantProfile(data: Partial<Merchant>): Promise<Merchant> {
   return patch<Merchant>('/merchant/profile', data);
 }

@@ -20,6 +20,8 @@ interface FormData {
   card_id: string;
   initial_points?: string;
   consent_received: boolean;
+  marketing_consent?: boolean;
+  whatsapp_consent?: boolean;
 }
 
 export default function AddMemberPage() {
@@ -32,7 +34,13 @@ export default function AddMemberPage() {
   const [loading, setLoading] = useState(false);
   const [duplicateId, setDuplicateId] = useState<string | null>(null);
 
-  const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm<FormData>();
+  const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm<FormData>({
+    defaultValues: {
+      consent_received: true,
+      marketing_consent: true,
+      whatsapp_consent: true,
+    },
+  });
   const selectedCardId = watch('card_id');
   const watchDob = watch('date_of_birth');
   const watchAnniv = watch('anniversary_date');
@@ -105,6 +113,8 @@ export default function AddMemberPage() {
         family_dob_2: data.family_dob_2?.trim() ? data.family_dob_2.trim() : undefined,
         family_dob_3: data.family_dob_3?.trim() ? data.family_dob_3.trim() : undefined,
         initial_points: data.initial_points ? Number(data.initial_points) : undefined,
+        marketing_consent: data.marketing_consent !== false,
+        whatsapp_consent: data.whatsapp_consent !== false,
       };
       const newMember = await api.createMember(user?.merchant_id || '', createPayload as any);
       invalidateContaining('members');
@@ -648,6 +658,44 @@ export default function AddMemberPage() {
           <span className="material-symbols-outlined text-primary text-[20px]">info</span>
           <div className="text-body-md text-on-surface-variant">
             <p>A <strong>membership number</strong> and <strong>QR code</strong> will be automatically generated on save.</p>
+          </div>
+        </div>
+
+        {/* DPDP Act 2023 Statutory Notice & Consent */}
+        <div className="bg-surface-container-low border border-primary/30 rounded-xl p-md space-y-3">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-primary text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified_user</span>
+            <p className="text-label-md font-bold text-on-surface">Data Protection & Consent (DPDP Act 2023)</p>
+          </div>
+          <p className="text-label-xs text-on-surface-variant leading-relaxed">
+            Metro Cardz processes customer data on behalf of your business as an authorized Data Processor. Demographic fields (DOB, anniversary, family dates) are optional under the statutory data minimization principle.
+          </p>
+
+          <div className="space-y-2 pt-1">
+            <label className="flex items-start gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                className="mt-1 h-4 w-4 rounded border-outline text-primary focus:ring-primary cursor-pointer"
+                {...register('consent_received', { required: 'Customer consent is legally required under DPDP Act Section 6' })}
+              />
+              <span className="text-body-sm text-on-surface">
+                <strong>Explicit Customer Consent (Required):</strong> Customer has freely provided informed consent to record their name and phone number for loyalty tracking and transactional receipts per the <a href="/privacy-policy" target="_blank" rel="noreferrer" className="text-primary underline font-medium">Privacy Policy</a>.
+              </span>
+            </label>
+            {errors.consent_received && (
+              <p className="text-error text-label-xs pl-6">{errors.consent_received.message}</p>
+            )}
+
+            <label className="flex items-start gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                className="mt-1 h-4 w-4 rounded border-outline text-primary focus:ring-primary cursor-pointer"
+                {...register('whatsapp_consent')}
+              />
+              <span className="text-body-sm text-on-surface-variant">
+                <strong>Promotional & WhatsApp Communications (Optional):</strong> Customer opted in to receive balance updates, promotional rewards, and milestone vouchers via WhatsApp / SMS.
+              </span>
+            </label>
           </div>
         </div>
 
