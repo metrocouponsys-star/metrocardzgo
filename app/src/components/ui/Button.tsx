@@ -1,6 +1,12 @@
 /**
  * Button — canonical typed button component using the Metro Cardz design system.
  *
+ * Usability guarantees (per non-technical user requirements):
+ *   - All buttons have a visible ACTIVE/pressed state (scale + darker shade)
+ *   - Disabled state is visually distinct (opacity-40, cursor-not-allowed)
+ *   - Loading shows spinner + text change so user knows something is happening
+ *   - Minimum 44px height on md/lg to meet touch-target requirements for counter use
+ *
  * Usage:
  *   <Button variant="filled">Save Changes</Button>
  *   <Button variant="outlined" size="sm" loading={saving}>Saving...</Button>
@@ -30,23 +36,23 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
-  filled:   'bg-primary text-on-primary hover:bg-primary/90 active:bg-primary/80 shadow-sm',
-  tonal:    'bg-primary-container text-on-primary-container hover:bg-primary-container/80',
-  outlined: 'border border-outline text-primary hover:bg-primary/8 bg-transparent',
-  text:     'text-primary hover:bg-primary/8 bg-transparent',
-  danger:   'bg-error text-on-error hover:bg-error/90 active:bg-error/80 shadow-sm',
+  filled:   'bg-primary text-on-primary hover:bg-primary/90 active:bg-primary/75 active:scale-95 shadow-sm',
+  tonal:    'bg-primary-container text-on-primary-container hover:bg-primary-container/80 active:bg-primary-container/60 active:scale-95',
+  outlined: 'border-2 border-outline text-primary hover:bg-primary/8 active:bg-primary/15 active:scale-95 bg-transparent',
+  text:     'text-primary hover:bg-primary/8 active:bg-primary/15 active:scale-95 bg-transparent',
+  danger:   'bg-error text-on-error hover:bg-error/90 active:bg-error/75 active:scale-95 shadow-sm',
 };
 
 const SIZE_CLASSES: Record<ButtonSize, string> = {
-  sm: 'px-3 py-1.5 text-label-md gap-1',
-  md: 'px-4 py-2 text-label-md gap-1.5',
-  lg: 'px-6 py-3 text-body-md gap-2',
+  sm: 'px-3 py-2 text-label-md gap-1 min-h-[36px]',
+  md: 'px-4 py-2.5 text-label-md gap-1.5 min-h-[44px]',   // 44px min-touch-target
+  lg: 'px-6 py-3.5 text-body-md gap-2 min-h-[52px]',
 };
 
 const ICON_SIZE: Record<ButtonSize, string> = {
   sm: 'text-[16px]',
-  md: 'text-[18px]',
-  lg: 'text-[20px]',
+  md: 'text-[20px]',
+  lg: 'text-[22px]',
 };
 
 export function Button({
@@ -66,9 +72,10 @@ export function Button({
     <button
       disabled={isDisabled}
       className={[
-        'inline-flex items-center justify-center font-medium rounded-lg',
-        'transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
-        'disabled:opacity-50 disabled:cursor-not-allowed',
+        'inline-flex items-center justify-center font-semibold rounded-xl',
+        'transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
+        // Disabled state is visually distinct from active: lower opacity + no hover effects + not-allowed cursor
+        'disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100 disabled:shadow-none',
         VARIANT_CLASSES[variant],
         SIZE_CLASSES[size],
         className,

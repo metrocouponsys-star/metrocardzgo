@@ -509,21 +509,24 @@ export default function SearchMemberPage() {
         </div>
       </div>
 
-      {/* FAB */}
+      {/* FAB — "Add Member" with text label so non-technical staff know what it does */}
       <button onClick={() => navigate('/portal/members/new')} style={{
-        position: 'fixed', right: '20px', bottom: '88px', width: '52px', height: '52px',
+        position: 'fixed', right: '20px', bottom: '88px',
+        height: '52px', padding: '0 18px',
         background: `linear-gradient(135deg, ${T.orange}, ${T.orangeDark})`,
         color: '#fff', border: 'none', borderRadius: '14px', cursor: 'pointer',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        display: 'flex', alignItems: 'center', gap: '8px',
         boxShadow: '0 4px 20px rgba(255,107,53,0.4)', zIndex: 40,
-      }} className="search-fab">
-        <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>person_add</span>
+        fontSize: '13px', fontWeight: 700,
+      }} className="search-fab" aria-label="Add new member">
+        <span className="material-symbols-outlined" style={{ fontSize: '22px' }}>person_add</span>
+        <span>Add Member</span>
       </button>
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
-        .tab-label { display: none; }
-        @media (min-width: 480px) { .tab-label { display: block; } }
+        /* Tab labels always visible — icon-only tabs are unrecognizable to non-technical staff */
+        .tab-label { display: block; }
         @media (max-width: 767px) {
           .search-grid { grid-template-columns: 1fr !important; }
           .search-fab { bottom: 80px !important; }

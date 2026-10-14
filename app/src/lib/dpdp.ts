@@ -177,7 +177,11 @@ export function maybeDecrypt(value: string | null | undefined): string {
   if (!value) return '';
   // AES-GCM format: iv:authTag:ciphertext (all hex) = contains 2 colons
   if ((value.match(/:/g) || []).length === 2) {
-    return decryptField(value);
+    try {
+      return decryptField(value) || value;
+    } catch {
+      return value; // fallback to raw ciphertext rather than crashing or empty
+    }
   }
   return value; // not encrypted — legacy plain text
 }

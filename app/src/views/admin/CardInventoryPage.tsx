@@ -3,7 +3,7 @@ import { useToastStore } from '../../store/toastStore';
 import { ConfirmModal, Modal } from '../../components/ui/Modal';
 import type { CardInventoryItem, Merchant } from '../../types';
 import * as api from '../../api';
-import { format } from 'date-fns';
+import { safeFormat } from '../../lib/dateUtils';
 
 type FilterStatus = 'all' | 'unassigned' | 'merchant_allocated' | 'member_linked' | 'deactivated';
 type WizardStep = 1 | 2 | 3 | 4;
@@ -1036,10 +1036,10 @@ export default function CardInventoryPage() {
                     </td>
                     <td className="px-4 py-3 text-label-sm text-on-surface-variant whitespace-nowrap">
                       {card.linked_at
-                        ? <>Linked<br />{format(new Date(card.linked_at), 'dd MMM yy')}</>
+                        ? <>Linked<br />{safeFormat(card.linked_at, 'dd MMM yy', '—')}</>
                         : card.allocated_at
-                        ? <>Allocated<br />{format(new Date(card.allocated_at), 'dd MMM yy')}</>
-                        : format(new Date(card.created_at), 'dd MMM yy')}
+                        ? <>Allocated<br />{safeFormat(card.allocated_at, 'dd MMM yy', '—')}</>
+                        : safeFormat(card.created_at, 'dd MMM yy', '—')}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useToastStore } from '../../store/toastStore';
-import { Modal } from '../../components/ui/Modal';
+import { Modal, ConfirmModal } from '../../components/ui/Modal';
 import type { OfferTemplate, MembershipType, PointsRule } from '../../types';
 import * as api from '../../api';
 import { invalidateContaining } from '../../api/cache';
@@ -62,6 +62,9 @@ export default function OffersPage() {
   const [editingOffer, setEditingOffer] = useState<OfferTemplate | null>(null);
   const [form, setForm] = useState({ title: '', description: '', offer_type: 'free_service', value: '', applicable_membership_type_ids: [] as string[], loyalty_points_earn: '', is_points_redemption: false, loyalty_points_cost: '' });
   const [saving, setSaving] = useState(false);
+  // Delete offer confirm modal state
+  const [deleteOfferTarget, setDeleteOfferTarget] = useState<OfferTemplate | null>(null);
+  const [deletingOffer, setDeletingOffer] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -125,15 +128,19 @@ export default function OffersPage() {
   const active = offers.filter(o => o.active);
   const inactive = offers.filter(o => !o.active);
 
-  const handleDelete = async (offer: OfferTemplate) => {
-    if (!window.confirm(`Delete offer "${offer.title}"?`)) return;
+  const handleDelete = async () => {
+    if (!deleteOfferTarget) return;
+    setDeletingOffer(true);
     try {
-      await api.deleteOfferTemplate(user?.merchant_id || '', offer.id);
-      addToast('success', 'Offer deleted');
+      await api.deleteOfferTemplate(user?.merchant_id || '', deleteOfferTarget.id);
+      addToast('success', `"${deleteOfferTarget.title}" offer deleted successfully`);
       invalidateContaining('offers');
-      setOffers(prev => prev.filter(o => o.id !== offer.id));
+      setOffers(prev => prev.filter(o => o.id !== deleteOfferTarget.id));
+      setDeleteOfferTarget(null);
     } catch {
-      addToast('error', 'Failed to delete offer');
+      addToast('error', 'Failed to delete offer — please try again');
+    } finally {
+      setDeletingOffer(false);
     }
   };
 

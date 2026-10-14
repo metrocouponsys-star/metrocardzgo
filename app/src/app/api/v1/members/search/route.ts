@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth, getMerchantId } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { normalizeMemberData } from '@/lib/dataNormalizer';
 
 export async function GET(request: NextRequest) {
   const auth = await requireAuth(request);
@@ -21,6 +22,7 @@ export async function GET(request: NextRequest) {
         { name: { contains: qs } },
         { phone: { contains: qs } },
         { memberCode: { contains: qs } },
+        { physicalCardNumber: { contains: qs } },
         { publicToken: { contains: qs } },
         { referralCode: { contains: qs } },
         { email: { contains: qs } },
@@ -29,5 +31,5 @@ export async function GET(request: NextRequest) {
     include: { membershipType: true },
     take: 20,
   });
-  return NextResponse.json(members);
+  return NextResponse.json(members.map(normalizeMemberData));
 }

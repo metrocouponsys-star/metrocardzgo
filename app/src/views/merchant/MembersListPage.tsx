@@ -5,6 +5,8 @@ import { useToastStore } from '../../store/toastStore';
 import type { Member } from '../../types';
 import * as api from '../../api';
 import { cached, invalidateContaining } from '../../api/cache';
+import { ConfirmModal } from '../../components/ui/Modal';
+import { formatCardNumber } from '../../lib/dateUtils';
 
 // ─── Tokens ──────────────────────────────────────────────────────────────────
 const T = {
@@ -62,6 +64,8 @@ export default function MembersListPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'expiring_soon' | 'expired' | 'deactivated'>('all');
+  const [deleteMemberTarget, setDeleteMemberTarget] = useState<Member | null>(null);
+  const [deletingMember, setDeletingMember] = useState(false);
 
   useEffect(() => { fetchMembers(); }, []);
 
@@ -73,6 +77,23 @@ export default function MembersListPage() {
       setMembers(data);
     } catch { addToast('error', 'Failed to load customer list'); }
     finally { setLoading(false); }
+  };
+
+  const handleDeleteMember = async () => {
+    if (!deleteMemberTarget || !user?.merchant_id) return;
+    setDeletingMember(true);
+    try {
+      await api.deleteMember(user.merchant_id, deleteMemberTarget.id);
+      setMembers(m => m.filter(x => x.id !== deleteMemberTarget.id));
+      invalidateContaining('members');
+      invalidateContaining('dashboard');
+      addToast('success', `${deleteMemberTarget.name} has been deactivated`);
+      setDeleteMemberTarget(null);
+    } catch {
+      addToast('error', 'Failed to deactivate member. Please try again.');
+    } finally {
+      setDeletingMember(false);
+    }
   };
 
   const isExpiringSoon = (expiryDate?: string) => {
@@ -278,10 +299,10 @@ export default function MembersListPage() {
                           </div>
                         </td>
                         <td style={{ padding: '12px 16px' }}>
-                          <p style={{ fontFamily: 'monospace', fontSize: '12px', fontWeight: 800, color: T.text, margin: '0 0 2px' }}>
-                            {m.physical_card_number ? m.physical_card_number : `#{m.member_code || '—'}`}
+                          <p style={{ fontFamily: 'monospace', fontSize: '12px', fontWeight: 800, color: T.text, margin: '0 0 2px', letterSpacing: '0.05em' }}>
+                            {formatCardNumber(m.physical_card_number || (m as any).physicalCardNumber) || `#${m.member_code || '—'}`}
                           </p>
-                          {m.physical_card_number && (
+                          {(m.physical_card_number || (m as any).physicalCardNumber) && (
                             <span style={{ fontSize: '10px', color: T.textLight, fontFamily: 'monospace' }}>Code: #{m.member_code}</span>
                           )}
                         </td>
@@ -294,7 +315,19 @@ export default function MembersListPage() {
                         <td style={{ padding: '12px 16px', textAlign: 'right', fontSize: '13px', color: T.text }}>{m.total_visits || 0}</td>
                         <td style={{ padding: '12px 16px' }}><StatusPill status={m.status} /></td>
                         <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                          <button onClick={e => { e.stopPropagation(); navigate(`/portal/members/${m.id}`); }} style={{ padding: '6px 14px', border: `1px solid ${T.border}`, borderRadius: '8px', fontSize: '12px', fontWeight: 700, color: T.textMuted, background: T.white, cursor: 'pointer' }}>View →</button>
+                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                            <button onClick={e => { e.stopPropagation(); navigate(`/portal/members/${m.id}`); }} style={{ padding: '9px 16px', border: `1px solid ${T.border}`, borderRadius: '8px', fontSize: '12px', fontWeight: 700, color: T.textMuted, background: T.white, cursor: 'pointer', minHeight: '44px', display: 'inline-flex', alignItems: 'center', gap: '4px', transition: 'background 0.15s, color 0.15s' }}
+                              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = T.orangeLight; (e.currentTarget as HTMLElement).style.color = T.orangeDark; }}
+                              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = T.white; (e.currentTarget as HTMLElement).style.color = T.textMuted; }}>
+                              Open Profile
+                              <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>arrow_forward</span>
+                            </button>
+                            <button onClick={e => { e.stopPropagation(); setDeleteMemberTarget(m); }} style={{ padding: '9px 12px', border: '1px solid #FEE2E2', borderRadius: '8px', fontSize: '12px', fontWeight: 700, color: '#DC2626', background: '#FEF2F2', cursor: 'pointer', minHeight: '44px', display: 'inline-flex', alignItems: 'center', gap: '4px', transition: 'all 0.15s' }}
+                              title="Deactivate this member">
+                              <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>person_off</span>
+                              Deactivate
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -348,6 +381,18 @@ export default function MembersListPage() {
           div[style*="repeat(4, 1fr)"] { grid-template-columns: repeat(2, 1fr) !important; }
         }
       `}</style>
+
+      {/* ── Deactivate Member Confirmation Modal ── */}
+      <ConfirmModal
+        isOpen={!!deleteMemberTarget}
+        onClose={() => !deletingMember && setDeleteMemberTarget(null)}
+        onConfirm={handleDeleteMember}
+        title="Deactivate Member"
+        isLoading={deletingMember}
+        danger={true}
+        confirmLabel={deletingMember ? 'Deactivating...' : 'Yes, Deactivate Member'}
+        description={`This will deactivate ${deleteMemberTarget?.name}'s membership. They will no longer be able to redeem offers or earn points. Their history will be preserved. This action can be reversed by reactivating the member.`}
+      />
     </div>
   );
 }

@@ -270,7 +270,7 @@ export default function AdminLoginPage() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} noValidate>
+            <form onSubmit={handleSubmit} noValidate autoComplete="off">
               {/* Email */}
               <div style={{ marginBottom: 16 }}>
                 <label
@@ -312,7 +312,7 @@ export default function AdminLoginPage() {
                     onBlur={() => setFocused(null)}
                     required
                     disabled={loading}
-                    autoComplete="email"
+                    autoComplete="off"
                     placeholder="admin@metrocardz.in"
                     style={{
                       width: '100%',
@@ -374,7 +374,7 @@ export default function AdminLoginPage() {
                     onBlur={() => setFocused(null)}
                     required
                     disabled={loading}
-                    autoComplete="current-password"
+                    autoComplete="new-password"
                     placeholder="Enter your password"
                     style={{
                       width: '100%',

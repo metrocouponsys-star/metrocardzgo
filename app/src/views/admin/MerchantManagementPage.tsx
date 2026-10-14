@@ -4,7 +4,7 @@ import { useAuthStore } from '../../store/authStore';
 import { ConfirmModal, Modal } from '../../components/ui/Modal';
 import type { Merchant } from '../../types';
 import * as api from '../../api';
-import { format } from 'date-fns';
+import { safeFormat } from '../../lib/dateUtils';
 
 const STATUS_CONFIG = {
   active: { cls: 'bg-green-100 text-green-800 border-green-200', label: 'Active' },
@@ -28,6 +28,22 @@ export default function MerchantManagementPage() {
   const [suspending, setSuspending] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
+
+  // Edit merchant state
+  const [editTarget, setEditTarget] = useState<Merchant | null>(null);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editForm, setEditForm] = useState({
+    business_name: '',
+    category: '',
+    plan_tier: 'Starter',
+    whatsapp_number: '',
+    address: '',
+    referral_bonus_points: 50,
+  });
+
+  // Delete merchant state
+  const [deleteTarget, setDeleteTarget] = useState<Merchant | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [actioningMerchant, setActioningMerchant] = useState<string | null>(null);
 
   // Creation form state
@@ -77,7 +93,7 @@ export default function MerchantManagementPage() {
         owner_email: ownerEmail.trim() || undefined,
       });
       setMerchants(prev => [newMerchant, ...prev]);
-      addToast('success', 'Merchant created successfully!');
+      addToast('success', `${businessName} added to the platform successfully`);
       setCreateOpen(false);
       // Reset form
       setBusinessName('');
@@ -102,7 +118,9 @@ export default function MerchantManagementPage() {
       const newStatus = suspendTarget.status === 'active' ? 'suspended' : 'active';
       const updated = await api.updateMerchantStatus(suspendTarget.id, newStatus);
       setMerchants(m => m.map(x => x.id === updated.id ? updated : x));
-      addToast('success', `${suspendTarget.business_name} status updated to ${newStatus}`);
+      addToast('success', newStatus === 'suspended'
+        ? `${suspendTarget.business_name} has been suspended — all staff logins disabled`
+        : `${suspendTarget.business_name} is now active — staff can log in again`);
       setSuspendTarget(null);
     } catch {
       addToast('error', 'Action failed');
@@ -134,6 +152,55 @@ export default function MerchantManagementPage() {
       addToast('error', e.message || 'Action failed');
     } finally {
       setActioningMerchant(null);
+    }
+  };
+
+  // ── Edit merchant ────────────────────────────────────────────────────────────
+  const openEditModal = (merchant: Merchant) => {
+    setEditForm({
+      business_name: merchant.business_name || '',
+      category: (merchant as any).category || '',
+      plan_tier: (merchant as any).plan_tier || 'Starter',
+      whatsapp_number: merchant.whatsapp_number || '',
+      address: (merchant as any).address || '',
+      referral_bonus_points: Number((merchant as any).referral_bonus_points ?? 50),
+    });
+    setEditTarget(merchant);
+  };
+
+  const handleEditMerchant = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editTarget) return;
+    if (!editForm.business_name.trim()) {
+      addToast('error', 'Business name is required');
+      return;
+    }
+    setEditLoading(true);
+    try {
+      const updated = await api.updateMerchant(editTarget.id, editForm);
+      setMerchants(m => m.map(x => x.id === updated.id ? { ...x, ...updated } : x));
+      addToast('success', `${updated.business_name || editForm.business_name} details updated successfully`);
+      setEditTarget(null);
+    } catch (err: any) {
+      addToast('error', err.message || 'Failed to update merchant — please try again');
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  // ── Delete merchant ──────────────────────────────────────────────────────────
+  const handleDeleteMerchant = async () => {
+    if (!deleteTarget) return;
+    setDeleteLoading(true);
+    try {
+      await api.deleteMerchant(deleteTarget.id);
+      setMerchants(m => m.filter(x => x.id !== deleteTarget.id));
+      addToast('success', `${deleteTarget.business_name} has been permanently removed from the platform`);
+      setDeleteTarget(null);
+    } catch (err: any) {
+      addToast('error', err.message || 'Failed to delete merchant — please try again');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -252,7 +319,7 @@ export default function MerchantManagementPage() {
                     <td className="px-4 py-3">
                       <span className={`text-label-sm px-2.5 py-0.5 rounded-full border ${status.cls}`}>{status.label}</span>
                     </td>
-                    <td className="px-4 py-3 text-label-sm text-on-surface-variant">{format(new Date(m.created_at), 'dd MMM yyyy')}</td>
+                    <td className="px-4 py-3 text-label-sm text-on-surface-variant">{safeFormat(m.created_at, 'dd MMM yyyy', '—')}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         {m.approval_status === 'pending' ? (
@@ -273,34 +340,56 @@ export default function MerchantManagementPage() {
                             </button>
                           </>
                         ) : (
-                          <div className="flex gap-2 items-center flex-wrap">
+                          <div className="flex gap-1.5 items-center flex-wrap">
+                            {/* Allocate Cards */}
                             <a
                               href={`/portal/admin/inventory?merchant=${m.id}`}
-                              className="text-label-sm bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 px-2.5 py-1 rounded-lg transition-colors font-bold inline-flex items-center gap-1"
+                              className="text-label-sm bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 px-2.5 py-1.5 rounded-lg transition-all font-bold inline-flex items-center gap-1 min-h-[36px]"
                               title="Allocate Physical Cards to Merchant"
                             >
                               <span className="material-symbols-outlined text-[14px]">credit_card</span>
                               Allocate Cards
                             </a>
+                            {/* Edit Merchant */}
+                            <button
+                              onClick={() => openEditModal(m)}
+                              disabled={isActioning}
+                              className="text-label-sm bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 px-2.5 py-1.5 rounded-lg transition-all font-bold inline-flex items-center gap-1 min-h-[36px] disabled:opacity-40"
+                              title="Edit merchant details"
+                            >
+                              <span className="material-symbols-outlined text-[14px]">edit</span>
+                              Edit
+                            </button>
+                            {/* Suspend / Reactivate */}
                             <button
                               onClick={() => setSuspendTarget(m)}
                               disabled={isActioning}
-                              className={`text-label-sm px-2.5 py-1 rounded-lg transition-colors font-bold border
+                              className={`text-label-sm px-2.5 py-1.5 rounded-lg transition-all font-bold border min-h-[36px] disabled:opacity-40
                                 ${m.status === 'active'
-                                  ? 'text-red-600 bg-red-50 hover:bg-red-100 border-red-200'
+                                  ? 'text-amber-700 bg-amber-50 hover:bg-amber-100 border-amber-200'
                                   : 'text-green-600 bg-green-50 hover:bg-green-100 border-green-200'}`}
                             >
                               {m.status === 'active' ? 'Suspend' : 'Reactivate'}
                             </button>
+                            {/* Impersonate */}
                             {m.status === 'active' && (
                               <button
-                                onClick={() => { impersonate(m.id, m.business_name); addToast('success', `Impersonating ${m.business_name}`); }}
-                                className="text-label-sm bg-primary text-white hover:bg-primary-dark px-2.5 py-1 rounded-lg transition-colors font-bold shadow-sm"
-                                style={{ minHeight: 'auto' }}
+                                onClick={() => { impersonate(m.id, m.business_name); addToast('success', `Now viewing as ${m.business_name}`); }}
+                                className="text-label-sm bg-primary text-white hover:bg-primary-dark px-2.5 py-1.5 rounded-lg transition-all font-bold shadow-sm min-h-[36px]"
                               >
                                 Impersonate
                               </button>
                             )}
+                            {/* Delete Merchant */}
+                            <button
+                              onClick={() => setDeleteTarget(m)}
+                              disabled={isActioning}
+                              className="text-label-sm bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 px-2.5 py-1.5 rounded-lg transition-all font-bold inline-flex items-center gap-1 min-h-[36px] disabled:opacity-40"
+                              title="Permanently delete this merchant"
+                            >
+                              <span className="material-symbols-outlined text-[14px]">delete</span>
+                              Delete
+                            </button>
                           </div>
                         )}
                       </div>
@@ -325,6 +414,131 @@ export default function MerchantManagementPage() {
           suspendTarget?.status === 'active'
             ? `Suspending "${suspendTarget?.business_name}" will block all active login sessions for their owner/staff partners and immediately disable redemptions for their customers.`
             : `Reactivating "${suspendTarget?.business_name}" will immediately restore full portal access for the merchant.`
+        }
+      />
+
+      {/* ── Edit Merchant Modal ─────────────────────────────────────────────── */}
+      <Modal
+        isOpen={!!editTarget}
+        onClose={() => !editLoading && setEditTarget(null)}
+        title={`Edit Merchant — ${editTarget?.business_name || ''}`}
+        maxWidth="max-w-lg"
+      >
+        <form onSubmit={handleEditMerchant} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <div className="md:col-span-2">
+              <label className="block text-label-sm text-on-surface-variant mb-1 font-medium">Business Name *</label>
+              <input
+                type="text"
+                required
+                value={editForm.business_name}
+                onChange={e => setEditForm(f => ({ ...f, business_name: e.target.value }))}
+                className="input-field h-11 text-body-sm"
+                placeholder="e.g. Glamour Salon"
+              />
+            </div>
+
+            <div>
+              <label className="block text-label-sm text-on-surface-variant mb-1 font-medium">Industry Category</label>
+              <select
+                value={editForm.category}
+                onChange={e => setEditForm(f => ({ ...f, category: e.target.value }))}
+                className="input-field h-11 text-body-sm bg-surface"
+              >
+                <option value="">Select category...</option>
+                {['Salon', 'Restaurant', 'Retail', 'Gym', 'Healthcare', 'Groceries',
+                  'Jewellery', 'Pharmacy', 'Electronics', 'Education', 'Other'].map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-label-sm text-on-surface-variant mb-1 font-medium">Plan Tier</label>
+              <select
+                value={editForm.plan_tier}
+                onChange={e => setEditForm(f => ({ ...f, plan_tier: e.target.value }))}
+                className="input-field h-11 text-body-sm bg-surface"
+              >
+                <option value="Starter">Starter</option>
+                <option value="Pro">Pro</option>
+                <option value="Enterprise">Enterprise</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-label-sm text-on-surface-variant mb-1 font-medium">WhatsApp Number</label>
+              <input
+                type="text"
+                value={editForm.whatsapp_number}
+                onChange={e => setEditForm(f => ({ ...f, whatsapp_number: e.target.value }))}
+                className="input-field h-11 text-body-sm"
+                placeholder="e.g. 919876543210"
+              />
+            </div>
+
+            <div>
+              <label className="block text-label-sm text-on-surface-variant mb-1 font-medium">Referral Bonus Points</label>
+              <input
+                type="number"
+                min={0}
+                max={10000}
+                value={editForm.referral_bonus_points}
+                onChange={e => setEditForm(f => ({ ...f, referral_bonus_points: Number(e.target.value) }))}
+                className="input-field h-11 text-body-sm"
+                placeholder="50"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-label-sm text-on-surface-variant mb-1 font-medium">Address / Location</label>
+              <input
+                type="text"
+                value={editForm.address}
+                onChange={e => setEditForm(f => ({ ...f, address: e.target.value }))}
+                className="input-field h-11 text-body-sm"
+                placeholder="e.g. 123 Main Street, Mumbai"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-outline-variant/30">
+            <button
+              type="button"
+              onClick={() => setEditTarget(null)}
+              className="btn-secondary h-11 px-5"
+              disabled={editLoading}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={editLoading}
+              className="btn-primary flex items-center gap-2 h-11 px-6 font-bold"
+            >
+              {editLoading && (
+                <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+              )}
+              {editLoading ? 'Saving Changes...' : 'Save Changes'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* ── Delete Merchant Confirm Modal ────────────────────────────────────── */}
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        onClose={() => !deleteLoading && setDeleteTarget(null)}
+        onConfirm={handleDeleteMerchant}
+        title="Delete Merchant Account"
+        isLoading={deleteLoading}
+        danger={true}
+        confirmLabel={deleteLoading ? 'Deleting...' : 'Yes, Delete Merchant'}
+        description={
+          `This will permanently remove "${deleteTarget?.business_name}" and disable all associated ` +
+          `member passes, cards, and redemptions. All ${(deleteTarget as any)?._count?.members ?? (deleteTarget as any)?.member_count ?? 0} ` +
+          `enrolled members will lose access to their loyalty cards. This action cannot be undone.`
         }
       />
 

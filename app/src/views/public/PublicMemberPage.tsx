@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import type { PublicMemberView } from '../../types';
 import * as api from '../../api';
-import { format } from 'date-fns';
+import { safeFormat } from '../../lib/dateUtils';
 import { InteractiveFlipCard } from '../../components/cards/InteractiveFlipCard';
 import { loadSavedCardDesign } from '../../types/cardDesign';
 
@@ -252,7 +252,7 @@ export default function PublicMemberPage() {
             design={loadSavedCardDesign(data.merchant_id || 'mer-001', 'store_loyalty')}
             memberName={data.member_name}
             cardNumber={`•••• •••• •••• ${data.member_code?.slice(-4) || '8842'}`}
-            validThru={data.expiry_date ? format(new Date(data.expiry_date), 'MM/yy') : '12/28'}
+            validThru={safeFormat(data.expiry_date, 'MM/yy', '12/28')}
             tier={tierData?.tier_name || data.membership_type_name}
             points={data.loyalty_points}
             qrValue={`https://metrocardz.in/m/${data.member_code}`}
@@ -338,7 +338,7 @@ export default function PublicMemberPage() {
               <div className={`rounded-xl p-3 text-center ${isExpired ? 'bg-error-container/30' : 'bg-surface-container-low'}`}>
                 <p className="text-[10px] text-on-surface-variant uppercase tracking-wide mb-1">Valid Till</p>
                 <p className={`text-[15px] font-extrabold font-display ${isExpired ? 'text-error' : 'text-on-surface'}`}>
-                  {data.expiry_date ? format(new Date(data.expiry_date), 'MMM yyyy') : '—'}
+                  {safeFormat(data.expiry_date, 'MMM yyyy', '—')}
                 </p>
               </div>
             </div>

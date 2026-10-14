@@ -693,13 +693,14 @@ export default function GoLoginPage() {
                   {authMethod === 'pass' && (
                     <div>
                       {!activePass ? (
-                        <form onSubmit={handleLookupPass} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                        <form onSubmit={handleLookupPass} noValidate autoComplete="off" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                           <div>
                             <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#374151', marginBottom: 6 }}>
                               Member Code or Mobile Number
                             </label>
                             <input
                               type="text"
+                              autoComplete="off"
                               placeholder="e.g. #MC0004 or 9987379000"
                               value={memberCode}
                               onChange={(e) => {
@@ -729,6 +730,7 @@ export default function GoLoginPage() {
                             </label>
                             <input
                               type="text"
+                              autoComplete="off"
                               placeholder="0 0 0 0"
                               value={last4}
                               onChange={(e) => {

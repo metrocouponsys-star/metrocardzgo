@@ -10,7 +10,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, Legend, AreaChart, Area
 } from 'recharts';
-import { format, formatDistanceToNow } from 'date-fns';
+import { safeFormat, safeFormatDistanceToNow } from '../../lib/dateUtils';
 
 const OFFER_LABELS: Record<string, string> = {
   percent_off: '% Off',
@@ -158,8 +158,8 @@ export default function ReportsPage() {
         r.offer?.title || '',
         r.offer?.offer_type || '',
         r.staff_name || '',
-        format(new Date(r.created_at), 'dd/MM/yyyy'),
-        format(new Date(r.created_at), 'HH:mm'),
+        safeFormat(r.created_at, 'dd/MM/yyyy', '—'),
+        safeFormat(r.created_at, 'HH:mm', '—'),
       ]),
     ];
     const csvContent = rows.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(',')).join('\n');
@@ -167,7 +167,7 @@ export default function ReportsPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `redemptions-${format(new Date(), 'yyyy-MM-dd')}.csv`);
+    link.setAttribute('download', `redemptions-${safeFormat(new Date(), 'yyyy-MM-dd')}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -194,7 +194,7 @@ export default function ReportsPage() {
         const localUrl = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = localUrl;
-        link.download = `members-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+        link.download = `members-${safeFormat(new Date(), 'yyyy-MM-dd')}.csv`;
         link.click();
         URL.revokeObjectURL(localUrl);
       })
@@ -212,7 +212,7 @@ export default function ReportsPage() {
   const totalRedemptionPages = Math.ceil((data?.all_redemptions.length || 0) / REDEMPTIONS_PER_PAGE);
 
   const updatedAgo = lastUpdated
-    ? secondsSince < 5 ? 'Just now' : `${formatDistanceToNow(lastUpdated)} ago`
+    ? secondsSince < 5 ? 'Just now' : `${safeFormatDistanceToNow(lastUpdated)} ago`
     : '';
 
   return (
@@ -349,7 +349,7 @@ export default function ReportsPage() {
                 <div className="h-[250px] bg-surface-container rounded-xl animate-pulse" />
               ) : (
                 <ResponsiveContainer width="100%" height={250}>
-                  <AreaChart data={data?.redemptions_over_time.map(d => ({ ...d, date: format(new Date(d.date), 'dd MMM') }))}>
+                  <AreaChart data={data?.redemptions_over_time.map(d => ({ ...d, date: safeFormat(d.date, 'dd MMM', '—') }))}>
                     <defs>
                       <linearGradient id="areaGradRedemptions" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor={CHART_COLORS.primary} stopOpacity={0.2} />
@@ -445,7 +445,7 @@ export default function ReportsPage() {
                       </td>
                       <td className="px-4 py-3.5 text-body-md text-on-surface-variant">{r.staff_name || '—'}</td>
                       <td className="px-4 py-3.5 text-label-sm text-on-surface-variant tabular-nums">
-                        {format(new Date(r.created_at), 'dd MMM yyyy, HH:mm')}
+                        {safeFormat(r.created_at, 'dd MMM yyyy, HH:mm', '—')}
                       </td>
                     </tr>
                   ))}
@@ -475,7 +475,7 @@ export default function ReportsPage() {
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={320}>
-              <AreaChart data={newMembers.map(d => ({ ...d, date: format(new Date(d.date), 'dd MMM') }))}>
+              <AreaChart data={newMembers.map(d => ({ ...d, date: safeFormat(d.date, 'dd MMM', '—') }))}>
                 <defs>
                   <linearGradient id="colorMembers" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor={CHART_COLORS.green} stopOpacity={0.25}/>

@@ -7,7 +7,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import type { PublicMemberView } from '../../types';
 import * as api from '../../api';
 import { StatusBadge } from '../../components/ui/StatusBadge';
-import { format } from 'date-fns';
+import { safeFormat } from '../../lib/dateUtils';
 import { InteractiveFlipCard } from '../../components/cards/InteractiveFlipCard';
 import { loadSavedCardDesign } from '../../types/cardDesign';
 
@@ -343,7 +343,7 @@ function MembershipResult({
             design={merchantDesign}
             memberName={data.member_name}
             cardNumber={formatCardNumber(data.physical_card_number || data.member_code)}
-            validThru={format(new Date(data.expiry_date), 'MM/yy')}
+            validThru={safeFormat(data.expiry_date, 'MM/yy', '12/28')}
             tier={data.membership_type_name}
             points={pointsVal}
             qrValue={`https://metrocardz.in/m/${data.member_code}`}
@@ -386,7 +386,7 @@ function MembershipResult({
             <div className="bg-slate-50 rounded-xl p-3 border border-slate-200">
               <p className="text-[10px] uppercase font-bold text-slate-400">{isExpired ? 'Expired On' : 'Valid Until'}</p>
               <p className="text-xs font-black text-slate-900 mt-0.5">
-                {format(new Date(data.expiry_date), 'dd MMM yyyy')}
+                {safeFormat(data.expiry_date, 'dd MMM yyyy', '—')}
               </p>
             </div>
           </div>
@@ -567,7 +567,7 @@ function MembershipResult({
                       <div key={t.id} className="bg-slate-50 rounded-2xl p-3 border border-slate-200 flex items-center justify-between text-xs">
                         <div>
                           <p className="font-bold text-slate-900 capitalize">{t.description || t.transaction_type.replace('_', ' ')}</p>
-                          {t.created_at && <p className="text-[10px] text-slate-400 mt-0.5">{format(new Date(t.created_at), 'dd MMM yyyy, HH:mm')}</p>}
+                          {t.created_at && <p className="text-[10px] text-slate-400 mt-0.5">{safeFormat(t.created_at, 'dd MMM yyyy, HH:mm')}</p>}
                         </div>
                         <span className={`font-mono font-black text-xs ${t.points >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                           {t.points >= 0 ? `+${t.points}` : t.points} pts
@@ -578,7 +578,7 @@ function MembershipResult({
                       <div key={r.id} className="bg-amber-50/50 rounded-2xl p-3 border border-amber-200 flex items-center justify-between text-xs">
                         <div>
                           <p className="font-bold text-amber-900">{r.offer_title}</p>
-                          {r.redeemed_at && <p className="text-[10px] text-amber-700 mt-0.5">{format(new Date(r.redeemed_at), 'dd MMM yyyy, HH:mm')}</p>}
+                          {r.redeemed_at && <p className="text-[10px] text-amber-700 mt-0.5">{safeFormat(r.redeemed_at, 'dd MMM yyyy, HH:mm')}</p>}
                         </div>
                         <span className="font-bold text-amber-800 text-[11px] bg-amber-100 px-2 py-0.5 rounded-lg border border-amber-300">
                           Redeemed

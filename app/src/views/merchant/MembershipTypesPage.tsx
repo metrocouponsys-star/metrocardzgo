@@ -1,9 +1,10 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useToastStore } from '../../store/toastStore';
 import type { MembershipType, OfferTemplate } from '../../types';
 import * as api from '../../api';
 import { invalidateContaining } from '../../api/cache';
+import { ConfirmModal } from '../../components/ui/Modal';
 
 const T = {
   bg: '#F8FAFC',
@@ -38,6 +39,8 @@ export default function MembershipTypesPage() {
   const [draftName, setDraftName] = useState('');
   const [draftDescription, setDraftDescription] = useState('');
   const [saving, setSaving] = useState(false);
+  const [deleteTierTarget, setDeleteTierTarget] = useState<MembershipType | null>(null);
+  const [deletingTier, setDeletingTier] = useState(false);
   const isOwner = user?.role === 'owner' || user?.role === 'super_admin';
 
   const fetchData = async () => {
@@ -108,14 +111,19 @@ export default function MembershipTypesPage() {
     }
   };
 
-  const deleteType = async (id: string) => {
+  const handleDeleteTier = async () => {
+    if (!deleteTierTarget) return;
+    setDeletingTier(true);
     try {
-      await api.deleteMembershipType(user?.merchant_id || '', id);
-      addToast('success', 'Membership type deleted');
+      await api.deleteMembershipType(user?.merchant_id || '', deleteTierTarget.id);
+      addToast('success', `Membership tier "${deleteTierTarget.name}" deleted`);
       invalidateContaining('membership-types');
+      setDeleteTierTarget(null);
       fetchData();
     } catch (error: any) {
       addToast('error', error?.message || 'Failed to delete membership type');
+    } finally {
+      setDeletingTier(false);
     }
   };
 
@@ -250,7 +258,7 @@ export default function MembershipTypesPage() {
                           Edit
                         </button>
                         <button
-                          onClick={() => deleteType(type.id)}
+                          onClick={() => setDeleteTierTarget(type)}
                           style={{ border: '1px solid #FECACA', background: '#fff', color: '#DC2626', borderRadius: 10, padding: '10px 12px', cursor: 'pointer', fontWeight: 700 }}
                         >
                           Delete
@@ -264,6 +272,20 @@ export default function MembershipTypesPage() {
           </div>
         )}
       </div>
+
+      <ConfirmModal
+        isOpen={!!deleteTierTarget}
+        onClose={() => !deletingTier && setDeleteTierTarget(null)}
+        onConfirm={handleDeleteTier}
+        title="Delete Membership Tier"
+        isLoading={deletingTier}
+        danger={true}
+        confirmLabel={deletingTier ? 'Deleting...' : 'Yes, Delete Tier'}
+        description={
+          `Deleting the "${deleteTierTarget?.name}" tier will affect all members currently on this plan. ` +
+          `Please reassign members to another tier before deleting, or they will be moved to the default tier automatically.`
+        }
+      />
     </div>
   );
 }

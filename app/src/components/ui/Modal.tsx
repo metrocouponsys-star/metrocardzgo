@@ -21,19 +21,24 @@ export function Modal({ isOpen, onClose, title, children, maxWidth = 'max-w-md' 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[900] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[900] flex items-center justify-center p-4" role="dialog" aria-modal="true">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-fade-in"
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade-in"
         onClick={onClose}
+        aria-hidden="true"
       />
       {/* Modal */}
       <div className={`relative w-full ${maxWidth} max-h-[85vh] md:max-h-[90vh] bg-white rounded-2xl shadow-dialog animate-scale-in flex flex-col my-auto overflow-hidden border border-outline-variant/30`}>
         {title && (
           <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant/30 shrink-0">
             <h3 className="text-[18px] font-extrabold text-on-surface font-display">{title}</h3>
-            <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-surface-container transition-colors text-on-surface-variant hover:text-on-surface">
-              <span className="material-symbols-outlined text-[20px]">close</span>
+            <button
+              onClick={onClose}
+              aria-label="Close dialog"
+              className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-surface-container transition-colors text-on-surface-variant hover:text-on-surface active:bg-surface-container-high"
+            >
+              <span className="material-symbols-outlined text-[22px]">close</span>
             </button>
           </div>
         )}
@@ -50,32 +55,78 @@ interface ConfirmModalProps {
   title: string;
   description: React.ReactNode;
   confirmLabel?: string;
+  cancelLabel?: string;
   isLoading?: boolean;
   danger?: boolean;
 }
 
-export function ConfirmModal({ isOpen, onClose, onConfirm, title, description, confirmLabel = 'Confirm', isLoading, danger }: ConfirmModalProps) {
+/**
+ * ConfirmModal — Used for all destructive or irreversible actions.
+ * 
+ * For danger=true actions, shows a prominent red warning banner so non-technical
+ * users clearly understand the consequence before tapping the confirm button.
+ * The confirm button is deliberately placed LAST (right side) to match user
+ * expectations, and Cancel is always immediately accessible.
+ */
+export function ConfirmModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  description,
+  confirmLabel = 'Confirm',
+  cancelLabel = 'Cancel',
+  isLoading,
+  danger,
+}: ConfirmModalProps) {
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-5">
+        {/* Danger warning banner — unmissable for non-technical users */}
+        {danger && (
+          <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl p-4">
+            <span
+              className="material-symbols-outlined text-red-600 text-[28px] shrink-0 mt-0.5"
+              style={{ fontVariationSettings: "'FILL' 1" }}
+            >
+              warning
+            </span>
+            <div>
+              <p className="font-extrabold text-red-900 text-[15px] mb-1">⚠️ This action cannot be undone</p>
+              <p className="text-red-700 text-[13px] leading-relaxed">
+                Please read carefully before confirming.
+              </p>
+            </div>
+          </div>
+        )}
+
         <div>
           <h3 className="text-[18px] font-extrabold text-on-surface font-display mb-2">{title}</h3>
           <div className="text-[15px] text-on-surface-variant leading-relaxed">{description}</div>
         </div>
-        <div className="flex gap-3 justify-end">
-          <button onClick={onClose} className="btn-secondary" disabled={isLoading}>Cancel</button>
+
+        <div className="flex gap-3 pt-2">
+          {/* Cancel is prominent and easy to tap — users must be able to escape easily */}
+          <button
+            onClick={onClose}
+            disabled={isLoading}
+            className="flex-1 min-h-[48px] px-5 py-3 rounded-xl font-bold text-[15px] border-2 border-outline-variant text-on-surface hover:bg-surface-container active:bg-surface-container-high transition-all disabled:opacity-40"
+          >
+            {cancelLabel}
+          </button>
+
           <button
             onClick={onConfirm}
             disabled={isLoading}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-[14px] transition-all active-scale disabled:opacity-50
-              ${danger
-                ? 'bg-gradient-to-r from-error to-red-600 text-white shadow-sm hover:shadow-md'
-                : 'btn-primary'
-              }
-            `}
+            className={[
+              'flex-1 min-h-[48px] flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-[15px] transition-all active:scale-95 disabled:opacity-40 disabled:active:scale-100',
+              danger
+                ? 'bg-red-600 text-white hover:bg-red-700 active:bg-red-800 shadow-sm'
+                : 'bg-primary text-on-primary hover:bg-primary/90 active:bg-primary/75 shadow-sm',
+            ].join(' ')}
           >
             {isLoading && <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>}
-            {confirmLabel}
+            {isLoading ? 'Processing...' : confirmLabel}
           </button>
         </div>
       </div>

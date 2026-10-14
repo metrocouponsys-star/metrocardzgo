@@ -10,6 +10,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+import { safeToLocaleDate } from '../../lib/dateUtils';
 
 interface MemberInfo {
   id: string;
@@ -284,7 +285,7 @@ export default function QrScanPage() {
                 {[
                   { label: 'Points', value: member.loyaltyPoints.toLocaleString() },
                   { label: 'Visits', value: member.totalVisits },
-                  { label: 'Expires', value: member.expiryDate ? new Date(member.expiryDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' }) : '—' },
+                  { label: 'Expires', value: safeToLocaleDate(member.expiryDate, 'en-IN', { day: '2-digit', month: 'short', year: '2-digit' }, '—') },
                 ].map(({ label, value }) => (
                   <div key={label} style={{
                     background: '#F9F7F5', border: '1px solid #F1E7DF', borderRadius: '12px', padding: '10px',

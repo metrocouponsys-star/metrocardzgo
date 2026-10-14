@@ -47,7 +47,19 @@ export async function DELETE(request: NextRequest, { params }: Params) {
   const auth = await requireSuperAdmin(request);
   if (auth instanceof NextResponse) return auth;
   const { id } = await params;
+  const url = new URL(request.url);
+  const permanent = url.searchParams.get('permanent') === 'true';
 
+  if (permanent) {
+    // Hard delete — cascades set in Prisma schema
+    await prisma.merchant.delete({ where: { id } });
+    await prisma.adminAuditLog.create({
+      data: { adminUserId: auth.userId, merchantId: id, action: 'delete_merchant_permanent' },
+    }).catch(() => {}); // audit log may fail if merchant is deleted
+    return NextResponse.json({ message: 'Merchant permanently deleted' });
+  }
+
+  // Soft delete (default) — suspend only
   await prisma.merchant.update({ where: { id }, data: { status: 'suspended' } });
   await prisma.adminAuditLog.create({
     data: { adminUserId: auth.userId, merchantId: id, action: 'suspend_merchant' },

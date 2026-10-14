@@ -4,7 +4,7 @@ import { useAuthStore } from '../../store/authStore';
 import type { DashboardStats, CelebrationMember } from '../../types';
 import * as api from '../../api';
 import { cached } from '../../api/cache';
-import { format, formatDistanceToNow } from 'date-fns';
+import { safeFormat, safeFormatDistanceToNow } from '../../lib/dateUtils';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 const REFRESH_MS = 60_000;
@@ -154,7 +154,7 @@ export default function DashboardPage() {
   const updatedLabel = lastUpdated
     ? secondsSince < 5 ? 'Just updated'
       : secondsSince < 60 ? `${secondsSince}s ago`
-      : `${formatDistanceToNow(lastUpdated)} ago`
+      : `${safeFormatDistanceToNow(lastUpdated)} ago`
     : null;
 
   const filteredCelebs = celebrations.filter(c => {
@@ -298,7 +298,7 @@ export default function DashboardPage() {
                         <p style={{ fontSize: '12px', color: T.textLight, margin: 0 }}>{r.offer_name || 'Offer redeemed'}</p>
                       </div>
                       <p style={{ fontSize: '11px', color: T.textLight, flexShrink: 0, margin: 0 }}>
-                        {r.redeemed_at ? format(new Date(r.redeemed_at), 'dd MMM, hh:mm a') : ''}
+                        {r.redeemed_at ? safeFormat(r.redeemed_at, 'dd MMM, hh:mm a', '') : ''}
                       </p>
                     </div>
                   ))}

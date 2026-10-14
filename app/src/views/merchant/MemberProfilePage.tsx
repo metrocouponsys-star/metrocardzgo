@@ -9,7 +9,11 @@ import { CardSkeleton, Skeleton } from '../../components/ui/Skeleton';
 import type { Member, MemberOfferState, Redemption, LoyaltyTransaction, MembershipType, MemberStatus } from '../../types';
 import * as api from '../../api';
 import { invalidateContaining, cached } from '../../api/cache';
-import { format, differenceInDays } from 'date-fns';
+import { safeFormat, safeToLocaleDate, safeDaysUntilAnnual, formatCardNumber, safeParseDate, safeDifferenceInDays } from '../../lib/dateUtils';
+
+function safeFmt(dateStr: string | null | undefined, fmt: string, fallback = '—'): string {
+  return safeFormat(dateStr, fmt, fallback);
+}
 
 type Tab = 'offers' | 'history' | 'points' | 'rewards';
 
@@ -82,6 +86,12 @@ export default function MemberProfilePage() {
     status: 'active',
   });
   const [updatingMember, setUpdatingMember] = useState(false);
+
+  // Delete member state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingMember, setDeletingMember] = useState(false);
+
+
 
 
   const fetchMember = async (forceRefresh = false) => {
@@ -170,7 +180,7 @@ export default function MemberProfilePage() {
         invalidateContaining('members');
         invalidateContaining('dashboard');
         fetchMember(true); // refresh — also updates loyalty_points balance
-        addToast('success', `"${redeemState.offerTitle}" redeemed successfully!`);
+        addToast('success', `Offer redeemed — "${redeemState.offerTitle}" used for ${member.name}`);
       }, 1800);
     } catch (e: any) {
       setRedeemState(null);
@@ -286,14 +296,14 @@ export default function MemberProfilePage() {
     setUpdatingMember(true);
     try {
       await api.updateMember(user.merchant_id || '', member.id, editForm);
-      addToast('success', 'Member details updated successfully');
+      addToast('success', `${member.name}'s profile updated successfully`);
       setShowEditModal(false);
       invalidateContaining(id || '');
       invalidateContaining('members');
       invalidateContaining('dashboard');
       fetchMember(true);
     } catch (err: any) {
-      addToast('error', err.message || 'Failed to update member details');
+      addToast('error', err.message || 'Could not save changes. Please check your connection and try again.');
     } finally {
       setUpdatingMember(false);
     }
@@ -315,7 +325,7 @@ export default function MemberProfilePage() {
         offer_state_id: purchaseForm.offer_state_id || undefined,
         note: purchaseForm.note.trim() || undefined,
       });
-      addToast('success', res.message || `Purchase recorded! Earned ${res.points_earned} points.`);
+      addToast('success', res.message || `Points added successfully — ${res.points_earned ?? 0} pts credited to ${member.name}`);
       setShowPurchaseModal(false);
       setPurchaseForm({ amount: '', coupon_code: '', offer_state_id: '', note: '' });
       invalidateContaining(id || '');
@@ -323,9 +333,26 @@ export default function MemberProfilePage() {
       invalidateContaining('dashboard');
       fetchMember(true);
     } catch (err: any) {
-      addToast('error', err.message || 'Failed to record purchase');
+      addToast('error', err.message || 'Failed to record purchase. Please check your connection and try again.');
     } finally {
       setRecordingPurchase(false);
+    }
+  };
+
+  const handleDeleteMember = async () => {
+    if (!member || !user) return;
+    setDeletingMember(true);
+    try {
+      await api.deleteMember(user.merchant_id || '', member.id);
+      addToast('success', `${member.name} has been removed from the system.`);
+      invalidateContaining('members');
+      invalidateContaining('dashboard');
+      navigate('/portal/members');
+    } catch (err: any) {
+      addToast('error', err.message || 'Failed to delete member — please try again');
+    } finally {
+      setDeletingMember(false);
+      setShowDeleteModal(false);
     }
   };
 
@@ -372,7 +399,9 @@ export default function MemberProfilePage() {
     }
   };
 
-  const daysToExpiry = member ? differenceInDays(new Date(member.expiry_date), new Date()) : 0;
+  // Guard: safeParseDate prevents "Invalid time value" crash when Supabase returns null expiry_date
+  const expiryDate = member ? safeParseDate(member.expiry_date) : null;
+  const daysToExpiry = (member && expiryDate) ? safeDifferenceInDays(expiryDate, new Date()) : 0;
 
   const isOwner = user?.role === 'owner';
 
@@ -462,7 +491,31 @@ export default function MemberProfilePage() {
                   <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white leading-tight">{member.name}</h2>
                   <StatusBadge status={member.status} />
                 </div>
-                <p className="text-white/80 font-mono text-sm font-semibold tracking-widest uppercase mt-1">#{member.member_code}</p>
+                <p className="text-white/80 font-mono text-sm font-semibold tracking-widest uppercase mt-1">#{member.member_code || (member as any).memberCode || '—'}</p>
+                {/* Physical Card Number with copy button if linked */}
+                {(member.physical_card_number || (member as any).physicalCardNumber) && (
+                  <div className="flex items-center gap-2 mt-1.5 bg-black/25 backdrop-blur-xs px-2.5 py-1 rounded-lg border border-white/15 w-fit">
+                    <span className="material-symbols-outlined text-[16px] text-amber-400">credit_card</span>
+                    <span className="text-white font-mono text-xs sm:text-sm font-bold tracking-wider">
+                      {member.physical_card_number || (member as any).physicalCardNumber}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const cardNum = member.physical_card_number || (member as any).physicalCardNumber;
+                        if (cardNum) {
+                          navigator.clipboard.writeText(cardNum);
+                          addToast('info', 'Card number copied to clipboard');
+                        }
+                      }}
+                      className="p-1 rounded text-white/70 hover:text-white transition-colors"
+                      title="Copy Card Number"
+                      aria-label="Copy Card Number"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">content_copy</span>
+                    </button>
+                  </div>
+                )}
                 <p className="text-white text-base sm:text-lg font-mono font-bold flex items-center gap-2 mt-1.5">
                   <span className="material-symbols-outlined text-[20px]">phone</span>
                   {member.phone}
@@ -470,33 +523,18 @@ export default function MemberProfilePage() {
 
                 {/* Birthday / Anniversary — always visible to merchant */}
                 {(member.date_of_birth || member.anniversary_date) && (() => {
-                  const today = new Date();
-                  today.setHours(0, 0, 0, 0);
-
-                  const getDaysUntil = (dateStr?: string | null) => {
-                    if (!dateStr) return null;
-                    try {
-                      const parts = dateStr.slice(5).split('-');
-                      const m = parseInt(parts[0], 10) - 1;
-                      const d = parseInt(parts[1], 10);
-                      let target = new Date(today.getFullYear(), m, d);
-                      if (target < today) {
-                        target = new Date(today.getFullYear() + 1, m, d);
-                      }
-                      const diffMs = target.getTime() - today.getTime();
-                      return Math.round(diffMs / (1000 * 60 * 60 * 24));
-                    } catch {
-                      return null;
-                    }
-                  };
-
-                  const dobDays = getDaysUntil(member.date_of_birth);
-                  const annDays = getDaysUntil(member.anniversary_date);
+                  const dobDays = safeDaysUntilAnnual(member.date_of_birth);
+                  const annDays = safeDaysUntilAnnual(member.anniversary_date);
                   const isBirthday = dobDays === 0;
                   const isAnniversary = annDays === 0;
 
                   const formatBadgeText = (dateStr: string, days: number | null, prefix: string) => {
-                    const formattedDate = new Date(dateStr).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+                    if (dateStr.includes('*')) {
+                      const matchYear = dateStr.match(/\d{4}/);
+                      return `${prefix} Born ${matchYear ? matchYear[0] : 'on record'}`;
+                    }
+                    const formattedDate = safeToLocaleDate(dateStr, 'en-IN', { day: '2-digit', month: 'short' });
+                    if (formattedDate === '—') return `${prefix} on record`;
                     if (days === 0) return `${prefix} Today! (${formattedDate})`;
                     if (days === 1) return `${prefix} Tomorrow · ${formattedDate} (in 1 day)`;
                     if (days != null && days <= 7) return `${prefix} ${formattedDate} (in ${days} days)`;
@@ -554,7 +592,7 @@ export default function MemberProfilePage() {
             <div className="relative z-10 mt-5 pt-3 border-t border-white/15 flex justify-between items-end">
               <div>
                 <p className="text-white/60 text-[11px] uppercase tracking-wider font-semibold mb-0.5">Valid Until</p>
-                <p className="font-semibold text-sm">{format(new Date(member.expiry_date), 'MMM dd, yyyy')}</p>
+                <p className="font-semibold text-sm">{safeFmt(member.expiry_date, 'MMM dd, yyyy', 'No expiry set')}</p>
               </div>
               <div className="text-center">
                 <p className="text-white/60 text-[11px] uppercase tracking-wider font-semibold mb-0.5">Total Visits</p>
@@ -564,6 +602,44 @@ export default function MemberProfilePage() {
                 <p className="text-white/60 text-[11px] uppercase tracking-wider font-semibold mb-0.5">Loyalty Points</p>
                 <p className="text-2xl font-extrabold text-amber-300 drop-shadow-xs">{member.loyalty_points.toLocaleString()}</p>
               </div>
+            </div>
+
+            {/* Physical Card Number row */}
+            <div className="relative z-10 mt-4 pt-3 border-t border-white/15">
+              <p className="text-white/60 text-[10px] uppercase tracking-widest font-semibold mb-1.5">Physical Card</p>
+              {(member.physical_card_number || (member as any).physicalCardNumber) ? (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="font-mono font-bold text-sm tracking-[0.2em] text-white">
+                    {formatCardNumber(member.physical_card_number || (member as any).physicalCardNumber)}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const raw = member.physical_card_number || (member as any).physicalCardNumber || '';
+                      navigator.clipboard.writeText(raw.replace(/\s/g, '')).then(() => {
+                        addToast('success', 'Card number copied to clipboard');
+                      }).catch(() => addToast('error', 'Could not copy — please copy manually'));
+                    }}
+                    className="flex items-center gap-1 text-white/70 hover:text-white text-[11px] bg-white/10 hover:bg-white/20 rounded-lg px-2.5 py-1 transition-all min-h-[32px] font-semibold active:scale-95"
+                    title="Copy card number"
+                  >
+                    <span className="material-symbols-outlined text-[13px]">content_copy</span>
+                    Copy
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <p className="text-white/45 text-xs italic">No physical card assigned</p>
+                  <button
+                    type="button"
+                    onClick={() => setShowEditModal(true)}
+                    className="text-amber-300 hover:text-amber-200 text-[11px] bg-white/10 hover:bg-white/20 rounded-lg px-2.5 py-1 min-h-[32px] transition-all font-semibold flex items-center gap-1"
+                  >
+                    <span className="material-symbols-outlined text-[12px]">link</span>
+                    Link Card
+                  </button>
+                </div>
+              )}
             </div>
           </section>
 
@@ -696,7 +772,7 @@ export default function MemberProfilePage() {
                     <div className="flex-1">
                       <p className="text-body-md font-bold">{r.offer?.title || (r as any).title || (r as any).offer_title || 'Offer Redeemed'}</p>
                       <p className="text-label-sm text-on-surface-variant">
-                        {format(new Date(r.created_at), 'dd MMM yyyy, HH:mm')} · Staff: {r.staff_name || 'Store Staff'}
+                        {safeFmt(r.created_at, 'dd MMM yyyy, HH:mm')} · Staff: {r.staff_name || 'Store Staff'}
                       </p>
                     </div>
                   </div>
@@ -740,7 +816,7 @@ export default function MemberProfilePage() {
                     <div className="flex-1">
                       <p className="text-body-md font-bold">{tx.source_offer_title || (tx.type === 'earn' ? 'Points Earned' : 'Points Redeemed')}</p>
                       <p className="text-label-sm text-on-surface-variant">
-                        {format(new Date(tx.created_at), 'dd MMM yyyy, HH:mm')}
+                        {safeFmt(tx.created_at, 'dd MMM yyyy, HH:mm')}
                         {' '}· Balance after: {tx.balance_after.toLocaleString()} pts
                       </p>
                     </div>
@@ -880,7 +956,9 @@ export default function MemberProfilePage() {
                   className="flex-1 px-3 py-2 bg-surface-container-low border border-outline-variant rounded-lg font-mono text-body-md text-center outline-none focus:border-primary transition-all uppercase"
                 />
                 <button type="submit" disabled={redeemingVoucher || !voucherCodeInput.trim()} className="btn-primary py-2 px-4 flex items-center gap-1">
-                  {redeemingVoucher ? '...' : 'Redeem'}
+                  {redeemingVoucher ? (
+                    <><span className="material-symbols-outlined animate-spin text-[14px]">progress_activity</span> Redeeming…</>
+                  ) : 'Redeem Voucher'}
                 </button>
               </form>
             </div>
@@ -912,8 +990,10 @@ export default function MemberProfilePage() {
                       placeholder="ENTER CODE"
                       className="flex-1 px-3 py-2 bg-surface-container-low border border-outline-variant rounded-lg font-mono text-body-md text-center outline-none focus:border-primary transition-all"
                     />
-                    <button type="submit" disabled={applyingReferral || !referralInput.trim()} className="btn-primary py-2 px-4">
-                      {applyingReferral ? '...' : 'Apply'}
+                    <button type="submit" disabled={applyingReferral || !referralInput.trim()} className="btn-primary py-2 px-4 flex items-center gap-1">
+                      {applyingReferral ? (
+                        <><span className="material-symbols-outlined animate-spin text-[14px]">progress_activity</span> Applying…</>
+                      ) : 'Apply Code'}
                     </button>
                   </div>
                 </form>
@@ -1010,54 +1090,64 @@ export default function MemberProfilePage() {
             </label>
           </div>
 
-          {/* Bottom Actions Row: Edit / PDF / Wallet */}
+          {/* Bottom Actions Row: Edit / PDF / Wallet / Delete */}
           {isOwner && (
-            <div className="flex gap-2">
-              <button
-                onClick={handleOpenEditModal}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-outline-variant text-on-surface-variant hover:bg-surface-container text-label-md transition-colors font-medium"
-              >
-                <span className="material-symbols-outlined text-[18px]">edit</span>
-                Edit
-              </button>
-              <button
-                onClick={handleDownloadCard}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-outline-variant text-on-surface-variant hover:bg-surface-container text-label-md transition-colors font-medium"
-              >
-                <span className="material-symbols-outlined text-[18px]">download</span>
-                PDF
-              </button>
-              {walletUrl ? (
-                <a
-                  href={walletUrl} target="_blank" rel="noopener noreferrer"
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-outline-variant text-on-surface-variant hover:bg-surface-container text-label-md transition-colors no-underline font-medium"
-                >
-                  <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>add_to_wallet</span>
-                  Wallet
-                </a>
-              ) : (
+            <div className="flex flex-col gap-2">
+              <div className="flex gap-2">
                 <button
-                  disabled={walletLoading}
-                  onClick={async () => {
-                    if (!member) return;
-                    setWalletLoading(true);
-                    try {
-                      const res = await api.generateWalletPassUrl(member.id);
-                      setWalletUrl(res.save_url);
-                      window.open(res.save_url, '_blank', 'noopener,noreferrer');
-                      addToast('success', 'Google Wallet pass generated!');
-                    } catch {
-                      addToast('error', 'Failed to generate Wallet pass — try again');
-                    } finally {
-                      setWalletLoading(false);
-                    }
-                  }}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-outline-variant text-on-surface-variant hover:bg-surface-container text-label-md transition-colors disabled:opacity-50 font-medium"
+                  onClick={handleOpenEditModal}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-outline-variant text-on-surface-variant hover:bg-surface-container text-label-md transition-colors font-medium active:scale-95"
                 >
-                  <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>add_to_wallet</span>
-                  {walletLoading ? '...' : 'Wallet'}
+                  <span className="material-symbols-outlined text-[18px]">edit</span>
+                  Edit Member
                 </button>
-              )}
+                <button
+                  onClick={handleDownloadCard}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-outline-variant text-on-surface-variant hover:bg-surface-container text-label-md transition-colors font-medium active:scale-95"
+                >
+                  <span className="material-symbols-outlined text-[18px]">download</span>
+                  Download PDF
+                </button>
+                {walletUrl ? (
+                  <a
+                    href={walletUrl} target="_blank" rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-outline-variant text-on-surface-variant hover:bg-surface-container text-label-md transition-colors no-underline font-medium active:scale-95"
+                  >
+                    <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>add_to_wallet</span>
+                    View in Wallet
+                  </a>
+                ) : (
+                  <button
+                    disabled={walletLoading}
+                    onClick={async () => {
+                      if (!member) return;
+                      setWalletLoading(true);
+                      try {
+                        const res = await api.generateWalletPassUrl(member.id);
+                        setWalletUrl(res.save_url);
+                        window.open(res.save_url, '_blank', 'noopener,noreferrer');
+                        addToast('success', 'Google Wallet pass generated successfully!');
+                      } catch {
+                        addToast('error', 'Failed to generate Wallet pass — try again');
+                      } finally {
+                        setWalletLoading(false);
+                      }
+                    }}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-outline-variant text-on-surface-variant hover:bg-surface-container text-label-md transition-colors disabled:opacity-50 font-medium active:scale-95"
+                  >
+                    <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>add_to_wallet</span>
+                    {walletLoading ? 'Generating…' : 'Add to Wallet'}
+                  </button>
+                )}
+              </div>
+              {/* Delete member — danger action, requires confirmation */}
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 text-label-md transition-colors font-medium active:scale-95 active:bg-red-100"
+              >
+                <span className="material-symbols-outlined text-[18px]">person_remove</span>
+                Delete Member
+              </button>
             </div>
           )}
 
@@ -1378,6 +1468,33 @@ export default function MemberProfilePage() {
           </div>
         </form>
       </Modal>
+
+      {/* ── Delete Member Confirmation Modal — danger=true shows red warning banner ── */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => !deletingMember && setShowDeleteModal(false)}
+        onConfirm={handleDeleteMember}
+        title="Delete Member"
+        danger={true}
+        confirmLabel="Yes, Delete Member"
+        cancelLabel="Keep Member"
+        isLoading={deletingMember}
+        description={
+          <div className="space-y-3">
+            <p className="text-on-surface text-[15px]">
+              This will permanently remove <strong>{member?.name}</strong> from the system, including all their:
+            </p>
+            <ul className="list-disc list-inside text-[14px] text-on-surface-variant space-y-1">
+              <li>Loyalty points and transaction history</li>
+              <li>Active offers and redemption records</li>
+              <li>Membership details and card assignment</li>
+            </ul>
+            <p className="text-[14px] font-bold text-red-700">
+              This cannot be undone. The member will need to re-enroll if this was done by mistake.
+            </p>
+          </div>
+        }
+      />
     </div>
   );
 }

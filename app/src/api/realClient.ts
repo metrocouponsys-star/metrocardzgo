@@ -96,6 +96,12 @@ async function request<T>(
   if (!publicEndpoint) {
     const token = getToken();
     if (token) headers['Authorization'] = `Bearer ${token}`;
+    try {
+      const authUser = useAuthStore.getState().user;
+      if (authUser?.merchant_id) {
+        headers['x-merchant-id'] = authUser.merchant_id;
+      }
+    } catch { /* ignore */ }
   }
 
   const res = await fetch(`${API}${path}`, {
@@ -293,6 +299,10 @@ export async function updateMember(_merchantId: string, memberId: string, data: 
   return patch<Member>(`/members/${memberId}`, sanitizeMemberDatePayload(data));
 }
 
+export async function deleteMember(_merchantId: string, memberId: string): Promise<void> {
+  return del<void>(`/members/${memberId}`);
+}
+
 export async function recordPurchase(
   _merchantId: string,
   memberId: string,
@@ -432,7 +442,7 @@ export async function getMerchantProfile(): Promise<Merchant> {
   return get<Merchant>('/merchant/profile');
 }
 
-export async function updateMerchant(_merchantId: string, data: Partial<Merchant>): Promise<Merchant> {
+export async function updateMerchantProfile(data: Partial<Merchant>): Promise<Merchant> {
   return patch<Merchant>('/merchant/profile', data);
 }
 
@@ -603,14 +613,42 @@ export async function rejectMerchant(merchantId: string): Promise<Merchant> {
   return post<Merchant>(`/admin/merchants/${merchantId}/reject`);
 }
 
+/**
+ * Update editable merchant details (business name, category, plan tier, etc.)
+ * Calls PUT /api/v1/admin/merchants/[id] for super-admin, or PATCH /merchant/profile for merchant.
+ */
+export async function updateMerchant(merchantId: string, data: Partial<Merchant> | {
+  business_name?: string;
+  category?: string;
+  plan_tier?: string;
+  whatsapp_number?: string;
+  address?: string;
+  referral_bonus_points?: number;
+}): Promise<Merchant> {
+  const role = useAuthStore.getState().user?.role;
+  if (role === 'super_admin') {
+    return request<Merchant>('PUT', `/admin/merchants/${merchantId}`, data);
+  }
+  return patch<Merchant>('/merchant/profile', data);
+}
+
+/**
+ * Permanently delete a merchant and all associated data.
+ * This is irreversible — only super-admin should call this.
+ */
+export async function deleteMerchant(merchantId: string, permanent = true): Promise<void> {
+  return del<void>(`/admin/merchants/${merchantId}?permanent=${permanent}`);
+}
+
 export async function sendCampaign(merchantId: string, campaignId: string): Promise<Campaign> {
   return post<Campaign>(`/campaigns/${campaignId}/send`);
 }
 
 // ── Referral & Card PDF ───────────────────────────────────────────────────────
-export async function getReferralLink(memberId: string): Promise<{ referral_code: string; referral_link: string; bonus_points: number }> {
-  return get(`/members/${memberId}/referral-link`);
+export async function getMemberReferralLink(memberId: string): Promise<{ referral_code: string; referral_link: string; bonus_points: number }> {
+  return request('GET', `/members/${memberId}/referral-link`);
 }
+export const getReferralLink = getMemberReferralLink;
 
 export async function downloadCardPdf(memberId: string): Promise<void> {
   const token = getToken();

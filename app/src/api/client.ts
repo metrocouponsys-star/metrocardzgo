@@ -369,6 +369,14 @@ export async function updateMember(merchantId: string, memberId: string, data: P
   return db.members[idx];
 }
 
+export async function deleteMember(merchantId: string, memberId: string): Promise<void> {
+  await delay(FAKE_DELAY);
+  const idx = db.members.findIndex(m => m.id === memberId && m.merchant_id === merchantId);
+  if (idx !== -1) {
+    db.members[idx].status = 'deactivated';
+  }
+}
+
 export async function recordPurchase(
   merchantId: string,
   memberId: string,
@@ -775,6 +783,16 @@ export async function updateMerchant(merchantId: string, data: Partial<Merchant>
   db.merchants[idx] = { ...db.merchants[idx], ...data };
   return db.merchants[idx];
 }
+
+export async function deleteMerchant(merchantId: string, _permanent = true): Promise<void> {
+  await delay(FAKE_DELAY);
+  const idx = db.merchants.findIndex(m => m.id === merchantId);
+  if (idx !== -1) {
+    db.merchants.splice(idx, 1);
+  }
+}
+
+
 
 export async function uploadMerchantLogo(merchantId: string, logoDataUrl: string): Promise<Merchant> {
   await delay(FAKE_DELAY);
@@ -1290,6 +1308,7 @@ export async function getReferralLink(memberId: string): Promise<any> {
   const code = member?.referral_code || 'REF-' + memberId.slice(-4);
   return { referral_code: code, referral_link: `${window.location.origin}/m/${member?.public_token || memberId}?ref=${code}`, bonus_points: 50 };
 }
+export const getMemberReferralLink = getReferralLink;
 
 export async function downloadCardPdf(memberId: string): Promise<void> {
   await delay(FAKE_DELAY);

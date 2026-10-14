@@ -5,7 +5,7 @@ import { useToastStore } from '../../store/toastStore';
 import { ConfirmModal } from '../../components/ui/Modal';
 import type { CardInventoryItem, Member } from '../../types';
 import * as api from '../../api';
-import { format } from 'date-fns';
+import { safeFormat } from '../../lib/dateUtils';
 import CardDesignerStudio from './CardDesignerStudio';
 
 const STATUS_CFG = {
@@ -250,7 +250,7 @@ export default function CardInventoryMerchantPage() {
                         <p className="text-label-md font-bold text-on-surface">{card.linked_member_name}</p>
                         <p className="text-label-sm text-on-surface-variant">{card.linked_member_phone}</p>
                         {card.linked_at && (
-                          <p className="text-label-sm text-on-surface-variant">Linked {format(new Date(card.linked_at), 'dd MMM yyyy')}</p>
+                          <p className="text-label-sm text-on-surface-variant">Linked {safeFormat(card.linked_at, 'dd MMM yyyy', '—')}</p>
                         )}
                       </div>
                     ) : (

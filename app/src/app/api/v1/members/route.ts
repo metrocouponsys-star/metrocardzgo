@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth, getMerchantId } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { normalizeMemberData } from '@/lib/dataNormalizer';
 import crypto from 'crypto';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -50,7 +51,7 @@ export async function GET(request: NextRequest) {
     skip: offset,
   });
 
-  return NextResponse.json(members);
+  return NextResponse.json(members.map(normalizeMemberData));
 }
 
 // ── POST /api/v1/members ──────────────────────────────────────────────────────
@@ -124,7 +125,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return NextResponse.json(member, { status: 201 });
+    return NextResponse.json(normalizeMemberData(member), { status: 201 });
   } catch (err: any) {
     console.error('[members/create]', err);
     if (err.code === 'P2002') {

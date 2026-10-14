@@ -150,6 +150,9 @@ export function getMerchantId(
   auth: AuthContext,
   request: NextRequest
 ): string | null {
+  const headerMerchantId = request.headers.get('x-merchant-id')?.trim();
+  if (headerMerchantId) return headerMerchantId;
+
   if (auth.role === 'super_admin') {
     const url = new URL(request.url);
     return url.searchParams.get('merchant_id') ?? auth.merchantId;

@@ -32,7 +32,7 @@ export default function LoginPage() {
     try {
       const authResult = await api.login(val, password);
       setAuth(authResult.user, authResult.token);
-      addToast('success', `Welcome back, ${authResult.user.name}! 👋`);
+      addToast('success', `Welcome back, ${authResult.user.name}!`);
       const targetRoute =
         authResult.user.role === 'super_admin'
           ? '/portal/admin'
@@ -200,7 +200,7 @@ export default function LoginPage() {
             border: '1px solid #E2E8F0',
             boxShadow: '0 4px 24px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04)',
           }}>
-            <form onSubmit={handleLogin} noValidate>
+            <form onSubmit={handleLogin} noValidate autoComplete="off">
 
               {/* Email field */}
               <div style={{ marginBottom: '16px' }}>
@@ -216,7 +216,7 @@ export default function LoginPage() {
                   <input
                     id="login-email"
                     type="text"
-                    autoComplete="username"
+                    autoComplete="off"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     onFocus={() => setFocused('email')}
@@ -249,7 +249,7 @@ export default function LoginPage() {
                   <input
                     id="login-password"
                     type={showPassword ? 'text' : 'password'}
-                    autoComplete="current-password"
+                    autoComplete="new-password"
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     onFocus={() => setFocused('password')}

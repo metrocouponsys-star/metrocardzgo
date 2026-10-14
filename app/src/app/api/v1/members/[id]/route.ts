@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth, getMerchantId } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { normalizeMemberData } from '@/lib/dataNormalizer';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest, { params }: Params) {
     },
   });
   if (!member) return NextResponse.json({ detail: 'Member not found' }, { status: 404 });
-  return NextResponse.json(member);
+  return NextResponse.json(normalizeMemberData(member));
 }
 
 async function handleUpdate(request: NextRequest, { params }: Params) {
@@ -67,7 +68,7 @@ async function handleUpdate(request: NextRequest, { params }: Params) {
     },
     include: { membershipType: true },
   });
-  return NextResponse.json(updated);
+  return NextResponse.json(normalizeMemberData(updated));
 }
 
 export async function PUT(request: NextRequest, context: Params) {

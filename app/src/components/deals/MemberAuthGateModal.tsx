@@ -274,7 +274,7 @@ export function MemberAuthGateModal({
               marginBottom: 10,
             }}
           >
-            <span>🔒 Member Exclusive</span>
+            <span>Member Exclusive</span>
           </div>
 
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.25 }}>
@@ -308,7 +308,7 @@ export function MemberAuthGateModal({
               transition: 'all 0.15s ease',
             }}
           >
-            💳 Member Card & ID
+            Member Card & ID
           </button>
           <button
             onClick={() => setTab('otp')}
@@ -324,7 +324,7 @@ export function MemberAuthGateModal({
               transition: 'all 0.15s ease',
             }}
           >
-            📱 Mobile OTP
+            Mobile OTP
           </button>
         </div>
 
@@ -397,70 +397,6 @@ export function MemberAuthGateModal({
                   {passError}
                 </div>
               )}
-
-              {/* Demo Accounts Quick-Fill for Testing */}
-              <div
-                style={{
-                  background: '#F8FAFC',
-                  borderRadius: 12,
-                  padding: '10px 12px',
-                  border: '1px solid #E2E8F0',
-                }}
-              >
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#64748B', marginBottom: 6 }}>
-                  TEST / DEMO CARDS (Click to auto-fill):
-                </div>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                  <button
-                    type="button"
-                    onClick={() => handleDemoFill('MC0004', '9000')}
-                    style={{
-                      background: '#fff',
-                      border: '1px solid #CBD5E1',
-                      borderRadius: 6,
-                      padding: '4px 8px',
-                      fontSize: 11,
-                      fontWeight: 700,
-                      color: '#0F172A',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    Priya (MC0004 · 9000)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDemoFill('SAL001', '2345')}
-                    style={{
-                      background: '#fff',
-                      border: '1px solid #CBD5E1',
-                      borderRadius: 6,
-                      padding: '4px 8px',
-                      fontSize: 11,
-                      fontWeight: 700,
-                      color: '#0F172A',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    Arjun (SAL001 · 2345)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDemoFill('INS001', '2334')}
-                    style={{
-                      background: '#fff',
-                      border: '1px solid #CBD5E1',
-                      borderRadius: 6,
-                      padding: '4px 8px',
-                      fontSize: 11,
-                      fontWeight: 700,
-                      color: '#0F172A',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    Rajesh (INS001 · 2334)
-                  </button>
-                </div>
-              </div>
 
               <button
                 type="submit"

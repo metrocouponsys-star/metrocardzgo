@@ -6,7 +6,7 @@ import { useToastStore } from '../../store/toastStore';
 import { Modal } from '../../components/ui/Modal';
 import type { Campaign, ReminderRule, MembershipType } from '../../types';
 import * as api from '../../api';
-import { format } from 'date-fns';
+import { safeFormat } from '../../lib/dateUtils';
 
 
 const TRIGGER_LABELS: Record<string, string> = {
@@ -509,8 +509,8 @@ export default function CampaignsPage() {
                   <div className="flex gap-4 text-label-sm text-on-surface-variant">
                     <span>{c.audience_size} recipients</span>
                     {c.sent_count !== undefined && c.sent_count > 0 && <span>✓ {c.sent_count} sent</span>}
-                    {c.scheduled_at && <span>📅 {format(new Date(c.scheduled_at), 'dd MMM yyyy, HH:mm')}</span>}
-                    <span>{format(new Date(c.created_at), 'dd MMM yyyy')}</span>
+                    {c.scheduled_at && <span>📅 {safeFormat(c.scheduled_at, 'dd MMM yyyy, HH:mm', '—')}</span>}
+                    <span>{safeFormat(c.created_at, 'dd MMM yyyy', '—')}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
