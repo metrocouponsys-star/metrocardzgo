@@ -134,23 +134,32 @@ export async function buildPublicMemberViewFromDb(memberId: string): Promise<Pub
     console.warn('[publicMemberView] Error fetching rewards:', (err as Error).message);
   }
 
-  // 3. Assemble active offers
+  // 3. Assemble active and redeemed offers
   let offersOut: any[] = [];
-  const activeStates = (member.offerStates || []).filter(
-    (s) => s.status === 'active' && s.offerTemplate?.active !== false
+  const relevantStates = (member.offerStates || []).filter(
+    (s) => (s.status === 'active' || s.status === 'exhausted') && s.offerTemplate?.active !== false
   );
 
-  if (activeStates.length > 0) {
-    offersOut = activeStates.map((s) => ({
-      id: s.id,
-      title: s.offerTemplate.title,
-      description: s.offerTemplate.description || '',
-      offer_type: s.offerTemplate.offerType,
-      value: Number(s.offerTemplate.value || 0),
-      remaining_qty: s.remainingQty !== null && s.remainingQty !== undefined ? Number(s.remainingQty) : null,
-      is_points_redemption: !!s.offerTemplate.isPointsRedemption,
-      points_cost: Number(s.offerTemplate.loyaltyPointsCost || 0),
-    }));
+  if (relevantStates.length > 0) {
+    offersOut = relevantStates.map((s) => {
+      const rem = s.remainingQty !== null && s.remainingQty !== undefined ? Number(s.remainingQty) : null;
+      let init = s.initialQty !== null && s.initialQty !== undefined ? Number(s.initialQty) : null;
+      if (init === null && rem !== null) {
+        init = Math.max(rem, 1);
+      }
+      return {
+        id: s.id,
+        title: s.offerTemplate.title,
+        description: s.offerTemplate.description || '',
+        offer_type: s.offerTemplate.offerType,
+        value: Number(s.offerTemplate.value || 0),
+        remaining_qty: rem,
+        initial_qty: init,
+        is_points_redemption: !!s.offerTemplate.isPointsRedemption,
+        points_cost: Number(s.offerTemplate.loyaltyPointsCost || 0),
+        loyalty_points_earn: s.offerTemplate.loyaltyPointsEarn ? Number(s.offerTemplate.loyaltyPointsEarn) : undefined,
+      };
+    });
   } else {
     // Fallback: If member has no specific states initialized yet, fetch active merchant offer templates
     try {
@@ -167,9 +176,11 @@ export async function buildPublicMemberViewFromDb(memberId: string): Promise<Pub
         description: t.description || '',
         offer_type: t.offerType,
         value: Number(t.value || 0),
-        remaining_qty: null,
+        remaining_qty: t.offerType === 'percent_off' ? null : 5,
+        initial_qty: t.offerType === 'percent_off' ? null : 5,
         is_points_redemption: !!t.isPointsRedemption,
         points_cost: Number(t.loyaltyPointsCost || 0),
+        loyalty_points_earn: t.loyaltyPointsEarn ? Number(t.loyaltyPointsEarn) : undefined,
       }));
     } catch (err) {
       console.warn('[publicMemberView] Error fetching fallback templates:', (err as Error).message);
@@ -273,15 +284,20 @@ export function buildPublicMemberViewFromMock(candidate: any): PublicMemberView 
   const existingStates = mockMemberOfferStates.filter((s) => s.member_id === candidate.id);
   const offers = templates.map((tmpl) => {
     const state = existingStates.find((s) => s.offer_template_id === tmpl.id);
+    const isPercent = tmpl.offer_type === 'percent_off';
+    const rem = isPercent ? null : (state?.remaining_qty !== undefined && state?.remaining_qty !== null ? state.remaining_qty : 4);
+    const init = isPercent ? null : (state?.initial_qty !== undefined && state?.initial_qty !== null ? state.initial_qty : (rem !== null ? Math.max(rem, 10) : 10));
     return {
       id: state?.id || `mos-auto-${candidate.id}-${tmpl.id}`,
       title: tmpl.title,
       description: tmpl.description || '',
       offer_type: tmpl.offer_type,
       value: Number(tmpl.value || 0),
-      remaining_qty: tmpl.offer_type === 'percent_off' ? null : (state?.remaining_qty ?? 3),
+      remaining_qty: rem,
+      initial_qty: init,
       is_points_redemption: !!tmpl.is_points_redemption,
       points_cost: tmpl.loyalty_points_cost || 0,
+      loyalty_points_earn: tmpl.loyalty_points_earn || undefined,
     };
   });
 

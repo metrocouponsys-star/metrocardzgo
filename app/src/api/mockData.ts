@@ -206,8 +206,8 @@ export const publicMemberViews: Record<string, PublicMemberView> = {
     loyalty_points: 350,
     total_visits: 14,
     offers: [
-      { id: 'off-001', title: 'Free Hair Wash', description: 'Valid on styling above ₹800.', offer_type: 'free_service', value: 1 },
-      { id: 'off-002', title: '10% Off All Services', description: 'Flat 10% on total billing.', offer_type: 'percent_off', value: 10 },
+      { id: 'off-001', title: 'Free Hair Wash', description: 'Valid on styling above ₹800.', offer_type: 'free_service', value: 1, remaining_qty: 3, initial_qty: 6 },
+      { id: 'off-002', title: '10% Off All Services', description: 'Flat 10% on total billing.', offer_type: 'percent_off', value: 10, remaining_qty: null, initial_qty: null },
     ],
     coupons: [
       { id: 'coup-001', code: 'GLAMOUR20', discount_type: 'percent', value: 20, min_purchase: 500, active_days: 'Mon, Wed, Fri', expires_at: '2026-12-31' },
@@ -230,8 +230,8 @@ export const publicMemberViews: Record<string, PublicMemberView> = {
     loyalty_points: 1450,
     total_visits: 7,
     offers: [
-      { id: 'off-ins-1', title: 'Early Renewal Cashback Pass', description: 'Earn 500 Safety Points if renewed early.', offer_type: 'wallet_points', value: 500 },
-      { id: 'off-ins-2', title: 'Free Health Checkup Voucher', description: 'Full diagnostic checkup at Apollo.', offer_type: 'free_service', value: 1 },
+      { id: 'off-ins-1', title: 'Early Renewal Cashback Pass', description: 'Earn 500 Safety Points if renewed early.', offer_type: 'wallet_points', value: 500, remaining_qty: 1, initial_qty: 1 },
+      { id: 'off-ins-2', title: 'Free Health Checkup Voucher', description: 'Full diagnostic checkup at Apollo.', offer_type: 'free_service', value: 1, remaining_qty: 1, initial_qty: 1 },
     ],
   },
   'tok-caf001': {
@@ -246,7 +246,7 @@ export const publicMemberViews: Record<string, PublicMemberView> = {
     loyalty_points: 420,
     total_visits: 22,
     offers: [
-      { id: 'off-caf-1', title: 'Coffee Punch Card (Buy 5 Get 1 Free)', description: 'Digital stamp card.', offer_type: 'free_service', value: 1 },
+      { id: 'off-caf-1', title: 'Coffee Punch Card (Buy 5 Get 1 Free)', description: 'Digital stamp card.', offer_type: 'buy_1_get_1', value: 1, remaining_qty: 4, initial_qty: 6 },
     ],
   },
   'tok-dnt001': {
@@ -261,7 +261,7 @@ export const publicMemberViews: Record<string, PublicMemberView> = {
     loyalty_points: 1650,
     total_visits: 5,
     offers: [
-      { id: 'off-dnt-1', title: 'Complimentary Ultrasonic Scaling & Polishing', description: 'Full teeth cleaning voucher.', offer_type: 'free_service', value: 1 },
+      { id: 'off-dnt-1', title: 'Complimentary Ultrasonic Scaling & Polishing', description: 'Full teeth cleaning voucher.', offer_type: 'free_service', value: 1, remaining_qty: 2, initial_qty: 4 },
     ],
   },
 };

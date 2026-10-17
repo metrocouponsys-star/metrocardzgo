@@ -9,12 +9,30 @@ import { loadSavedCardDesign } from '../../types/cardDesign';
 // ── Offer icons ───────────────────────────────────────────────────────────
 const OFFER_ICONS: Record<string, string> = {
   percent_off: 'percent',
+  flat_off: 'sell',
+  buy_1_get_1: 'card_giftcard',
   free_service: 'spa',
   wallet_points: 'account_balance_wallet',
+  cashback: 'account_balance_wallet',
   referral: 'people',
   birthday: 'cake',
+  birthday_anniversary: 'cake',
   points_redemption: 'stars',
   visit_milestone: 'workspace_premium',
+};
+
+const OFFER_BADGES: Record<string, { label: string; bg: string; text: string; border: string }> = {
+  percent_off: { label: 'DISCOUNT', bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
+  flat_off: { label: 'FLAT OFF', bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
+  buy_1_get_1: { label: 'BOGO', bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
+  free_service: { label: 'FREE REWARD', bg: 'bg-amber-50', text: 'text-amber-800', border: 'border-amber-200' },
+  wallet_points: { label: 'CASHBACK', bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
+  cashback: { label: 'CASHBACK', bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
+  referral: { label: 'REFERRAL', bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200' },
+  birthday: { label: 'BIRTHDAY', bg: 'bg-pink-50', text: 'text-pink-700', border: 'border-pink-200' },
+  birthday_anniversary: { label: 'ANNIVERSARY', bg: 'bg-pink-50', text: 'text-pink-700', border: 'border-pink-200' },
+  points_redemption: { label: 'POINTS PASS', bg: 'bg-amber-50', text: 'text-amber-800', border: 'border-amber-200' },
+  visit_milestone: { label: 'MILESTONE', bg: 'bg-teal-50', text: 'text-teal-700', border: 'border-teal-200' },
 };
 
 const OFFER_COLORS = [
@@ -434,20 +452,127 @@ export default function PublicMemberPage() {
             <div className="p-4 space-y-3">
               {data.offers.map((offer: any, idx: number) => {
                 const clr = OFFER_COLORS[idx % OFFER_COLORS.length];
+                const hasQty = offer.remaining_qty !== null && offer.remaining_qty !== undefined;
+                const remainingVal = hasQty ? Number(offer.remaining_qty) : null;
+                const initialVal = offer.initial_qty !== null && offer.initial_qty !== undefined
+                  ? Number(offer.initial_qty)
+                  : (remainingVal !== null ? Math.max(remainingVal, 1) : null);
+                const isExhausted = hasQty && (remainingVal !== null && remainingVal <= 0);
+                const percentLeft = (hasQty && initialVal && initialVal > 0 && remainingVal !== null)
+                  ? Math.min(100, Math.max(0, (remainingVal / initialVal) * 100))
+                  : null;
+                const badge = OFFER_BADGES[offer.offer_type] || { label: 'OFFER', bg: 'bg-amber-50', text: 'text-amber-800', border: 'border-amber-200' };
+
                 return (
-                  <div key={offer.id} className={`flex items-start gap-3 p-3 rounded-xl border ${clr.bg} ${clr.border}`}>
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${clr.bg}`}>
-                      <span className={`material-symbols-outlined text-[20px] ${clr.icon}`} style={{ fontVariationSettings: "'FILL' 1" }}>
-                        {OFFER_ICONS[offer.offer_type] || 'star'}
-                      </span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-on-surface text-[13px]">{offer.title}</p>
-                      {offer.description && <p className="text-[12px] text-on-surface-variant mt-0.5 leading-relaxed">{offer.description}</p>}
-                      {offer.loyalty_points_earn && (
-                        <p className="text-[11px] font-bold text-secondary mt-1">+{offer.loyalty_points_earn} pts per redemption</p>
+                  <div
+                    key={offer.id || idx}
+                    className={`rounded-2xl p-4 border transition-all ${
+                      isExhausted
+                        ? 'bg-slate-100/70 border-slate-200 opacity-70'
+                        : `${clr.bg} ${clr.border} shadow-xs`
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3 flex-1 min-w-0">
+                        <div
+                          className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
+                            isExhausted
+                              ? 'bg-slate-200 border-slate-300 text-slate-500'
+                              : 'bg-white border-outline-variant/30 text-amber-800 shadow-2xs'
+                          }`}
+                        >
+                          <span className={`material-symbols-outlined text-[20px] ${isExhausted ? 'text-slate-500' : clr.icon}`} style={{ fontVariationSettings: "'FILL' 1" }}>
+                            {OFFER_ICONS[offer.offer_type] || 'star'}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className={`text-[9px] uppercase font-black px-2 py-0.5 rounded-full border ${badge.bg} ${badge.text} ${badge.border}`}>
+                              {badge.label}
+                            </span>
+                            {isExhausted && (
+                              <span className="text-[9px] uppercase font-black bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full border border-rose-200 flex items-center gap-0.5">
+                                <span className="material-symbols-outlined text-[10px]">cancel</span>
+                                Fully Redeemed
+                              </span>
+                            )}
+                          </div>
+                          <p className={`font-bold text-[14px] mt-1 leading-snug ${isExhausted ? 'text-slate-500 line-through' : 'text-on-surface'}`}>
+                            {offer.title}
+                          </p>
+                          {offer.description && (
+                            <p className="text-[12px] text-on-surface-variant mt-0.5 leading-relaxed">{offer.description}</p>
+                          )}
+                          <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
+                            {offer.points_cost > 0 && (
+                              <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 flex items-center gap-1">
+                                <span className="material-symbols-outlined text-[11px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
+                                {offer.points_cost} pts to redeem
+                              </span>
+                            )}
+                            {offer.loyalty_points_earn > 0 && (
+                              <span className="text-[10px] font-bold text-secondary bg-secondary/[0.08] px-2 py-0.5 rounded-md border border-secondary/20 flex items-center gap-1">
+                                <span className="material-symbols-outlined text-[11px]">add_circle</span>
+                                +{offer.loyalty_points_earn} pts earn
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Quota Badge (mirrors merchant dashboard: 4/10 left) */}
+                      {hasQty ? (
+                        <div className="shrink-0 text-right">
+                          <span
+                            className={`inline-flex items-center gap-1 text-xs font-black px-3 py-1.5 rounded-full shadow-2xs border ${
+                              isExhausted
+                                ? 'bg-slate-200 text-slate-600 border-slate-300'
+                                : 'bg-primary text-on-primary border-primary-dark'
+                            }`}
+                            style={!isExhausted ? { background: '#D97706', color: '#FFFFFF', borderColor: '#B45309' } : undefined}
+                          >
+                            <span className="material-symbols-outlined text-[13px]">confirmation_number</span>
+                            {remainingVal}/{initialVal} left
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="shrink-0 text-right">
+                          <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
+                            <span className="material-symbols-outlined text-[13px]">all_inclusive</span>
+                            Unlimited
+                          </span>
+                        </div>
                       )}
                     </div>
+
+                    {/* Visual Progress Bar (remaining vs initial quantity) */}
+                    {hasQty && initialVal !== null && initialVal > 0 && (
+                      <div className="mt-3 pt-2.5 border-t border-black/[0.06] space-y-1.5">
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="text-on-surface-variant font-medium flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[12px] text-on-surface-variant/70">tune</span>
+                            Remaining Benefit Quota
+                          </span>
+                          <span className={`font-bold ${isExhausted ? 'text-slate-400' : 'text-amber-800'}`}>
+                            {isExhausted ? '0 uses remaining' : `${remainingVal} of ${initialVal} uses remaining`}
+                          </span>
+                        </div>
+                        <div className="w-full bg-black/[0.06] h-2 rounded-full overflow-hidden border border-black/[0.04] p-0.5">
+                          <div
+                            className={`h-full rounded-full transition-all duration-700 ease-out ${
+                              isExhausted
+                                ? 'bg-slate-300'
+                                : percentLeft !== null && percentLeft > 50
+                                ? 'bg-gradient-to-r from-amber-400 to-amber-500'
+                                : percentLeft !== null && percentLeft > 25
+                                ? 'bg-gradient-to-r from-amber-500 to-orange-500'
+                                : 'bg-gradient-to-r from-rose-400 to-rose-500'
+                            }`}
+                            style={{ width: `${percentLeft ?? 0}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}

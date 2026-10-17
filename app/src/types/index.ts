@@ -311,7 +311,18 @@ export interface PublicMemberView {
     membership_type_name: string;
     status: string;
   }>;
-  offers: Pick<OfferTemplate, 'id' | 'title' | 'description' | 'offer_type' | 'value'>[];
+  offers: Array<{
+    id: string;
+    title: string;
+    description?: string;
+    offer_type: OfferType | string;
+    value: number | string;
+    remaining_qty?: number | null;
+    initial_qty?: number | null;
+    is_points_redemption?: boolean;
+    points_cost?: number;
+    loyalty_points_earn?: number;
+  }>;
   open_lucky_draws?: Array<{
     id: string;
     name: string;

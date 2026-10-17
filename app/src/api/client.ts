@@ -167,13 +167,16 @@ function buildDynamicPublicMemberView(m: Member): PublicMemberView {
   const offers = templates.map(tmpl => {
     const state = existingStates.find(s => s.offer_template_id === tmpl.id);
     const bundledQty = mType?.bundled_offers?.find(b => b.offer_template_id === tmpl.id)?.default_qty;
+    const rem = tmpl.offer_type === 'percent_off' ? null : (state?.remaining_qty ?? bundledQty ?? 3);
+    const init = tmpl.offer_type === 'percent_off' ? null : (state?.initial_qty ?? bundledQty ?? (rem !== null ? Math.max(rem, 6) : null));
     return {
       id: state?.id || `mos-auto-${m.id}-${tmpl.id}`,
       title: tmpl.title,
       description: tmpl.description || '',
       offer_type: tmpl.offer_type,
       value: Number(tmpl.value) || 0,
-      remaining_qty: tmpl.offer_type === 'percent_off' ? null : (state?.remaining_qty ?? bundledQty ?? 3),
+      remaining_qty: rem,
+      initial_qty: init,
       is_points_redemption: !!tmpl.is_points_redemption,
       points_cost: tmpl.loyalty_points_cost || 0,
     };
