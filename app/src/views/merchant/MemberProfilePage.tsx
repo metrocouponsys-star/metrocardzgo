@@ -165,12 +165,42 @@ export default function MemberProfilePage() {
     setRedeeming(true);
     const amt = Number(purchaseAmount) || undefined;
     try {
+      let res: any;
       if (redeemState.isPointsRedemption) {
         // Feature 1: points redemption flow
-        await api.redeemPoints(user.merchant_id || '', member.id, redeemState.offerStateId, user.id, amt);
+        res = await api.redeemPoints(user.merchant_id || '', member.id, redeemState.offerStateId, user.id, amt);
       } else {
-        await api.redeemOffer(user.merchant_id || '', member.id, redeemState.offerStateId, user.id, amt);
+        res = await api.redeemOffer(user.merchant_id || '', member.id, redeemState.offerStateId, user.id, amt);
       }
+
+      // Synchronize local member state immediately
+      setMember((prev) => {
+        if (!prev) return prev;
+        const newPts = res?.loyalty_points ?? res?.new_balance ?? prev.loyalty_points;
+        const newVisits = res?.total_visits ?? ((prev.total_visits || 0) + 1);
+        const updatedOfferStates = (prev.offer_states || []).map((st) => {
+          if (st.id === redeemState.offerStateId) {
+            const currentQty = st.remaining_qty;
+            const updatedQty = res?.remaining_qty !== undefined
+              ? res.remaining_qty
+              : (currentQty !== null && currentQty !== undefined ? Math.max(0, currentQty - 1) : null);
+            return {
+              ...st,
+              remaining_qty: updatedQty,
+              status: updatedQty !== null && updatedQty <= 0 ? ('exhausted' as const) : st.status,
+            };
+          }
+          return st;
+        });
+
+        return {
+          ...prev,
+          loyalty_points: newPts,
+          total_visits: newVisits,
+          offer_states: updatedOfferStates,
+        };
+      });
+
       setSuccessAnimation(true);
       setPurchaseAmount(''); // reset
       setTimeout(() => {
@@ -181,7 +211,7 @@ export default function MemberProfilePage() {
         invalidateContaining('dashboard');
         fetchMember(true); // refresh — also updates loyalty_points balance
         addToast('success', `Offer redeemed — "${redeemState.offerTitle}" used for ${member.name}`);
-      }, 1800);
+      }, 1600);
     } catch (e: any) {
       setRedeemState(null);
       addToast('error', e.message || 'Redemption failed');

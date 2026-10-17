@@ -114,9 +114,11 @@ export function middleware(request: NextRequest) {
     );
   }
 
-  // ── 3. Force HTTPS in production ──────────────────────────────────────────
-  if (IS_PROD && request.headers.get('x-forwarded-proto') === 'http') {
-    const httpsUrl = `https://${request.headers.get('host')}${request.nextUrl.pathname}${request.nextUrl.search}`;
+  // ── 3. Force HTTPS in production (skip localhost and internal dev IPs) ───
+  const reqHost = request.headers.get('host') || '';
+  const isLocalHost = reqHost.includes('localhost') || reqHost.includes('127.0.0.1');
+  if (IS_PROD && !isLocalHost && request.headers.get('x-forwarded-proto') === 'http') {
+    const httpsUrl = `https://${reqHost}${request.nextUrl.pathname}${request.nextUrl.search}`;
     return NextResponse.redirect(httpsUrl, { status: 301 });
   }
 

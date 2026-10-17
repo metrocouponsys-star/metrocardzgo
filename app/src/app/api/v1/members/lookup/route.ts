@@ -60,10 +60,6 @@ async function handleLookup(rawId: string, rawLast4: string) {
           ...(idDigitsOnly.length >= 10 ? [{ phone: { endsWith: idDigitsOnly.slice(-10) } }] : []),
         ],
       },
-      include: {
-        merchant: { select: { businessName: true, logoUrl: true, cardDesignUrl: true } },
-        membershipType: { select: { name: true } },
-      },
     });
 
     const verifiedDb = dbMembers.find((m) => {
@@ -72,19 +68,11 @@ async function handleLookup(rawId: string, rawLast4: string) {
     });
 
     if (verifiedDb) {
-      return NextResponse.json({
-        id: verifiedDb.id,
-        name: verifiedDb.name,
-        member_code: verifiedDb.memberCode,
-        phone: verifiedDb.phone,
-        status: verifiedDb.status,
-        expiry_date: verifiedDb.expiryDate,
-        points_balance: Number(verifiedDb.loyaltyPoints ?? 0),
-        tier_name: verifiedDb.membershipType?.name || 'Gold Member',
-        total_visits: verifiedDb.totalVisits ?? 0,
-        merchant_name: verifiedDb.merchant?.businessName || 'Metro Cardz GO',
-        card_design_url: verifiedDb.merchant?.cardDesignUrl || null,
-      });
+      const { buildPublicMemberViewFromDb } = await import('@/lib/publicMemberView');
+      const fullView = await buildPublicMemberViewFromDb(verifiedDb.id);
+      if (fullView) {
+        return NextResponse.json(fullView);
+      }
     }
   } catch (err) {
     // If DB is offline or table does not exist in dev, fall through to mock demo directory
@@ -107,22 +95,9 @@ async function handleLookup(rawId: string, rawLast4: string) {
   if (candidate) {
     const phoneDigits = normalizeDigits(candidate.phone);
     if (phoneDigits.endsWith(last4)) {
-      const merch = mockMerchants.find((x) => x.id === candidate.merchant_id);
-      const mtype = mockMembershipTypes.find((x) => x.id === candidate.membership_type_id);
-
-      return NextResponse.json({
-        id: candidate.id,
-        name: candidate.name,
-        member_code: candidate.member_code,
-        phone: candidate.phone,
-        status: candidate.status,
-        expiry_date: candidate.expiry_date,
-        points_balance: candidate.loyalty_points ?? 0,
-        tier_name: mtype?.name || 'Gold Member',
-        total_visits: 12,
-        merchant_name: merch?.business_name || 'Metro Cardz GO Partner',
-        card_design_url: merch?.card_design_url || null,
-      });
+      const { buildPublicMemberViewFromMock } = await import('@/lib/publicMemberView');
+      const mockView = buildPublicMemberViewFromMock(candidate);
+      return NextResponse.json(mockView);
     }
   }
 

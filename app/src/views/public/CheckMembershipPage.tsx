@@ -67,7 +67,7 @@ function LookupSkeleton() {
 function LookupForm({
   onResult,
 }: {
-  onResult: (data: PublicMemberView) => void;
+  onResult: (data: PublicMemberView, creds?: { identifier: string; last4: string }) => void;
 }) {
   const [searchParams] = useSearchParams();
   const merchantQuery = searchParams.get('merchant') || searchParams.get('store');
@@ -100,7 +100,7 @@ function LookupForm({
     setLoading(true);
     try {
       const view = await api.lookupMembership(trimId, trimLast4);
-      onResult(view);
+      onResult(view, { identifier: trimId, last4: trimLast4 });
     } catch (err: any) {
       const msg: string = err?.message || '';
       if (msg.toLowerCase().includes('too many')) {
@@ -251,9 +251,17 @@ function LookupForm({
 function MembershipResult({
   data,
   onReset,
+  onSync,
+  isSyncing,
+  lastSyncedAt,
+  syncToast,
 }: {
   data: PublicMemberView;
   onReset: () => void;
+  onSync: (silent?: boolean) => void;
+  isSyncing: boolean;
+  lastSyncedAt: Date;
+  syncToast: string | null;
 }) {
   const [dataReady, setDataReady] = useState(false);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
@@ -283,8 +291,24 @@ function MembershipResult({
     setTimeout(() => setCopiedCode(null), 2500);
   };
 
+  const formattedSyncTime = React.useMemo(() => {
+    try {
+      return lastSyncedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    } catch {
+      return 'Just now';
+    }
+  }, [lastSyncedAt]);
+
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 pb-14 selection:bg-amber-500 selection:text-black">
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 pb-14 selection:bg-amber-500 selection:text-black relative">
+
+      {/* Sync Toast Notification */}
+      {syncToast && (
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white text-xs font-bold px-4 py-2.5 rounded-2xl shadow-xl border border-slate-700 flex items-center gap-2 animate-bounce">
+          <span className="material-symbols-outlined text-emerald-400 text-[18px]">verified</span>
+          {syncToast}
+        </div>
+      )}
 
       {/* Top Banner Header with Particular Merchant Logo */}
       <div className="bg-white border-b border-slate-200 py-6 px-4 text-center shadow-sm">
@@ -335,7 +359,34 @@ function MembershipResult({
       </div>
 
       {/* Main Container */}
-      <div className="max-w-md mx-auto px-4 pt-6 space-y-5">
+      <div className="max-w-md mx-auto px-4 pt-4 space-y-5">
+
+        {/* ── Live Sync Status Bar ── */}
+        <div className="bg-white/80 backdrop-blur-sm border border-slate-200/90 rounded-2xl p-2.5 px-3 flex items-center justify-between shadow-xs">
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+            </span>
+            <div className="text-left">
+              <p className="text-[11px] font-bold text-slate-800 leading-tight">Live Pass Sync Active</p>
+              <p className="text-[10px] text-slate-400 font-medium">Last synced: {formattedSyncTime}</p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => onSync(false)}
+            disabled={isSyncing}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 text-xs font-bold shadow-2xs transition-all active:scale-95 disabled:opacity-60"
+            title="Sync latest points and offer balance"
+          >
+            <span className={`material-symbols-outlined text-[15px] ${isSyncing ? 'animate-spin text-amber-600' : 'text-amber-700'}`}>
+              sync
+            </span>
+            <span>{isSyncing ? 'Syncing...' : 'Sync Pass'}</span>
+          </button>
+        </div>
 
         {/* ── 3D Interactive Merchant-Designed Member Pass ── */}
         <div className="space-y-2">
@@ -477,19 +528,59 @@ function MembershipResult({
                 {(!data.offers || data.offers.length === 0) ? (
                   <p className="text-xs text-slate-500 italic text-center py-6">No active tier perks configured right now.</p>
                 ) : (
-                  data.offers.map((offer: any, idx: number) => (
-                    <div key={offer.id || idx} className="bg-slate-50 rounded-2xl p-3.5 flex items-start gap-3 border border-slate-200">
-                      <div className="w-9 h-9 rounded-xl bg-amber-100 border border-amber-300 flex items-center justify-center shrink-0 text-amber-800">
-                        <span className="material-symbols-outlined text-[18px]">
-                          {OFFER_ICONS[offer.offer_type] || 'star'}
-                        </span>
+                  data.offers.map((offer: any, idx: number) => {
+                    const isExhausted = offer.remaining_qty !== null && offer.remaining_qty !== undefined && Number(offer.remaining_qty) <= 0;
+                    return (
+                      <div
+                        key={offer.id || idx}
+                        className={`rounded-2xl p-3.5 flex items-start justify-between gap-3 border transition-all ${
+                          isExhausted ? 'bg-slate-100/70 border-slate-200 opacity-65' : 'bg-slate-50 border-slate-200 hover:border-amber-300'
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div
+                            className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
+                              isExhausted ? 'bg-slate-200 border-slate-300 text-slate-500' : 'bg-amber-100 border-amber-300 text-amber-800'
+                            }`}
+                          >
+                            <span className="material-symbols-outlined text-[18px]">
+                              {OFFER_ICONS[offer.offer_type] || 'star'}
+                            </span>
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h4 className={`font-bold text-xs ${isExhausted ? 'text-slate-500 line-through' : 'text-slate-900'}`}>
+                                {offer.title}
+                              </h4>
+                              {isExhausted && (
+                                <span className="text-[9px] uppercase font-black bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded border border-rose-200">
+                                  Redeemed
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">{offer.description}</p>
+                            {offer.points_cost > 0 && (
+                              <span className="inline-block mt-1 text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                                ★ {offer.points_cost} points required
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {offer.remaining_qty !== null && offer.remaining_qty !== undefined && (
+                          <span
+                            className={`text-[10px] font-black px-2.5 py-1 rounded-lg shrink-0 whitespace-nowrap border ${
+                              isExhausted
+                                ? 'bg-slate-200 text-slate-600 border-slate-300'
+                                : 'bg-emerald-50 text-emerald-800 border-emerald-200 shadow-2xs'
+                            }`}
+                          >
+                            {isExhausted ? '0 left' : `${offer.remaining_qty} remaining`}
+                          </span>
+                        )}
                       </div>
-                      <div>
-                        <h4 className="font-bold text-slate-900 text-xs">{offer.title}</h4>
-                        <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">{offer.description}</p>
-                      </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             )}
@@ -566,7 +657,7 @@ function MembershipResult({
                     {data.loyalty_history?.map((t: any) => (
                       <div key={t.id} className="bg-slate-50 rounded-2xl p-3 border border-slate-200 flex items-center justify-between text-xs">
                         <div>
-                          <p className="font-bold text-slate-900 capitalize">{t.description || t.transaction_type.replace('_', ' ')}</p>
+                          <p className="font-bold text-slate-900 capitalize">{t.description || t.transaction_type?.replace('_', ' ')}</p>
                           {t.created_at && <p className="text-[10px] text-slate-400 mt-0.5">{safeFormat(t.created_at, 'dd MMM yyyy, HH:mm')}</p>}
                         </div>
                         <span className={`font-mono font-black text-xs ${t.points >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
@@ -633,20 +724,132 @@ function MembershipResult({
 export default function CheckMembershipPage() {
   const [data, setData] = useState<PublicMemberView | null>(null);
   const [loading, setLoading] = useState(false);
+  const [credentials, setCredentials] = useState<{ identifier: string; last4: string } | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [lastSyncedAt, setLastSyncedAt] = useState<Date>(new Date());
+  const [syncToast, setSyncToast] = useState<string | null>(null);
 
-  const handleResult = (view: PublicMemberView) => {
+  const handleResult = (view: PublicMemberView, creds?: { identifier: string; last4: string }) => {
     setLoading(true);
+    if (creds) setCredentials(creds);
     setTimeout(() => {
       setData(view);
+      setLastSyncedAt(new Date());
       setLoading(false);
-    }, 250);
+    }, 200);
   };
 
   const handleReset = () => {
     setData(null);
+    setCredentials(null);
   };
 
+  const syncMemberData = React.useCallback(async (silent = false) => {
+    if (!data) return;
+    if (!silent) setIsSyncing(true);
+
+    try {
+      let updatedView: PublicMemberView | null = null;
+      if (credentials) {
+        updatedView = await api.lookupMembership(credentials.identifier, credentials.last4);
+      } else if (data.member_id) {
+        updatedView = await api.getPublicMemberView(data.member_id);
+      }
+
+      if (updatedView) {
+        setData(updatedView);
+        setLastSyncedAt(new Date());
+        if (!silent) {
+          setSyncToast('Pass updated with latest points & perks!');
+          setTimeout(() => setSyncToast(null), 3000);
+        }
+      }
+    } catch (err) {
+      console.warn('[CheckMembership] sync error:', err);
+    } finally {
+      if (!silent) setIsSyncing(false);
+    }
+  }, [data, credentials]);
+
+  // Real-time synchronization hooks
+  useEffect(() => {
+    if (!data) return;
+
+    // 1. BroadcastChannel (cross-window/cross-tab)
+    let bc: BroadcastChannel | null = null;
+    if (typeof BroadcastChannel !== 'undefined') {
+      try {
+        bc = new BroadcastChannel('metrocardz_sync_channel');
+        bc.onmessage = (event) => {
+          const msg = event.data;
+          if (!msg?.member_id || msg.member_id === data.member_id) {
+            syncMemberData(true);
+          }
+        };
+      } catch {}
+    }
+
+    // 2. Storage event
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'metrocardz_last_sync_event' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (!parsed.member_id || parsed.member_id === data.member_id) {
+            syncMemberData(true);
+          }
+        } catch {}
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+
+    // 3. Custom event
+    const handleCustom = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const detail = customEvent.detail;
+      if (!detail?.member_id || detail.member_id === data.member_id) {
+        syncMemberData(true);
+      }
+    };
+    window.addEventListener('metrocardz_sync', handleCustom);
+
+    // 4. Focus & visibility change
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        syncMemberData(true);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('focus', handleVisibility);
+
+    // 5. Periodic auto-poll every 8 seconds while page is visible
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        syncMemberData(true);
+      }
+    }, 8000);
+
+    return () => {
+      if (bc) bc.close();
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('metrocardz_sync', handleCustom);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('focus', handleVisibility);
+      clearInterval(interval);
+    };
+  }, [data?.member_id, syncMemberData]);
+
   if (loading) return <LookupSkeleton />;
-  if (data) return <MembershipResult data={data} onReset={handleReset} />;
+  if (data) {
+    return (
+      <MembershipResult
+        data={data}
+        onReset={handleReset}
+        onSync={syncMemberData}
+        isSyncing={isSyncing}
+        lastSyncedAt={lastSyncedAt}
+        syncToast={syncToast}
+      />
+    );
+  }
   return <LookupForm onResult={handleResult} />;
 }

@@ -311,6 +311,27 @@ export async function recordPurchase(
   return post<any>(`/members/${memberId}/purchase`, data);
 }
 
+export function notifyRedemptionSync(memberId: string, payload?: any) {
+  if (typeof window === 'undefined') return;
+  try {
+    const data = {
+      type: 'REDEMPTION_COMPLETED',
+      member_id: memberId,
+      timestamp: Date.now(),
+      payload,
+    };
+    if (typeof BroadcastChannel !== 'undefined') {
+      const bc = new BroadcastChannel('metrocardz_sync_channel');
+      bc.postMessage(data);
+      bc.close();
+    }
+    localStorage.setItem('metrocardz_last_sync_event', JSON.stringify(data));
+    window.dispatchEvent(new CustomEvent('metrocardz_sync', { detail: data }));
+  } catch {
+    // Non-fatal
+  }
+}
+
 // ── Redemptions ───────────────────────────────────────────────────────────────
 export async function redeemOffer(
   _merchantId: string,
@@ -319,7 +340,9 @@ export async function redeemOffer(
   _staffId: string,
   amount?: number,
 ): Promise<Redemption> {
-  return post<Redemption>('/redemptions', { member_id: memberId, offer_state_id: offerStateId, amount });
+  const res = await post<Redemption>('/redemptions', { member_id: memberId, offer_state_id: offerStateId, amount });
+  notifyRedemptionSync(memberId, res);
+  return res;
 }
 
 export async function redeemPoints(
@@ -329,7 +352,9 @@ export async function redeemPoints(
   _staffId: string,
   amount?: number,
 ): Promise<Redemption> {
-  return post<Redemption>('/redemptions/redeem-points', { member_id: memberId, offer_state_id: offerStateId, amount });
+  const res = await post<Redemption>('/redemptions/redeem-points', { member_id: memberId, offer_state_id: offerStateId, amount });
+  notifyRedemptionSync(memberId, res);
+  return res;
 }
 
 export async function getMemberRedemptions(_merchantId: string, memberId: string): Promise<Redemption[]> {
@@ -491,16 +516,30 @@ export async function getPublicMemberView(token: string): Promise<PublicMemberVi
 export async function lookupMembership(identifier: string, last4: string): Promise<PublicMemberView> {
   const view = await post<PublicMemberView>('/public/lookup-membership', { identifier, last4 }, true);
 
-  // Separately fetch rewards + coupons (mirrors merchant portal pattern)
+  // Normalize aliases if necessary
+  if (view) {
+    const raw: any = view;
+    if (!view.member_id && raw.id) view.member_id = raw.id;
+    if (!view.member_name && raw.name) view.member_name = raw.name;
+    if (view.loyalty_points === undefined && raw.points_balance !== undefined) {
+      view.loyalty_points = Number(raw.points_balance);
+    }
+    if (!view.membership_type_name && raw.tier_name) {
+      view.membership_type_name = raw.tier_name;
+    }
+  }
+
+  // Separately fetch rewards + coupons + offers if not already present
   if (view?.member_id) {
     try {
-      const catalog = await get<{ rewards: any[]; coupons: any[] }>(
+      const catalog = await get<{ rewards: any[]; coupons: any[]; offers?: any[] }>(
         `/public/member-catalog?member_id=${encodeURIComponent(view.member_id)}`,
         true, // public endpoint — no auth header
       );
       if (catalog) {
-        if (catalog.rewards?.length) view.rewards = catalog.rewards;
-        if (catalog.coupons?.length) view.coupons = catalog.coupons;
+        if (catalog.rewards?.length && (!view.rewards || view.rewards.length === 0)) view.rewards = catalog.rewards;
+        if (catalog.coupons?.length && (!view.coupons || view.coupons.length === 0)) view.coupons = catalog.coupons;
+        if (catalog.offers?.length && (!view.offers || view.offers.length === 0)) view.offers = catalog.offers;
       }
     } catch {
       // Non-fatal: UI will show whatever the primary view returned
@@ -698,7 +737,11 @@ export async function getRewards(merchantId?: string): Promise<Reward[]> {
 export async function createReward(data: Partial<Reward>): Promise<Reward> { return post<Reward>('/rewards', data); }
 export async function updateReward(id: string, data: Partial<Reward>): Promise<Reward> { return patch<Reward>(`/rewards/${id}`, data); }
 export async function deleteReward(id: string): Promise<void> { return del(`/rewards/${id}`); }
-export async function claimReward(rewardId: string, memberId: string): Promise<any> { return post(`/rewards/${rewardId}/claim?member_id=${memberId}`); }
+export async function claimReward(rewardId: string, memberId: string): Promise<any> {
+  const res = await post(`/rewards/${rewardId}/claim?member_id=${memberId}`);
+  notifyRedemptionSync(memberId, res);
+  return res;
+}
 export async function getRewardClaims(memberId?: string): Promise<any[]> { return get(`/rewards/claims${memberId ? `?member_id=${memberId}` : ''}`); }
 
 // ── Coupon Codes ──────────────────────────────────────────────────────────────

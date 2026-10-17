@@ -59,12 +59,13 @@ export async function POST(request: NextRequest) {
       : null;
 
     // 3. Execute redemption inside atomic ACID transaction with automatic retry
-    await runTransactionWithRetry(async (tx) => {
+    const result = await runTransactionWithRetry(async (tx) => {
       // Re-fetch offer state inside transaction to prevent race conditions
       const freshOfferState = await tx.memberOfferState.findFirst({
         where: { memberId: member_id, offerTemplateId: offer_template_id },
       });
 
+      let updatedRemainingQty: number | null = null;
       if (freshOfferState) {
         if (freshOfferState.status === 'exhausted' || (freshOfferState.remainingQty !== null && Number(freshOfferState.remainingQty) <= 0)) {
           throw new Error('OFFER_EXHAUSTED');
@@ -73,6 +74,7 @@ export async function POST(request: NextRequest) {
         // Deduct qty
         if (freshOfferState.remainingQty !== null) {
           const newQty = Number(freshOfferState.remainingQty) - 1;
+          updatedRemainingQty = newQty;
           await tx.memberOfferState.update({
             where: { id: freshOfferState.id },
             data: {
@@ -85,7 +87,7 @@ export async function POST(request: NextRequest) {
 
       // 4. Log redemption
       const redemptionId = crypto.randomUUID();
-      await tx.redemptionLog.create({
+      const redemptionRecord = await tx.redemptionLog.create({
         data: {
           id: redemptionId,
           memberId: member_id,
@@ -101,14 +103,16 @@ export async function POST(request: NextRequest) {
         where: { id: member_id },
       });
 
+      let finalPoints = Number(freshMember.loyaltyPoints ?? 0);
+      const updatedVisits = (freshMember.totalVisits || 0) + 1;
+
       if (offer.loyaltyPointsEarn && Number(offer.loyaltyPointsEarn) > 0) {
-        const currentPoints = Number(freshMember.loyaltyPoints ?? 0);
         const earned = Number(offer.loyaltyPointsEarn);
-        const newBalance = currentPoints + earned;
+        finalPoints += earned;
 
         await tx.member.update({
           where: { id: member_id },
-          data: { loyaltyPoints: newBalance, totalVisits: { increment: 1 } },
+          data: { loyaltyPoints: finalPoints, totalVisits: updatedVisits },
         });
         await tx.loyaltyTransaction.create({
           data: {
@@ -119,7 +123,7 @@ export async function POST(request: NextRequest) {
             points: earned,
             sourceRedemptionId: redemptionId,
             sourceOfferId: offer_template_id,
-            balanceAfter: newBalance,
+            balanceAfter: finalPoints,
             note: `Earned via ${offer.title}`,
           },
         });
@@ -127,12 +131,38 @@ export async function POST(request: NextRequest) {
         // Still increment visit count
         await tx.member.update({
           where: { id: member_id },
-          data: { totalVisits: { increment: 1 } },
+          data: { totalVisits: updatedVisits },
         });
       }
+
+      return {
+        id: redemptionId,
+        member_id,
+        offer_template_id,
+        offer_state_id: freshOfferState?.id || null,
+        amount: validAmount,
+        created_at: redemptionRecord.createdAt ? new Date(redemptionRecord.createdAt).toISOString() : new Date().toISOString(),
+        remaining_qty: updatedRemainingQty,
+        loyalty_points: finalPoints,
+        points_balance: finalPoints,
+        total_visits: updatedVisits,
+        offer: {
+          id: offer.id,
+          title: offer.title,
+          offer_type: offer.offerType,
+          description: offer.description,
+        },
+        member: {
+          id: member.id,
+          name: member.name,
+          member_code: member.memberCode,
+          loyalty_points: finalPoints,
+        },
+        message: 'Offer redeemed successfully',
+      };
     });
 
-    return NextResponse.json({ message: 'Offer redeemed successfully' }, { status: 201 });
+    return NextResponse.json(result, { status: 201 });
   } catch (err: any) {
     if (err?.message === 'OFFER_EXHAUSTED') {
       return NextResponse.json({ detail: 'Offer exhausted for this member' }, { status: 400 });

@@ -528,6 +528,20 @@ export async function redeemOffer(
     offer: offer ? { title: offer.title, offer_type: offer.offer_type } : undefined,
   };
   db.redemptions.unshift(redemption);
+
+  if (typeof window !== 'undefined') {
+    try {
+      const data = { type: 'REDEMPTION_COMPLETED', member_id: memberId, timestamp: Date.now() };
+      if (typeof BroadcastChannel !== 'undefined') {
+        const bc = new BroadcastChannel('metrocardz_sync_channel');
+        bc.postMessage(data);
+        bc.close();
+      }
+      localStorage.setItem('metrocardz_last_sync_event', JSON.stringify(data));
+      window.dispatchEvent(new CustomEvent('metrocardz_sync', { detail: data }));
+    } catch {}
+  }
+
   return redemption;
 }
 
@@ -600,6 +614,20 @@ export async function redeemPoints(
     offer: { title: offer.title, offer_type: offer.offer_type },
   };
   db.redemptions.unshift(redemption);
+
+  if (typeof window !== 'undefined') {
+    try {
+      const data = { type: 'REDEMPTION_COMPLETED', member_id: memberId, timestamp: Date.now() };
+      if (typeof BroadcastChannel !== 'undefined') {
+        const bc = new BroadcastChannel('metrocardz_sync_channel');
+        bc.postMessage(data);
+        bc.close();
+      }
+      localStorage.setItem('metrocardz_last_sync_event', JSON.stringify(data));
+      window.dispatchEvent(new CustomEvent('metrocardz_sync', { detail: data }));
+    } catch {}
+  }
+
   return redemption;
 }
 
@@ -1435,7 +1463,22 @@ export async function claimReward(rewardId: string, memberId: string): Promise<a
   if (reward.quantity_available !== null && reward.quantity_available !== undefined) {
     reward.quantity_available = Math.max(0, reward.quantity_available - 1);
   }
-  return { id: `claim-${Date.now()}`, reward_id: rewardId, member_id: memberId, points_spent: reward.points_cost };
+  const result = { id: `claim-${Date.now()}`, reward_id: rewardId, member_id: memberId, points_spent: reward.points_cost };
+
+  if (typeof window !== 'undefined') {
+    try {
+      const data = { type: 'REDEMPTION_COMPLETED', member_id: memberId, timestamp: Date.now() };
+      if (typeof BroadcastChannel !== 'undefined') {
+        const bc = new BroadcastChannel('metrocardz_sync_channel');
+        bc.postMessage(data);
+        bc.close();
+      }
+      localStorage.setItem('metrocardz_last_sync_event', JSON.stringify(data));
+      window.dispatchEvent(new CustomEvent('metrocardz_sync', { detail: data }));
+    } catch {}
+  }
+
+  return result;
 }
 export async function getRewardClaims(memberId?: string): Promise<any[]> { return []; }
 

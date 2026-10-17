@@ -293,6 +293,7 @@ export interface PublicMemberView {
   merchant_phone?: string;
   member_name: string;
   member_code: string;          // e.g. "SAL001" — used for display and lookup
+  phone?: string;
   membership_type_name: string;
   status: MemberStatus;
   expiry_date: string;
