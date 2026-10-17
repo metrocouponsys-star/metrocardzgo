@@ -58,6 +58,7 @@ export function BottomNav({ className = '' }: BottomNavProps) {
         background:  '#FFFFFF',
         borderTop:   '1px solid #E5E7EB',
         boxShadow:   '0 -4px 20px rgba(0,0,0,0.04)',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       }}
       aria-label="Customer navigation"
     >

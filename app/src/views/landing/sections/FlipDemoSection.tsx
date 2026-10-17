@@ -124,8 +124,8 @@ export const FlipDemoSection: React.FC = () => {
         {/* Card flip container */}
         <div className="flex justify-center">
           <div
-            className="perspective-card cursor-pointer relative"
-            style={{ width: 'min(380px, calc(100vw - 3rem))', aspectRatio: '1.586 / 1' }}
+            className="perspective-card cursor-pointer relative max-w-full"
+            style={{ width: 'min(380px, calc(100% - 1rem))', aspectRatio: '1.586 / 1' }}
             onClick={() => setFlipped(f => !f)}
           >
             {/* Ambient glow */}

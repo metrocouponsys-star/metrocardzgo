@@ -1,8 +1,16 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import '@/index.css';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { localBusinessSchema, SITE_URL, BRAND_NAME } from '@/lib/seo';
 import SentryInit from '@/components/SentryInit';
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: 'cover',
+  themeColor: '#0C0C0E',
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -67,9 +75,8 @@ export default function RootLayout({
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-        {/* PWA — manifest + theme + iOS meta */}
+        {/* PWA — manifest + iOS meta */}
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#FF6B35" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />

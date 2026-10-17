@@ -64,7 +64,7 @@ export const DualPlatformSection: React.FC = () => {
           </p>
 
           {/* Quick Filter Buttons for Mobile/Tablet */}
-          <div className="flex items-center justify-center gap-2 mt-8">
+          <div className="flex flex-wrap items-center justify-center gap-2 mt-8 px-2">
             <button
               onClick={() => setActiveTab('both')}
               className={`px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer ${

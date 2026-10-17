@@ -300,9 +300,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* ═══ Mobile Header ══════════════════════════════════════════════════ */}
       <header style={{
         display: 'none', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
-        height: '54px', background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)',
+        height: 'calc(54px + env(safe-area-inset-top, 0px))',
+        paddingTop: 'env(safe-area-inset-top, 0px)',
+        background: 'rgba(255,255,255,0.96)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
         borderBottom: `1px solid ${T.border}`, alignItems: 'center',
-        justifyContent: 'space-between', padding: '0 16px', boxShadow: T.shadow,
+        justifyContent: 'space-between', paddingLeft: '16px', paddingRight: '16px',
+        boxShadow: T.shadow,
       }} className="app-mobile-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
           <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: T.orangeLight, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -455,7 +460,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         @media (max-width: 767px) {
           .app-mobile-header { display: flex !important; }
           .app-mobile-nav { display: flex !important; }
-          .app-main { padding-top: 54px !important; padding-bottom: 72px !important; }
+          .app-main {
+            padding-top: calc(54px + env(safe-area-inset-top, 0px)) !important;
+            padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+          }
         }
         .app-amber-light { background: #FEF3C7; }
       `}</style>

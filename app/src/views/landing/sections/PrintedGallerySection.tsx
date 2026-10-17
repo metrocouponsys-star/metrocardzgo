@@ -31,7 +31,7 @@ export const PrintedGallerySection: React.FC = () => {
         
         {/* Row 1: Scrolling Left */}
         <div 
-          className="relative overflow-hidden" 
+          className="relative overflow-hidden max-w-full" 
           style={{ 
             maskImage: 'linear-gradient(90deg, transparent, black 15%, black 85%, transparent)', 
             WebkitMaskImage: 'linear-gradient(90deg, transparent, black 15%, black 85%, transparent)' 
@@ -75,7 +75,7 @@ export const PrintedGallerySection: React.FC = () => {
 
         {/* Row 2: Scrolling Right */}
         <div 
-          className="relative overflow-hidden" 
+          className="relative overflow-hidden max-w-full" 
           style={{ 
             maskImage: 'linear-gradient(90deg, transparent, black 15%, black 85%, transparent)', 
             WebkitMaskImage: 'linear-gradient(90deg, transparent, black 15%, black 85%, transparent)' 

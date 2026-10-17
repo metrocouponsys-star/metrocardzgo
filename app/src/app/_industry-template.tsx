@@ -6,6 +6,7 @@ import { FAQSection } from '@/components/seo/FAQSection';
 import { Breadcrumb } from '@/components/seo/Breadcrumb';
 import { IndustryDemoButton } from '@/components/seo/IndustryDemoButton';
 import { CardShowcaseSection, type Category } from '@/views/landing/sections/CardShowcaseSection';
+import { LandingNavbar } from '@/views/landing/components/LandingNavbar';
 
 const CATEGORY_BY_SLUG: Record<string, Category> = {
   'restaurant-loyalty-cards': 'Food & Beverage',
@@ -103,8 +104,8 @@ export function IndustryPageTemplate({ data }: IndustryPageTemplateProps) {
            on iOS Safari and Android. */}
       <div className="landing-root">
 
-        {/* ─── Nav (same as landing page) ─── */}
-        <IndustryNav />
+        {/* ─── Nav (same responsive navbar as landing page) ─── */}
+        <LandingNavbar />
 
         <main>
           {/* ─── Breadcrumb ─── */}
@@ -359,39 +360,7 @@ export function IndustryPageTemplate({ data }: IndustryPageTemplateProps) {
   );
 }
 
-// ─── Minimal nav for industry pages ──────────────────────────────────────────
-function IndustryNav() {
-  return (
-    <nav
-      className="fixed top-0 left-0 right-0 z-50"
-      style={{ background: 'rgba(13,13,13,0.95)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(201,162,39,0.15)' }}
-    >
-      <div className="max-w-7xl mx-auto px-6 lg:px-10 flex items-center justify-between h-16">
-        <a href="/" className="flex items-center gap-2.5">
-          <div className="relative w-9 h-9">
-            <div className="absolute inset-0 rounded-md rotate-6 opacity-60" style={{ background: 'linear-gradient(135deg, #7A5C12, #C9A227)' }} />
-            <div className="absolute inset-0 rounded-md -rotate-3" style={{ background: 'linear-gradient(135deg, #D4AF37, #7A5C12)' }} />
-            <span className="absolute inset-0 flex items-center justify-center font-poppins font-black text-black text-sm">M</span>
-          </div>
-          <div>
-            <span className="font-poppins font-black text-warm-white tracking-tight text-base">Metro</span>
-            <span className="font-poppins font-black text-gold tracking-tight text-base">Cardz</span>
-          </div>
-        </a>
-        <div className="flex items-center gap-4">
-          <a href="/#industries" className="text-warm-white/60 hover:text-gold text-sm hidden md:block transition-colors">Industries</a>
-          <a
-            href="/#contact"
-            className="px-5 py-2 rounded-full text-sm font-semibold font-poppins text-rich-black transition-all duration-200 hover:scale-105"
-            style={{ background: 'linear-gradient(135deg, #D4AF37, #C9A227)' }}
-          >
-            Get Free Mockup
-          </a>
-        </div>
-      </div>
-    </nav>
-  );
-}
+
 
 // ─── Minimal footer for industry pages ───────────────────────────────────────
 function IndustryFooter() {

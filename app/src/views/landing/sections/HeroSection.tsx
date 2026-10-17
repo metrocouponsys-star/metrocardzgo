@@ -87,11 +87,11 @@ export const HeroSection: React.FC = () => {
 
       <Particles />
 
-      <div className="relative max-w-7xl mx-auto px-6 lg:px-10 py-28 w-full grid lg:grid-cols-[1.1fr_0.9fr] gap-14 items-center">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16 sm:py-28 w-full grid lg:grid-cols-[1.1fr_0.9fr] gap-10 lg:gap-14 items-center">
 
-        {/* Left — Copy */}
+        {/* Left — Copy (order-1 on mobile & desktop so users see headline first) */}
         <div
-          className="text-center lg:text-left order-2 lg:order-1"
+          className="text-center lg:text-left order-1 lg:order-1"
           style={{
             opacity: mounted ? 1 : 0,
             transform: mounted ? 'none' : 'translateY(20px)',
@@ -100,7 +100,7 @@ export const HeroSection: React.FC = () => {
         >
           {/* Badge */}
           <div
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-6"
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-5"
             style={{
               background: 'rgba(201,162,39,0.1)',
               border: '1px solid rgba(201,162,39,0.3)',
@@ -108,19 +108,19 @@ export const HeroSection: React.FC = () => {
             }}
           >
             <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#D4AF37', animation: 'pulse 2s ease infinite' }} />
-            <span className="text-xs font-semibold tracking-widest uppercase">India's Premium Card Printers</span>
+            <span className="text-[11px] sm:text-xs font-semibold tracking-widest uppercase">India's Premium Card Printers</span>
           </div>
 
           {/* Headline */}
           <h1
-            className="font-poppins font-black mb-6 leading-[0.95] tracking-tight"
-            style={{ fontSize: 'clamp(3rem, 6vw, 6.2rem)', color: '#FAFAFA' }}
+            className="font-poppins font-black mb-5 leading-[1.02] tracking-tight break-words"
+            style={{ fontSize: 'clamp(2.2rem, 5.2vw, 5.8rem)', color: '#FAFAFA' }}
           >
             Custom Membership
             <span
               style={{
                 display: 'block',
-                background: 'linear-gradient(135deg, #D4AF37 0%, #C9A227 50%, #B8940F 100%)',
+                background: 'linear-gradient(135deg, #FFD700 0%, #D4AF37 50%, #C9A227 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
@@ -348,7 +348,7 @@ export const HeroSection: React.FC = () => {
 
         {/* Right — Card showcase */}
         <div
-          className="relative order-1 lg:order-2 flex items-center justify-center"
+          className="relative order-2 lg:order-2 flex items-center justify-center w-full"
           style={{
             opacity: mounted ? 1 : 0,
             transform: mounted ? 'none' : 'translateY(16px)',
@@ -356,7 +356,7 @@ export const HeroSection: React.FC = () => {
           }}
         >
           <div
-            className="absolute w-72 h-72 sm:w-96 sm:h-96 rounded-full opacity-25"
+            className="absolute w-72 h-72 sm:w-96 sm:h-96 rounded-full opacity-25 pointer-events-none"
             style={{
               background: 'radial-gradient(circle, rgba(212,175,55,0.3) 0%, transparent 70%)',
               filter: 'blur(50px)',
@@ -374,9 +374,9 @@ export const HeroSection: React.FC = () => {
             >
               {/* Hero image */}
               <div
+                className="h-[300px] sm:h-[380px] lg:h-[400px]"
                 style={{
                   position: 'relative',
-                  height: 400,
                   backgroundImage:
                     'linear-gradient(180deg, rgba(12,12,14,0.1), rgba(12,12,14,0.5)), url(https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=1200&q=80)',
                   backgroundSize: 'cover',
