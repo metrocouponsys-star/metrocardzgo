@@ -25,6 +25,12 @@ function padMemberCode(merchantId: string, count: number): string {
   return `${prefix}${String(count + 1).padStart(4, '0')}`;
 }
 
+function parseOptionalDate(val: unknown): Date | null {
+  if (!val || typeof val !== 'string' || !val.trim()) return null;
+  const d = new Date(val.trim());
+  return isNaN(d.getTime()) ? null : d;
+}
+
 // ── GET /api/v1/members ───────────────────────────────────────────────────────
 export async function GET(request: NextRequest) {
   const auth = await requireAuth(request);
@@ -80,6 +86,10 @@ export async function POST(request: NextRequest) {
       if (!exists) { referralCode = candidate; break; }
     }
 
+    const joined = parseOptionalDate(body.joined_date) ?? new Date();
+    const expiry = parseOptionalDate(body.expiry_date) ?? new Date(joined.getTime() + 365 * 24 * 60 * 60 * 1000);
+    const initialPoints = Number(body.initial_points ?? body.loyalty_points ?? 0) || 0;
+
     const member = await prisma.member.create({
       data: {
         merchantId,
@@ -89,17 +99,15 @@ export async function POST(request: NextRequest) {
         name: body.name,
         phone: body.phone,
         email: body.email ?? null,
-        dateOfBirth: body.date_of_birth ? new Date(body.date_of_birth) : null,
-        anniversaryDate: body.anniversary_date ? new Date(body.anniversary_date) : null,
-        familyDob1: body.family_dob_1 ? new Date(body.family_dob_1) : null,
-        familyDob2: body.family_dob_2 ? new Date(body.family_dob_2) : null,
-        familyDob3: body.family_dob_3 ? new Date(body.family_dob_3) : null,
+        dateOfBirth: parseOptionalDate(body.date_of_birth),
+        anniversaryDate: parseOptionalDate(body.anniversary_date),
+        familyDob1: parseOptionalDate(body.family_dob_1),
+        familyDob2: parseOptionalDate(body.family_dob_2),
+        familyDob3: parseOptionalDate(body.family_dob_3),
         membershipTypeId: body.membership_type_id,
-        joinedDate: body.joined_date ? new Date(body.joined_date) : new Date(),
-        expiryDate: body.expiry_date
-          ? new Date(body.expiry_date)
-          : new Date((body.joined_date ? new Date(body.joined_date).getTime() : Date.now()) + 365 * 24 * 60 * 60 * 1000),
-        loyaltyPoints: 0,
+        joinedDate: joined,
+        expiryDate: expiry,
+        loyaltyPoints: initialPoints,
         status: 'active',
         notes: body.notes ?? null,
         referralCode,

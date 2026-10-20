@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
 
   // Link to member
   if (body.action === 'link_member') {
-    await prisma.cardInventoryItem.update({
+    const cardItem = await prisma.cardInventoryItem.update({
       where: { id: body.card_id },
       data: {
         status: 'member_linked',
@@ -77,11 +77,12 @@ export async function POST(request: NextRequest) {
         linkedAt: new Date(),
       },
     });
+    const cardNumber = body.card_number || cardItem.cardNumber;
     await prisma.member.update({
       where: { id: body.member_id },
-      data: { physicalCardNumber: body.card_number },
+      data: { physicalCardNumber: cardNumber },
     });
-    return NextResponse.json({ message: 'Card linked to member' });
+    return NextResponse.json({ message: 'Card linked to member', card_number: cardNumber });
   }
 
   return NextResponse.json({ detail: 'Invalid action' }, { status: 400 });
