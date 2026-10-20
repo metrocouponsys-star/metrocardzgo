@@ -451,8 +451,10 @@ export async function getAdminMerchants(): Promise<Merchant[]> {
 }
 
 export async function updateMerchantStatus(merchantId: string, status: 'active' | 'suspended'): Promise<Merchant> {
-  const endpoint = status === 'suspended' ? 'suspend' : 'activate';
-  return post<Merchant>(`/admin/merchants/${merchantId}/${endpoint}`);
+  if (status === 'suspended') {
+    return post<Merchant>(`/admin/merchants/${merchantId}/suspend`);
+  }
+  return post<Merchant>(`/admin/merchants/${merchantId}/activate`);
 }
 
 export async function getMerchantUsers(merchantId: string): Promise<MerchantUser[]> {
@@ -820,9 +822,9 @@ export interface RunLuckyDrawResult {
 export async function getLuckyDraws(): Promise<LuckyDraw[]> { return get<LuckyDraw[]>('/lucky-draws'); }
 export async function createLuckyDraw(data: Partial<LuckyDraw>): Promise<LuckyDraw> { return post<LuckyDraw>('/lucky-draws', data); }
 export async function updateLuckyDraw(id: string, data: Partial<LuckyDraw>): Promise<LuckyDraw> { return patch<LuckyDraw>(`/lucky-draws/${id}`, data); }
-export async function enterLuckyDraw(drawId: string, memberId: string): Promise<any> { return post(`/lucky-draws/${drawId}/enter?member_id=${memberId}`); }
-export async function publicEnterLuckyDraw(drawId: string, token: string): Promise<any> { return post(`/public/lucky-draws/${drawId}/enter?token=${token}`, {}, true); }
-export async function runLuckyDraw(drawId: string): Promise<RunLuckyDrawResult> { return post<RunLuckyDrawResult>(`/lucky-draws/${drawId}/run`); }
+export async function enterLuckyDraw(drawId: string, memberId: string): Promise<any> { return post('/lucky-draws', { action: 'enter', draw_id: drawId, member_id: memberId }); }
+export async function publicEnterLuckyDraw(drawId: string, token: string): Promise<any> { return post('/lucky-draws', { action: 'enter', draw_id: drawId, token }, true); }
+export async function runLuckyDraw(drawId: string): Promise<RunLuckyDrawResult> { return post<RunLuckyDrawResult>('/lucky-draws', { action: 'run', draw_id: drawId }); }
 export async function deleteLuckyDraw(id: string): Promise<void> { return del(`/lucky-draws/${id}`); }
 
 // ── Admin Members & Reports ───────────────────────────────────────────────────
@@ -842,7 +844,7 @@ export async function getAdminReportStats(params?: { date_from?: string; date_to
   return get(`/admin/reports/stats?${q.toString()}`);
 }
 export async function getAdminReportsByMerchant(): Promise<any[]> { return get('/admin/reports/by-merchant'); }
-export async function getAdminMerchantDetail(merchantId: string): Promise<any> { return get(`/admin/merchants/${merchantId}/detail`); }
+export async function getAdminMerchantDetail(merchantId: string): Promise<any> { return get(`/admin/merchants/${merchantId}`); }
 export async function updateStaffRole(merchantId: string, userId: string, role: string): Promise<any> {
   return patch(`/admin/merchants/${merchantId}/users/${userId}/role?role=${role}`);
 }
