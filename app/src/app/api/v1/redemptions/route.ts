@@ -71,17 +71,32 @@ export async function POST(request: NextRequest) {
           throw new Error('OFFER_EXHAUSTED');
         }
 
-        // Deduct qty
+        // Deduct qty atomically
         if (freshOfferState.remainingQty !== null) {
-          const newQty = Number(freshOfferState.remainingQty) - 1;
-          updatedRemainingQty = newQty;
-          await tx.memberOfferState.update({
-            where: { id: freshOfferState.id },
+          const updatedState = await tx.memberOfferState.updateMany({
+            where: {
+              id: freshOfferState.id,
+              remainingQty: { gte: 1 },
+              status: 'active',
+            },
             data: {
-              remainingQty: newQty,
-              status: newQty <= 0 ? 'exhausted' : 'active',
+              remainingQty: { decrement: 1 },
             },
           });
+          if (updatedState.count === 0) {
+            throw new Error('OFFER_EXHAUSTED');
+          }
+          const afterState = await tx.memberOfferState.findUnique({
+            where: { id: freshOfferState.id },
+          });
+          const numQty = Number(afterState?.remainingQty ?? 0);
+          if (numQty <= 0) {
+            await tx.memberOfferState.update({
+              where: { id: freshOfferState.id },
+              data: { status: 'exhausted' },
+            });
+          }
+          updatedRemainingQty = numQty;
         }
       }
 
@@ -98,22 +113,22 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // 5. Credit loyalty points if offer earns points (read fresh member balance inside transaction)
-      const freshMember = await tx.member.findUniqueOrThrow({
-        where: { id: member_id },
-      });
-
-      let finalPoints = Number(freshMember.loyaltyPoints ?? 0);
-      const updatedVisits = (freshMember.totalVisits || 0) + 1;
+      // 5. Credit loyalty points atomically if offer earns points
+      let finalPoints = 0;
+      let updatedVisits = 1;
 
       if (offer.loyaltyPointsEarn && Number(offer.loyaltyPointsEarn) > 0) {
         const earned = Number(offer.loyaltyPointsEarn);
-        finalPoints += earned;
-
-        await tx.member.update({
+        const updatedMember = await tx.member.update({
           where: { id: member_id },
-          data: { loyaltyPoints: finalPoints, totalVisits: updatedVisits },
+          data: {
+            loyaltyPoints: { increment: earned },
+            totalVisits: { increment: 1 },
+          },
         });
+        finalPoints = Number(updatedMember.loyaltyPoints ?? 0);
+        updatedVisits = Number(updatedMember.totalVisits ?? 1);
+
         await tx.loyaltyTransaction.create({
           data: {
             id: crypto.randomUUID(),
@@ -128,11 +143,12 @@ export async function POST(request: NextRequest) {
           },
         });
       } else {
-        // Still increment visit count
-        await tx.member.update({
+        const updatedMember = await tx.member.update({
           where: { id: member_id },
-          data: { totalVisits: updatedVisits },
+          data: { totalVisits: { increment: 1 } },
         });
+        finalPoints = Number(updatedMember.loyaltyPoints ?? 0);
+        updatedVisits = Number(updatedMember.totalVisits ?? 1);
       }
 
       return {

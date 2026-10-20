@@ -30,16 +30,19 @@ export async function POST(request: NextRequest, { params }: Params) {
   }
 
   const now = new Date();
-  const updated = await prisma.scratchCard.update({
-    where: { id },
+  // Atomic conditional update: only the first concurrent request reveals the card and credits points
+  const updatedCount = await prisma.scratchCard.updateMany({
+    where: { id, isRevealed: false },
     data: {
       isRevealed: true,
       revealedAt: now,
     },
   });
 
-  // If reward is points, credit points to the member
-  if (updated.rewardType === 'points') {
+  const updated = await prisma.scratchCard.findUniqueOrThrow({ where: { id } });
+
+  // Only credit points if this specific request won the reveal race (updatedCount.count === 1)
+  if (updatedCount.count === 1 && updated.rewardType === 'points') {
     const pts = parseInt(updated.rewardValue, 10);
     if (!isNaN(pts) && pts > 0) {
       await prisma.member.update({

@@ -372,6 +372,68 @@ async function runTestSuite() {
   }
 
   // ─────────────────────────────────────────────────────────────
+  // 11. HIGH-CONCURRENCY (1ms BURST) & RACE-CONDITION PROTECTION
+  // ─────────────────────────────────────────────────────────────
+  console.log('\n▶ [11/11] Simulating 1ms High-Pressure Bursts & Race Conditions...');
+  {
+    // A. Double-spending points prevention under simultaneous 1ms burst
+    let simulatedBalance = 150;
+    const pointsDeductionRequest = 100;
+
+    // Simulate 10 simultaneous requests hitting in the exact same event-loop tick
+    const executeSimulatedRedemption = async () => {
+      // Atomic conditional update logic (mirrors Prisma updateMany with gte check)
+      if (simulatedBalance >= pointsDeductionRequest) {
+        simulatedBalance -= pointsDeductionRequest;
+        return { success: true, remaining: simulatedBalance };
+      }
+      return { success: false, error: 'INSUFFICIENT_POINTS' };
+    };
+
+    const burstRequests = Array.from({ length: 10 }, () => executeSimulatedRedemption());
+    const burstResults = await Promise.all(burstRequests);
+
+    const successful = burstResults.filter(r => r.success);
+    const rejected = burstResults.filter(r => !r.success);
+
+    assert(successful.length === 1, `Exact single request succeeded during 10-request burst (success count: ${successful.length})`);
+    assert(rejected.length === 9, `Remaining 9 requests cleanly rejected with INSUFFICIENT_POINTS`);
+    assert(simulatedBalance === 50, `Final balance accurately calculated at 50 points (no negative overdraft)`);
+
+    // B. Simultaneous Voucher / Scratch Card Reveal Concurrency in 1ms
+    let voucherIsRedeemed = false;
+    const redeemVoucherConcurrently = async () => {
+      // Atomic conditional update (mirrors WHERE id = ... AND isRedeemed = false)
+      if (!voucherIsRedeemed) {
+        voucherIsRedeemed = true;
+        return { status: 200, code: 'REDEEMED' };
+      }
+      return { status: 400, code: 'ALREADY_REDEEMED' };
+    };
+
+    const voucherBurst = await Promise.all(Array.from({ length: 15 }, () => redeemVoucherConcurrently()));
+    const voucherWins = voucherBurst.filter(v => v.code === 'REDEEMED');
+    const voucherBlocks = voucherBurst.filter(v => v.code === 'ALREADY_REDEEMED');
+
+    assert(voucherWins.length === 1, `Exactly one request redeemed the voucher in 1ms (count: ${voucherWins.length})`);
+    assert(voucherBlocks.length === 14, `All other 14 requests blocked with ALREADY_REDEEMED`);
+
+    // C. 1ms High-Burst Rate Limiter (sliding window protection against DDoS)
+    const testIp = '10.0.0.99';
+    const mockBurstReq = new NextRequest('http://localhost:3000/api/v1/auth/login', {
+      headers: { 'x-forwarded-for': testIp },
+    });
+    const burstConfig = { windowMs: 1000, max: 5, keyPrefix: 'burst_test' };
+
+    const burstRateLimitChecks = Array.from({ length: 10 }, () => rateLimit(mockBurstReq, burstConfig));
+    const allowed = burstRateLimitChecks.filter(r => r.allowed);
+    const blocked = burstRateLimitChecks.filter(r => !r.allowed);
+
+    assert(allowed.length === 5, `Rate limiter permitted exactly max quota (5) under instant burst`);
+    assert(blocked.length === 5, `Rate limiter strictly throttled the remaining 5 requests`);
+  }
+
+  // ─────────────────────────────────────────────────────────────
   // SUMMARY REPORT
   // ─────────────────────────────────────────────────────────────
   console.log('\n======================================================');

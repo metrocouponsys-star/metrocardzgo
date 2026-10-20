@@ -48,12 +48,21 @@ export async function POST(request: NextRequest) {
         throw new Error('VOUCHER_EXPIRED');
       }
 
-      const updated = await tx.giftVoucher.update({
-        where: { id: voucher.id },
+      // Atomic conditional update: prevents double spending under high-pressure concurrency
+      const updatedCount = await tx.giftVoucher.updateMany({
+        where: { id: voucher.id, isRedeemed: false },
         data: {
           isRedeemed: true,
           redeemedByMemberId: member_id || null,
         },
+      });
+
+      if (updatedCount.count === 0) {
+        throw new Error('ALREADY_REDEEMED');
+      }
+
+      const updated = await tx.giftVoucher.findUniqueOrThrow({
+        where: { id: voucher.id },
         include: {
           redeemedBy: { select: { id: true, name: true, phone: true } },
         },

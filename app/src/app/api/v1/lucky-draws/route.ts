@@ -42,14 +42,17 @@ export async function POST(request: NextRequest) {
     const winnerCount = Math.min(prizes.length, shuffled.length);
     const winners = shuffled.slice(0, winnerCount);
 
-    await prisma.luckyDraw.update({
-      where: { id: draw.id },
+    const updated = await prisma.luckyDraw.updateMany({
+      where: { id: draw.id, status: 'open' },
       data: {
         status: 'completed',
         winnerMemberId: winners[0]?.memberId ?? null,
         winnerMemberIds: winners.map(w => w.memberId),
       },
     });
+    if (updated.count === 0) {
+      return NextResponse.json({ detail: 'Draw is already completed' }, { status: 400 });
+    }
     return NextResponse.json({ winners: winners.map(w => w.memberId), prizes });
   }
 

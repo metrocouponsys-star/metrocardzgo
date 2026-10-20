@@ -54,15 +54,26 @@ export async function POST(request: NextRequest, { params }: Params) {
         throw new Error('INSUFFICIENT_POINTS');
       }
 
-      // 3. Deduct points atomically
-      const newBalance = currentPoints - pointsCost;
-      await tx.member.update({
-        where: { id: member.id },
+      // 3. Deduct points atomically with conditional gte check (prevents double spending under high-pressure concurrency)
+      const updatedMember = await tx.member.updateMany({
+        where: {
+          id: member.id,
+          loyaltyPoints: { gte: pointsCost },
+        },
         data: {
-          loyaltyPoints: newBalance,
+          loyaltyPoints: { decrement: pointsCost },
           totalVisits: { increment: 1 },
         },
       });
+
+      if (updatedMember.count === 0) {
+        throw new Error('INSUFFICIENT_POINTS');
+      }
+
+      const freshMember = await tx.member.findUniqueOrThrow({
+        where: { id: member.id },
+      });
+      const newBalance = Number(freshMember.loyaltyPoints ?? 0);
 
       // 4. Record RewardClaim
       const claim = await tx.rewardClaim.create({
@@ -92,12 +103,18 @@ export async function POST(request: NextRequest, { params }: Params) {
         },
       });
 
-      // 6. Decrement inventory if applicable
+      // 6. Decrement inventory atomically if applicable (prevents overselling)
       if (reward.quantityAvailable !== null) {
-        await tx.rewardCatalog.update({
-          where: { id: reward.id },
+        const updatedInventory = await tx.rewardCatalog.updateMany({
+          where: {
+            id: reward.id,
+            quantityAvailable: { gte: 1 },
+          },
           data: { quantityAvailable: { decrement: 1 } },
         });
+        if (updatedInventory.count === 0) {
+          throw new Error('REWARD_OUT_OF_STOCK');
+        }
       }
 
       return claim;

@@ -62,14 +62,26 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      const newBalance = currentPoints - pointsToRedeem;
-      await tx.member.update({
-        where: { id: member_id },
+      // Atomic conditional decrement: prevents double spending under high-pressure concurrency
+      const updated = await tx.member.updateMany({
+        where: {
+          id: member_id,
+          loyaltyPoints: { gte: pointsToRedeem },
+        },
         data: {
-          loyaltyPoints: newBalance,
+          loyaltyPoints: { decrement: pointsToRedeem },
           totalVisits: { increment: 1 },
         },
       });
+
+      if (updated.count === 0) {
+        throw new Error('INSUFFICIENT_POINTS');
+      }
+
+      const updatedMember = await tx.member.findUniqueOrThrow({
+        where: { id: member_id },
+      });
+      const newBalance = Number(updatedMember.loyaltyPoints ?? 0);
 
       const redemptionId = crypto.randomUUID();
       await tx.redemptionLog.create({
