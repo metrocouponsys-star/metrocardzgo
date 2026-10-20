@@ -31,13 +31,16 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = await requireSuperAdmin(request);
+  const auth = await requireAuth(request);
   if (auth instanceof NextResponse) return auth;
 
   const body = await request.json();
 
   // Batch add cards
   if (body.action === 'add_batch') {
+    if (auth.role !== 'super_admin') {
+      return NextResponse.json({ detail: 'Super admin access required' }, { status: 403 });
+    }
     const cards = (body.card_numbers as string[]).map(num => ({
       id: crypto.randomUUID(),
       cardNumber: num.replace(/\s/g, ''),
@@ -50,6 +53,9 @@ export async function POST(request: NextRequest) {
 
   // Allocate to merchant
   if (body.action === 'allocate') {
+    if (auth.role !== 'super_admin') {
+      return NextResponse.json({ detail: 'Super admin access required' }, { status: 403 });
+    }
     await prisma.cardInventoryItem.updateMany({
       where: { id: { in: body.card_ids }, status: 'unassigned' },
       data: {

@@ -463,6 +463,10 @@ export async function createMerchantUser(merchantId: string, data: Partial<Merch
   return post<MerchantUser>(`/admin/merchants/${merchantId}/users`, data);
 }
 
+export async function changeMerchantPassword(merchantId: string, newPassword: string): Promise<{ success: boolean; message: string; user?: any }> {
+  return post(`/admin/merchants/${merchantId}/password`, { password: newPassword });
+}
+
 export async function getMerchantProfile(): Promise<Merchant> {
   return get<Merchant>('/merchant/profile');
 }
@@ -911,8 +915,20 @@ export async function uploadMerchantLogo(_merchantId: string, logoDataUrl: strin
   return post('/merchant/profile/logo', { logo_data_url: logoDataUrl });
 }
 
-export async function setMerchantCardDesign(merchantId: string, cardDesignDataUrl: string): Promise<Merchant> {
-  return post(`/admin/merchants/${merchantId}/card-design`, { card_design_data_url: cardDesignDataUrl });
+export async function getMerchantCardDesign(merchantId?: string, scope: string = 'store_loyalty'): Promise<{ design: any }> {
+  try {
+    return await get<{ design: any }>(`/merchant/card-design?scope=${scope}${merchantId ? `&merchant_id=${merchantId}` : ''}`);
+  } catch {
+    return { design: null };
+  }
+}
+
+export async function setMerchantCardDesign(merchantId: string, cardDesignDataUrl: string): Promise<any> {
+  try {
+    return await post('/merchant/card-design', { design: cardDesignDataUrl, merchant_id: merchantId });
+  } catch {
+    return await post(`/admin/merchants/${merchantId}/card-design`, { card_design_data_url: cardDesignDataUrl });
+  }
 }
 
 export async function downloadCardsQrExcel(cardNumbers: string[]): Promise<void> {

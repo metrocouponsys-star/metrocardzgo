@@ -47,6 +47,7 @@ export interface CardDesignConfig {
   logoType: 'custom_image' | 'preset_icon';
   customLogoUrl?: string;
   presetIcon?: PresetIconId;
+  backgroundImageUrl?: string; // Custom card face artwork image (JPEG/JPG/PNG/WebP)
 
   // Tier Badge
   tierLabel: string;

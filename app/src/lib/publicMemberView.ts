@@ -64,6 +64,7 @@ export async function buildPublicMemberViewFromDb(memberId: string): Promise<Pub
         orderBy: { createdAt: 'desc' },
         take: 20,
       },
+      linkedCards: true,
     },
   });
 
@@ -158,6 +159,7 @@ export async function buildPublicMemberViewFromDb(memberId: string): Promise<Pub
         is_points_redemption: !!s.offerTemplate.isPointsRedemption,
         points_cost: Number(s.offerTemplate.loyaltyPointsCost || 0),
         loyalty_points_earn: s.offerTemplate.loyaltyPointsEarn ? Number(s.offerTemplate.loyaltyPointsEarn) : undefined,
+        image_url: (s.offerTemplate as any).imageUrl || (s.offerTemplate as any).image_url || null,
       };
     });
   } else {
@@ -181,6 +183,7 @@ export async function buildPublicMemberViewFromDb(memberId: string): Promise<Pub
         is_points_redemption: !!t.isPointsRedemption,
         points_cost: Number(t.loyaltyPointsCost || 0),
         loyalty_points_earn: t.loyaltyPointsEarn ? Number(t.loyaltyPointsEarn) : undefined,
+        image_url: (t as any).imageUrl || (t as any).image_url || null,
       }));
     } catch (err) {
       console.warn('[publicMemberView] Error fetching fallback templates:', (err as Error).message);
@@ -216,16 +219,20 @@ export async function buildPublicMemberViewFromDb(memberId: string): Promise<Pub
           status: { not: 'deactivated' },
         },
         include: {
-          merchant: { select: { businessName: true, logoUrl: true } },
+          merchant: { select: { id: true, businessName: true, logoUrl: true, cardDesignUrl: true } },
           membershipType: { select: { name: true } },
+          linkedCards: true,
         },
       });
 
       otherMemberships = otherMembers.map((o) => ({
         member_id: o.id,
+        merchant_id: o.merchantId,
         merchant_name: o.merchant?.businessName || 'Metro Cardz Partner',
         merchant_logo: o.merchant?.logoUrl || undefined,
+        card_design_url: o.merchant?.cardDesignUrl || null,
         member_code: o.memberCode,
+        physical_card_number: o.physicalCardNumber || o.linkedCards?.[0]?.cardNumber || undefined,
         loyalty_points: Number(o.loyaltyPoints || 0),
         membership_type_name: o.membershipType?.name || 'Standard',
         status: o.status,
@@ -238,9 +245,11 @@ export async function buildPublicMemberViewFromDb(memberId: string): Promise<Pub
   const pts = Number(member.loyaltyPoints ?? 0);
   const tierName = member.membershipType?.name || 'Gold Member';
   const merchName = member.merchant?.businessName || 'Metro Cardz Partner';
+  const resolvedCardNumber = member.physicalCardNumber || (member as any).linkedCards?.[0]?.cardNumber || undefined;
 
   return {
     member_id: member.id,
+    merchant_id: member.merchantId,
     id: member.id,
     member_name: member.name,
     name: member.name,
@@ -258,7 +267,7 @@ export async function buildPublicMemberViewFromDb(memberId: string): Promise<Pub
     merchant_phone: member.merchant?.whatsappNumber || undefined,
     card_design_url: member.merchant?.cardDesignUrl || null,
     referral_code: member.referralCode || undefined,
-    physical_card_number: member.physicalCardNumber || undefined,
+    physical_card_number: resolvedCardNumber,
     offers: offersOut,
     coupons: couponsOut,
     rewards: rewardsOut,
@@ -328,6 +337,7 @@ export function buildPublicMemberViewFromMock(candidate: any): PublicMemberView 
 
   return {
     member_id: candidate.id,
+    merchant_id: candidate.merchant_id,
     id: candidate.id,
     member_name: candidate.name,
     name: candidate.name,

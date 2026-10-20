@@ -651,6 +651,10 @@ export async function createOfferTemplate(merchantId: string, data: Partial<Offe
     value: data.value || 0,
     active: true,
     applicable_membership_type_ids: data.applicable_membership_type_ids || [],
+    loyalty_points_earn: data.loyalty_points_earn ?? null,
+    is_points_redemption: data.is_points_redemption ?? false,
+    loyalty_points_cost: data.loyalty_points_cost ?? null,
+    image_url: data.image_url ?? null,
   };
   db.offerTemplates.push(newOffer);
   return newOffer;
@@ -848,6 +852,12 @@ export async function updateMerchant(merchantId: string, data: Partial<Merchant>
   return db.merchants[idx];
 }
 
+export async function changeMerchantPassword(merchantId: string, newPassword: string): Promise<{ success: boolean; message: string; user?: any }> {
+  await delay(FAKE_DELAY);
+  const user = db.merchantUsers.find(u => u.merchant_id === merchantId);
+  return { success: true, message: 'Password updated successfully', user };
+}
+
 export async function deleteMerchant(merchantId: string, _permanent = true): Promise<void> {
   await delay(FAKE_DELAY);
   const idx = db.merchants.findIndex(m => m.id === merchantId);
@@ -864,6 +874,16 @@ export async function uploadMerchantLogo(merchantId: string, logoDataUrl: string
   if (idx === -1) idx = 0;
   db.merchants[idx] = { ...db.merchants[idx], logo_url: logoDataUrl || undefined };
   return { ...db.merchants[idx] };
+}
+
+export async function getMerchantCardDesign(merchantId?: string, _scope: string = 'store_loyalty'): Promise<{ design: any }> {
+  await delay(FAKE_DELAY);
+  const m = db.merchants.find(x => x.id === merchantId) || db.merchants[0];
+  let parsed = null;
+  if (m?.card_design_url) {
+    try { parsed = JSON.parse(m.card_design_url); } catch { parsed = { backgroundImageUrl: m.card_design_url }; }
+  }
+  return { design: parsed };
 }
 
 /** Set the card design image for a merchant's card batch. */

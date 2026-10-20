@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useToastStore } from '../../store/toastStore';
 import * as api from '../../api';
@@ -39,9 +39,40 @@ export default function CardDesignerStudio() {
   const [showPrintGuides, setShowPrintGuides] = useState(false);
   const [sampleMemberName, setSampleMemberName] = useState('RAHUL SHARMA');
   const [saving, setSaving] = useState(false);
+  const [faceUploading, setFaceUploading] = useState(false);
+  const cardFaceInputRef = useRef<HTMLInputElement>(null);
+
+  /** Client-side image compressor: converts JPEG/PNG to lightweight high-res JPEG data URL */
+  const compressImageToDataUrl = (file: File, maxWidth = 840, quality = 0.85): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let w = img.width;
+          let h = img.height;
+          if (w > maxWidth) {
+            h = Math.round((h * maxWidth) / w);
+            w = maxWidth;
+          }
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d')!;
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = () => reject(new Error('Failed to decode image'));
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsDataURL(file);
+    });
+  };
 
   // Load saved design whenever scope or merchant changes
   useEffect(() => {
+    let active = true;
     const loaded = loadSavedCardDesign(merchantId, activeScope);
     // If merchant has a business name and brandName is default, prefill with merchant's real business name
     if (user?.merchant_name && loaded.brandName === DEFAULT_STORE_CARD_DESIGN.brandName && activeScope === 'store_loyalty') {
@@ -49,6 +80,25 @@ export default function CardDesignerStudio() {
     }
     setDesign(loaded);
     setIsFlipped(false);
+
+    // Also load persisted design from MySQL database
+    api.getMerchantCardDesign(merchantId, activeScope).then((res) => {
+      if (!active || !res?.design) return;
+      let dbDesign = res.design;
+      if (typeof dbDesign === 'string') {
+        try { dbDesign = JSON.parse(dbDesign); } catch {}
+      }
+      if (dbDesign && typeof dbDesign === 'object') {
+        setDesign((prev) => ({
+          ...prev,
+          ...dbDesign,
+          brandName: (user?.merchant_name || dbDesign.brandName || prev.brandName).toUpperCase(),
+        }));
+        persistCardDesignLocally(merchantId, { ...loaded, ...dbDesign });
+      }
+    }).catch(() => {});
+
+    return () => { active = false; };
   }, [merchantId, activeScope, user?.merchant_name]);
 
   // Update specific fields in design
@@ -67,26 +117,63 @@ export default function CardDesignerStudio() {
     addToast('success', `Applied preset: ${preset.name}`);
   };
 
-  // Handle Logo Upload (converts image to base64 Data URL)
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle Logo Upload (supports JPEG, JPG, PNG, SVG, WebP with compression)
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) {
-      addToast('error', 'Logo file size must be less than 2MB');
+    if (file.size > 5 * 1024 * 1024) {
+      addToast('error', 'Logo file size must be less than 5MB');
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
+    try {
+      if (file.type.includes('svg')) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          updateDesign({
+            logoType: 'custom_image',
+            customLogoUrl: event.target?.result as string,
+          });
+          addToast('success', 'Custom SVG logo uploaded successfully');
+        };
+        reader.readAsDataURL(file);
+      } else {
+        const dataUrl = await compressImageToDataUrl(file, 400, 0.85);
+        updateDesign({
+          logoType: 'custom_image',
+          customLogoUrl: dataUrl,
+        });
+        addToast('success', 'Custom logo (JPEG/PNG) uploaded successfully');
+      }
+    } catch {
+      addToast('error', 'Failed to process logo image');
+    }
+  };
+
+  // Handle Full Card Artwork Upload in JPEG / JPG / PNG format
+  const handleCardFaceUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      addToast('error', 'Card image file size must be less than 10MB');
+      return;
+    }
+
+    setFaceUploading(true);
+    try {
+      const dataUrl = await compressImageToDataUrl(file, 840, 0.85);
       updateDesign({
-        logoType: 'custom_image',
-        customLogoUrl: dataUrl,
+        backgroundImageUrl: dataUrl,
       });
-      addToast('success', 'Custom logo uploaded successfully');
-    };
-    reader.readAsDataURL(file);
+      addToast('success', 'Custom card face artwork (JPEG) applied successfully!');
+    } catch {
+      addToast('error', 'Could not process card artwork image');
+    } finally {
+      setFaceUploading(false);
+      if (cardFaceInputRef.current) cardFaceInputRef.current.value = '';
+    }
   };
 
   // Save Card Design
@@ -589,19 +676,77 @@ export default function CardDesignerStudio() {
                   <div className="border border-dashed border-slate-300 rounded-2xl p-4 text-center space-y-2 bg-slate-50">
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/jpeg,image/jpg,image/png,image/webp,image/svg+xml,.jpeg,.jpg,.png,.webp,.svg"
                       onChange={handleLogoUpload}
                       className="text-xs text-slate-500 file:mr-2 file:py-1 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-white hover:file:bg-amber-600 cursor-pointer"
                     />
-                    <p className="text-[11px] text-slate-400">PNG or SVG with transparent background recommended</p>
+                    <p className="text-[11px] text-slate-400">JPEG, JPG, PNG or SVG format supported. Max 5MB.</p>
                     {design.customLogoUrl && (
                       <div className="mt-2 flex items-center justify-center gap-2">
                         <img src={design.customLogoUrl} alt="Preview" className="w-10 h-10 object-contain rounded-lg border border-slate-200 bg-white" />
                         <span className="text-xs text-emerald-600 font-bold">Logo loaded</span>
+                        <button
+                          type="button"
+                          onClick={() => updateDesign({ customLogoUrl: undefined })}
+                          className="text-[11px] text-red-500 hover:text-red-700 ml-2 font-bold"
+                          title="Remove logo"
+                        >
+                          Remove
+                        </button>
                       </div>
                     )}
                   </div>
                 )}
+              </div>
+
+              {/* Custom Card Face Artwork (JPEG / JPG / PNG / WebP) */}
+              <div className="pt-3 border-t border-slate-100 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-black uppercase text-slate-700 tracking-wider">
+                    Custom Card Artwork (JPEG / JPG / PNG)
+                  </label>
+                  {design.backgroundImageUrl && (
+                    <button
+                      type="button"
+                      onClick={() => updateDesign({ backgroundImageUrl: undefined })}
+                      className="text-[11px] text-red-600 font-bold hover:underline flex items-center gap-1"
+                    >
+                      <span className="material-symbols-outlined text-[13px]">delete</span> Remove Artwork
+                    </button>
+                  )}
+                </div>
+                <p className="text-[11px] text-slate-500">
+                  Upload full card artwork in <strong>JPEG format (.jpg, .jpeg)</strong> or PNG. Automatically fills the card face like a real printed PVC card.
+                </p>
+
+                <div className="border border-dashed border-slate-300 rounded-2xl p-4 text-center space-y-2 bg-slate-50">
+                  <input
+                    ref={cardFaceInputRef}
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp,.jpeg,.jpg,.png,.webp"
+                    onChange={handleCardFaceUpload}
+                    disabled={faceUploading}
+                    className="text-xs text-slate-500 file:mr-2 file:py-1 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-white hover:file:bg-amber-600 cursor-pointer disabled:opacity-50"
+                  />
+                  <p className="text-[11px] text-slate-400">
+                    {faceUploading ? 'Optimizing & compressing JPEG artwork…' : 'Supports .jpeg, .jpg, .png, .webp (CR80 standard 3:2 ratio recommended, max 10MB)'}
+                  </p>
+                  {design.backgroundImageUrl && (
+                    <div className="mt-2 flex items-center justify-center gap-3 bg-white p-2.5 rounded-xl border border-slate-200">
+                      <img
+                        src={design.backgroundImageUrl}
+                        alt="Card Face Artwork"
+                        className="w-16 h-10 object-cover rounded-md border border-slate-300 shadow-xs"
+                      />
+                      <div className="text-left">
+                        <span className="text-xs text-emerald-600 font-bold flex items-center gap-1">
+                          <span className="material-symbols-outlined text-[14px]">check_circle</span> JPEG Artwork Active
+                        </span>
+                        <p className="text-[10px] text-slate-400">Card face updated in real-time</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Tier Badge Controls */}

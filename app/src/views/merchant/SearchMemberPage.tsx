@@ -56,9 +56,15 @@ function MemberResultRow({ member, onClick }: { member: Member; onClick: () => v
         {member.name.charAt(0)}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px', flexWrap: 'wrap' }}>
           <p style={{ fontWeight: 700, fontSize: '13px', color: T.text, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member.name}</p>
           {member.membership_type && <MembershipBadge name={member.membership_type.name} />}
+          {member.loyalty_points !== undefined && (
+            <span style={{ fontSize: '11px', fontWeight: 800, color: '#B45309', background: '#FEF3C7', padding: '1px 6px', borderRadius: '999px', display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '12px', fontVariationSettings: "'FILL' 1" }}>stars</span>
+              {member.loyalty_points} pts
+            </span>
+          )}
         </div>
         <p style={{ fontSize: '12px', color: T.textMuted, margin: 0 }}>{member.phone} · #{member.member_code}</p>
       </div>

@@ -15,7 +15,21 @@ export async function GET(request: NextRequest, { params }: Params) {
     include: { users: true, membershipTypes: true, _count: { select: { members: true } } },
   });
   if (!merchant) return NextResponse.json({ detail: 'Merchant not found' }, { status: 404 });
-  return NextResponse.json(merchant);
+  return NextResponse.json({
+    ...merchant,
+    business_name: merchant.businessName,
+    category: merchant.category || '',
+    plan_tier: merchant.planTier || 'Starter',
+    whatsapp_number: merchant.whatsappNumber || '',
+    logo_url: merchant.logoUrl,
+    card_design_url: merchant.cardDesignUrl,
+    address: merchant.address,
+    status: merchant.status,
+    approval_status: merchant.approvalStatus,
+    referral_bonus_points: merchant.referralBonusPoints ? Number(merchant.referralBonusPoints) : 50,
+    created_at: merchant.createdAt.toISOString(),
+    member_count: merchant._count?.members ?? 0,
+  });
 }
 
 export async function PUT(request: NextRequest, { params }: Params) {

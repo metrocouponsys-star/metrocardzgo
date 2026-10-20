@@ -95,8 +95,10 @@ export async function POST(request: NextRequest) {
         familyDob2: body.family_dob_2 ? new Date(body.family_dob_2) : null,
         familyDob3: body.family_dob_3 ? new Date(body.family_dob_3) : null,
         membershipTypeId: body.membership_type_id,
-        joinedDate: new Date(body.joined_date),
-        expiryDate: new Date(body.expiry_date),
+        joinedDate: body.joined_date ? new Date(body.joined_date) : new Date(),
+        expiryDate: body.expiry_date
+          ? new Date(body.expiry_date)
+          : new Date((body.joined_date ? new Date(body.joined_date).getTime() : Date.now()) + 365 * 24 * 60 * 60 * 1000),
         loyaltyPoints: 0,
         status: 'active',
         notes: body.notes ?? null,

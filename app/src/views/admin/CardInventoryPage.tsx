@@ -96,7 +96,12 @@ export default function CardInventoryPage() {
 
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterMerchant, setFilterMerchant] = useState('');
+  const [filterMerchant, setFilterMerchant] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return new URLSearchParams(window.location.search).get('merchant') || '';
+    }
+    return '';
+  });
   const [page, setPage] = useState(1);
 
   // ─── Wizard State ──────────────────────────────────────────────────────────
@@ -144,12 +149,22 @@ export default function CardInventoryPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [allCards, allMerchants] = await Promise.all([
+      const [cardsRes, merchantsRes] = await Promise.allSettled([
         api.getCardInventory(),
         api.getAllMerchants(),
       ]);
-      setCards(allCards);
-      setMerchants(allMerchants);
+      if (cardsRes.status === 'fulfilled') {
+        setCards(cardsRes.value || []);
+      } else {
+        console.error('Failed to load card inventory:', cardsRes.reason);
+        addToast('error', 'Failed to load card inventory');
+      }
+      if (merchantsRes.status === 'fulfilled') {
+        setMerchants(merchantsRes.value || []);
+      } else {
+        console.error('Failed to load merchants:', merchantsRes.reason);
+        addToast('error', 'Failed to load merchants');
+      }
     } finally { setLoading(false); }
   };
 
@@ -190,15 +205,16 @@ export default function CardInventoryPage() {
   );
 
   const filteredAllocateMerchants = useMemo(() => {
-    const activeMerchants = merchants.filter(m => m.status === 'active');
+    const activeMerchants = merchants.filter(m => m.status === 'active' || m.approval_status === 'approved' || (!m.status && m.approval_status !== 'rejected'));
     if (!allocateMerchantSearch.trim()) return activeMerchants;
     const q = allocateMerchantSearch.toLowerCase();
-    return activeMerchants.filter(m =>
-      (m.business_name || '').toLowerCase().includes(q) ||
-      (m.category || '').toLowerCase().includes(q) ||
-      (m.whatsapp_number || '').includes(q) ||
-      (m.address || '').toLowerCase().includes(q)
-    );
+    return activeMerchants.filter(m => {
+      const name = (m.business_name || (m as any).businessName || '').toLowerCase();
+      const cat = (m.category || '').toLowerCase();
+      const phone = (m.whatsapp_number || (m as any).whatsappNumber || '');
+      const addr = (m.address || '').toLowerCase();
+      return name.includes(q) || cat.includes(q) || phone.includes(q) || addr.includes(q);
+    });
   }, [merchants, allocateMerchantSearch]);
 
   // ─── Wizard Handlers ──────────────────────────────────────────────────────
@@ -290,7 +306,8 @@ export default function CardInventoryPage() {
       }
 
       await api.allocateCardsToMerchant(allocateMerchant, unassigned.map(c => c.id));
-      const merchantName = merchants.find(m => m.id === allocateMerchant)?.business_name;
+      const targetM = merchants.find(m => m.id === allocateMerchant);
+      const merchantName = targetM?.business_name || (targetM as any)?.businessName || 'merchant';
       addToast('success', `🎉 ${unassigned.length} cards allocated to ${merchantName}!`);
       await fetchData();
       closeWizard();
@@ -729,7 +746,7 @@ export default function CardInventoryPage() {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/jpg,image/png,image/webp,.jpeg,.jpg,.png,.webp"
                 className="hidden"
                 onChange={handleCardImageFilePick}
               />

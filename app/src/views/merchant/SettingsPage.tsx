@@ -258,7 +258,7 @@ export default function SettingsPage() {
                 <input
                   ref={logoFileRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/jpg,image/png,image/webp,.jpeg,.jpg,.png,.webp"
                   className="hidden"
                   onChange={async (e) => {
                     const file = e.target.files?.[0];

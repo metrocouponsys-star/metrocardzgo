@@ -233,6 +233,9 @@ export function InteractiveFlipCard({
 
   // Background gradient resolution
   const getBackgroundStyle = () => {
+    if (design.backgroundImageUrl) {
+      return `url("${design.backgroundImageUrl}") center / cover no-repeat`;
+    }
     const { primaryColor, secondaryColor, gradientDirection } = design;
     switch (gradientDirection) {
       case 'radial':

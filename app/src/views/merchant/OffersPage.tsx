@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useToastStore } from '../../store/toastStore';
 import { Modal, ConfirmModal } from '../../components/ui/Modal';
@@ -7,24 +7,125 @@ import * as api from '../../api';
 import { invalidateContaining } from '../../api/cache';
 
 const T = {
-  bg: '#F6F3EE',
+  bg: '#F0F4F8',
   white: '#FFFFFF',
-  panel: '#FFFDFB',
-  soft: '#F9F7F5',
-  border: '#EAE3DD',
-  text: '#111827',
-  textMuted: '#6B7280',
-  textLight: '#9CA3AF',
+  panel: '#FAFBFC',
+  soft: '#F5F7FA',
+  border: '#E4E9F0',
+  text: '#0D1321',
+  textMuted: '#5C6B80',
+  textLight: '#9AAAB8',
   orange: '#FF6B35',
-  orangeLight: '#FFF4EF',
-  orangeDark: '#EA580C',
+  orangeLight: '#FFF2EC',
+  orangeDark: '#C14D1E',
   green: '#16A34A',
   greenLight: '#F0FDF4',
   violet: '#7C3AED',
   violetLight: '#F5F3FF',
-  shadow: '0 10px 22px rgba(17,24,39,0.05)',
+  shadow: '0 1px 3px rgba(13,19,33,0.06), 0 4px 16px rgba(13,19,33,0.04)',
+  shadowHover: '0 6px 28px rgba(13,19,33,0.11)',
+  shadowGlow: '0 8px 32px rgba(255,107,53,0.22)',
   shadowMd: '0 16px 30px rgba(17,24,39,0.06)',
 };
+
+const TYPE_COLORS: Record<string, { bg: string; fg: string; gradient: string }> = {
+  birthday_anniversary: { bg: '#FFF0F6', fg: '#C026D3', gradient: 'linear-gradient(135deg,#F0ABFC,#C026D3)' },
+  flat_off:            { bg: '#F0FDF4', fg: '#16A34A', gradient: 'linear-gradient(135deg,#4ADE80,#16A34A)' },
+  wallet_points:       { bg: '#EFF6FF', fg: '#2563EB', gradient: 'linear-gradient(135deg,#60A5FA,#2563EB)' },
+  cashback:            { bg: '#EFF6FF', fg: '#2563EB', gradient: 'linear-gradient(135deg,#60A5FA,#2563EB)' },
+  buy_1_get_1:         { bg: '#F5F3FF', fg: '#7C3AED', gradient: 'linear-gradient(135deg,#A78BFA,#7C3AED)' },
+  percent_off:         { bg: '#FFF7ED', fg: '#D97706', gradient: 'linear-gradient(135deg,#FCD34D,#D97706)' },
+  free_service:        { bg: '#F0FDFA', fg: '#0D9488', gradient: 'linear-gradient(135deg,#34D399,#0D9488)' },
+  referral:            { bg: '#EFF6FF', fg: '#3B82F6', gradient: 'linear-gradient(135deg,#93C5FD,#3B82F6)' },
+  birthday:            { bg: '#FFF0F6', fg: '#EC4899', gradient: 'linear-gradient(135deg,#F9A8D4,#EC4899)' },
+  points_redemption:   { bg: '#FEF9C3', fg: '#B45309', gradient: 'linear-gradient(135deg,#FCD34D,#B45309)' },
+};
+
+/* ── Image Upload Helper ────────────────────────────────────────────────────── */
+function ImageUploadField({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (url: string) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [dragging, setDragging] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  const handleFile = (file: File) => {
+    setUploading(true);
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let w = img.width;
+        let h = img.height;
+        const maxDim = 720;
+        if (w > maxDim || h > maxDim) {
+          if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
+          else { w = Math.round((w * maxDim) / h); h = maxDim; }
+        }
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, w, h);
+          onChange(canvas.toDataURL('image/jpeg', 0.82));
+        } else {
+          onChange(ev.target?.result as string);
+        }
+        setUploading(false);
+      };
+      img.onerror = () => {
+        onChange(ev.target?.result as string);
+        setUploading(false);
+      };
+      img.src = ev.target?.result as string;
+    };
+    reader.onerror = () => setUploading(false);
+    reader.readAsDataURL(file);
+  };
+
+  return (
+    <div>
+      <label style={{ display: 'block', marginBottom: 7, fontSize: 11, fontWeight: 800, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+        Offer Image <span style={{ fontWeight: 400, color: T.textLight, textTransform: 'none', letterSpacing: 0 }}>(optional — shown on card)</span>
+      </label>
+      {value ? (
+        <div style={{ position: 'relative', borderRadius: 14, overflow: 'hidden', border: `1px solid ${T.border}` }}>
+          <img src={value} alt="Offer" style={{ width: '100%', height: 130, objectFit: 'cover', display: 'block' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom,transparent 40%,rgba(0,0,0,0.52))', display: 'flex', alignItems: 'flex-end', padding: '10px 12px', gap: 7 }}>
+            <button type="button" onClick={() => inputRef.current?.click()}
+              style={{ background: 'rgba(255,255,255,0.9)', border: 'none', borderRadius: 8, padding: '5px 11px', fontWeight: 700, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, color: T.text }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 13 }}>photo_camera</span>Change
+            </button>
+            <button type="button" onClick={() => onChange('')}
+              style={{ background: 'rgba(239,68,68,0.88)', border: 'none', borderRadius: 8, padding: '5px 11px', fontWeight: 700, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, color: '#fff' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 13 }}>delete</span>Remove
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div
+          onClick={() => inputRef.current?.click()}
+          onDragOver={e => { e.preventDefault(); setDragging(true); }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={e => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}
+          style={{ border: `2px dashed ${dragging ? T.orange : T.border}`, borderRadius: 14, padding: '24px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7, cursor: 'pointer', background: dragging ? T.orangeLight : T.panel, transition: 'all 0.2s' }}
+        >
+          {uploading
+            ? <span className="material-symbols-outlined" style={{ fontSize: 26, color: T.orange, animation: 'spin 0.8s linear infinite' }}>progress_activity</span>
+            : <span className="material-symbols-outlined" style={{ fontSize: 26, color: dragging ? T.orange : T.textLight }}>add_photo_alternate</span>}
+          <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: dragging ? T.orange : T.textMuted }}>{uploading ? 'Optimizing & uploading...' : 'Click or drag image here'}</p>
+          <p style={{ margin: 0, fontSize: 11, color: T.textLight }}>JPEG, JPG, PNG, WEBP · auto-compressed</p>
+        </div>
+      )}
+      <input ref={inputRef} type="file" accept="image/jpeg,image/jpg,image/png,image/webp,.jpeg,.jpg,.png,.webp" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
+    </div>
+  );
+}
 
 const OFFER_TYPES = [
   { value: 'birthday_anniversary', label: '🎂 Birthday & Anniversary Flat Off' },
@@ -60,7 +161,7 @@ export default function OffersPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingOffer, setEditingOffer] = useState<OfferTemplate | null>(null);
-  const [form, setForm] = useState({ title: '', description: '', offer_type: 'free_service', value: '', applicable_membership_type_ids: [] as string[], loyalty_points_earn: '', is_points_redemption: false, loyalty_points_cost: '' });
+  const [form, setForm] = useState({ title: '', description: '', offer_type: 'free_service', value: '', applicable_membership_type_ids: [] as string[], loyalty_points_earn: '', is_points_redemption: false, loyalty_points_cost: '', image_url: '' });
   const [saving, setSaving] = useState(false);
   // Delete offer confirm modal state
   const [deleteOfferTarget, setDeleteOfferTarget] = useState<OfferTemplate | null>(null);
@@ -73,8 +174,8 @@ export default function OffersPage() {
     ]).then(([o, mt]) => { setOffers(o); setMembershipTypes(mt); setLoading(false); });
   }, []);
 
-  const openCreate = () => { setEditingOffer(null); setForm({ title: '', description: '', offer_type: 'free_service', value: '', applicable_membership_type_ids: [], loyalty_points_earn: '', is_points_redemption: false, loyalty_points_cost: '' }); setShowModal(true); };
-  const openEdit = (o: OfferTemplate) => { setEditingOffer(o); setForm({ title: o.title, description: o.description, offer_type: o.offer_type, value: String(o.value), applicable_membership_type_ids: o.applicable_membership_type_ids || [], loyalty_points_earn: o.loyalty_points_earn != null ? String(o.loyalty_points_earn) : '', is_points_redemption: o.is_points_redemption || false, loyalty_points_cost: o.loyalty_points_cost != null ? String(o.loyalty_points_cost) : '' }); setShowModal(true); };
+  const openCreate = () => { setEditingOffer(null); setForm({ title: '', description: '', offer_type: 'free_service', value: '', applicable_membership_type_ids: [], loyalty_points_earn: '', is_points_redemption: false, loyalty_points_cost: '', image_url: '' }); setShowModal(true); };
+  const openEdit = (o: OfferTemplate) => { setEditingOffer(o); setForm({ title: o.title, description: o.description, offer_type: o.offer_type, value: String(o.value), applicable_membership_type_ids: o.applicable_membership_type_ids || [], loyalty_points_earn: o.loyalty_points_earn != null ? String(o.loyalty_points_earn) : '', is_points_redemption: o.is_points_redemption || false, loyalty_points_cost: o.loyalty_points_cost != null ? String(o.loyalty_points_cost) : '', image_url: (o as any).image_url || '' }); setShowModal(true); };
 
   const toggleMembershipType = (id: string) => {
     setForm(f => ({
@@ -98,6 +199,7 @@ export default function OffersPage() {
         loyalty_points_earn: form.loyalty_points_earn ? parseFloat(form.loyalty_points_earn) : null,
         is_points_redemption: form.is_points_redemption,
         loyalty_points_cost: form.loyalty_points_cost ? parseFloat(form.loyalty_points_cost) : null,
+        image_url: form.image_url || null,
       };
       if (editingOffer) {
         const updated = await api.updateOfferTemplate(user?.merchant_id || '', editingOffer.id, data);
@@ -163,7 +265,7 @@ export default function OffersPage() {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14 }}>
                 {active.map((offer) => (
-                  <OfferRow key={offer.id} offer={offer} membershipTypes={membershipTypes} onEdit={openEdit} onToggle={toggleActive} onDelete={handleDelete} />
+                  <OfferRow key={offer.id} offer={offer} membershipTypes={membershipTypes} onEdit={openEdit} onToggle={toggleActive} onDelete={(o) => setDeleteOfferTarget(o)} />
                 ))}
               </div>
             </div>
@@ -176,7 +278,7 @@ export default function OffersPage() {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14, opacity: 0.7 }}>
                 {inactive.map((offer) => (
-                  <OfferRow key={offer.id} offer={offer} membershipTypes={membershipTypes} onEdit={openEdit} onToggle={toggleActive} onDelete={handleDelete} />
+                  <OfferRow key={offer.id} offer={offer} membershipTypes={membershipTypes} onEdit={openEdit} onToggle={toggleActive} onDelete={(o) => setDeleteOfferTarget(o)} />
                 ))}
               </div>
             </div>
@@ -277,6 +379,8 @@ export default function OffersPage() {
 
         <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editingOffer ? 'Edit Offer' : 'Add Offer'} maxWidth="max-w-lg">
           <div className="space-y-4">
+            {/* Image Upload — optional */}
+            <ImageUploadField value={form.image_url} onChange={url => setForm(f => ({ ...f, image_url: url }))} />
             <div>
               <label className="form-label">Title *</label>
               <input className="input-field" placeholder="e.g. Free Hair Wash" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
@@ -374,6 +478,17 @@ export default function OffersPage() {
             </div>
           </div>
         </Modal>
+
+        <ConfirmModal
+          isOpen={!!deleteOfferTarget}
+          onClose={() => setDeleteOfferTarget(null)}
+          onConfirm={handleDelete}
+          title="Delete Offer"
+          description={`Are you sure you want to delete "${deleteOfferTarget?.title}"? This offer will be removed from your promotions catalog.`}
+          confirmLabel="Delete Offer"
+          danger
+          isLoading={deletingOffer}
+        />
       </div>
     </div>
   );
@@ -385,60 +500,86 @@ function OfferRow({ offer, membershipTypes, onEdit, onToggle, onDelete }: {
   onDelete: (o: OfferTemplate) => void;
 }) {
   const icon = TYPE_ICONS[offer.offer_type] || 'star';
+  const colors = TYPE_COLORS[offer.offer_type] || { bg: T.orangeLight, fg: T.orange, gradient: 'linear-gradient(135deg,#FF6B35,#E85A28)' };
   const applicableNames = membershipTypes.filter(mt => offer.applicable_membership_type_ids?.includes(mt.id)).map(mt => mt.name);
+  const imageUrl = (offer as any).image_url;
   return (
-    <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 18, boxShadow: T.shadow, padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-        <div style={{ width: 44, height: 44, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', background: offer.offer_type === 'points_redemption' ? '#FEF3C7' : T.orangeLight, flexShrink: 0 }}>
-          <span className="material-symbols-outlined" style={{ fontSize: 22, color: offer.offer_type === 'points_redemption' ? '#D97706' : T.orange, fontVariationSettings: "'FILL' 1" }}>{icon}</span>
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            <h4 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: T.text }}>{offer.title}</h4>
-            <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', borderRadius: 999, padding: '4px 8px', background: offer.active ? '#F0FDF4' : '#F3F4F6', color: offer.active ? '#16A34A' : T.textMuted }}>
-              {offer.active ? 'Active' : 'Inactive'}
-            </span>
-            {offer.loyalty_points_earn != null && !offer.is_points_redemption && (
-              <span style={{ fontSize: 10, fontWeight: 800, padding: '4px 8px', borderRadius: 999, background: '#F0FDF4', color: '#16A34A', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                <span className="material-symbols-outlined" style={{ fontSize: 10, fontVariationSettings: "'FILL' 1" }}>add_circle</span>
-                +{offer.loyalty_points_earn} pts
-              </span>
-            )}
-            {offer.is_points_redemption && offer.loyalty_points_cost != null && (
-              <span style={{ fontSize: 10, fontWeight: 800, padding: '4px 8px', borderRadius: 999, background: '#FEF3C7', color: '#B45309', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                <span className="material-symbols-outlined" style={{ fontSize: 10, fontVariationSettings: "'FILL' 1" }}>stars</span>
-                {offer.loyalty_points_cost} pts
-              </span>
-            )}
+    <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 20, boxShadow: T.shadow, overflow: 'hidden', display: 'flex', flexDirection: 'column', transition: 'all 0.22s' }}
+      onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = T.shadowHover; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)'; }}
+      onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = T.shadow; (e.currentTarget as HTMLDivElement).style.transform = 'none'; }}
+    >
+      {imageUrl ? (
+        <div style={{ position: 'relative', height: 110 }}>
+          <img src={imageUrl} alt={offer.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom,transparent 25%,rgba(0,0,0,0.38))' }} />
+          <div style={{ position: 'absolute', top: 10, right: 10, width: 34, height: 34, borderRadius: 11, background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 17, color: colors.fg, fontVariationSettings: "'FILL' 1" }}>{icon}</span>
           </div>
-          <p style={{ margin: '6px 0 0', fontSize: 13, color: T.textMuted, lineHeight: 1.5 }}>{offer.description}</p>
+          <div style={{ position: 'absolute', bottom: 9, left: 11 }}>
+            <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 7px', borderRadius: 999, background: offer.active ? 'rgba(22,163,74,0.88)' : 'rgba(148,163,184,0.88)', color: '#fff', backdropFilter: 'blur(4px)' }}>{offer.active ? 'Active' : 'Inactive'}</span>
+          </div>
         </div>
-      </div>
-
-      {applicableNames.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-          {applicableNames.map((n) => (
-            <span key={n} style={{ fontSize: 11, fontWeight: 700, padding: '5px 8px', borderRadius: 999, background: T.orangeLight, color: T.orangeDark, border: `1px solid ${T.border}` }}>{n}</span>
-          ))}
-        </div>
+      ) : (
+        <div style={{ height: 5, background: colors.gradient }} />
       )}
 
-      <div style={{ display: 'flex', gap: 8 }}>
-        <button onClick={() => onEdit(offer)} style={{ flex: 1, border: `1px solid ${T.border}`, background: T.soft, color: T.textMuted, borderRadius: 10, padding: '9px 10px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-          <span className="material-symbols-outlined" style={{ fontSize: 14 }}>edit</span>
-          Edit
-        </button>
-        <button onClick={() => onToggle(offer)} style={{ flex: 1, border: `1px solid ${offer.active ? '#FECACA' : '#DBEAFE'}`, background: offer.active ? '#FEF2F2' : '#EFF6FF', color: offer.active ? '#DC2626' : '#2563EB', borderRadius: 10, padding: '9px 10px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-          <span className="material-symbols-outlined" style={{ fontSize: 14 }}>{offer.active ? 'toggle_off' : 'toggle_on'}</span>
-          {offer.active ? 'Deactivate' : 'Activate'}
-        </button>
-        <button onClick={() => onDelete(offer)} title="Delete offer" style={{ width: 40, border: `1px solid #FECACA`, background: '#FEF2F2', color: '#DC2626', borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span className="material-symbols-outlined" style={{ fontSize: 16 }}>delete</span>
-        </button>
+      <div style={{ padding: '14px 15px 12px', flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 11 }}>
+          {!imageUrl && (
+            <div style={{ width: 42, height: 42, borderRadius: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', background: colors.bg, flexShrink: 0 }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 21, color: colors.fg, fontVariationSettings: "'FILL' 1" }}>{icon}</span>
+            </div>
+          )}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap', marginBottom: 3 }}>
+              <h4 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: T.text }}>{offer.title}</h4>
+              {!imageUrl && <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.07em', textTransform: 'uppercase', borderRadius: 999, padding: '3px 8px', background: offer.active ? '#F0FDF4' : '#F3F4F6', color: offer.active ? '#16A34A' : T.textMuted }}>{offer.active ? 'Active' : 'Inactive'}</span>}
+              {offer.loyalty_points_earn != null && !offer.is_points_redemption && (
+                <span style={{ fontSize: 10, fontWeight: 800, padding: '3px 7px', borderRadius: 999, background: '#F0FDF4', color: '#16A34A', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 10, fontVariationSettings: "'FILL' 1" }}>add_circle</span>+{offer.loyalty_points_earn} pts
+                </span>
+              )}
+              {offer.is_points_redemption && offer.loyalty_points_cost != null && (
+                <span style={{ fontSize: 10, fontWeight: 800, padding: '3px 7px', borderRadius: 999, background: '#FEF3C7', color: '#B45309', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 10, fontVariationSettings: "'FILL' 1" }}>stars</span>{offer.loyalty_points_cost} pts
+                </span>
+              )}
+            </div>
+            <p style={{ margin: 0, fontSize: 13, color: T.textMuted, lineHeight: 1.5 }}>{offer.description}</p>
+          </div>
+        </div>
+
+        {applicableNames.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+            {applicableNames.map((n) => (
+              <span key={n} style={{ fontSize: 11, fontWeight: 700, padding: '4px 8px', borderRadius: 999, background: colors.bg, color: colors.fg, border: `1px solid ${T.border}` }}>{n}</span>
+            ))}
+          </div>
+        )}
+
+        <div style={{ display: 'flex', gap: 7, marginTop: 'auto' }}>
+          <button onClick={() => onEdit(offer)} style={{ flex: 1, border: `1px solid ${T.border}`, background: T.soft, color: T.textMuted, borderRadius: 10, padding: '8px 10px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, transition: 'all 0.18s', fontSize: 12 }}
+            onMouseEnter={e => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.color = '#2563EB'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = T.soft; e.currentTarget.style.color = T.textMuted; }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 14 }}>edit</span>Edit
+          </button>
+          <button onClick={() => onToggle(offer)} style={{ flex: 1, border: `1px solid ${offer.active ? '#FECACA' : '#DBEAFE'}`, background: offer.active ? '#FEF2F2' : '#EFF6FF', color: offer.active ? '#DC2626' : '#2563EB', borderRadius: 10, padding: '8px 10px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, transition: 'all 0.18s', fontSize: 12 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 14 }}>{offer.active ? 'toggle_off' : 'toggle_on'}</span>
+            {offer.active ? 'Deactivate' : 'Activate'}
+          </button>
+          <button onClick={() => onDelete(offer)} title="Delete offer" style={{ width: 38, border: '1px solid #FECACA', background: '#FEF2F2', color: '#DC2626', borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.18s' }}
+            onMouseEnter={e => (e.currentTarget.style.background = '#FEE2E2')}
+            onMouseLeave={e => (e.currentTarget.style.background = '#FEF2F2')}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 15 }}>delete</span>
+          </button>
+        </div>
       </div>
     </div>
   );
 }
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SET POINTS TAB  (inline Points Rules panel in Offers)

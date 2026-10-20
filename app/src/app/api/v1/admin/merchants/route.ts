@@ -17,7 +17,32 @@ export async function GET(request: NextRequest) {
     include: { _count: { select: { members: true, users: true } } },
     orderBy: { createdAt: 'desc' },
   });
-  return NextResponse.json(merchants);
+
+  const mapped = merchants.map(m => ({
+    ...m,
+    id: m.id,
+    business_name: m.businessName,
+    businessName: m.businessName,
+    category: m.category || '',
+    plan_tier: m.planTier || 'Starter',
+    planTier: m.planTier || 'Starter',
+    whatsapp_number: m.whatsappNumber || '',
+    whatsappNumber: m.whatsappNumber || '',
+    logo_url: m.logoUrl,
+    logoUrl: m.logoUrl,
+    card_design_url: m.cardDesignUrl,
+    cardDesignUrl: m.cardDesignUrl,
+    address: m.address,
+    status: m.status,
+    approval_status: m.approvalStatus,
+    approvalStatus: m.approvalStatus,
+    referral_bonus_points: m.referralBonusPoints ? Number(m.referralBonusPoints) : 50,
+    created_at: m.createdAt.toISOString(),
+    createdAt: m.createdAt.toISOString(),
+    member_count: m._count?.members ?? 0,
+  }));
+
+  return NextResponse.json(mapped);
 }
 
 export async function POST(request: NextRequest) {

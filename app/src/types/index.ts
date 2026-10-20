@@ -121,6 +121,8 @@ export interface OfferTemplate {
   loyalty_points_cost?: number | null;
   min_visits?: number | null;
   min_purchase_amount?: number | null;
+  /** Optional promo / offer banner image (URL or data URL) */
+  image_url?: string | null;
 }
 
 export interface MemberOfferState {
@@ -288,9 +290,11 @@ export interface LoginResponse {
 
 export interface PublicMemberView {
   member_id: string;            // added — backend returns this
+  merchant_id?: string;
   merchant_name: string;
   merchant_logo?: string;
   merchant_phone?: string;
+  card_design_url?: string | null;
   member_name: string;
   member_code: string;          // e.g. "SAL001" — used for display and lookup
   phone?: string;
@@ -304,9 +308,12 @@ export interface PublicMemberView {
   physical_card_number?: string;
   other_memberships?: Array<{
     member_id: string;
+    merchant_id?: string;
     merchant_name: string;
     merchant_logo?: string;
+    card_design_url?: string | null;
     member_code: string;
+    physical_card_number?: string;
     loyalty_points: number;
     membership_type_name: string;
     status: string;
@@ -322,6 +329,7 @@ export interface PublicMemberView {
     is_points_redemption?: boolean;
     points_cost?: number;
     loyalty_points_earn?: number;
+    image_url?: string | null;
   }>;
   open_lucky_draws?: Array<{
     id: string;

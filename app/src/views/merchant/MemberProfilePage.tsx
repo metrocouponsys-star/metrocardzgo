@@ -732,23 +732,32 @@ export default function MemberProfilePage() {
                     return (
                       <div key={state.id} className="card p-4 space-y-3 border border-outline-variant/30 hover:border-primary/40 transition-all shadow-xs">
                         <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-body-md text-on-surface leading-snug">{offer.title}</p>
-                            {offer.description && (
-                              <p className="text-label-sm text-on-surface-variant mt-0.5 line-clamp-2">{offer.description}</p>
+                          <div className="flex items-start gap-3 flex-1 min-w-0">
+                            {(offer as any).image_url && (
+                              <img
+                                src={(offer as any).image_url}
+                                alt={offer.title}
+                                className="w-14 h-14 rounded-xl object-cover shrink-0 border border-outline-variant/40 shadow-xs"
+                              />
                             )}
-                            {offer.is_points_redemption && (
-                              <span className="inline-flex items-center gap-1 mt-1.5 bg-amber-100 text-amber-800 font-bold text-label-xs px-2.5 py-0.5 rounded-full border border-amber-200">
-                                <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
-                                {offer.loyalty_points_cost} pts to redeem
-                              </span>
-                            )}
-                            {offer.loyalty_points_earn && !offer.is_points_redemption && (
-                              <span className="inline-flex items-center gap-1 mt-1.5 bg-green-100 text-green-800 font-bold text-label-xs px-2.5 py-0.5 rounded-full border border-green-200">
-                                <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>add_circle</span>
-                                +{offer.loyalty_points_earn} pts earn
-                              </span>
-                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-body-md text-on-surface leading-snug">{offer.title}</p>
+                              {offer.description && (
+                                <p className="text-label-sm text-on-surface-variant mt-0.5 line-clamp-2">{offer.description}</p>
+                              )}
+                              {offer.is_points_redemption && (
+                                <span className="inline-flex items-center gap-1 mt-1.5 bg-amber-100 text-amber-800 font-bold text-label-xs px-2.5 py-0.5 rounded-full border border-amber-200">
+                                  <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
+                                  {offer.loyalty_points_cost} pts to redeem
+                                </span>
+                              )}
+                              {offer.loyalty_points_earn && !offer.is_points_redemption && (
+                                <span className="inline-flex items-center gap-1 mt-1.5 bg-green-100 text-green-800 font-bold text-label-xs px-2.5 py-0.5 rounded-full border border-green-200">
+                                  <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>add_circle</span>
+                                  +{offer.loyalty_points_earn} pts earn
+                                </span>
+                              )}
+                            </div>
                           </div>
                           {/* High-visibility Remaining Quantity Badge */}
                           {state.remaining_qty !== null && state.remaining_qty !== undefined && (

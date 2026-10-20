@@ -103,7 +103,7 @@ function fetchPage(table, offset) {
       let data = '';
       res.on('data', chunk => data += chunk);
       res.on('end', () => {
-        if (res.statusCode === 200) {
+        if (res.statusCode === 200 || res.statusCode === 206) {
           try {
             resolve(JSON.parse(data));
           } catch (e) {

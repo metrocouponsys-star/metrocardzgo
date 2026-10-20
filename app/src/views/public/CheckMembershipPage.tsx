@@ -12,15 +12,15 @@ import { InteractiveFlipCard } from '../../components/cards/InteractiveFlipCard'
 import { loadSavedCardDesign } from '../../types/cardDesign';
 
 function formatCardNumber(num?: string | null): string {
-  if (!num) return 'MC •••• •••• ••••';
-  const clean = num.replace(/\s+/g, '');
+  if (!num) return '•••• •••• •••• ••••';
+  const clean = num.replace(/[#\s]/g, '').trim();
   if (clean.length === 16) {
     return `${clean.slice(0, 4)} ${clean.slice(4, 8)} ${clean.slice(8, 12)} ${clean.slice(12, 16)}`;
   }
   if (clean.length >= 8) {
     return clean.match(/.{1,4}/g)?.join(' ') || clean;
   }
-  return `MC-CARD-${clean}`;
+  return clean;
 }
 
 const OFFER_ICONS: Record<string, string> = {
@@ -273,6 +273,8 @@ function MembershipResult({
   isSyncing,
   lastSyncedAt,
   syncToast,
+  onSwitchMerchant,
+  switchingMemberId,
 }: {
   data: PublicMemberView;
   onReset: () => void;
@@ -280,6 +282,8 @@ function MembershipResult({
   isSyncing: boolean;
   lastSyncedAt: Date;
   syncToast: string | null;
+  onSwitchMerchant: (memberId: string) => Promise<void> | void;
+  switchingMemberId: string | null;
 }) {
   const [dataReady, setDataReady] = useState(false);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
@@ -289,12 +293,42 @@ function MembershipResult({
   const points = useCountUp(pointsVal, 1200, dataReady);
 
   const merchantDesign = React.useMemo(() => {
-    const loaded = loadSavedCardDesign((data as any).merchant_id || 'mer-001', 'store_loyalty');
+    const loaded = loadSavedCardDesign((data as any).merchant_id || data.member_id || 'mer-001', 'store_loyalty');
+    const rawDesign = (data as any)?.card_design_url;
+    if (rawDesign) {
+      try {
+        if (typeof rawDesign === 'string' && rawDesign.trim().startsWith('{')) {
+          const parsed = JSON.parse(rawDesign);
+          return {
+            ...loaded,
+            ...parsed,
+            brandName: (data.merchant_name || parsed.brandName || loaded.brandName).toUpperCase(),
+            customLogoUrl: parsed.customLogoUrl || (data as any).merchant_logo || loaded.customLogoUrl,
+          };
+        } else if (typeof rawDesign === 'string' && rawDesign.trim().length > 0) {
+          return {
+            ...loaded,
+            backgroundImageUrl: rawDesign,
+            brandName: (data.merchant_name || loaded.brandName).toUpperCase(),
+            customLogoUrl: (data as any).merchant_logo || loaded.customLogoUrl,
+          };
+        }
+      } catch {
+        return {
+          ...loaded,
+          backgroundImageUrl: rawDesign,
+          brandName: (data.merchant_name || loaded.brandName).toUpperCase(),
+        };
+      }
+    }
     if (data.merchant_name) {
       loaded.brandName = data.merchant_name.toUpperCase();
     }
+    if ((data as any).merchant_logo && !loaded.customLogoUrl) {
+      loaded.customLogoUrl = (data as any).merchant_logo;
+    }
     return loaded;
-  }, [data.merchant_name, (data as any).merchant_id]);
+  }, [data.merchant_name, (data as any).merchant_id, data.member_id, (data as any)?.card_design_url, (data as any)?.merchant_logo]);
 
   useEffect(() => {
     const t = setTimeout(() => setDataReady(true), 120);
@@ -356,17 +390,41 @@ function MembershipResult({
               </p>
               <div className="space-y-1.5">
                 {data.other_memberships.map(other => (
-                  <a
+                  <button
                     key={other.member_id}
-                    href={`/m/${other.member_id}`}
-                    className="p-2.5 rounded-xl bg-white border border-slate-200 hover:border-amber-400 flex items-center justify-between transition-all group shadow-xs"
+                    type="button"
+                    disabled={switchingMemberId === other.member_id}
+                    onClick={() => onSwitchMerchant(other.member_id)}
+                    className="w-full p-2.5 rounded-xl bg-white border border-slate-200 hover:border-amber-400 hover:bg-amber-50/20 flex items-center justify-between transition-all group shadow-xs text-left active:scale-[0.99] disabled:opacity-60 cursor-pointer"
                   >
                     <div className="min-w-0 pr-2">
                       <p className="text-xs font-bold text-slate-900 truncate group-hover:text-amber-700">{other.merchant_name}</p>
-                      <p className="text-[10px] text-slate-500">{other.membership_type_name} · ★ {other.loyalty_points} pts</p>
+                      <p className="text-[10px] text-slate-500 flex items-center gap-1 mt-0.5">
+                        <span className="font-semibold">{other.membership_type_name}</span>
+                        <span>·</span>
+                        {other.physical_card_number && (
+                          <>
+                            <span className="font-mono text-slate-700">{formatCardNumber(other.physical_card_number)}</span>
+                            <span>·</span>
+                          </>
+                        )}
+                        <span className="text-amber-700 font-bold">★ {other.loyalty_points} pts</span>
+                      </p>
                     </div>
-                    <span className="material-symbols-outlined text-slate-400 group-hover:text-amber-600 text-[16px] shrink-0">open_in_new</span>
-                  </a>
+                    <div className="flex items-center gap-1 text-amber-700 font-bold text-xs shrink-0 bg-amber-100/70 group-hover:bg-amber-200 px-2.5 py-1 rounded-lg transition-colors">
+                      {switchingMemberId === other.member_id ? (
+                        <>
+                          <span className="w-3 h-3 rounded-full border-2 border-amber-700 border-t-transparent animate-spin" />
+                          <span className="text-[10px]">Switching…</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Switch</span>
+                          <span className="material-symbols-outlined text-[14px]">swap_horiz</span>
+                        </>
+                      )}
+                    </div>
+                  </button>
                 ))}
               </div>
             </div>
@@ -409,6 +467,7 @@ function MembershipResult({
         {/* ── 3D Interactive Merchant-Designed Member Pass ── */}
         <div className="space-y-2">
           <InteractiveFlipCard
+            key={`${data.member_id}-${(data as any).merchant_id || ''}-${data.physical_card_number || data.member_code}`}
             design={merchantDesign}
             memberName={data.member_name}
             cardNumber={formatCardNumber(data.physical_card_number || data.member_code)}
@@ -561,83 +620,114 @@ function MembershipResult({
                     return (
                       <div
                         key={offer.id || idx}
-                        className={`rounded-2xl p-4 border transition-all ${
+                        className={`rounded-2xl border transition-all overflow-hidden ${
                           isExhausted
                             ? 'bg-slate-100/70 border-slate-200 opacity-70'
                             : 'bg-white border-slate-200/90 shadow-xs hover:border-amber-400 hover:shadow-md'
                         }`}
                       >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-start gap-3 flex-1 min-w-0">
-                            <div
-                              className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
-                                isExhausted
-                                  ? 'bg-slate-200 border-slate-300 text-slate-500'
-                                  : 'bg-amber-100 border-amber-300 text-amber-800 shadow-2xs'
-                              }`}
-                            >
-                              <span className="material-symbols-outlined text-[20px]">
-                                {OFFER_ICONS[offer.offer_type] || 'star'}
+                        {/* Offer Image Header when present */}
+                        {offer.image_url && (
+                          <div className="relative h-32 w-full bg-slate-100 overflow-hidden">
+                            <img
+                              src={offer.image_url}
+                              alt={offer.title}
+                              className={`w-full h-full object-cover transition-transform duration-300 hover:scale-105 ${isExhausted ? 'grayscale' : ''}`}
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                            <div className="absolute top-2.5 right-2.5">
+                              <span className={`text-[9px] uppercase font-black px-2.5 py-1 rounded-full backdrop-blur-md shadow-sm border ${badge.bg} ${badge.text} ${badge.border}`}>
+                                {badge.label}
                               </span>
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className={`text-[9px] uppercase font-black px-2 py-0.5 rounded-full border ${badge.bg} ${badge.text} ${badge.border}`}>
-                                  {badge.label}
+                            {hasQty && (
+                              <div className="absolute bottom-2.5 left-2.5">
+                                <span className={`text-[10px] font-black px-2 py-0.5 rounded-md backdrop-blur-md text-white ${isExhausted ? 'bg-slate-900/70' : 'bg-amber-600/90'}`}>
+                                  {isExhausted ? 'Redeemed' : `${remainingVal}/${initialVal} left`}
                                 </span>
-                                {isExhausted && (
-                                  <span className="text-[9px] uppercase font-black bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full border border-rose-200 flex items-center gap-0.5">
-                                    <span className="material-symbols-outlined text-[10px]">cancel</span>
-                                    Fully Redeemed
-                                  </span>
-                                )}
                               </div>
-                              <h4 className={`font-bold text-sm mt-1 leading-snug ${isExhausted ? 'text-slate-500 line-through' : 'text-slate-900'}`}>
-                                {offer.title}
-                              </h4>
-                              {offer.description && (
-                                <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">{offer.description}</p>
-                              )}
-                              <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
-                                {offer.points_cost > 0 && (
-                                  <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 flex items-center gap-1">
-                                    <span className="material-symbols-outlined text-[11px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
-                                    {offer.points_cost} pts to redeem
-                                  </span>
-                                )}
-                                {offer.loyalty_points_earn > 0 && (
-                                  <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 flex items-center gap-1">
-                                    <span className="material-symbols-outlined text-[11px]">add_circle</span>
-                                    +{offer.loyalty_points_earn} pts earn
-                                  </span>
-                                )}
-                              </div>
-                            </div>
+                            )}
                           </div>
+                        )}
 
-                          {/* Quota Badge (mirrors merchant dashboard: 4/10 left) */}
-                          {hasQty ? (
-                            <div className="shrink-0 text-right">
-                              <span
-                                className={`inline-flex items-center gap-1 text-xs font-black px-3 py-1.5 rounded-full shadow-2xs border ${
-                                  isExhausted
-                                    ? 'bg-slate-200 text-slate-600 border-slate-300'
-                                    : 'bg-amber-500 text-slate-950 border-amber-600'
-                                }`}
-                              >
-                                <span className="material-symbols-outlined text-[13px]">confirmation_number</span>
-                                {remainingVal}/{initialVal} left
-                              </span>
+                        <div className="p-4 space-y-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-start gap-3 flex-1 min-w-0">
+                              {!offer.image_url && (
+                                <div
+                                  className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
+                                    isExhausted
+                                      ? 'bg-slate-200 border-slate-300 text-slate-500'
+                                      : 'bg-amber-100 border-amber-300 text-amber-800 shadow-2xs'
+                                  }`}
+                                >
+                                  <span className="material-symbols-outlined text-[20px]">
+                                    {OFFER_ICONS[offer.offer_type] || 'star'}
+                                  </span>
+                                </div>
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  {!offer.image_url && (
+                                    <span className={`text-[9px] uppercase font-black px-2 py-0.5 rounded-full border ${badge.bg} ${badge.text} ${badge.border}`}>
+                                      {badge.label}
+                                    </span>
+                                  )}
+                                  {isExhausted && (
+                                    <span className="text-[9px] uppercase font-black bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full border border-rose-200 flex items-center gap-0.5">
+                                      <span className="material-symbols-outlined text-[10px]">cancel</span>
+                                      Fully Redeemed
+                                    </span>
+                                  )}
+                                </div>
+                                <h4 className={`font-bold text-sm mt-1 leading-snug ${isExhausted ? 'text-slate-500 line-through' : 'text-slate-900'}`}>
+                                  {offer.title}
+                                </h4>
+                                {offer.description && (
+                                  <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">{offer.description}</p>
+                                )}
+                                <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
+                                  {offer.points_cost > 0 && (
+                                    <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 flex items-center gap-1">
+                                      <span className="material-symbols-outlined text-[11px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
+                                      {offer.points_cost} pts to redeem
+                                    </span>
+                                  )}
+                                  {offer.loyalty_points_earn > 0 && (
+                                    <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 flex items-center gap-1">
+                                      <span className="material-symbols-outlined text-[11px]">add_circle</span>
+                                      +{offer.loyalty_points_earn} pts earn
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
                             </div>
-                          ) : (
-                            <div className="shrink-0 text-right">
-                              <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
-                                <span className="material-symbols-outlined text-[13px]">all_inclusive</span>
-                                Unlimited
-                              </span>
-                            </div>
-                          )}
-                        </div>
+
+                            {/* Quota Badge (mirrors merchant dashboard: 4/10 left) */}
+                            {!offer.image_url && (
+                              hasQty ? (
+                                <div className="shrink-0 text-right">
+                                  <span
+                                    className={`inline-flex items-center gap-1 text-xs font-black px-3 py-1.5 rounded-full shadow-2xs border ${
+                                      isExhausted
+                                        ? 'bg-slate-200 text-slate-600 border-slate-300'
+                                        : 'bg-amber-500 text-slate-950 border-amber-600'
+                                    }`}
+                                  >
+                                    <span className="material-symbols-outlined text-[13px]">confirmation_number</span>
+                                    {remainingVal}/{initialVal} left
+                                  </span>
+                                </div>
+                              ) : (
+                                <div className="shrink-0 text-right">
+                                  <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                    <span className="material-symbols-outlined text-[13px]">all_inclusive</span>
+                                    Unlimited
+                                  </span>
+                                </div>
+                              )
+                            )}
+                          </div>
 
                         {/* Visual Progress Bar (remaining vs initial quantity) */}
                         {hasQty && initialVal !== null && initialVal > 0 && (
@@ -667,6 +757,7 @@ function MembershipResult({
                             </div>
                           </div>
                         )}
+                        </div>
                       </div>
                     );
                   })
@@ -817,6 +908,7 @@ export default function CheckMembershipPage() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncedAt, setLastSyncedAt] = useState<Date>(new Date());
   const [syncToast, setSyncToast] = useState<string | null>(null);
+  const [switchingMemberId, setSwitchingMemberId] = useState<string | null>(null);
 
   const handleResult = (view: PublicMemberView, creds?: { identifier: string; last4: string }) => {
     setLoading(true);
@@ -831,6 +923,23 @@ export default function CheckMembershipPage() {
   const handleReset = () => {
     setData(null);
     setCredentials(null);
+  };
+
+  const handleSwitchMerchant = async (memberId: string) => {
+    setSwitchingMemberId(memberId);
+    try {
+      const switchedView = await api.getPublicMemberView(memberId);
+      if (switchedView) {
+        setData(switchedView);
+        setLastSyncedAt(new Date());
+        setSyncToast(`Switched to ${switchedView.merchant_name}! Pass updated.`);
+        setTimeout(() => setSyncToast(null), 3000);
+      }
+    } catch (err: any) {
+      console.error('[CheckMembership] Failed to switch merchant:', err);
+    } finally {
+      setSwitchingMemberId(null);
+    }
   };
 
   const syncMemberData = React.useCallback(async (silent = false) => {
@@ -937,6 +1046,8 @@ export default function CheckMembershipPage() {
         isSyncing={isSyncing}
         lastSyncedAt={lastSyncedAt}
         syncToast={syncToast}
+        onSwitchMerchant={handleSwitchMerchant}
+        switchingMemberId={switchingMemberId}
       />
     );
   }

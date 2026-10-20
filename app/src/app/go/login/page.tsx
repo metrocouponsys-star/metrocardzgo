@@ -35,6 +35,41 @@ export default function GoLoginPage() {
   const [passError, setPassError] = useState('');
   const [activePass, setActivePass] = useState<any | null>(null);
 
+  // Admin Authentication State (for 9029999614 and metrocouponsys@gmail.com)
+  const [adminIdentifier, setAdminIdentifier] = useState('9029999614');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [adminLoading, setAdminLoading] = useState(false);
+  const [adminError, setAdminError] = useState('');
+  const [adminShowPassword, setAdminShowPassword] = useState(false);
+
+  const handleAdminLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!adminIdentifier.trim() || !adminPassword.trim()) {
+      setAdminError('Please enter your email or mobile number and password');
+      return;
+    }
+    setAdminLoading(true);
+    setAdminError('');
+    try {
+      const res = await fetch('/api/admin/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: adminIdentifier.trim(), password: adminPassword.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setAdminError(data.message || 'Invalid credentials. Only authorized GO deal managers (9029999614 / metrocouponsys@gmail.com) can access.');
+        return;
+      }
+      router.push('/admin/deals');
+      router.refresh();
+    } catch {
+      setAdminError('Network error. Please check your connection and try again.');
+    } finally {
+      setAdminLoading(false);
+    }
+  };
+
   // Existing logged-in user check
   const [customer, setCustomer] = useState<any | null>(null);
 
@@ -866,38 +901,188 @@ export default function GoLoginPage() {
                   gap: 10,
                 }}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#EF4444' }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 20, color: '#EF4444' }}>
                   admin_panel_settings
                 </span>
-                <span style={{ fontSize: 13, color: '#7F1D1D', lineHeight: 1.5 }}>
-                  This area is reserved for Metro Cardz GO operations & deal managers.
-                </span>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#991B1B' }}>
+                    GO Deals Admin Authentication
+                  </div>
+                  <div style={{ fontSize: 11, color: '#7F1D1D', marginTop: 2 }}>
+                    Authorized accounts: 9029999614 / metrocouponsys@gmail.com
+                  </div>
+                </div>
               </div>
 
-              <Link href="/admin/login" style={{ textDecoration: 'none', display: 'block' }}>
+              <form onSubmit={handleAdminLogin} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#374151', marginBottom: 6 }}>
+                    Email or Mobile Number
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="text"
+                      value={adminIdentifier}
+                      onChange={(e) => {
+                        setAdminIdentifier(e.target.value);
+                        setAdminError('');
+                      }}
+                      placeholder="9029999614 or metrocouponsys@gmail.com"
+                      autoComplete="username"
+                      style={{
+                        width: '100%',
+                        height: 46,
+                        padding: '0 14px 0 40px',
+                        borderRadius: 10,
+                        background: '#F9FAFB',
+                        border: '1px solid #E5E7EB',
+                        fontSize: 14,
+                        color: '#111827',
+                        outline: 'none',
+                        boxSizing: 'border-box',
+                        fontFamily: 'inherit',
+                      }}
+                      autoFocus
+                    />
+                    <span
+                      className="material-symbols-outlined"
+                      style={{
+                        position: 'absolute',
+                        left: 12,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        fontSize: 18,
+                        color: '#9CA3AF',
+                      }}
+                    >
+                      person
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <label style={{ fontSize: 12, fontWeight: 700, color: '#374151' }}>
+                      Admin Password
+                    </label>
+                    <span style={{ fontSize: 11, color: '#9CA3AF' }}>Deal Manager Password</span>
+                  </div>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type={adminShowPassword ? 'text' : 'password'}
+                      value={adminPassword}
+                      onChange={(e) => {
+                        setAdminPassword(e.target.value);
+                        setAdminError('');
+                      }}
+                      placeholder="Enter admin password"
+                      autoComplete="current-password"
+                      style={{
+                        width: '100%',
+                        height: 46,
+                        padding: '0 40px 0 40px',
+                        borderRadius: 10,
+                        background: '#F9FAFB',
+                        border: '1px solid #E5E7EB',
+                        fontSize: 14,
+                        color: '#111827',
+                        outline: 'none',
+                        boxSizing: 'border-box',
+                        fontFamily: 'inherit',
+                      }}
+                    />
+                    <span
+                      className="material-symbols-outlined"
+                      style={{
+                        position: 'absolute',
+                        left: 12,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        fontSize: 18,
+                        color: '#9CA3AF',
+                      }}
+                    >
+                      lock
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setAdminShowPassword(!adminShowPassword)}
+                      style={{
+                        position: 'absolute',
+                        right: 12,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: 0,
+                        color: '#9CA3AF',
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
+                        {adminShowPassword ? 'visibility_off' : 'visibility'}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                {adminError && (
+                  <div
+                    style={{
+                      background: '#FEF2F2',
+                      border: '1px solid #FEE2E2',
+                      color: '#DC2626',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      padding: '10px 14px',
+                      borderRadius: 10,
+                    }}
+                  >
+                    {adminError}
+                  </div>
+                )}
+
                 <button
+                  type="submit"
+                  disabled={adminLoading}
                   style={{
                     width: '100%',
                     height: 50,
-                    border: '1.5px solid #E5E7EB',
-                    background: '#FFFFFF',
-                    color: '#111827',
+                    border: 'none',
+                    background: 'linear-gradient(135deg, #FF8A3D 0%, #EA580C 100%)',
+                    color: '#FFFFFF',
                     borderRadius: 13,
                     fontWeight: 700,
                     fontSize: 14,
-                    cursor: 'pointer',
+                    cursor: adminLoading ? 'not-allowed' : 'pointer',
+                    opacity: adminLoading ? 0.7 : 1,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: 8,
+                    boxShadow: '0 6px 16px rgba(234,88,12,0.25)',
+                    transition: 'all 0.2s',
                   }}
                 >
-                  <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
-                    lock_open
-                  </span>
-                  Continue to Admin Login
+                  {adminLoading ? (
+                    <>
+                      <span className="material-symbols-outlined animate-spin" style={{ fontSize: 18 }}>
+                        sync
+                      </span>
+                      <span>Authenticating…</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
+                        login
+                      </span>
+                      <span>Login to Manage Deals</span>
+                    </>
+                  )}
                 </button>
-              </Link>
+              </form>
             </div>
           )}
 

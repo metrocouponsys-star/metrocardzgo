@@ -62,6 +62,8 @@ function ProtectedRoute({ children, roles }: { children: React.ReactNode; roles?
   // Without this, the store briefly shows isAuthenticated=false → redirect loop.
   if (!_hasHydrated) return <HydrationSpinner />;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
+  // Super admin has universal access across all merchant and admin modules
+  if (user?.role === 'super_admin') return <>{children}</>;
   if (roles && user && !roles.includes(user.role)) {
     const fallback = user.role === 'staff' ? '/portal/members/search?tab=qr' : '/portal/dashboard';
     return <Navigate to={fallback} replace />;

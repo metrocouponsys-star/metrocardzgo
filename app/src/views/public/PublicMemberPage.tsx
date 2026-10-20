@@ -6,6 +6,18 @@ import { safeFormat } from '../../lib/dateUtils';
 import { InteractiveFlipCard } from '../../components/cards/InteractiveFlipCard';
 import { loadSavedCardDesign } from '../../types/cardDesign';
 
+function formatCardNumber(num?: string | null): string {
+  if (!num) return '•••• •••• •••• ••••';
+  const clean = num.replace(/[#\s]/g, '').trim();
+  if (clean.length === 16) {
+    return `${clean.slice(0, 4)} ${clean.slice(4, 8)} ${clean.slice(8, 12)} ${clean.slice(12, 16)}`;
+  }
+  if (clean.length >= 8) {
+    return clean.match(/.{1,4}/g)?.join(' ') || clean;
+  }
+  return clean;
+}
+
 // ── Offer icons ───────────────────────────────────────────────────────────
 const OFFER_ICONS: Record<string, string> = {
   percent_off: 'percent',
@@ -203,6 +215,44 @@ export default function PublicMemberPage() {
   // Avatar letters
   const initials = data.member_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'M';
 
+  const merchantDesign = React.useMemo(() => {
+    const loaded = loadSavedCardDesign(data?.merchant_id || data?.id || 'mer-001', 'store_loyalty');
+    const rawDesign = (data as any)?.card_design_url;
+    if (rawDesign) {
+      try {
+        if (typeof rawDesign === 'string' && rawDesign.trim().startsWith('{')) {
+          const parsed = JSON.parse(rawDesign);
+          return {
+            ...loaded,
+            ...parsed,
+            brandName: (data.merchant_name || parsed.brandName || loaded.brandName).toUpperCase(),
+            customLogoUrl: parsed.customLogoUrl || data.merchant_logo_url || loaded.customLogoUrl,
+          };
+        } else if (typeof rawDesign === 'string' && rawDesign.trim().length > 0) {
+          return {
+            ...loaded,
+            backgroundImageUrl: rawDesign,
+            brandName: (data.merchant_name || loaded.brandName).toUpperCase(),
+            customLogoUrl: data.merchant_logo_url || loaded.customLogoUrl,
+          };
+        }
+      } catch {
+        return {
+          ...loaded,
+          backgroundImageUrl: rawDesign,
+          brandName: (data.merchant_name || loaded.brandName).toUpperCase(),
+        };
+      }
+    }
+    if (data?.merchant_name) {
+      loaded.brandName = data.merchant_name.toUpperCase();
+    }
+    if (data?.merchant_logo_url && !loaded.customLogoUrl) {
+      loaded.customLogoUrl = data.merchant_logo_url;
+    }
+    return loaded;
+  }, [data?.merchant_name, data?.merchant_id, data?.id, (data as any)?.card_design_url, data?.merchant_logo_url]);
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] font-sans">
 
@@ -230,6 +280,44 @@ export default function PublicMemberPage() {
       </header>
 
       <div className="max-w-md mx-auto px-4 py-5 space-y-4 pb-12">
+
+        {/* ── Multi-Store Switcher Banner ── */}
+        {data.other_memberships && data.other_memberships.length > 0 && (
+          <div className="p-3 bg-white border border-slate-200 rounded-2xl text-left space-y-2 shadow-sm">
+            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-[15px] text-amber-600">storefront</span>
+              Switch to your other store memberships:
+            </p>
+            <div className="space-y-1.5">
+              {data.other_memberships.map((other: any) => (
+                <a
+                  key={other.member_id}
+                  href={`/check-membership`}
+                  className="p-2.5 rounded-xl bg-slate-50 hover:bg-amber-50/40 border border-slate-200 hover:border-amber-400 flex items-center justify-between transition-all group shadow-xs"
+                >
+                  <div className="min-w-0 pr-2">
+                    <p className="text-xs font-bold text-slate-900 truncate group-hover:text-amber-700">{other.merchant_name}</p>
+                    <p className="text-[10px] text-slate-500 flex items-center gap-1 mt-0.5">
+                      <span className="font-semibold">{other.membership_type_name}</span>
+                      <span>·</span>
+                      {other.physical_card_number && (
+                        <>
+                          <span className="font-mono text-slate-700">{formatCardNumber(other.physical_card_number)}</span>
+                          <span>·</span>
+                        </>
+                      )}
+                      <span className="text-amber-700 font-bold">★ {other.loyalty_points} pts</span>
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1 text-amber-700 font-bold text-xs shrink-0 bg-amber-100/70 group-hover:bg-amber-200 px-2.5 py-1 rounded-lg transition-colors">
+                    <span>View Pass</span>
+                    <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* ── Celebration banners ─────────────────────────────────────── */}
         {isBirthday && (
@@ -267,9 +355,10 @@ export default function PublicMemberPage() {
         {/* ── 3D Interactive Flippable Physical Card Pass ── */}
         <div className="space-y-2">
           <InteractiveFlipCard
-            design={loadSavedCardDesign(data.merchant_id || 'mer-001', 'store_loyalty')}
+            key={`${data.member_id}-${data.merchant_id || ''}-${data.physical_card_number || data.member_code}`}
+            design={merchantDesign}
             memberName={data.member_name}
-            cardNumber={`•••• •••• •••• ${data.member_code?.slice(-4) || '8842'}`}
+            cardNumber={formatCardNumber(data.physical_card_number || data.member_code)}
             validThru={safeFormat(data.expiry_date, 'MM/yy', '12/28')}
             tier={tierData?.tier_name || data.membership_type_name}
             points={data.loyalty_points}
@@ -466,84 +555,115 @@ export default function PublicMemberPage() {
                 return (
                   <div
                     key={offer.id || idx}
-                    className={`rounded-2xl p-4 border transition-all ${
+                    className={`rounded-2xl border transition-all overflow-hidden ${
                       isExhausted
                         ? 'bg-slate-100/70 border-slate-200 opacity-70'
                         : `${clr.bg} ${clr.border} shadow-xs`
                     }`}
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-start gap-3 flex-1 min-w-0">
-                        <div
-                          className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
-                            isExhausted
-                              ? 'bg-slate-200 border-slate-300 text-slate-500'
-                              : 'bg-white border-outline-variant/30 text-amber-800 shadow-2xs'
-                          }`}
-                        >
-                          <span className={`material-symbols-outlined text-[20px] ${isExhausted ? 'text-slate-500' : clr.icon}`} style={{ fontVariationSettings: "'FILL' 1" }}>
-                            {OFFER_ICONS[offer.offer_type] || 'star'}
+                    {/* Offer Image Header when present */}
+                    {offer.image_url && (
+                      <div className="relative h-28 w-full bg-slate-100 overflow-hidden">
+                        <img
+                          src={offer.image_url}
+                          alt={offer.title}
+                          className={`w-full h-full object-cover transition-transform duration-300 hover:scale-105 ${isExhausted ? 'grayscale' : ''}`}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
+                        <div className="absolute top-2.5 right-2.5">
+                          <span className={`text-[9px] uppercase font-black px-2.5 py-1 rounded-full backdrop-blur-md shadow-sm border ${badge.bg} ${badge.text} ${badge.border}`}>
+                            {badge.label}
                           </span>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className={`text-[9px] uppercase font-black px-2 py-0.5 rounded-full border ${badge.bg} ${badge.text} ${badge.border}`}>
-                              {badge.label}
+                        {hasQty && (
+                          <div className="absolute bottom-2.5 left-2.5">
+                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-md backdrop-blur-md text-white ${isExhausted ? 'bg-slate-900/70' : 'bg-amber-600/90'}`}>
+                              {isExhausted ? 'Redeemed' : `${remainingVal}/${initialVal} left`}
                             </span>
-                            {isExhausted && (
-                              <span className="text-[9px] uppercase font-black bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full border border-rose-200 flex items-center gap-0.5">
-                                <span className="material-symbols-outlined text-[10px]">cancel</span>
-                                Fully Redeemed
-                              </span>
-                            )}
                           </div>
-                          <p className={`font-bold text-[14px] mt-1 leading-snug ${isExhausted ? 'text-slate-500 line-through' : 'text-on-surface'}`}>
-                            {offer.title}
-                          </p>
-                          {offer.description && (
-                            <p className="text-[12px] text-on-surface-variant mt-0.5 leading-relaxed">{offer.description}</p>
-                          )}
-                          <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
-                            {offer.points_cost > 0 && (
-                              <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 flex items-center gap-1">
-                                <span className="material-symbols-outlined text-[11px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
-                                {offer.points_cost} pts to redeem
-                              </span>
-                            )}
-                            {offer.loyalty_points_earn > 0 && (
-                              <span className="text-[10px] font-bold text-secondary bg-secondary/[0.08] px-2 py-0.5 rounded-md border border-secondary/20 flex items-center gap-1">
-                                <span className="material-symbols-outlined text-[11px]">add_circle</span>
-                                +{offer.loyalty_points_earn} pts earn
-                              </span>
-                            )}
-                          </div>
-                        </div>
+                        )}
                       </div>
+                    )}
 
-                      {/* Quota Badge (mirrors merchant dashboard: 4/10 left) */}
-                      {hasQty ? (
-                        <div className="shrink-0 text-right">
-                          <span
-                            className={`inline-flex items-center gap-1 text-xs font-black px-3 py-1.5 rounded-full shadow-2xs border ${
-                              isExhausted
-                                ? 'bg-slate-200 text-slate-600 border-slate-300'
-                                : 'bg-primary text-on-primary border-primary-dark'
-                            }`}
-                            style={!isExhausted ? { background: '#D97706', color: '#FFFFFF', borderColor: '#B45309' } : undefined}
-                          >
-                            <span className="material-symbols-outlined text-[13px]">confirmation_number</span>
-                            {remainingVal}/{initialVal} left
-                          </span>
+                    <div className="p-4 space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3 flex-1 min-w-0">
+                          {!offer.image_url && (
+                            <div
+                              className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
+                                isExhausted
+                                  ? 'bg-slate-200 border-slate-300 text-slate-500'
+                                  : 'bg-white border-outline-variant/30 text-amber-800 shadow-2xs'
+                              }`}
+                            >
+                              <span className={`material-symbols-outlined text-[20px] ${isExhausted ? 'text-slate-500' : clr.icon}`} style={{ fontVariationSettings: "'FILL' 1" }}>
+                                {OFFER_ICONS[offer.offer_type] || 'star'}
+                              </span>
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {!offer.image_url && (
+                                <span className={`text-[9px] uppercase font-black px-2 py-0.5 rounded-full border ${badge.bg} ${badge.text} ${badge.border}`}>
+                                  {badge.label}
+                                </span>
+                              )}
+                              {isExhausted && (
+                                <span className="text-[9px] uppercase font-black bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full border border-rose-200 flex items-center gap-0.5">
+                                  <span className="material-symbols-outlined text-[10px]">cancel</span>
+                                  Fully Redeemed
+                                </span>
+                              )}
+                            </div>
+                            <p className={`font-bold text-[14px] mt-1 leading-snug ${isExhausted ? 'text-slate-500 line-through' : 'text-on-surface'}`}>
+                              {offer.title}
+                            </p>
+                            {offer.description && (
+                              <p className="text-[12px] text-on-surface-variant mt-0.5 leading-relaxed">{offer.description}</p>
+                            )}
+                            <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
+                              {offer.points_cost > 0 && (
+                                <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 flex items-center gap-1">
+                                  <span className="material-symbols-outlined text-[11px]" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
+                                  {offer.points_cost} pts to redeem
+                                </span>
+                              )}
+                              {offer.loyalty_points_earn > 0 && (
+                                <span className="text-[10px] font-bold text-secondary bg-secondary/[0.08] px-2 py-0.5 rounded-md border border-secondary/20 flex items-center gap-1">
+                                  <span className="material-symbols-outlined text-[11px]">add_circle</span>
+                                  +{offer.loyalty_points_earn} pts earn
+                                </span>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                      ) : (
-                        <div className="shrink-0 text-right">
-                          <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
-                            <span className="material-symbols-outlined text-[13px]">all_inclusive</span>
-                            Unlimited
-                          </span>
-                        </div>
-                      )}
-                    </div>
+
+                        {/* Quota Badge (mirrors merchant dashboard: 4/10 left) */}
+                        {!offer.image_url && (
+                          hasQty ? (
+                            <div className="shrink-0 text-right">
+                              <span
+                                className={`inline-flex items-center gap-1 text-xs font-black px-3 py-1.5 rounded-full shadow-2xs border ${
+                                  isExhausted
+                                    ? 'bg-slate-200 text-slate-600 border-slate-300'
+                                    : 'bg-primary text-on-primary border-primary-dark'
+                                }`}
+                                style={!isExhausted ? { background: '#D97706', color: '#FFFFFF', borderColor: '#B45309' } : undefined}
+                              >
+                                <span className="material-symbols-outlined text-[13px]">confirmation_number</span>
+                                {remainingVal}/{initialVal} left
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="shrink-0 text-right">
+                              <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                <span className="material-symbols-outlined text-[13px]">all_inclusive</span>
+                                Unlimited
+                              </span>
+                            </div>
+                          )
+                        )}
+                      </div>
 
                     {/* Visual Progress Bar (remaining vs initial quantity) */}
                     {hasQty && initialVal !== null && initialVal > 0 && (
@@ -573,6 +693,7 @@ export default function PublicMemberPage() {
                         </div>
                       </div>
                     )}
+                    </div>
                   </div>
                 );
               })}

@@ -5,7 +5,15 @@ import { prisma } from '@/lib/prisma';
 export async function GET(request: NextRequest) {
   const auth = await requireAuth(request);
   if (auth instanceof NextResponse) return auth;
-  const merchantId = getMerchantId(auth, request);
+  let merchantId = getMerchantId(auth, request);
+  if (!merchantId && auth.role === 'super_admin') {
+    const firstMerchant = await prisma.merchant.findFirst({
+      where: { status: 'active' },
+      select: { id: true },
+      orderBy: { createdAt: 'asc' },
+    });
+    merchantId = firstMerchant?.id || null;
+  }
   if (!merchantId) return NextResponse.json({ detail: 'Merchant ID required' }, { status: 400 });
 
   const cards = await prisma.cardInventoryItem.findMany({

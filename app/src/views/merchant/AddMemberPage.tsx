@@ -7,6 +7,7 @@ import { Modal } from '../../components/ui/Modal';
 import type { MembershipType, CardInventoryItem } from '../../types';
 import * as api from '../../api';
 import { invalidateContaining } from '../../api/cache';
+import { safeFormat } from '../../lib/dateUtils';
 
 interface FormData {
   name: string;
@@ -33,6 +34,10 @@ export default function AddMemberPage() {
   const [cardSearch, setCardSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [duplicateId, setDuplicateId] = useState<string | null>(null);
+  const [activationDate, setActivationDate] = useState(() => {
+    return new Date().toISOString().split('T')[0];
+  });
+  const [cardConfirmed, setCardConfirmed] = useState(true);
 
   const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm<FormData>({
     defaultValues: {
@@ -48,9 +53,29 @@ export default function AddMemberPage() {
   const watchFamily2 = watch('family_dob_2');
   const watchFamily3 = watch('family_dob_3');
 
+  const calculatedExpiry = useMemo(() => {
+    if (!activationDate) return '';
+    const d = new Date(activationDate);
+    if (isNaN(d.getTime())) return '';
+    d.setFullYear(d.getFullYear() + 1);
+    return d.toISOString().split('T')[0];
+  }, [activationDate]);
+
   const selectedCard = useMemo(() => {
     return availableCards.find(c => c.id === selectedCardId);
   }, [availableCards, selectedCardId]);
+
+  const handleNextInStack = () => {
+    if (availableCards.length === 0) return;
+    const currentIndex = selectedCard ? availableCards.findIndex(c => c.id === selectedCard.id) : -1;
+    const nextIndex = (currentIndex + 1) % availableCards.length;
+    const nextCard = availableCards[nextIndex];
+    if (nextCard) {
+      setValue('card_id', nextCard.id, { shouldDirty: true, shouldValidate: true });
+      setCardConfirmed(true);
+      addToast('info', `Switched to Card #${nextIndex + 1} in stack (${nextCard.card_number})`);
+    }
+  };
 
   const filteredCards = useMemo(() => {
     if (!cardSearch.trim()) return availableCards;
@@ -64,27 +89,11 @@ export default function AddMemberPage() {
 
   const handleCardSearchChange = (val: string) => {
     setCardSearch(val);
-    let digits = val.replace(/\D/g, '');
-    if (val.includes('?n=')) {
-      const m = val.match(/[?&]n=([0-9]+)/);
-      if (m) digits = m[1];
-    }
-    if (digits.length >= 16) {
-      const match = availableCards.find(c => c.card_number.replace(/\D/g, '') === digits);
-      if (match) {
-        setValue('card_id', match.id, { shouldDirty: true, shouldValidate: true });
-        addToast('success', `Card ${match.card_number} selected!`);
-      }
-    }
   };
 
   const handleCardSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      if (filteredCards.length > 0) {
-        setValue('card_id', filteredCards[0].id, { shouldDirty: true, shouldValidate: true });
-        addToast('success', `Card ${filteredCards[0].card_number} selected`);
-      }
     }
   };
 
@@ -96,7 +105,8 @@ export default function AddMemberPage() {
         .sort((a, b) => a.card_number.localeCompare(b.card_number, undefined, { numeric: true, sensitivity: 'base' }));
       setAvailableCards(sorted);
       if (sorted.length > 0) {
-        setValue('card_id', sorted[0].id);
+        setValue('card_id', sorted[0].id, { shouldDirty: true, shouldValidate: true });
+        setCardConfirmed(true);
       }
     });
   }, []);
@@ -107,6 +117,8 @@ export default function AddMemberPage() {
     try {
       const createPayload = {
         ...data,
+        joined_date: activationDate ? new Date(activationDate).toISOString() : new Date().toISOString(),
+        expiry_date: calculatedExpiry ? new Date(calculatedExpiry).toISOString() : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
         date_of_birth: data.date_of_birth?.trim() ? data.date_of_birth.trim() : undefined,
         anniversary_date: data.anniversary_date?.trim() ? data.anniversary_date.trim() : undefined,
         family_dob_1: data.family_dob_1?.trim() ? data.family_dob_1.trim() : undefined,
@@ -119,8 +131,8 @@ export default function AddMemberPage() {
       const newMember = await api.createMember(user?.merchant_id || '', createPayload as any);
       invalidateContaining('members');
       invalidateContaining('dashboard');
-      // If a card was selected, link it immediately
-      if (data.card_id) {
+      // If a card was selected and confirmed, link it immediately
+      if (data.card_id && cardConfirmed) {
         try {
           await api.linkCardToMember(user?.merchant_id || '', data.card_id, newMember.id);
           addToast('success', `Member ${newMember.name} (${newMember.member_code}) enrolled with card!`);
@@ -295,6 +307,47 @@ export default function AddMemberPage() {
           {errors.membership_type_id && <p className="text-error text-label-sm mt-1">{errors.membership_type_id.message}</p>}
         </div>
 
+        {/* Custom Activation Date (1-Year Validity Calculation) */}
+        <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 space-y-3">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <label className="form-label mb-0 flex items-center gap-1.5 font-bold text-on-surface" htmlFor="activation_date">
+              <span className="material-symbols-outlined text-primary text-[18px]">event_available</span>
+              Activation Date *
+            </label>
+            <span className="text-[11px] font-bold text-primary bg-primary/10 border border-primary/20 px-2.5 py-0.5 rounded-full">
+              1-Year Membership Validity
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <input
+                id="activation_date"
+                type="date"
+                required
+                className="input-field text-sm font-semibold bg-white"
+                value={activationDate}
+                onChange={e => setActivationDate(e.target.value)}
+              />
+              <p className="text-[11px] text-on-surface-variant mt-1 font-medium">
+                From this activation date, exactly 1 year of validity is considered.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-xl border border-outline-variant/60 p-3 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-[20px]">verified</span>
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] uppercase font-bold text-slate-400">Calculated Expiry Date</p>
+                <p className="text-xs font-black text-slate-900 mt-0.5">
+                  {safeFormat(calculatedExpiry, 'dd MMM yyyy', '—')}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* DOB */}
         <div>
           <div className="flex items-center justify-between mb-1">
@@ -440,93 +493,123 @@ export default function AddMemberPage() {
           </p>
         </div>
 
-        {/* Physical Card Assignment (with search and sequential order) */}
+        {/* Physical Card Assignment (with suggestion and explicit click-to-assign) */}
         {availableCards.length > 0 && (
           <div className="bg-surface-container-low border border-outline-variant rounded-xl p-md space-y-3">
-            {/* Header with Title and "Next in Stack" Quick Button */}
+            {/* Section Header */}
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div>
                 <label className="form-label mb-0" htmlFor="card_search">
-                  Assign Physical Card · Assigning Order
+                  Assign Physical Card · Sequential Stack
                 </label>
                 <p className="text-label-xs text-on-surface-variant">
-                  {availableCards.length} cards available in inventory · Sequential order allocation
+                  {availableCards.length} unassigned cards in merchant inventory
                 </p>
               </div>
-              {availableCards[0] && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setValue('card_id', availableCards[0].id, { shouldDirty: true, shouldValidate: true });
-                    setCardSearch('');
-                  }}
-                  className={`text-label-xs px-2.5 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-all ${
-                    selectedCardId === availableCards[0].id
-                      ? 'bg-primary text-on-primary shadow-xs'
-                      : 'bg-primary-container/30 text-primary hover:bg-primary-container/50'
-                  }`}
-                  title="Assign the top card from your physical stack"
-                >
-                  <span className="material-symbols-outlined text-[15px]">auto_awesome</span>
-                  Next in Stack: {availableCards[0].card_number}
-                </button>
-              )}
+              <span className="text-[11px] font-semibold text-on-surface-variant bg-surface-container px-2.5 py-1 rounded-full border border-outline-variant/40">
+                Click a card below to assign
+              </span>
             </div>
 
-            {/* Currently Selected Card Status Bar */}
+            {/* Currently Selected / Assigned Card */}
             {selectedCard ? (
-              <div className="bg-surface border border-primary/40 rounded-xl p-3 flex items-center justify-between gap-3 shadow-xs">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>credit_card</span>
-                  </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-mono font-bold text-body-md tracking-wider text-on-surface">
-                        {selectedCard.card_number}
-                      </span>
-                      {selectedCard.id === availableCards[0]?.id ? (
-                        <span className="text-[10px] bg-primary text-on-primary font-bold px-2 py-0.5 rounded-full">
-                          Top of Stack (#1)
-                        </span>
-                      ) : (
-                        <span className="text-[10px] bg-surface-container text-on-surface-variant font-bold px-2 py-0.5 rounded-full">
-                          #{availableCards.findIndex(c => c.id === selectedCard.id) + 1} in stack
-                        </span>
-                      )}
+              <div className="bg-emerald-50/90 border-2 border-emerald-500 rounded-xl p-3.5 space-y-3 shadow-xs animate-fade-in">
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                      <span className="material-symbols-outlined text-[22px]">credit_card</span>
                     </div>
-                    <p className="text-label-xs text-primary font-medium">
-                      ✓ Ready to link upon saving member
-                    </p>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[10px] uppercase font-black bg-emerald-200 text-emerald-950 px-2.5 py-0.5 rounded-full">
+                          {availableCards.findIndex(c => c.id === selectedCard.id) === 0
+                            ? 'Top of Stack (#1)'
+                            : `Stack (#${availableCards.findIndex(c => c.id === selectedCard.id) + 1})`}
+                        </span>
+                        <span className="font-mono font-bold text-body-md tracking-wider text-slate-900">
+                          {selectedCard.card_number}
+                        </span>
+                      </div>
+                      <p className="text-label-xs text-emerald-850 font-bold mt-0.5 flex items-center gap-1.5 text-emerald-800">
+                        <span className="material-symbols-outlined text-[15px] text-emerald-600 font-bold">check_circle</span>
+                        ✓ Ready to link upon saving member
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    {availableCards.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={handleNextInStack}
+                        className="px-3 py-1.5 rounded-xl border border-emerald-600 bg-white hover:bg-emerald-50 text-emerald-900 text-label-xs font-bold transition-all flex items-center gap-1 shadow-2xs"
+                        title="Move to next card in stack"
+                      >
+                        <span>Next in Stack</span>
+                        <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setValue('card_id', '', { shouldDirty: true, shouldValidate: true });
+                        setCardConfirmed(false);
+                        addToast('info', 'Physical card removed');
+                      }}
+                      className="px-3 py-1.5 rounded-xl border border-rose-300 bg-white hover:bg-rose-50 text-rose-700 text-label-xs font-bold transition-all flex items-center gap-1 shadow-2xs"
+                      title="Remove Card"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">close</span>
+                      <span>Remove Card</span>
+                    </button>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setValue('card_id', '', { shouldDirty: true, shouldValidate: true })}
-                  className="text-label-xs text-on-surface-variant hover:text-error hover:bg-error-container/20 px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-1 shrink-0"
-                  title="Remove card assignment"
-                >
-                  <span className="material-symbols-outlined text-[16px]">close</span>
-                  <span>Remove Card</span>
-                </button>
+
+                <div className="pt-2 border-t border-emerald-200/70 flex items-center justify-between flex-wrap gap-2">
+                  <label className="flex items-center gap-2 text-label-xs font-bold text-emerald-950 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={cardConfirmed}
+                      onChange={e => setCardConfirmed(e.target.checked)}
+                      className="w-4 h-4 text-emerald-600 rounded border-emerald-300 focus:ring-emerald-500"
+                    />
+                    <span>Confirm selected card for this member</span>
+                  </label>
+                  {!cardConfirmed && (
+                    <span className="text-[10px] text-amber-800 font-bold bg-amber-100 px-2 py-0.5 rounded">
+                      Unconfirmed — will not be linked on save unless checked
+                    </span>
+                  )}
+                </div>
               </div>
             ) : (
-              <div className="bg-surface border border-dashed border-outline-variant rounded-xl p-3 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-on-surface-variant text-label-sm">
-                  <span className="material-symbols-outlined text-[18px]">credit_card_off</span>
-                  <span>No physical card selected (member will use digital pass only)</span>
-                </div>
-                {availableCards[0] && (
+              /* Automatic Suggestion Banner when removed or unassigned */
+              availableCards[0] && (
+                <div className="bg-amber-50/80 border-2 border-amber-300 rounded-xl p-3 flex items-center justify-between gap-3 shadow-xs">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="material-symbols-outlined text-amber-700 text-[20px]">credit_card_off</span>
+                    <div>
+                      <span className="text-label-xs font-bold text-amber-950">No card currently assigned</span>
+                      <p className="text-[11px] text-amber-900/80">
+                        Top of stack ready: <span className="font-mono font-bold">{availableCards[0].card_number}</span>
+                      </p>
+                    </div>
+                  </div>
                   <button
                     type="button"
-                    onClick={() => setValue('card_id', availableCards[0].id, { shouldDirty: true, shouldValidate: true })}
-                    className="text-label-xs text-primary font-bold hover:underline flex items-center gap-1"
+                    onClick={() => {
+                      setValue('card_id', availableCards[0].id, { shouldDirty: true, shouldValidate: true });
+                      setCardConfirmed(true);
+                      addToast('success', `Assigned Top of Stack (#1): ${availableCards[0].card_number}`);
+                    }}
+                    className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-label-xs flex items-center gap-1 shadow-xs transition-all shrink-0 active:scale-95"
+                    title="Click to assign Top of Stack (#1)"
                   >
-                    <span className="material-symbols-outlined text-[14px]">add</span>
-                    Assign Top Card
+                    <span className="material-symbols-outlined text-[15px]">add_card</span>
+                    <span>Assign Top of Stack (#1)</span>
                   </button>
-                )}
-              </div>
+                </div>
+              )
             )}
 
             {/* Search Input Field */}
@@ -560,7 +643,10 @@ export default function AddMemberPage() {
               {/* Option: No physical card */}
               <button
                 type="button"
-                onClick={() => setValue('card_id', '', { shouldDirty: true, shouldValidate: true })}
+                onClick={() => {
+                  setValue('card_id', '', { shouldDirty: true, shouldValidate: true });
+                  setCardConfirmed(false);
+                }}
                 className={`w-full text-left px-3 py-2 flex items-center justify-between text-label-sm transition-colors ${
                   !selectedCardId
                     ? 'bg-primary-container/20 text-primary font-bold'
@@ -589,10 +675,12 @@ export default function AddMemberPage() {
                       type="button"
                       onClick={() => {
                         setValue('card_id', c.id, { shouldDirty: true, shouldValidate: true });
+                        setCardConfirmed(true);
+                        addToast('success', `Card ${c.card_number} assigned!`);
                       }}
                       className={`w-full text-left px-3 py-2.5 flex items-center justify-between transition-colors ${
                         isSelected
-                          ? 'bg-primary-container/30 text-primary font-bold'
+                          ? 'bg-emerald-50 text-emerald-950 font-bold border-l-4 border-emerald-500'
                           : 'hover:bg-surface-container text-on-surface'
                       }`}
                     >
@@ -604,14 +692,19 @@ export default function AddMemberPage() {
                           {c.card_number}
                         </span>
                         {idx === 0 && (
-                          <span className="text-[10px] bg-primary/10 text-primary font-bold px-1.5 py-0.5 rounded shrink-0">
-                            Top
+                          <span className="text-[10px] bg-amber-100 text-amber-900 font-black px-1.5 py-0.5 rounded shrink-0 border border-amber-300/60">
+                            Suggested
                           </span>
                         )}
                       </div>
-                      {isSelected && (
-                        <span className="material-symbols-outlined text-primary text-[18px] shrink-0">
-                          check_circle
+                      {isSelected ? (
+                        <span className="text-emerald-800 text-[11px] font-black bg-emerald-100 px-2.5 py-0.5 rounded-full flex items-center gap-1 shrink-0 border border-emerald-300">
+                          <span className="material-symbols-outlined text-[14px]">check_circle</span>
+                          Assigned
+                        </span>
+                      ) : (
+                        <span className="text-primary text-[11px] font-bold bg-primary-container/25 hover:bg-primary hover:text-on-primary px-2.5 py-1 rounded-lg transition-colors shrink-0">
+                          Click to Assign
                         </span>
                       )}
                     </button>

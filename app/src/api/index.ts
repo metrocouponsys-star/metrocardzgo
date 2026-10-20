@@ -14,7 +14,7 @@
 import * as mock from './client';
 import * as real from './realClient';
 
-const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK_DATA !== 'false';
+const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
 const api = USE_MOCK ? mock : real;
 
 export const login = api.login;
@@ -55,6 +55,7 @@ export const getMerchantUsers = api.getMerchantUsers;
 export const createMerchantUser = api.createMerchantUser;
 export const updateMerchant = api.updateMerchant;
 export const deleteMerchant = api.deleteMerchant;
+export const changeMerchantPassword = api.changeMerchantPassword;
 export const getMerchantProfile = api.getMerchantProfile;
 export const getMerchantDpa = api.getMerchantDpa;
 export const signMerchantDpa = api.signMerchantDpa;
@@ -139,6 +140,7 @@ export const getPublicWalletPassUrl = api.getPublicWalletPassUrl;
 
 // ── Media / Uploads ───────────────────────────────────────────────────────────
 export const uploadMerchantLogo = api.uploadMerchantLogo;
+export const getMerchantCardDesign = api.getMerchantCardDesign;
 export const setMerchantCardDesign = api.setMerchantCardDesign;
 export const downloadCardsQrExcel = api.downloadCardsQrExcel;
 

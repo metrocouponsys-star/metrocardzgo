@@ -65,7 +65,7 @@ function RewardCatalogTab({ active }: { active?: boolean }) {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editTarget, setEditTarget] = useState<any | null>(null);
-  const [form, setForm] = useState({ name: '', description: '', points_cost: '', quantity_available: '' });
+  const [form, setForm] = useState({ name: '', description: '', points_cost: '', quantity_available: '', image_url: '' });
   const [saving, setSaving] = useState(false);
 
   const load = () => {
@@ -76,8 +76,8 @@ function RewardCatalogTab({ active }: { active?: boolean }) {
   // Re-fetch whenever this tab becomes active (in case data changed while on another tab)
   useEffect(() => { if (active) load(); }, [active]);
 
-  const openCreate = () => { setEditTarget(null); setForm({ name: '', description: '', points_cost: '', quantity_available: '' }); setShowModal(true); };
-  const openEdit = (r: any) => { setEditTarget(r); setForm({ name: r.name, description: r.description, points_cost: String(r.points_cost), quantity_available: r.quantity_available != null ? String(r.quantity_available) : '' }); setShowModal(true); };
+  const openCreate = () => { setEditTarget(null); setForm({ name: '', description: '', points_cost: '', quantity_available: '', image_url: '' }); setShowModal(true); };
+  const openEdit = (r: any) => { setEditTarget(r); setForm({ name: r.name, description: r.description, points_cost: String(r.points_cost), quantity_available: r.quantity_available != null ? String(r.quantity_available) : '', image_url: r.image_url || '' }); setShowModal(true); };
 
   const save = async () => {
     if (!form.name || !form.points_cost) { addToast('error', 'Name and points cost are required'); return; }
@@ -85,6 +85,7 @@ function RewardCatalogTab({ active }: { active?: boolean }) {
     try {
       const data: any = { name: form.name, description: form.description, points_cost: Number(form.points_cost), is_active: true };
       if (form.quantity_available) data.quantity_available = Number(form.quantity_available);
+      if (form.image_url) data.image_url = form.image_url;
       let res: any;
       if (editTarget) {
         res = await api.updateReward(editTarget.id, data);
@@ -110,7 +111,7 @@ function RewardCatalogTab({ active }: { active?: boolean }) {
       invalidateContaining('public');
       addToast('success', editTarget ? 'Reward updated' : 'Reward created successfully');
       setShowModal(false); setEditTarget(null);
-      setForm({ name: '', description: '', points_cost: '', quantity_available: '' });
+      setForm({ name: '', description: '', points_cost: '', quantity_available: '', image_url: '' });
     } catch { addToast('error', 'Failed to save reward'); }
     finally { setSaving(false); }
   };
@@ -155,15 +156,25 @@ function RewardCatalogTab({ active }: { active?: boolean }) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
           {rewards.map(r => (
-            <div key={r.id} className={`card p-md flex flex-col gap-3 transition-all hover:shadow-elevated ${!r.is_active ? 'opacity-60' : ''}`}>
+            <div key={r.id} className={`card p-md flex flex-col gap-3 transition-all hover:shadow-elevated overflow-hidden ${!r.is_active ? 'opacity-60' : ''}`}>
+              {r.image_url && (
+                <div className="relative h-32 -mx-md -mt-md mb-1 overflow-hidden bg-surface-container">
+                  <img src={r.image_url} alt={r.name} className="w-full h-full object-cover" />
+                  <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[11px] font-bold backdrop-blur-md bg-white/90 text-on-surface shadow-xs">
+                    {Number(r.points_cost).toFixed(0)} pts
+                  </div>
+                </div>
+              )}
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
                   <h3 className="text-headline-sm font-bold text-on-surface truncate">{r.name}</h3>
                   <p className="text-body-sm text-on-surface-variant mt-0.5 line-clamp-2">{r.description}</p>
                 </div>
-                <div className={`px-3 py-1.5 rounded-xl font-bold text-label-sm flex-shrink-0 ${r.is_active ? 'bg-secondary-container text-secondary' : 'bg-surface-container text-on-surface-variant'}`}>
-                  {Number(r.points_cost).toFixed(0)} pts
-                </div>
+                {!r.image_url && (
+                  <div className={`px-3 py-1.5 rounded-xl font-bold text-label-sm flex-shrink-0 ${r.is_active ? 'bg-secondary-container text-secondary' : 'bg-surface-container text-on-surface-variant'}`}>
+                    {Number(r.points_cost).toFixed(0)} pts
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center gap-2 text-label-sm text-on-surface-variant">
@@ -202,6 +213,72 @@ function RewardCatalogTab({ active }: { active?: boolean }) {
           <div>
             <label className="form-label">Reward Name *</label>
             <input className="input-field" placeholder="e.g. Free Coffee" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} autoFocus />
+          </div>
+          <div>
+            <label className="form-label">Reward Image <span className="text-on-surface-variant font-normal text-label-xs">(optional — URL or photo)</span></label>
+            <div className="flex gap-2 items-center">
+              <input
+                type="text"
+                className="input-field flex-1"
+                placeholder="https://... or click upload"
+                value={form.image_url}
+                onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))}
+              />
+              <label className="btn-outline !py-2 !px-3 cursor-pointer text-label-sm shrink-0 flex items-center gap-1">
+                <span className="material-symbols-outlined text-[16px]">upload_file</span>
+                Upload
+                <input
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/webp,.jpeg,.jpg,.png,.webp"
+                  className="hidden"
+                  onChange={e => {
+                    const f = e.target.files?.[0];
+                    if (!f) return;
+                    const r = new FileReader();
+                    r.onload = ev => {
+                      const img = new Image();
+                      img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let w = img.width;
+                        let h = img.height;
+                        const maxDim = 600;
+                        if (w > maxDim || h > maxDim) {
+                          if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
+                          else { w = Math.round((w * maxDim) / h); h = maxDim; }
+                        }
+                        canvas.width = w;
+                        canvas.height = h;
+                        const ctx = canvas.getContext('2d');
+                        if (ctx) {
+                          ctx.drawImage(img, 0, 0, w, h);
+                          setForm(prev => ({ ...prev, image_url: canvas.toDataURL('image/jpeg', 0.82) }));
+                        } else {
+                          setForm(prev => ({ ...prev, image_url: ev.target?.result as string }));
+                        }
+                      };
+                      img.onerror = () => setForm(prev => ({ ...prev, image_url: ev.target?.result as string }));
+                      img.src = ev.target?.result as string;
+                    };
+                    r.readAsDataURL(f);
+                  }}
+                />
+              </label>
+              {form.image_url && (
+                <button
+                  type="button"
+                  onClick={() => setForm(f => ({ ...f, image_url: '' }))}
+                  className="p-2 text-error hover:bg-error-container/30 rounded-xl"
+                  title="Remove image"
+                >
+                  <span className="material-symbols-outlined text-[16px]">close</span>
+                </button>
+              )}
+            </div>
+            {form.image_url && (
+              <div className="mt-2 w-20 h-20 rounded-xl overflow-hidden border border-outline-variant/60 shadow-2xs">
+                <img src={form.image_url} alt="Preview" className="w-full h-full object-cover" />
+              </div>
+            )}
           </div>
           <div>
             <label className="form-label">Description</label>

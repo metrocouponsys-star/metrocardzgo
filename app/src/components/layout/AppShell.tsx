@@ -22,14 +22,24 @@ const T = {
 };
 
 // ─── Error Boundary ───────────────────────────────────────────────────────────
+interface EBProps {
+  children: React.ReactNode;
+  locationKey?: string;
+}
 interface EBState { hasError: boolean; message: string }
-class PageErrorBoundary extends Component<{ children: React.ReactNode }, EBState> {
+class PageErrorBoundary extends Component<EBProps, EBState> {
   state: EBState = { hasError: false, message: '' };
   static getDerivedStateFromError(err: Error): EBState {
-    return { hasError: true, message: err.message };
+    return { hasError: true, message: err?.message || 'An unexpected error occurred' };
   }
   componentDidCatch(err: Error, info: React.ErrorInfo) {
     console.error('[PageErrorBoundary]', err, info);
+  }
+  componentDidUpdate(prevProps: EBProps) {
+    if (this.state.hasError && prevProps.locationKey !== this.props.locationKey) {
+      // User navigated to a different route — reset error state so the new page renders
+      this.setState({ hasError: false, message: '' });
+    }
   }
   render() {
     if (this.state.hasError) {
@@ -40,15 +50,23 @@ class PageErrorBoundary extends Component<{ children: React.ReactNode }, EBState
           </div>
           <div>
             <p style={{ fontWeight: 700, fontSize: '16px', color: T.text, margin: '0 0 6px' }}>Something went wrong</p>
-            <p style={{ fontSize: '13px', color: T.textMuted, margin: 0, maxWidth: '300px' }}>{this.state.message}</p>
+            <p style={{ fontSize: '13px', color: T.textMuted, margin: 0, maxWidth: '400px' }}>{this.state.message}</p>
           </div>
-          <button
-            onClick={() => { this.setState({ hasError: false, message: '' }); window.location.reload(); }}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 20px', background: T.orange, color: '#fff', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}
-          >
-            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>refresh</span>
-            Reload Page
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button
+              onClick={() => { this.setState({ hasError: false, message: '' }); }}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 18px', background: '#F1F5F9', color: T.text, border: `1px solid ${T.border}`, borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}
+            >
+              Try Again
+            </button>
+            <button
+              onClick={() => { this.setState({ hasError: false, message: '' }); window.location.reload(); }}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 20px', background: T.orange, color: '#fff', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>refresh</span>
+              Reload Page
+            </button>
+          </div>
         </div>
       );
     }
@@ -345,7 +363,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <button onClick={stopImpersonating} style={{ background: 'rgba(0,0,0,0.1)', border: 'none', borderRadius: '6px', padding: '4px 12px', fontWeight: 700, cursor: 'pointer', fontSize: '12px', color: '#451A03' }}>Exit</button>
           </div>
         )}
-        <PageErrorBoundary>
+        <PageErrorBoundary locationKey={location.pathname}>
           {children}
         </PageErrorBoundary>
       </main>

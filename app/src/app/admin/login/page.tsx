@@ -21,7 +21,7 @@ export default function AdminLoginPage() {
       const res = await fetch('/api/admin/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ identifier: email, password }),
       });
 
       if (res.ok) {
@@ -285,7 +285,7 @@ export default function AdminLoginPage() {
                     letterSpacing: '0.05em',
                   }}
                 >
-                  Email Address
+                  Email or Mobile Number
                 </label>
                 <div style={{ position: 'relative' }}>
                   <span
@@ -305,15 +305,15 @@ export default function AdminLoginPage() {
                   </span>
                   <input
                     id="go-admin-email"
-                    type="email"
+                    type="text"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     onFocus={() => setFocused('email')}
                     onBlur={() => setFocused(null)}
                     required
                     disabled={loading}
-                    autoComplete="off"
-                    placeholder="admin@metrocardz.in"
+                    autoComplete="username"
+                    placeholder="9029999614 or metrocouponsys@gmail.com"
                     style={{
                       width: '100%',
                       height: 48,

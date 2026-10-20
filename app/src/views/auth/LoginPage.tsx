@@ -114,19 +114,70 @@ export default function LoginPage() {
           }}>
             Manage your members, rewards, QR scans<br />and campaigns — all in one place.
           </p>
+          {/* ── Modern App Digital Membership Card Mockup ── */}
+          <div style={{
+            margin: '28px 0',
+            background: 'linear-gradient(135deg, rgba(30,41,59,0.95) 0%, rgba(15,23,42,0.98) 100%)',
+            border: '1px solid rgba(255,255,255,0.12)',
+            borderRadius: '20px',
+            padding: '22px',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15)',
+            position: 'relative',
+            overflow: 'hidden',
+            opacity: mounted ? 1 : 0,
+            transform: mounted ? 'none' : 'translateY(16px)',
+            transition: 'opacity 0.6s 0.15s ease, transform 0.6s 0.15s ease',
+          }}>
+            {/* Card Shimmer / Glow */}
+            <div style={{ position: 'absolute', top: '-40px', right: '-40px', width: '160px', height: '160px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,107,53,0.25) 0%, transparent 70%)' }} />
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', position: 'relative', zIndex: 1 }}>
+              <div>
+                <span style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 800, color: '#FF6B35' }}>Privilege Pass</span>
+                <p style={{ margin: '2px 0 0', color: '#FFFFFF', fontWeight: 800, fontSize: '16px', fontFamily: '"Plus Jakarta Sans", Inter, sans-serif' }}>Metro VIP Club</p>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '22px', color: '#F59E0B' }}>contactless</span>
+                <span style={{ fontSize: '10px', fontWeight: 800, background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)', color: '#000', padding: '3px 8px', borderRadius: '999px', letterSpacing: '0.04em' }}>GOLD TIER</span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '18px', position: 'relative', zIndex: 1 }}>
+              {/* Gold EMV Chip */}
+              <div style={{ width: '38px', height: '28px', borderRadius: '6px', background: 'linear-gradient(135deg, #FCD34D 0%, #D97706 100%)', border: '1px solid rgba(255,255,255,0.4)', boxShadow: '0 2px 6px rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: '22px', height: '16px', border: '1px solid rgba(0,0,0,0.25)', borderRadius: '3px' }} />
+              </div>
+              <span style={{ fontFamily: 'monospace', fontSize: '15px', letterSpacing: '0.18em', color: 'rgba(255,255,255,0.9)', fontWeight: 700 }}>
+                4821 •••• •••• 3847
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.08)', position: 'relative', zIndex: 1 }}>
+              <div>
+                <p style={{ margin: 0, fontSize: '10px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', fontWeight: 600 }}>Member</p>
+                <p style={{ margin: '2px 0 0', color: '#fff', fontSize: '13px', fontWeight: 700 }}>Arjun Sharma</p>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <p style={{ margin: 0, fontSize: '10px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', fontWeight: 600 }}>Points Balance</p>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', margin: '2px 0 0' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '14px', color: '#F59E0B', fontVariationSettings: "'FILL' 1" }}>stars</span>
+                  <span style={{ color: '#FCD34D', fontSize: '14px', fontWeight: 800 }}>3,450 pts</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Feature Chips */}
         <div style={{ position: 'relative', zIndex: 1 }}>
           {[
-            { icon: 'qr_code_scanner', label: 'Instant QR Scan & Verify', color: '#FF6B35' },
-            { icon: 'trending_up',     label: 'Real-time Redemption Analytics', color: '#00D4AA' },
-            { icon: 'campaign',        label: 'Birthday & Campaign Automation', color: '#F59E0B' },
-            { icon: 'groups',          label: 'Full Member Lifecycle View', color: '#818CF8' },
+            { icon: 'photo_library',   label: 'Rich Image Offers & Point Perks', color: '#FF6B35' },
+            { icon: 'qr_code_scanner', label: 'Instant QR Scan & Physical Card NFC', color: '#00D4AA' },
+            { icon: 'trending_up',     label: 'Real-time Points Redemption & Quota Tracking', color: '#F59E0B' },
           ].map((f, i) => (
             <div key={f.icon} style={{
               display: 'flex', alignItems: 'center', gap: '14px',
-              padding: '14px 16px', borderRadius: '12px',
+              padding: '12px 14px', borderRadius: '12px',
               background: 'rgba(255,255,255,0.05)',
               border: '1px solid rgba(255,255,255,0.08)',
               marginBottom: '8px',
@@ -135,12 +186,12 @@ export default function LoginPage() {
               transition: `opacity 0.5s ${0.2 + i * 0.08}s ease, transform 0.5s ${0.2 + i * 0.08}s ease`,
             }}>
               <div style={{
-                width: '34px', height: '34px', borderRadius: '8px', flexShrink: 0,
+                width: '32px', height: '32px', borderRadius: '8px', flexShrink: 0,
                 background: `${f.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
                 <span className="material-symbols-outlined" style={{ fontSize: '18px', color: f.color, fontVariationSettings: "'FILL' 1" }}>{f.icon}</span>
               </div>
-              <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', fontWeight: 500 }}>{f.label}</span>
+              <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: '13px', fontWeight: 600 }}>{f.label}</span>
             </div>
           ))}
 

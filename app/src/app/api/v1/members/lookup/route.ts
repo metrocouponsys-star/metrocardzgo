@@ -58,6 +58,9 @@ async function handleLookup(rawId: string, rawLast4: string) {
           { memberCode: { equals: idStripHash } },
           ...(idDigitsOnly.length >= 4 ? [{ phone: { contains: idDigitsOnly } }] : []),
           ...(idDigitsOnly.length >= 10 ? [{ phone: { endsWith: idDigitsOnly.slice(-10) } }] : []),
+          ...(idDigitsOnly.length >= 4 ? [{ physicalCardNumber: { contains: idDigitsOnly } }] : []),
+          ...(idClean.length >= 4 ? [{ physicalCardNumber: { contains: idClean } }] : []),
+          ...(idDigitsOnly.length >= 4 ? [{ linkedCards: { some: { cardNumber: { contains: idDigitsOnly } } } }] : []),
         ],
       },
     });
