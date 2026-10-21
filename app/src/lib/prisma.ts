@@ -14,17 +14,31 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    log:
-      process.env.NODE_ENV === 'development'
-        ? ['query', 'error', 'warn']
-        : ['error'],
-  });
+export function getPrismaClient(): PrismaClient {
+  if (!globalForPrisma.prisma) {
+    globalForPrisma.prisma = new PrismaClient({
+      log:
+        process.env.NODE_ENV === 'development'
+          ? ['query', 'error', 'warn']
+          : ['error'],
+    });
+  }
+  return globalForPrisma.prisma;
+}
 
-// Always cache the singleton — prevents connection pool exhaustion in production
-globalForPrisma.prisma = prisma;
+// Lazy proxy: postpones PrismaClient instantiation until the first actual database query.
+// This prevents Next.js build-time route collection from loading Prisma's native Rust Query Engine
+// and exhausting OS thread limits (Tokio os error 11 EAGAIN) on containerized hosts.
+export const prisma = new Proxy({} as PrismaClient, {
+  get(_target, prop, receiver) {
+    const client = getPrismaClient();
+    const value = Reflect.get(client, prop, receiver);
+    if (typeof value === 'function') {
+      return value.bind(client);
+    }
+    return value;
+  },
+});
 
 export type TransactionClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
 

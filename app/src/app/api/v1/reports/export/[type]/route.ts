@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GET as reportsGet } from '../../route';
 
+export const dynamic = 'force-dynamic';
+
 type Params = { params: Promise<{ type: string }> };
 
 export async function GET(request: NextRequest, { params }: Params) {

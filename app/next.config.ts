@@ -17,7 +17,17 @@ function hostname(url: string): string {
 const MAIN_HOST = hostname(BASE_URL);
 const EXTRA_HOST = EXTRA_URL ? hostname(EXTRA_URL) : '';
 
+// Cap Tokio, Node libuv, and Rayon worker threads on shared container hosts
+// Prevents OS error 11 (Resource temporarily unavailable - EAGAIN)
+if (!process.env.TOKIO_WORKER_THREADS) process.env.TOKIO_WORKER_THREADS = '1';
+if (!process.env.UV_THREADPOOL_SIZE) process.env.UV_THREADPOOL_SIZE = '1';
+if (!process.env.RAYON_NUM_THREADS) process.env.RAYON_NUM_THREADS = '1';
+
 const nextConfig: NextConfig = {
+  // Throttle build-time page data collection workers to prevent thread/memory saturation
+  experimental: {
+    cpus: 1,
+  },
   // ── Hostinger Web App Hosting (Node.js standalone) ───────────────────────
   // Build:   npm run build
   // Start:   npm run start  (Hostinger sets PORT automatically)
