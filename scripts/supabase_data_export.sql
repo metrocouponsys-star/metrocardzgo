@@ -1,7 +1,7 @@
 -- ============================================================
 -- Metro Cardz — Supabase to Hostinger MySQL Master Export
--- Generated: 2026-10-20T12:13:12.863Z
--- Total Rows: 4910
+-- Generated: 2026-10-21T14:48:26.434Z
+-- Total Rows: 4946
 -- ============================================================
 
 SET FOREIGN_KEY_CHECKS=0;
@@ -321,7 +321,7 @@ INSERT IGNORE INTO `membership_type_offers` (`membership_type_id`, `offer_templa
   ('tier_merch_  6_elite_champion_vip', 'b4b1b832-9a45-4c6b-ba29-d36b6eee51c3', NULL),
   ('tier_merch_  6_elite_champion_vip', 'b9a41c2a-c0f8-4e74-be4d-361b0179c715', NULL);
 
--- ── Table: members  (169 rows) ──────────────────
+-- ── Table: members  (176 rows) ──────────────────
 
 INSERT IGNORE INTO `members` (`id`, `merchant_id`, `member_code`, `public_token`, `physical_card_number`, `name`, `phone`, `email`, `date_of_birth`, `anniversary_date`, `membership_type_id`, `joined_date`, `expiry_date`, `loyalty_points`, `status`, `notes`, `total_visits`, `referral_code`, `referred_by_member_id`, `created_at`, `auto_renew`, `family_dob_1`, `family_dob_2`, `family_dob_3`) VALUES
   ('9722e2ba-17b8-4020-9470-9542a01c390c', '9f5a3fe4-f21f-4fed-beaf-67dcb9c6cffc', 'MC0001', '1f4a5d0fc3066ab56d324b64', '4821 6739 0000 0100', 'sharvil more', '9987379000', NULL, '2026-07-19', '2026-07-20', 'ea2bc841-f304-4a67-91db-c58ee4fa3273', '2026-07-15', '2027-07-15', 0, 'active', NULL, 0, 'U5FX065H', NULL, '2026-07-15 08:00:03', 0, NULL, NULL, NULL),
@@ -452,6 +452,10 @@ INSERT IGNORE INTO `members` (`id`, `merchant_id`, `member_code`, `public_token`
   ('af7b92b1-b55f-4cc3-a9df-e14830e81601', 'merch_  6', 'MC0008', 'd9200b7b251d357b254faad6', '4821 6739 0000 1500', 'Sharvil More', '5548169285', NULL, '2026-08-12', '2026-08-10', 'tier_merch_  6_elite_champion_vip', '2026-08-01', '2027-08-01', 0, 'active', NULL, 1, 'X0A67I1X', NULL, '2026-08-01 14:51:20', 0, NULL, NULL, NULL),
   ('032e896e-d53d-49fc-b73a-e096c396aa8f', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', 'MC0018', '21b83f22478bafbcbe045c6c', '2173 6567 3333 0018', 'VIGHAN BALIRAM', '9924559552', NULL, '1995-09-05', NULL, 'a317a72d-b0f2-4d67-a420-a3688c6d811b', '2026-10-18', '2027-10-18', 0, 'active', NULL, 0, 'YS1K8SSF', NULL, '2026-10-18 08:59:11', 0, NULL, NULL, NULL),
   ('468dfda3-23e6-413e-a891-ed2417b85d48', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', 'MC0031', 'f912753c4ad0dd828d4a819c', '2173 6567 3333 0031', 'SUNIL SALUNKE', '7383069173', NULL, NULL, NULL, 'a317a72d-b0f2-4d67-a420-a3688c6d811b', '2026-10-20', '2027-10-20', 0, 'active', NULL, 0, '7P9RNFFT', NULL, '2026-10-20 11:20:50', 0, NULL, NULL, NULL),
+  ('b7ff14e8-2e4c-46a6-ba99-ce7f15afe235', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', 'MC0033', 'd07f34d1071ef028db6a9c87', '2173 6567 3333 0033', 'JAGTAP MONOJ', '8000551137', NULL, '1982-08-01', '1982-08-01', 'a317a72d-b0f2-4d67-a420-a3688c6d811b', '2026-10-20', '2027-10-20', 0, 'active', NULL, 0, 'MNHOE3H1', NULL, '2026-10-20 13:56:05', 0, NULL, NULL, NULL),
+  ('cd84fc62-3c9f-46c0-9cfc-ec9d308f3d79', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', 'MC0035', 'a380263def10713724bbabf8', '2173 6567 3333 0035', 'RAKESH PATIL', '9664614208', NULL, '1994-08-03', NULL, 'a317a72d-b0f2-4d67-a420-a3688c6d811b', '2026-10-20', '2027-10-20', 0, 'active', NULL, 0, 'OSWSN8RK', NULL, '2026-10-20 17:53:24', 0, NULL, NULL, NULL),
+  ('25990cab-dcb1-4151-95cf-d1fd107f7b83', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', 'MC0037', 'd0acd9a31bc522283618685f', '2173 6567 3333 0037', 'Rohidas PATIL', '7046246822', NULL, '2001-07-28', NULL, 'a317a72d-b0f2-4d67-a420-a3688c6d811b', '2026-10-20', '2027-10-20', 0, 'active', NULL, 0, 'QD460SXA', NULL, '2026-10-20 17:57:59', 0, NULL, NULL, NULL),
+  ('c9e4ebb0-fe5a-4160-9fa5-7c009b5cb6a9', '75eff299-f162-4427-8b08-04f404141ef9', 'MC0014', 'e6c4c28db7ba996db9ba9b04', '8667 7863 7616 0014', 'Ronit Varma', '9820638707', NULL, '1994-04-27', NULL, '074ec04d-dbed-437f-b8b2-054ab63a9561', '2026-10-21', '2027-10-21', 10, 'active', NULL, 0, 'ECTXSOJP', NULL, '2026-10-21 06:01:16', 0, NULL, NULL, NULL),
   ('64a57df1-f643-48ae-a76b-a2bcc0804756', 'merch_  6', 'MC0011', 'fe14db72a387efb2f853b259', '4821 6739 0000 0400', 'Sagar Pawar ', '9326801082', NULL, NULL, NULL, 'tier_merch_  6_elite_champion_vip', '2026-09-09', '2027-09-09', 0, 'active', NULL, 0, 'NELU8S0X', NULL, '2026-09-09 07:20:34', 0, NULL, NULL, NULL),
   ('ea24353b-ca00-4a9a-8eed-d453778e7438', 'bc3951f9-ff8c-436b-8322-e5dd6592ca4b', 'MC0004', '567e40c9f74f06af47b795b7', '8689 6453 5689 0015', 'Ashwini gawade ', '9821624674', NULL, '1974-09-15', '1998-12-16', '78fe536c-8141-4082-9feb-047e8ba35f76', '2026-09-09', '2027-09-09', 1700, 'active', NULL, 0, '0YVV5G9Q', NULL, '2026-09-09 14:03:47', 0, '1968-01-02', '2007-05-20', NULL),
   ('852f7899-d75f-4635-a45c-b7fed92792e1', '75eff299-f162-4427-8b08-04f404141ef9', 'MC0009', 'ed5a8d0f4380afb62c088870', '8667 7863 7616 0003', 'Khyati Shah', '8080791991', NULL, '1991-09-07', NULL, '074ec04d-dbed-437f-b8b2-054ab63a9561', '2026-09-26', '2027-09-26', 0, 'active', NULL, 0, 'JHHYBLYV', NULL, '2026-09-26 12:13:14', 0, NULL, NULL, NULL),
@@ -473,13 +477,16 @@ INSERT IGNORE INTO `members` (`id`, `merchant_id`, `member_code`, `public_token`
   ('60f2042f-0664-4bba-8fda-f097b43e61ea', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', 'MC0028', 'b9f27b16b0dfbad7eafce9b8', '2173 6567 3333 0028', 'DARSHANBHAI NAVGNBHAI VAGHELA', '8780072742', NULL, NULL, NULL, 'a317a72d-b0f2-4d67-a420-a3688c6d811b', '2026-10-20', '2027-10-20', 0, 'active', NULL, 0, 'R3RLHA4E', NULL, '2026-10-20 09:22:39', 0, NULL, NULL, NULL),
   ('7b5a5198-5e75-40fd-b26a-937bd120ea1e', 'b64a2ee7-5fc4-434d-9b92-1fa730df2810', 'MC0015', '6abab6bd276dcf2e5e683876', '8783 5621 8877 0105', 'Devangi Shukla', '9833972487', NULL, '1990-04-24', '2018-12-30', 'facf9011-6d18-47cd-bbc3-731c751ba145', '2026-10-09', '2027-10-09', 20, 'active', NULL, 2, '6FAO3PX3', NULL, '2026-10-09 12:32:38', 0, NULL, NULL, NULL),
   ('cbf521b5-4432-4e7d-a2dc-538fe6420f24', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', 'MC0019', '730d9e96d2089a2cd4ed5d27', '2173 6567 3333 0019', 'YADAV BHAGYASHREE', '8160528658', NULL, '2002-04-05', NULL, 'a317a72d-b0f2-4d67-a420-a3688c6d811b', '2026-10-18', '2027-10-18', 0, 'active', NULL, 0, 'T5VISI32', NULL, '2026-10-18 11:10:24', 0, NULL, NULL, NULL),
-  ('42c29eaf-3ba7-4fb0-9183-d4f600c72103', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', 'MC0024', '62423844fe111a6e41bb34a0', '2173 6567 3333 0024', 'praveen patil', '9824626360', NULL, '1985-03-17', NULL, 'a317a72d-b0f2-4d67-a420-a3688c6d811b', '2026-10-20', '2027-10-20', 0, 'active', NULL, 0, 'BPN30WL1', NULL, '2026-10-20 05:46:13', 0, NULL, NULL, NULL),
-  ('9ed2ac95-2318-4316-8c69-0f7b98b4f9b8', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', 'MC0032', '0eb8262f2341ca3489d32773', '2173 6567 3333 0032', 'ANIL KUMBHAR', '7048151650', NULL, NULL, NULL, 'a317a72d-b0f2-4d67-a420-a3688c6d811b', '2026-10-20', '2027-10-20', 0, 'active', NULL, 0, 'C0HFCMWZ', NULL, '2026-10-20 11:28:02', 0, NULL, NULL, NULL),
-  ('mem-62d2ea23a3559c0b1e6b157e3fc075bc', 'merch_  4', 'MEM-13', 'pub_b5998fe066e6432c79b4504ab83a8420', 'CARD-13', 'AMC Silver Demo', '9000000000013', 'demo+13@example.com', '2006-07-23', '2025-07-23', 'tier_merch_  4_amc_gold_vip', '2026-04-23', '2027-07-23', 1200, 'active', 'Demo member seeded', 0, 'REF-13-62d2ea', NULL, '2026-07-23 16:45:11', 1, NULL, NULL, NULL),
-  ('mem_merch_  4_amc_silver_1', 'merch_  4', 'MC-tier_merch_  4_amc_silver-1', 'token_tier_merch_  4_amc_silver_1', 'CARD-tier_merch_  4_amc_silver-1', 'Demo Member (AMC Silver)', '+16660000  41', 'member_1_tier_merch_  4_amc_silver@demo.test', '1994-01-29', '1999-01-29', 'tier_merch_  4_amc_gold_vip', '2026-06-22', '2027-01-18', 0, 'active', NULL, 0, 'REF-tier_merch_  4_amc_silver', NULL, '2026-07-22 15:49:29', 0, NULL, NULL, NULL),
-  ('mem-56be375883bc6ae8416dac05b3d6b6c5', 'merch_  4', 'MEM-14', 'pub_e9be3cf29e821c82608513235cebebc9', 'CARD-14', 'Pay-Per-Service Demo', '9000000000014', 'demo+14@example.com', '2006-07-23', '2025-07-23', 'tier_merch_  4_amc_gold_vip', '2026-04-16', '2027-07-23', 1200, 'active', 'Demo member seeded', 0, 'REF-14-56be37', NULL, '2026-07-23 16:45:11', 1, NULL, NULL, NULL);
+  ('42c29eaf-3ba7-4fb0-9183-d4f600c72103', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', 'MC0024', '62423844fe111a6e41bb34a0', '2173 6567 3333 0024', 'praveen patil', '9824626360', NULL, '1985-03-17', NULL, 'a317a72d-b0f2-4d67-a420-a3688c6d811b', '2026-10-20', '2027-10-20', 0, 'active', NULL, 0, 'BPN30WL1', NULL, '2026-10-20 05:46:13', 0, NULL, NULL, NULL);
 
 INSERT IGNORE INTO `members` (`id`, `merchant_id`, `member_code`, `public_token`, `physical_card_number`, `name`, `phone`, `email`, `date_of_birth`, `anniversary_date`, `membership_type_id`, `joined_date`, `expiry_date`, `loyalty_points`, `status`, `notes`, `total_visits`, `referral_code`, `referred_by_member_id`, `created_at`, `auto_renew`, `family_dob_1`, `family_dob_2`, `family_dob_3`) VALUES
+  ('9ed2ac95-2318-4316-8c69-0f7b98b4f9b8', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', 'MC0032', '0eb8262f2341ca3489d32773', '2173 6567 3333 0032', 'ANIL KUMBHAR', '7048151650', NULL, NULL, NULL, 'a317a72d-b0f2-4d67-a420-a3688c6d811b', '2026-10-20', '2027-10-20', 0, 'active', NULL, 0, 'C0HFCMWZ', NULL, '2026-10-20 11:28:02', 0, NULL, NULL, NULL),
+  ('c2b4c816-7823-4051-9782-ea8abbf7debb', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', 'MC0034', 'eae247108166397acd937ef0', '2173 6567 3333 0034', 'VIMAL BHAI', '9512879104', NULL, NULL, NULL, 'a317a72d-b0f2-4d67-a420-a3688c6d811b', '2026-10-20', '2027-10-20', 0, 'active', NULL, 0, 'RFL263IB', NULL, '2026-10-20 14:05:57', 0, NULL, NULL, NULL),
+  ('c97278f9-45d7-4971-97bf-b5700d7fafc4', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', 'MC0036', '4c3e1b6df270f5f777ff69f7', '2173 6567 3333 0036', 'NYANU PATIL', '9773453020', NULL, '1994-07-07', NULL, 'a317a72d-b0f2-4d67-a420-a3688c6d811b', '2026-10-20', '2027-10-20', 0, 'active', NULL, 0, 'FI8GLDPJ', NULL, '2026-10-20 17:55:23', 0, NULL, NULL, NULL),
+  ('42fec350-e43c-43e3-80fe-b6d307f308f4', '75eff299-f162-4427-8b08-04f404141ef9', 'MC0013', 'c2524ffed24206fb5cc2ca5a', NULL, 'Ronit Varma', '9920638707', NULL, '1994-04-27', NULL, '074ec04d-dbed-437f-b8b2-054ab63a9561', '2026-10-21', '2027-10-21', 10, 'active', NULL, 0, '3289OTTX', NULL, '2026-10-21 05:42:39', 0, NULL, NULL, NULL),
+  ('mem-62d2ea23a3559c0b1e6b157e3fc075bc', 'merch_  4', 'MEM-13', 'pub_b5998fe066e6432c79b4504ab83a8420', 'CARD-13', 'AMC Silver Demo', '9000000000013', 'demo+13@example.com', '2006-07-23', '2025-07-23', 'tier_merch_  4_amc_gold_vip', '2026-04-23', '2027-07-23', 1200, 'active', 'Demo member seeded', 0, 'REF-13-62d2ea', NULL, '2026-07-23 16:45:11', 1, NULL, NULL, NULL),
+  ('mem_merch_  4_amc_silver_1', 'merch_  4', 'MC-tier_merch_  4_amc_silver-1', 'token_tier_merch_  4_amc_silver_1', 'CARD-tier_merch_  4_amc_silver-1', 'Demo Member (AMC Silver)', '+16660000  41', 'member_1_tier_merch_  4_amc_silver@demo.test', '1994-01-29', '1999-01-29', 'tier_merch_  4_amc_gold_vip', '2026-06-22', '2027-01-18', 0, 'active', NULL, 0, 'REF-tier_merch_  4_amc_silver', NULL, '2026-07-22 15:49:29', 0, NULL, NULL, NULL),
+  ('mem-56be375883bc6ae8416dac05b3d6b6c5', 'merch_  4', 'MEM-14', 'pub_e9be3cf29e821c82608513235cebebc9', 'CARD-14', 'Pay-Per-Service Demo', '9000000000014', 'demo+14@example.com', '2006-07-23', '2025-07-23', 'tier_merch_  4_amc_gold_vip', '2026-04-16', '2027-07-23', 1200, 'active', 'Demo member seeded', 0, 'REF-14-56be37', NULL, '2026-07-23 16:45:11', 1, NULL, NULL, NULL),
   ('mem_merch_  4_pay-per-service_1', 'merch_  4', 'MC-tier_merch_  4_pay-per-service-1', 'token_tier_merch_  4_pay-per-service_1', 'CARD-tier_merch_  4_pay-per-service-1', 'Demo Member (Pay-Per-Service)', '+16660000  41', 'member_1_tier_merch_  4_pay-per-service@demo.test', '1994-05-28', '1999-05-28', 'tier_merch_  4_amc_gold_vip', '2026-06-22', '2027-01-18', 0, 'active', NULL, 0, 'REF-tier_merch_  4_pay-per-service', NULL, '2026-07-22 15:49:29', 0, NULL, NULL, NULL),
   ('mem-5c2dc7423a0c677e54c64500d7af5642', 'merch_  5', 'MEM-16', 'pub_b905f2717dd915895a5622c5d8d66ae7', 'CARD-16', 'Super Shopper Demo', '9000000000016', 'demo+16@example.com', '2006-07-23', '2025-07-23', 'tier_merch_  5_smart_saver', '2026-04-02', '2027-07-23', 1200, 'active', 'Demo member seeded', 0, 'REF-16-5c2dc7', NULL, '2026-07-23 16:45:11', 1, NULL, NULL, NULL),
   ('mem_merch_  5_super_shopper_1', 'merch_  5', 'MC-tier_merch_  5_super_shopper-1', 'token_tier_merch_  5_super_shopper_1', 'CARD-tier_merch_  5_super_shopper-1', 'Demo Member (Super Shopper)', '+16660000  51', 'member_1_tier_merch_  5_super_shopper@demo.test', '1994-10-27', '1999-10-27', 'tier_merch_  5_smart_saver', '2026-06-22', '2027-01-18', 0, 'active', NULL, 0, 'REF-tier_merch_  5_super_shopper', NULL, '2026-07-22 15:49:29', 0, NULL, NULL, NULL),
@@ -500,7 +507,7 @@ INSERT IGNORE INTO `members` (`id`, `merchant_id`, `member_code`, `public_token`
   ('mem_merch_ 10_solitaire_crown_vip_1', 'merch_ 10', 'MC-tier_merch_ 10_solitaire_crown_vip-1', 'token_tier_merch_ 10_solitaire_crown_vip_1', 'CARD-tier_merch_ 10_solitaire_crown_vip-1', 'Demo Member (Solitaire Crown VIP)', '+16660000 101', 'member_1_tier_merch_ 10_solitaire_crown_vip@demo.test', '1994-06-06', '1999-06-06', 'tier_merch_ 10_gold_elite', '2026-06-22', '2027-01-18', 0, 'active', NULL, 0, 'REF-tier_merch_ 10_solitaire_crown_vip', NULL, '2026-07-22 15:49:29', 0, NULL, NULL, NULL),
   ('mem-f3ffcc249446e5bde5a241af9ad9e60a', 'merch_  6', 'MEM-20', 'pub_ffe0339bcfd87e2b484bf5ab8d2d2453', 'CARD-20', 'Pro Athlete Demo', '9000000000020', 'demo+20@example.com', '2006-07-23', '2025-07-23', 'tier_merch_  6_elite_champion_vip', '2026-03-05', '2027-07-23', 1100, 'active', 'Demo member seeded', 0, 'REF-20-f3ffcc', NULL, '2026-07-23 16:45:11', 1, NULL, NULL, NULL);
 
--- ── Table: member_offer_state  (492 rows) ──────────────────
+-- ── Table: member_offer_state  (512 rows) ──────────────────
 
 INSERT IGNORE INTO `member_offer_state` (`id`, `member_id`, `offer_template_id`, `remaining_qty`, `initial_qty`, `status`) VALUES
   ('e0b6e3c5-836a-4c5a-ad25-75abd9dc223d', '2f3f1a71-9597-4a2f-850d-adfa2ce9a08e', '33038b24-413c-4ef5-8db8-8629bed5830b', 1, 1, 'active'),
@@ -1012,7 +1019,29 @@ INSERT IGNORE INTO `member_offer_state` (`id`, `member_id`, `offer_template_id`,
   ('28012056-ffac-4f96-b70b-d861449a7580', '720ff67c-1443-457e-9b6e-cbf2bd30c17b', '72e894af-e8ab-4402-ac09-244fd38b585d', 0, 1, 'exhausted'),
   ('355fc665-7e63-4513-8e9f-7aff918ccdc0', '720ff67c-1443-457e-9b6e-cbf2bd30c17b', '9f0cc0e3-1218-429a-874d-8993a7c3851b', 2, 3, 'active'),
   ('dd88923c-bb75-47dd-a19e-c968f42c5a4a', 'mem-cc5e67de2d566c08a1aab2b21dc7ac96', '33038b24-413c-4ef5-8db8-8629bed5830b', 1, 1, 'active'),
-  ('09058414-4dfe-4b0a-b31a-60b735557cae', 'mem-cc5e67de2d566c08a1aab2b21dc7ac96', '0804af25-39c5-467b-b395-7eb99d9543de', 1, 1, 'active');
+  ('09058414-4dfe-4b0a-b31a-60b735557cae', 'mem-cc5e67de2d566c08a1aab2b21dc7ac96', '0804af25-39c5-467b-b395-7eb99d9543de', 1, 1, 'active'),
+  ('7569369c-b8e9-498f-a181-5202c0d4413c', '42fec350-e43c-43e3-80fe-b6d307f308f4', '22804e99-1ab0-4ff7-92e3-0325484ab7ac', 1, 1, 'active'),
+  ('2fe49a0a-3cd0-422a-af96-5dd50049583b', '42fec350-e43c-43e3-80fe-b6d307f308f4', '75b1e665-1193-4e67-9cac-069097c9a061', 1, 1, 'active'),
+  ('989e6e90-d731-4b89-aee2-a4f4fc608f30', '42fec350-e43c-43e3-80fe-b6d307f308f4', '8eafbc19-2dbd-4f7a-be0e-900733c15e1c', 1, 1, 'active'),
+  ('6f81a999-5bb1-461e-b2b0-5b121046ff90', '42fec350-e43c-43e3-80fe-b6d307f308f4', 'ab248ae6-dec1-40d4-9563-26f023313a4a', 1, 1, 'active'),
+  ('af15de86-84b8-446d-8e86-1316ae0232f7', '42fec350-e43c-43e3-80fe-b6d307f308f4', 'ac33198b-6199-4bc4-a33d-0217dd274929', 1, 1, 'active'),
+  ('75f54630-da05-4f18-ada9-25fcf50c1a6c', '42fec350-e43c-43e3-80fe-b6d307f308f4', 'b99345d2-d107-490b-b238-a448df053cb7', 1, 1, 'active'),
+  ('bd5bafc2-5982-4984-9949-26615c8fc31c', '42fec350-e43c-43e3-80fe-b6d307f308f4', 'ca64a6bf-23e1-4c70-be3c-e7c82ab63823', 1, 1, 'active'),
+  ('7e127976-b979-4937-9918-093a38de20ba', '42fec350-e43c-43e3-80fe-b6d307f308f4', 'd33e865b-6f54-4c4d-91df-fa7e51718bc5', 10, 10, 'active');
+
+INSERT IGNORE INTO `member_offer_state` (`id`, `member_id`, `offer_template_id`, `remaining_qty`, `initial_qty`, `status`) VALUES
+  ('27521f3c-285f-48f7-b4d2-4c9c7f4128a5', '42fec350-e43c-43e3-80fe-b6d307f308f4', 'd795909c-a05b-4532-a8e7-953f3a140a76', 1, 1, 'active'),
+  ('3f0828fa-947b-4b31-b25a-1f5c6d0860cc', '42fec350-e43c-43e3-80fe-b6d307f308f4', '36805043-8827-4e07-88a9-3258eab6e5d2', 100, 100, 'active'),
+  ('432a5e19-f4e2-426f-ad32-5f30131b84a8', 'c9e4ebb0-fe5a-4160-9fa5-7c009b5cb6a9', '22804e99-1ab0-4ff7-92e3-0325484ab7ac', 1, 1, 'active'),
+  ('374f9238-97c9-41e4-a150-d2ce53e081be', 'c9e4ebb0-fe5a-4160-9fa5-7c009b5cb6a9', '75b1e665-1193-4e67-9cac-069097c9a061', 1, 1, 'active'),
+  ('5c3b5825-c81b-4bf1-b4a9-a81adbaf1b27', 'c9e4ebb0-fe5a-4160-9fa5-7c009b5cb6a9', '8eafbc19-2dbd-4f7a-be0e-900733c15e1c', 1, 1, 'active'),
+  ('8ef7a6c5-e4cd-43b4-8ac5-0fb425ca27bf', 'c9e4ebb0-fe5a-4160-9fa5-7c009b5cb6a9', 'ab248ae6-dec1-40d4-9563-26f023313a4a', 1, 1, 'active'),
+  ('0aa6274b-1fbf-400a-9cb6-1b19f78397f5', 'c9e4ebb0-fe5a-4160-9fa5-7c009b5cb6a9', 'ac33198b-6199-4bc4-a33d-0217dd274929', 1, 1, 'active'),
+  ('da6750c7-4d11-4ffe-bba0-e540fc10100f', 'c9e4ebb0-fe5a-4160-9fa5-7c009b5cb6a9', 'b99345d2-d107-490b-b238-a448df053cb7', 1, 1, 'active'),
+  ('5b13e9af-314e-4995-a0fa-e4352a162465', 'c9e4ebb0-fe5a-4160-9fa5-7c009b5cb6a9', 'ca64a6bf-23e1-4c70-be3c-e7c82ab63823', 1, 1, 'active'),
+  ('80e259c4-8d47-41f7-b286-1c79261284c6', 'c9e4ebb0-fe5a-4160-9fa5-7c009b5cb6a9', 'd33e865b-6f54-4c4d-91df-fa7e51718bc5', 10, 10, 'active'),
+  ('8646991d-8ada-4787-b707-edd825fc2fd5', 'c9e4ebb0-fe5a-4160-9fa5-7c009b5cb6a9', 'd795909c-a05b-4532-a8e7-953f3a140a76', 1, 1, 'active'),
+  ('b05306f5-c84c-4e31-8746-6308f6130a5d', 'c9e4ebb0-fe5a-4160-9fa5-7c009b5cb6a9', '36805043-8827-4e07-88a9-3258eab6e5d2', 100, 100, 'active');
 
 -- ── Table: redemption_log  (94 rows) ──────────────────
 
@@ -1114,7 +1143,7 @@ INSERT IGNORE INTO `redemption_log` (`id`, `member_id`, `offer_template_id`, `me
   ('0980581a-d924-4de5-ae04-23daf9292b6d', '220dc66e-7304-41d7-b709-552095df8f53', 'offer_merch_7_1', 'admin_merch_  7', 50, '49.128.164.159', '2026-10-17 04:49:00'),
   ('59a14658-9a70-44fe-a0ea-e3e816cda5c5', '577814cd-30ad-4726-8a6a-b1929ed79b21', '16524f33-2048-40bb-a168-d1c92d0d7bed', '16a25cb0-8425-469e-a7ef-796b19f944e4', 0, '206.84.228.88', '2026-10-19 05:31:49');
 
--- ── Table: loyalty_transactions  (282 rows) ──────────────────
+-- ── Table: loyalty_transactions  (284 rows) ──────────────────
 
 INSERT IGNORE INTO `loyalty_transactions` (`id`, `member_id`, `merchant_id`, `type`, `points`, `source_redemption_id`, `source_offer_id`, `balance_after`, `created_at`, `note`) VALUES
   ('17e0f721-b795-4329-8e58-3ae3a064a42b', 'mem-ab0c31deb9b57cbc978b310c5bcf7392', 'merch_  9', 'earn', 30, NULL, NULL, 1230, '2026-08-05 16:45:52', 'Purchase ₹1000.00'),
@@ -1148,6 +1177,7 @@ INSERT IGNORE INTO `loyalty_transactions` (`id`, `member_id`, `merchant_id`, `ty
   ('2fb3fc9e-901e-485f-9421-fde85137bc3d', '220dc66e-7304-41d7-b709-552095df8f53', 'merch_  7', 'earn', 25, 'f604a28a-bae0-46f8-8e58-30eeb6b9dc4c', NULL, 191, '2026-10-17 04:43:43', 'Points rule: 25 pts per visit'),
   ('b3fbb3fb-dd47-4471-bb2f-5e5e29b69a16', '220dc66e-7304-41d7-b709-552095df8f53', 'merch_  7', 'earn', 25, 'c2daff5e-8fa1-4112-9b4a-b976b05dd682', NULL, 301, '2026-10-17 09:47:39', 'Points rule: 25 pts per visit'),
   ('34e89780-a611-45d6-9c7e-e5eba934feee', '220dc66e-7304-41d7-b709-552095df8f53', 'merch_  7', 'earn', 5, 'c2daff5e-8fa1-4112-9b4a-b976b05dd682', NULL, 306, '2026-10-17 09:47:39', 'Points rule: 1 pts/₹10 × ₹50'),
+  ('378113ad-44ee-432c-aeef-346e78cff4a2', '42fec350-e43c-43e3-80fe-b6d307f308f4', '75eff299-f162-4427-8b08-04f404141ef9', 'earn', 10, NULL, NULL, 10, '2026-10-21 05:42:39', 'Welcome Bonus Points'),
   ('e60df6b1-519c-448c-81af-c70932190325', 'ea24353b-ca00-4a9a-8eed-d453778e7438', 'bc3951f9-ff8c-436b-8322-e5dd6592ca4b', 'earn', 1700, NULL, NULL, 1700, '2026-09-09 14:03:47', 'Welcome Bonus Points'),
   ('8934628d-01f9-48aa-9c3a-1af33a1c28da', 'f055ee36-af9b-4800-87fa-0d71136c506f', 'bc3951f9-ff8c-436b-8322-e5dd6592ca4b', 'earn', 400, NULL, NULL, 400, '2026-09-15 14:17:30', 'Welcome Bonus Points'),
   ('26438d1e-1428-4f54-98b5-2ac39a2c34e1', 'e613d0f0-31a6-4cb2-91cf-56a6b0e58dac', 'b64a2ee7-5fc4-434d-9b92-1fa730df2810', 'earn', 10, '5f59cea8-09a2-4c52-be74-7cbbab46ee24', NULL, 20, '2026-09-24 13:09:51', 'Points rule: 10 pts per visit'),
@@ -1163,12 +1193,13 @@ INSERT IGNORE INTO `loyalty_transactions` (`id`, `member_id`, `merchant_id`, `ty
   ('06be9328-9065-4061-a975-8be156c7e377', '720ff67c-1443-457e-9b6e-cbf2bd30c17b', 'b64a2ee7-5fc4-434d-9b92-1fa730df2810', 'earn', 10, '6d708edf-e5f6-40a9-9d2a-e25061ad5bae', NULL, 20, '2026-10-10 11:42:07', 'Points rule: 10 pts per visit'),
   ('20f31bd6-a0d6-42ce-936a-fe2830c429cc', '220dc66e-7304-41d7-b709-552095df8f53', 'merch_  7', 'earn', 25, '61ca5058-abec-48b3-892a-4a86f924832e', NULL, 216, '2026-10-17 04:46:06', 'Points rule: 25 pts per visit'),
   ('542f460f-1291-46f0-9964-ec60e8e5eb19', '577814cd-30ad-4726-8a6a-b1929ed79b21', 'b64a2ee7-5fc4-434d-9b92-1fa730df2810', 'earn', 10, '59a14658-9a70-44fe-a0ea-e3e816cda5c5', NULL, 40, '2026-10-19 05:31:49', 'Points rule: 10 pts per visit'),
+  ('3a38248f-b107-4eed-a89e-5fb6af49bfef', 'c9e4ebb0-fe5a-4160-9fa5-7c009b5cb6a9', '75eff299-f162-4427-8b08-04f404141ef9', 'earn', 10, NULL, NULL, 10, '2026-10-21 06:01:16', 'Welcome Bonus Points'),
   ('93540248-3685-483e-8591-3433e4ca644d', '918c0b0d-5b39-4c44-ae23-49f4c7c8037b', 'b64a2ee7-5fc4-434d-9b92-1fa730df2810', 'earn', 10, '7a96c68f-80c6-4b05-8109-5111c9e94302', NULL, 10, '2026-09-13 06:13:10', 'Points rule: 10 pts per visit'),
-  ('66fc856a-717a-4292-bd5f-97ca6d648f19', 'dbf585f9-4d67-4e05-b632-0b0ff60e0992', 'bc3951f9-ff8c-436b-8322-e5dd6592ca4b', 'earn', 1600, NULL, NULL, 1600, '2026-09-17 14:30:01', 'Welcome Bonus Points'),
-  ('da10e34b-2911-4e17-b138-7c6828c81a6f', '30d516ea-5f2c-4aee-b6f7-3365b963c288', '75eff299-f162-4427-8b08-04f404141ef9', 'earn', 10, NULL, NULL, 10, '2026-09-25 09:35:47', 'Welcome Bonus Points'),
-  ('50a772b8-0cc7-4c68-9658-3eca68e982f7', 'ba0ba1d2-55e3-40e6-b88e-ad5db9a2c39d', '75eff299-f162-4427-8b08-04f404141ef9', 'earn', 10, NULL, NULL, 10, '2026-09-25 09:44:11', 'Welcome Bonus Points');
+  ('66fc856a-717a-4292-bd5f-97ca6d648f19', 'dbf585f9-4d67-4e05-b632-0b0ff60e0992', 'bc3951f9-ff8c-436b-8322-e5dd6592ca4b', 'earn', 1600, NULL, NULL, 1600, '2026-09-17 14:30:01', 'Welcome Bonus Points');
 
 INSERT IGNORE INTO `loyalty_transactions` (`id`, `member_id`, `merchant_id`, `type`, `points`, `source_redemption_id`, `source_offer_id`, `balance_after`, `created_at`, `note`) VALUES
+  ('da10e34b-2911-4e17-b138-7c6828c81a6f', '30d516ea-5f2c-4aee-b6f7-3365b963c288', '75eff299-f162-4427-8b08-04f404141ef9', 'earn', 10, NULL, NULL, 10, '2026-09-25 09:35:47', 'Welcome Bonus Points'),
+  ('50a772b8-0cc7-4c68-9658-3eca68e982f7', 'ba0ba1d2-55e3-40e6-b88e-ad5db9a2c39d', '75eff299-f162-4427-8b08-04f404141ef9', 'earn', 10, NULL, NULL, 10, '2026-09-25 09:44:11', 'Welcome Bonus Points'),
   ('f8ca7359-30b9-43ee-b1f0-2b9e204f4a9e', '282c0816-6dfb-4b39-a074-0ef6f9d07c70', '75eff299-f162-4427-8b08-04f404141ef9', 'earn', 10, NULL, NULL, 10, '2026-10-02 15:20:57', 'Welcome Bonus Points'),
   ('8c5c4f1f-53ba-41de-b574-9c4542a6816d', '94e4b753-0b24-436e-9652-e1d73a32c99c', 'bc3951f9-ff8c-436b-8322-e5dd6592ca4b', 'earn', 1100, NULL, NULL, 1100, '2026-10-04 06:30:51', 'Welcome Bonus Points'),
   ('16bbebd6-6300-4097-af59-5853bc9ed0e9', 'mem-27df0ea3c95f20b238b999ea9c157c09', 'merch_  7', 'earn', 25, '3075161b-8bf1-4dd2-97f3-c2c226e429b7', NULL, 1225, '2026-10-05 05:08:06', 'Points rule: 25 pts per visit'),
@@ -1216,11 +1247,11 @@ INSERT IGNORE INTO `loyalty_transactions` (`id`, `member_id`, `merchant_id`, `ty
   ('lt-8f34ba39b71982d266e075d3e590e55a', 'mem_merch_  6_basic_access_1', 'merch_  6', 'earn', 300, NULL, 'offer_merch_6_1', 300, '2026-07-23 05:19:56', NULL),
   ('lt-4b345df194748acd9343a9ab60184abb', 'mem_merch_  6_pro_athlete_1', 'merch_  6', 'earn', 300, NULL, 'efc9d470-af7a-421a-af5f-35e3cf969d23', 300, '2026-07-20 16:03:56', NULL),
   ('lt-880bcc5ab46ccb06855bf4a11d9e1af3', 'mem_merch_  6_elite_champion_vip_1', 'merch_  6', 'earn', 300, NULL, 'efc9d470-af7a-421a-af5f-35e3cf969d23', 300, '2026-07-18 17:14:56', NULL),
-  ('lt-048f28e0127caa83c30bc96be6d9a026', 'mem_merch_  7_silver_beauty_1', 'merch_  7', 'earn', 300, NULL, 'offer_merch_7_1', 300, '2026-07-16 20:37:56', NULL),
-  ('lt-0efbc61785de277010433780b52cb78c', 'mem_merch_  7_gold_luxe_1', 'merch_  7', 'earn', 300, NULL, 'offer_merch_7_1', 300, '2026-07-17 02:00:56', NULL),
-  ('lt-c3ba3ee9ef3ed0dba798d5e922b7c195', 'mem_merch_  7_platinum_royalty_1', 'merch_  7', 'earn', 300, NULL, 'offer_merch_7_1', 300, '2026-07-17 17:24:56', NULL);
+  ('lt-048f28e0127caa83c30bc96be6d9a026', 'mem_merch_  7_silver_beauty_1', 'merch_  7', 'earn', 300, NULL, 'offer_merch_7_1', 300, '2026-07-16 20:37:56', NULL);
 
 INSERT IGNORE INTO `loyalty_transactions` (`id`, `member_id`, `merchant_id`, `type`, `points`, `source_redemption_id`, `source_offer_id`, `balance_after`, `created_at`, `note`) VALUES
+  ('lt-0efbc61785de277010433780b52cb78c', 'mem_merch_  7_gold_luxe_1', 'merch_  7', 'earn', 300, NULL, 'offer_merch_7_1', 300, '2026-07-17 02:00:56', NULL),
+  ('lt-c3ba3ee9ef3ed0dba798d5e922b7c195', 'mem_merch_  7_platinum_royalty_1', 'merch_  7', 'earn', 300, NULL, 'offer_merch_7_1', 300, '2026-07-17 17:24:56', NULL),
   ('lt-bfa7d02e4570ba45d9ed988b72adda44', 'mem_merch_  8_care_starter_1', 'merch_  8', 'earn', 300, NULL, 'offer_merch_8_1', 300, '2026-07-18 11:50:56', NULL),
   ('lt-208b5dc963aa246c8659c44771c84e4d', 'mem_merch_  8_drive_pro_1', 'merch_  8', 'earn', 300, NULL, 'offer_merch_8_1', 300, '2026-07-23 09:05:56', NULL),
   ('lt-a2de51127960b1ec7f896a3ca481009b', 'mem_merch_  8_shield_ceramic_vip_1', 'merch_  8', 'earn', 300, NULL, 'offer_merch_8_1', 300, '2026-07-20 09:34:56', NULL),
@@ -1268,11 +1299,11 @@ INSERT IGNORE INTO `loyalty_transactions` (`id`, `member_id`, `merchant_id`, `ty
   ('lt-40e65a581d38a5eecbb551f994072122', '2f3f1a71-9597-4a2f-850d-adfa2ce9a08e', '4bf2fb6b-bdf3-49d3-ac1b-1e6e746c6643', 'earn', 200, NULL, '33038b24-413c-4ef5-8db8-8629bed5830b', 500, '2026-07-21 23:22:56', NULL),
   ('lt-fa8641d78d2872bfef43fbf2ad4e7a79', 'mem_merch_  5_vip_family_club_1', 'merch_  5', 'earn', 200, NULL, 'offer_merch_5_1', 500, '2026-07-20 06:15:56', NULL),
   ('lt-1a968401a7590bff118fd16dbb90cf71', 'mem_ea2bc841-f304-4a67-91db-c58ee4fa3273_1', '9f5a3fe4-f21f-4fed-beaf-67dcb9c6cffc', 'earn', 200, NULL, NULL, 500, '2026-07-19 03:52:56', NULL),
-  ('lt-521bf0c9240fcb67875478eeb19b284b', 'mem_94d50169-c4e7-4c8d-9f9d-b7e23e6ca82f_1', '4bf2fb6b-bdf3-49d3-ac1b-1e6e746c6643', 'earn', 200, NULL, NULL, 500, '2026-07-17 12:36:56', NULL),
-  ('lt-88e052600c3d161fe01036d17b944d46', 'mem_merch_  1_policy_starter_1', 'merch_  1', 'earn', 200, NULL, 'offer_merch_1_1', 500, '2026-07-19 02:26:56', NULL),
-  ('lt-7db265b682a4b2a9c6d4900d7b225ed0', 'mem_merch_  1_shield_elite_1', 'merch_  1', 'earn', 200, NULL, 'offer_merch_1_1', 500, '2026-07-19 01:49:56', NULL);
+  ('lt-521bf0c9240fcb67875478eeb19b284b', 'mem_94d50169-c4e7-4c8d-9f9d-b7e23e6ca82f_1', '4bf2fb6b-bdf3-49d3-ac1b-1e6e746c6643', 'earn', 200, NULL, NULL, 500, '2026-07-17 12:36:56', NULL);
 
 INSERT IGNORE INTO `loyalty_transactions` (`id`, `member_id`, `merchant_id`, `type`, `points`, `source_redemption_id`, `source_offer_id`, `balance_after`, `created_at`, `note`) VALUES
+  ('lt-88e052600c3d161fe01036d17b944d46', 'mem_merch_  1_policy_starter_1', 'merch_  1', 'earn', 200, NULL, 'offer_merch_1_1', 500, '2026-07-19 02:26:56', NULL),
+  ('lt-7db265b682a4b2a9c6d4900d7b225ed0', 'mem_merch_  1_shield_elite_1', 'merch_  1', 'earn', 200, NULL, 'offer_merch_1_1', 500, '2026-07-19 01:49:56', NULL),
   ('lt-c048cba7c3b9706e8d4603198b104c2e', 'mem_merch_  1_heritage_vip_1', 'merch_  1', 'earn', 200, NULL, 'offer_merch_1_1', 500, '2026-07-23 05:41:56', NULL),
   ('lt-d18fb0ba5f06d51b8afc0d470194fd4a', 'mem_merch_  2_resident_member_1', 'merch_  2', 'earn', 200, NULL, 'offer_merch_2_1', 500, '2026-07-22 08:35:56', NULL),
   ('lt-f45ce88017735f516b8b252d2758ad8a', 'mem_merch_  2_home_owner_preferred_1', 'merch_  2', 'earn', 200, NULL, 'offer_merch_2_1', 500, '2026-07-19 08:42:56', NULL),
@@ -1320,11 +1351,11 @@ INSERT IGNORE INTO `loyalty_transactions` (`id`, `member_id`, `merchant_id`, `ty
   ('lt-3ff7ea0f87776c526a7dd62c8885b4c0', 'mem-5b8d4a96465c19fe045644cbb681631f', 'merch_  5', 'earn', 200, NULL, NULL, 500, '2026-07-21 19:19:56', NULL),
   ('lt-72272cb4ed0993b466d4742ae5e4d4e4', 'mem-25262c83327365225f36135fed87ad91', 'merch_  6', 'earn', 200, NULL, NULL, 500, '2026-07-17 22:42:56', NULL),
   ('lt-241db1378cd621d31fc555d010e59770', 'mem-49fc317efc4f12be586f231a2b65607d', 'merch_  6', 'earn', 200, NULL, NULL, 500, '2026-07-21 11:16:56', NULL),
-  ('lt-58ec7ededf4bed3616f2cb8739f32f2d', 'mem-f3ffcc249446e5bde5a241af9ad9e60a', 'merch_  6', 'earn', 200, NULL, NULL, 500, '2026-07-17 01:01:56', NULL),
-  ('lt-34efbbc36cbb3ea331f9c488e77008ea', 'mem-27df0ea3c95f20b238b999ea9c157c09', 'merch_  7', 'earn', 200, NULL, NULL, 500, '2026-07-22 22:13:56', NULL),
-  ('lt-a29a411c73d4f99c6cc9d2c0221003e6', 'mem-a8ab70a6200ce8faaec876906805a3f7', 'merch_  7', 'earn', 200, NULL, NULL, 500, '2026-07-17 04:40:56', NULL);
+  ('lt-58ec7ededf4bed3616f2cb8739f32f2d', 'mem-f3ffcc249446e5bde5a241af9ad9e60a', 'merch_  6', 'earn', 200, NULL, NULL, 500, '2026-07-17 01:01:56', NULL);
 
 INSERT IGNORE INTO `loyalty_transactions` (`id`, `member_id`, `merchant_id`, `type`, `points`, `source_redemption_id`, `source_offer_id`, `balance_after`, `created_at`, `note`) VALUES
+  ('lt-34efbbc36cbb3ea331f9c488e77008ea', 'mem-27df0ea3c95f20b238b999ea9c157c09', 'merch_  7', 'earn', 200, NULL, NULL, 500, '2026-07-22 22:13:56', NULL),
+  ('lt-a29a411c73d4f99c6cc9d2c0221003e6', 'mem-a8ab70a6200ce8faaec876906805a3f7', 'merch_  7', 'earn', 200, NULL, NULL, 500, '2026-07-17 04:40:56', NULL),
   ('lt-1fa7a3af310dece51e9f1c06d82b6cc4', 'mem-0e3b579efefa397745a21162cb940394', 'merch_  7', 'earn', 200, NULL, NULL, 500, '2026-07-18 16:36:56', NULL),
   ('lt-d04f232d58ac960bc237d42e9dbce409', 'mem-98d874e771a317826afc2643d80fac79', 'merch_  8', 'earn', 200, NULL, NULL, 500, '2026-07-20 13:32:56', NULL),
   ('lt-c43a63ba776a7b243af2e95f06777b52', 'mem-dee482b42443f2baca67985e1a5433fc', 'merch_  8', 'earn', 200, NULL, NULL, 500, '2026-07-17 18:42:56', NULL),
@@ -1372,11 +1403,11 @@ INSERT IGNORE INTO `loyalty_transactions` (`id`, `member_id`, `merchant_id`, `ty
   ('lt-53292266b1fac43619e1854e209134c8', 'mem_merch_ 10_solitaire_crown_vip_1', 'merch_ 10', 'redeem', 250, NULL, 'offer_merch_10_1', 250, '2026-07-19 22:43:56', NULL),
   ('lt-a711a5ee753deb02c007a88e085e3438', '44c69212-90b6-4de8-98ed-d74a12ab3013', 'merch_  6', 'redeem', 250, NULL, 'offer_merch_6_1', 250, '2026-07-16 21:38:56', NULL),
   ('lt-cbec0034d3aaf73d633f86ae3fb1767a', 'mem-cc5e67de2d566c08a1aab2b21dc7ac96', '4bf2fb6b-bdf3-49d3-ac1b-1e6e746c6643', 'redeem', 250, NULL, NULL, 250, '2026-07-18 16:44:56', NULL),
-  ('lt-9561bf840b1c06ebc857da4a4afa6af6', 'mem-a0e330925e832caedad5e558181a5ebc', '9f5a3fe4-f21f-4fed-beaf-67dcb9c6cffc', 'redeem', 250, NULL, NULL, 250, '2026-07-17 15:54:56', NULL),
-  ('lt-b118522b35d55ff2bdb77355384590d7', 'mem-e67d69fe2fcfd08b641a1584c8ecb623', 'merch_  1', 'redeem', 250, NULL, NULL, 250, '2026-07-16 21:07:56', NULL),
-  ('lt-ceec247068ed3b269cbdc8936a8063b5', 'mem-dafe7c867c4e002408c1850fbda2c400', 'merch_  1', 'redeem', 250, NULL, NULL, 250, '2026-07-21 15:10:56', NULL);
+  ('lt-9561bf840b1c06ebc857da4a4afa6af6', 'mem-a0e330925e832caedad5e558181a5ebc', '9f5a3fe4-f21f-4fed-beaf-67dcb9c6cffc', 'redeem', 250, NULL, NULL, 250, '2026-07-17 15:54:56', NULL);
 
 INSERT IGNORE INTO `loyalty_transactions` (`id`, `member_id`, `merchant_id`, `type`, `points`, `source_redemption_id`, `source_offer_id`, `balance_after`, `created_at`, `note`) VALUES
+  ('lt-b118522b35d55ff2bdb77355384590d7', 'mem-e67d69fe2fcfd08b641a1584c8ecb623', 'merch_  1', 'redeem', 250, NULL, NULL, 250, '2026-07-16 21:07:56', NULL),
+  ('lt-ceec247068ed3b269cbdc8936a8063b5', 'mem-dafe7c867c4e002408c1850fbda2c400', 'merch_  1', 'redeem', 250, NULL, NULL, 250, '2026-07-21 15:10:56', NULL),
   ('lt-141b1b5d9b2c1d5183de8c1f8bc05d6c', 'mem-eb892d3adc43b7bc4f8cb9604cdbf8ec', 'merch_  1', 'redeem', 250, NULL, NULL, 250, '2026-07-19 07:39:56', NULL),
   ('lt-0c4eabd664fe3d36dee936c1f180d8b7', 'mem-38d9f52d770d33cbcdeb1ce7ed89b9fc', 'merch_  2', 'redeem', 250, NULL, NULL, 250, '2026-07-18 06:25:56', NULL),
   ('lt-d32ec4a202ac619697bbc6d5e492dfad', 'mem-80c518dc99a2188908fb98a5e0796bed', 'merch_  2', 'redeem', 250, NULL, NULL, 250, '2026-07-22 10:18:56', NULL),
@@ -2831,7 +2862,6 @@ INSERT IGNORE INTO `card_inventory` (`id`, `card_number`, `status`, `allocated_m
   ('15a5ce89-f08d-446d-9315-020db2ff0bbe', '2173 6567 3333 0038', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('15e767f5-5647-4ba8-bc91-e2377909ee0e', '2173 6567 3333 0468', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('17a3b1e6-4a6c-4f3e-9fe2-99f249a1203f', '2173 6567 3333 0358', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
-  ('1831d101-64e9-4fa4-bfa1-facf7d00fb7d', '2173 6567 3333 0037', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('186dd2a5-938f-4703-a482-d60f5269cda4', '2173 6567 3333 0099', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('1897be16-59e8-497d-bf29-b6fc7ff3f061', '2173 6567 3333 0329', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('19e80310-8efb-4b5d-9bf8-59d2cfebb0dd', '2173 6567 3333 0043', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
@@ -2839,6 +2869,7 @@ INSERT IGNORE INTO `card_inventory` (`id`, `card_number`, `status`, `allocated_m
   ('1a18568c-c112-4c51-94b6-d4624b86649a', '2173 6567 3333 0388', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('1afe8d9b-5610-4918-9d4c-394a40c97a68', '2173 6567 3333 0424', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('0af9a3eb-275b-4746-a6f6-5e3a6e11c333', '2173 6567 3333 0026', 'member_linked', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', '27a3398d-759a-4f67-8edd-293bf4529f03', '2026-10-20 07:42:03', '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
+  ('1831d101-64e9-4fa4-bfa1-facf7d00fb7d', '2173 6567 3333 0037', 'member_linked', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', '25990cab-dcb1-4151-95cf-d1fd107f7b83', '2026-10-20 17:58:06', '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('1b2e30e6-bfd2-4cd4-b03b-1bd0eeb27bcf', '2173 6567 3333 0341', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('1c00a37f-1152-4415-aac5-2df36a1b8bdd', '2173 6567 3333 0107', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('1c8b2074-0cfa-48e0-88d9-98a6e529bc81', '2173 6567 3333 0294', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
@@ -3000,11 +3031,11 @@ INSERT IGNORE INTO `card_inventory` (`id`, `card_number`, `status`, `allocated_m
   ('6f4d62dc-dd1e-44ff-b0e7-15085b636e51', '2173 6567 3333 0253', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('6f799726-4f84-4db7-b564-d6a5d1d7752d', '2173 6567 3333 0375', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('6f95f1ec-1333-4097-91e6-c46780f25f80', '2173 6567 3333 0240', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
-  ('706f7c72-747b-4226-bd27-b1a3a7ca609c', '2173 6567 3333 0035', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('70a614e3-bd8c-45fa-80a9-da5ea46f8893', '2173 6567 3333 0067', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('712eb575-6fbe-4ab2-a022-e4f29d0f63c7', '2173 6567 3333 0374', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('72899dcf-a737-43e7-a34b-de7d7e7b05cd', '2173 6567 3333 0172', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('6a901b41-41b2-4476-86cb-f59d16904543', '2173 6567 3333 0031', 'member_linked', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', '468dfda3-23e6-413e-a891-ed2417b85d48', '2026-10-20 11:20:58', '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
+  ('706f7c72-747b-4226-bd27-b1a3a7ca609c', '2173 6567 3333 0035', 'member_linked', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', 'cd84fc62-3c9f-46c0-9cfc-ec9d308f3d79', '2026-10-20 17:53:33', '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('72d11ffb-1d1a-4701-8659-78e2a8d4c720', '2173 6567 3333 0495', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('7572991f-d5c6-480d-9d79-1b6d3b1fedf7', '2173 6567 3333 0202', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('761a8eb0-8e3c-4a96-9a4a-4c3e71d4b23b', '2173 6567 3333 0273', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
@@ -3033,7 +3064,6 @@ INSERT IGNORE INTO `card_inventory` (`id`, `card_number`, `status`, `allocated_m
   ('8179fb3f-90ff-47ff-8dd5-2bcf01f87bdf', '2173 6567 3333 0227', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('817b8169-55fb-465a-a279-67542446fded', '2173 6567 3333 0114', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('81c88636-0d20-4fa5-bc61-bea22fded344', '2173 6567 3333 0200', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
-  ('828dccc3-af51-411f-9edd-e94cdce7847e', '2173 6567 3333 0036', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('82d7f68e-b106-4d8d-8a17-08d7021b7155', '2173 6567 3333 0485', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('8311d1e7-c867-473b-8a03-c3f58869d6c3', '2173 6567 3333 0120', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('83bd10c9-511d-4d96-afdb-dbdd1bf2827e', '2173 6567 3333 0301', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
@@ -3047,7 +3077,7 @@ INSERT IGNORE INTO `card_inventory` (`id`, `card_number`, `status`, `allocated_m
   ('88f615ec-6707-408e-9dd5-8d6d779ff5b9', '2173 6567 3333 0336', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('88ba82f4-4978-44e4-a786-90a089438ac5', '2173 6567 3333 0017', 'member_linked', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', 'b11ff622-9402-447b-b07a-ac5c853ed9b7', '2026-09-30 06:39:31', '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('7dd5acf2-6764-40aa-8687-b6539d3591a1', '2173 6567 3333 0032', 'member_linked', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', '9ed2ac95-2318-4316-8c69-0f7b98b4f9b8', '2026-10-20 11:28:09', '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
-  ('8a23fb37-8123-4fc6-a390-4ce88eed2b70', '2173 6567 3333 0033', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
+  ('828dccc3-af51-411f-9edd-e94cdce7847e', '2173 6567 3333 0036', 'member_linked', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', 'c97278f9-45d7-4971-97bf-b5700d7fafc4', '2026-10-20 17:55:30', '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('8a2e2a39-72bb-4ac4-a718-50b38766e0a1', '2173 6567 3333 0409', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('8b8e538b-9548-4b3f-b3bc-3ba9cd78744a', '2173 6567 3333 0403', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('8ca2f6d2-31ab-40c8-91cf-5e7b2aec3659', '2173 6567 3333 0352', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
@@ -3069,10 +3099,10 @@ INSERT IGNORE INTO `card_inventory` (`id`, `card_number`, `status`, `allocated_m
   ('93841b0a-9c37-42fa-8dd5-e0c0be6cc8a9', '2173 6567 3333 0177', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('938af9ba-a48e-433e-8278-e0ef4cc412e9', '2173 6567 3333 0076', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('938db4a3-8431-4a52-8399-9e7db6aee833', '2173 6567 3333 0071', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
-  ('93980326-4715-4e71-8ea1-c51a1a098cda', '2173 6567 3333 0097', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26');
+  ('93980326-4715-4e71-8ea1-c51a1a098cda', '2173 6567 3333 0097', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
+  ('943d32b2-abfd-427a-ae62-259ac17e20ae', '2173 6567 3333 0108', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26');
 
 INSERT IGNORE INTO `card_inventory` (`id`, `card_number`, `status`, `allocated_merchant_id`, `allocated_at`, `linked_member_id`, `linked_at`, `created_by_admin_id`, `created_at`) VALUES
-  ('943d32b2-abfd-427a-ae62-259ac17e20ae', '2173 6567 3333 0108', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('9501c202-1b2c-4f10-989b-a4d53b4a4b41', '2173 6567 3333 0274', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('9511a816-172f-4c2b-9ab9-f4a9d49df850', '2173 6567 3333 0353', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('9537c4e6-fa29-4460-92df-75b7ab46f81b', '2173 6567 3333 0455', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
@@ -3089,6 +3119,7 @@ INSERT IGNORE INTO `card_inventory` (`id`, `card_number`, `status`, `allocated_m
   ('9d72106e-8d92-4b3f-9d00-c7804e1ce785', '2173 6567 3333 0063', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('9e9a3604-3f31-4f28-befe-12cd0ee9873f', '2173 6567 3333 0370', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('9ed56c23-bd03-453a-8e4c-c7939940a753', '2173 6567 3333 0180', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
+  ('8a23fb37-8123-4fc6-a390-4ce88eed2b70', '2173 6567 3333 0033', 'member_linked', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', 'b7ff14e8-2e4c-46a6-ba99-ce7f15afe235', '2026-10-20 13:56:13', '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('9fbd3e80-3514-4bdd-ac29-64ad928fbe50', '2173 6567 3333 0053', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('a14e3f2a-3392-42e4-a663-ee1d7c08822a', '2173 6567 3333 0411', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('a1b1b1c7-342b-4fde-aa38-1666f039cf66', '2173 6567 3333 0280', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
@@ -3143,7 +3174,6 @@ INSERT IGNORE INTO `card_inventory` (`id`, `card_number`, `status`, `allocated_m
   ('baae650a-1bb6-49f2-bc99-4a1e6f01abef', '2173 6567 3333 0111', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('babc1371-8d0d-45a8-8600-8b8147139c1a', '2173 6567 3333 0229', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('bb15863a-d58b-4958-958c-12f80a9539d6', '2173 6567 3333 0192', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
-  ('bb15b92b-547a-48b3-9cef-881dd6dbc4db', '2173 6567 3333 0034', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('bbbd529f-9d42-4e15-8134-5b4092c17193', '2173 6567 3333 0191', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('bc9d147e-868d-4487-a4ea-2cdea711476f', '2173 6567 3333 0290', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('bcbb4982-5f50-4ba5-a28a-6630a9637525', '2173 6567 3333 0230', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
@@ -3173,10 +3203,10 @@ INSERT IGNORE INTO `card_inventory` (`id`, `card_number`, `status`, `allocated_m
   ('c9817f51-a0d5-4a9f-b8f4-edf2d8aba6cf', '2173 6567 3333 0127', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('cafba218-dc61-46c4-be4a-fc3a9e1a55f7', '2173 6567 3333 0368', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('cbf26443-f2ba-4c4c-9f99-95ff38f5ea79', '2173 6567 3333 0499', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
-  ('cd14ee14-70fd-4e08-aeab-c9249c17342f', '2173 6567 3333 0181', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26');
+  ('cd14ee14-70fd-4e08-aeab-c9249c17342f', '2173 6567 3333 0181', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
+  ('cd4b3fa9-c171-4ca4-bf25-b19e731fdbc0', '2173 6567 3333 0425', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26');
 
 INSERT IGNORE INTO `card_inventory` (`id`, `card_number`, `status`, `allocated_merchant_id`, `allocated_at`, `linked_member_id`, `linked_at`, `created_by_admin_id`, `created_at`) VALUES
-  ('cd4b3fa9-c171-4ca4-bf25-b19e731fdbc0', '2173 6567 3333 0425', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('cd4e4c54-49e4-4847-af3e-90ace6faa121', '2173 6567 3333 0284', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('cd7c0bda-8eb9-467e-bc6c-4280223a6d20', '2173 6567 3333 0382', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('ce9d5d43-bd40-418e-bfc3-6d3edf878244', '2173 6567 3333 0296', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
@@ -3225,10 +3255,10 @@ INSERT IGNORE INTO `card_inventory` (`id`, `card_number`, `status`, `allocated_m
   ('e41b8714-ccd0-4289-9fd2-cde32491e813', '2173 6567 3333 0222', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('e4736a2a-b5f5-452d-98ed-6e78ffae6437', '2173 6567 3333 0266', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('e48f4ec1-ee1c-4806-beb4-781601568fde', '2173 6567 3333 0443', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
-  ('e5073fe0-0dbc-44e3-b473-7e856a6d0347', '2173 6567 3333 0130', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26');
+  ('e5073fe0-0dbc-44e3-b473-7e856a6d0347', '2173 6567 3333 0130', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
+  ('e533f648-97cb-488c-82c0-23a391aad761', '2173 6567 3333 0203', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26');
 
 INSERT IGNORE INTO `card_inventory` (`id`, `card_number`, `status`, `allocated_merchant_id`, `allocated_at`, `linked_member_id`, `linked_at`, `created_by_admin_id`, `created_at`) VALUES
-  ('e533f648-97cb-488c-82c0-23a391aad761', '2173 6567 3333 0203', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('e55ce345-b578-45dd-9279-306fb397f606', '2173 6567 3333 0492', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('e596d08a-2347-48d8-a9bc-3fe868ae0d26', '2173 6567 3333 0220', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('e5cf3e79-9f4f-40cd-9a72-3c81b7629d6e', '2173 6567 3333 0490', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
@@ -3277,10 +3307,10 @@ INSERT IGNORE INTO `card_inventory` (`id`, `card_number`, `status`, `allocated_m
   ('fb24211e-29c7-40de-82e1-a99da76c2925', '2173 6567 3333 0436', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('fb67065a-6ba6-4ec1-9b4b-aa8742b15fdd', '2173 6567 3333 0233', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('fcd3d8ef-edd0-4531-a8fb-b56244e9a2c3', '2173 6567 3333 0217', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
-  ('fe555639-213e-4bff-a854-c2a01fe9de80', '2173 6567 3333 0412', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26');
+  ('fe555639-213e-4bff-a854-c2a01fe9de80', '2173 6567 3333 0412', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
+  ('fffe831e-2990-4f77-8733-a57bc8d58a16', '2173 6567 3333 0307', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26');
 
 INSERT IGNORE INTO `card_inventory` (`id`, `card_number`, `status`, `allocated_merchant_id`, `allocated_at`, `linked_member_id`, `linked_at`, `created_by_admin_id`, `created_at`) VALUES
-  ('fffe831e-2990-4f77-8733-a57bc8d58a16', '2173 6567 3333 0307', 'merchant_allocated', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('fbca34c4-9ad0-432b-961d-c8d113f035a6', '2173 6567 3333 0011', 'member_linked', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', 'd7133e03-ad22-424c-8c95-fdcc99898863', '2026-09-22 11:13:59', '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('75b3f0bb-b3ab-4903-964e-443d3db5b644', '4555 8645 9367 0007', 'member_linked', '63c2aeec-7410-4c78-9a68-beb45b1c622c', '2026-08-27 11:40:23', '5b59fa54-2745-4d23-924e-c23b7cf51780', '2026-09-23 14:11:34', '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-08-27 11:34:13'),
   ('f96922b6-4db0-4841-9146-71fba9573660', '2173 6567 3333 0013', 'member_linked', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', 'f24afb43-f24e-4b5a-81f7-55f9603fcc43', '2026-09-26 07:20:16', '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
@@ -3295,6 +3325,7 @@ INSERT IGNORE INTO `card_inventory` (`id`, `card_number`, `status`, `allocated_m
   ('651e637d-e66a-4fbb-883c-a37e3dd198b9', '2173 6567 3333 0018', 'member_linked', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', '032e896e-d53d-49fc-b73a-e096c396aa8f', '2026-10-18 08:59:18', '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('15297dd1-5979-434c-9ec9-0c8aa8b5385a', '2173 6567 3333 0025', 'member_linked', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', '9babf41a-3f09-41ae-8d93-c2429fb6d9a1', '2026-10-20 07:26:18', '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('b33b3eea-39bd-4370-bf4a-a62206b60673', '2173 6567 3333 0029', 'member_linked', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', 'e8ef481f-2aeb-46de-b9a2-73c11b33838b', '2026-10-20 11:17:17', '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
+  ('bb15b92b-547a-48b3-9cef-881dd6dbc4db', '2173 6567 3333 0034', 'member_linked', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '2026-09-03 09:31:57', 'c2b4c816-7823-4051-9782-ea8abbf7debb', '2026-10-20 14:06:06', '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:26:26'),
   ('18edb697-c03b-46a2-b360-df86b4dd7933', '4555 8645 9367 0010', 'member_linked', '63c2aeec-7410-4c78-9a68-beb45b1c622c', '2026-08-27 11:40:23', 'eae71ce8-e368-4ee4-bf64-cc069c18eb16', '2026-09-23 14:59:38', '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-08-27 11:34:13'),
   ('010d5741-3eb8-49af-ae39-097362cb329e', '0000 3456 9367 0041', 'merchant_allocated', '09703dad-3876-4266-bff1-e2f5cbcf253c', '2026-10-17 05:03:16', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-10-17 04:50:57'),
   ('053dd6c6-3d17-4047-a4e1-4b8387b00470', '0000 3456 9367 0125', 'merchant_allocated', '09703dad-3876-4266-bff1-e2f5cbcf253c', '2026-10-17 05:03:16', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-10-17 04:50:57'),
@@ -3357,6 +3388,7 @@ INSERT IGNORE INTO `card_inventory` (`id`, `card_number`, `status`, `allocated_m
   ('ecdc5c89-4906-4cf7-b2ae-5096b1136a9d', '8783 5621 8877 0494', 'merchant_allocated', 'b64a2ee7-5fc4-434d-9b92-1fa730df2810', '2026-09-09 05:29:06', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-09 05:20:59'),
   ('6607d531-985c-427c-845f-cab5ca005ee7', '8667 7863 7616 0001', 'member_linked', '75eff299-f162-4427-8b08-04f404141ef9', '2026-09-09 10:29:54', 'c709d17f-6996-4b39-ad84-0e7daf04e46f', '2026-09-19 14:00:23', '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-09 10:16:46'),
   ('8f11ea2b-c43d-4bd2-a19e-22f348f4f7cb', '4555 8645 9367 0011', 'member_linked', '63c2aeec-7410-4c78-9a68-beb45b1c622c', '2026-08-27 11:40:23', '5c931bbb-8fee-4280-9f07-3ee38768845b', '2026-09-23 15:00:56', '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-08-27 11:34:13'),
+  ('97ec89a2-cd14-40ad-8e9a-a17b48a21f7d', '8667 7863 7616 0014', 'member_linked', '75eff299-f162-4427-8b08-04f404141ef9', '2026-09-09 10:29:54', 'c9e4ebb0-fe5a-4160-9fa5-7c009b5cb6a9', '2026-10-21 06:01:25', '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-09 10:16:46'),
   ('94d1f4bb-d5b1-48f3-a63c-b62c485bb533', '8667 7863 7616 0009', 'member_linked', '75eff299-f162-4427-8b08-04f404141ef9', '2026-09-09 10:29:54', '1c40355f-1b0e-4f7d-b533-02a0c0bbf62d', '2026-09-26 12:08:54', '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-09 10:16:46'),
   ('0a4fb970-ef91-4858-ae75-983a0f64b113', '8667 7863 7616 0011', 'member_linked', '75eff299-f162-4427-8b08-04f404141ef9', '2026-09-09 10:29:54', 'd8105344-4e43-4b3a-9c8b-953e02ca3436', '2026-10-07 15:09:49', '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-09 10:16:46'),
   ('86f853ca-2c13-495a-ac06-ef1b4d21a120', '8667 7863 7616 0003', 'member_linked', '75eff299-f162-4427-8b08-04f404141ef9', '2026-09-09 10:29:54', '852f7899-d75f-4635-a45c-b7fed92792e1', '2026-09-26 12:13:24', '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-09 10:16:46'),
@@ -3365,7 +3397,6 @@ INSERT IGNORE INTO `card_inventory` (`id`, `card_number`, `status`, `allocated_m
   ('333a82d3-576d-49ea-9607-610b8be90ee2', '0000 3456 9367 0104', 'merchant_allocated', '09703dad-3876-4266-bff1-e2f5cbcf253c', '2026-10-17 05:03:16', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-10-17 04:50:57'),
   ('8d08326b-694e-4bd5-81bd-9cbd8837d51a', '8667 7863 7616 0013', 'merchant_allocated', '75eff299-f162-4427-8b08-04f404141ef9', '2026-09-09 10:29:54', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-09 10:16:46'),
   ('341bbe24-7e15-4ac2-b1f1-861b1f3a736a', '0000 3456 9367 0139', 'merchant_allocated', '09703dad-3876-4266-bff1-e2f5cbcf253c', '2026-10-17 05:03:16', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-10-17 04:50:57'),
-  ('97ec89a2-cd14-40ad-8e9a-a17b48a21f7d', '8667 7863 7616 0014', 'merchant_allocated', '75eff299-f162-4427-8b08-04f404141ef9', '2026-09-09 10:29:54', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-09 10:16:46'),
   ('bec04dbc-6ec1-4beb-be5b-1216a029d31f', '8667 7863 7616 0015', 'merchant_allocated', '75eff299-f162-4427-8b08-04f404141ef9', '2026-09-09 10:29:54', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-09 10:16:46'),
   ('714c1294-4c83-4c87-a14d-4169b435d5a3', '8667 7863 7616 0010', 'member_linked', '75eff299-f162-4427-8b08-04f404141ef9', '2026-09-09 10:29:54', '282c0816-6dfb-4b39-a074-0ef6f9d07c70', '2026-10-02 15:21:05', '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-09 10:16:46'),
   ('34d9159e-7c0a-4b58-bf1d-e443ee7ecec8', '0000 3456 9367 0152', 'merchant_allocated', '09703dad-3876-4266-bff1-e2f5cbcf253c', '2026-10-17 05:03:16', NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-10-17 04:50:57'),
@@ -4612,85 +4643,85 @@ INSERT IGNORE INTO `card_inventory` (`id`, `card_number`, `status`, `allocated_m
   ('54b25163-313a-4ddd-b293-aa8c8720e897', '2176 6567 3333 0353', 'unassigned', NULL, NULL, NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:06:17'),
   ('54d3f808-ff00-45bf-a858-c64527f7802f', '2176 6567 3333 0359', 'unassigned', NULL, NULL, NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:06:17'),
   ('5613e0cf-77f9-41e8-b919-c9a130be0d9e', '2176 6567 3333 0417', 'unassigned', NULL, NULL, NULL, NULL, '9c2a0db3-c7e6-4d04-8b65-6cb56ec6b9f7', '2026-09-03 09:06:17'),
-  ('49c91730-b263-4998-af6d-bf72b074d019', '4000 1000 0016 0007', 'member_linked', 'mer-mob', '2025-09-17 00:00:00', 'mem-mob-7', '2025-09-17 00:00:00', NULL, '2025-09-17 00:00:00'),
-  ('903cf5f6-bb04-434a-af40-0c3fb896512e', '4000 1000 0016 0008', 'member_linked', 'mer-mob', '2026-06-17 00:00:00', 'mem-mob-8', '2026-06-17 00:00:00', NULL, '2026-06-17 00:00:00'),
-  ('58476966-cebf-48e5-a983-6fe6d8e3c71b', '4000 1000 0016 0009', 'member_linked', 'mer-mob', '2026-07-17 00:00:00', 'mem-mob-9', '2026-07-17 00:00:00', NULL, '2026-07-17 00:00:00'),
-  ('6c6fded2-f109-4485-8614-a69f0639122a', '4000 1000 0016 0001', 'member_linked', 'mer-mob', '2025-06-17 00:00:00', 'mem-mob-1', '2025-06-17 00:00:00', NULL, '2025-06-17 00:00:00'),
-  ('43efcc56-7f63-41ed-bfaf-34a8359be85a', '4000 1000 0016 0002', 'member_linked', 'mer-mob', '2025-12-17 00:00:00', 'mem-mob-2', '2025-12-17 00:00:00', NULL, '2025-12-17 00:00:00'),
-  ('8a8847bd-744a-4006-8e5d-e68d2cdd7fcc', '4000 1000 0016 0005', 'member_linked', 'mer-mob', '2026-02-17 00:00:00', 'mem-mob-5', '2026-02-17 00:00:00', NULL, '2026-02-17 00:00:00'),
-  ('46c3b406-0b27-4d7a-91e6-cbc176ad3a6d', '4000 1000 0016 0010', 'member_linked', 'mer-mob', '2026-04-17 00:00:00', 'mem-mob-10', '2026-04-17 00:00:00', NULL, '2026-04-17 00:00:00'),
-  ('be32bba8-961c-4bde-a771-803260f33a51', '4000 1000 0016 0004', 'member_linked', 'mer-mob', '2026-05-17 00:00:00', 'mem-mob-4', '2026-05-17 00:00:00', NULL, '2026-05-17 00:00:00'),
-  ('164e2019-6c14-4c55-8016-9beb5e3d7d0e', '4000 1000 0016 0003', 'member_linked', 'mer-mob', '2024-12-17 00:00:00', 'mem-mob-3', '2024-12-17 00:00:00', NULL, '2024-12-17 00:00:00'),
-  ('c4ced2dc-2053-475e-9145-667c2d7f62f2', '4000 1000 0016 0006', 'member_linked', 'mer-mob', '2026-03-17 00:00:00', 'mem-mob-6', '2026-03-17 00:00:00', NULL, '2026-03-17 00:00:00'),
-  ('42d1978d-8263-47e9-9d5b-e97c5037ed06', 'CARD-tier_merch_  5_vip_family_club-1', 'member_linked', 'merch_  5', '2026-06-22 00:00:00', 'mem_merch_  5_vip_family_club_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
-  ('85373fe3-d785-4e7d-8b55-c264723222ef', 'CARD-ea2bc841-f304-4a67-91db-c58ee4fa3273-1', 'member_linked', '9f5a3fe4-f21f-4fed-beaf-67dcb9c6cffc', '2026-06-22 00:00:00', 'mem_ea2bc841-f304-4a67-91db-c58ee4fa3273_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
-  ('7734d5ff-64b8-48c0-b8c3-cd89aeebd8ab', 'CARD-94d50169-c4e7-4c8d-9f9d-b7e23e6ca82f-1', 'member_linked', '4bf2fb6b-bdf3-49d3-ac1b-1e6e746c6643', '2026-06-22 00:00:00', 'mem_94d50169-c4e7-4c8d-9f9d-b7e23e6ca82f_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
-  ('9a606104-e655-456b-9cef-905cc8387b96', 'CARD-tier_merch_  1_heritage_vip-1', 'member_linked', 'merch_  1', '2026-06-22 00:00:00', 'mem_merch_  1_heritage_vip_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
-  ('9eefe416-e097-4bef-b4b3-917c3edada9b', 'CARD-tier_merch_  2_home_owner_preferred-1', 'member_linked', 'merch_  2', '2026-06-22 00:00:00', 'mem_merch_  2_home_owner_preferred_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
-  ('fcac9859-7ab0-42ba-8885-a6d8e8174478', 'CARD-tier_merch_  3_explorer-1', 'member_linked', 'merch_  3', '2026-06-22 00:00:00', 'mem_merch_  3_explorer_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
-  ('47f6e6b7-3497-433a-ad4c-60b8f28bfb82', 'CARD-tier_merch_  4_amc_gold_vip-1', 'member_linked', 'merch_  4', '2026-06-22 00:00:00', 'mem_merch_  4_amc_gold_vip_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
-  ('32544bdc-c520-42d5-9f3d-9e277e110bff', 'CARD-tier_merch_  5_smart_saver-1', 'member_linked', 'merch_  5', '2026-06-22 00:00:00', 'mem_merch_  5_smart_saver_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00');
+  ('0313277d-218d-4a40-ab8e-cda435439308', '4000 1000 0016 0007', 'member_linked', 'mer-mob', '2025-09-17 00:00:00', 'mem-mob-7', '2025-09-17 00:00:00', NULL, '2025-09-17 00:00:00'),
+  ('b60aa5f0-73fd-48df-86e8-058ce29b3bd8', '4000 1000 0016 0008', 'member_linked', 'mer-mob', '2026-06-17 00:00:00', 'mem-mob-8', '2026-06-17 00:00:00', NULL, '2026-06-17 00:00:00'),
+  ('651a7783-5d52-4320-ae88-d250bb621a10', '4000 1000 0016 0009', 'member_linked', 'mer-mob', '2026-07-17 00:00:00', 'mem-mob-9', '2026-07-17 00:00:00', NULL, '2026-07-17 00:00:00'),
+  ('8eba7fc8-7e8c-475d-973a-8a2413d425b4', '4000 1000 0016 0001', 'member_linked', 'mer-mob', '2025-06-17 00:00:00', 'mem-mob-1', '2025-06-17 00:00:00', NULL, '2025-06-17 00:00:00'),
+  ('3119d2ff-d7c3-41e8-89c8-9cbfde46d06f', '4000 1000 0016 0002', 'member_linked', 'mer-mob', '2025-12-17 00:00:00', 'mem-mob-2', '2025-12-17 00:00:00', NULL, '2025-12-17 00:00:00'),
+  ('71f59cb1-89ec-4a6c-b435-a0efdcbe6284', '4000 1000 0016 0005', 'member_linked', 'mer-mob', '2026-02-17 00:00:00', 'mem-mob-5', '2026-02-17 00:00:00', NULL, '2026-02-17 00:00:00'),
+  ('14c6ac36-27b9-4398-a487-b296e5cf5647', '4000 1000 0016 0010', 'member_linked', 'mer-mob', '2026-04-17 00:00:00', 'mem-mob-10', '2026-04-17 00:00:00', NULL, '2026-04-17 00:00:00'),
+  ('18e7ee96-e64e-4b88-8812-79fd3952894f', '4000 1000 0016 0004', 'member_linked', 'mer-mob', '2026-05-17 00:00:00', 'mem-mob-4', '2026-05-17 00:00:00', NULL, '2026-05-17 00:00:00'),
+  ('badc1800-7c58-4ee6-b02d-10a203053787', '4000 1000 0016 0003', 'member_linked', 'mer-mob', '2024-12-17 00:00:00', 'mem-mob-3', '2024-12-17 00:00:00', NULL, '2024-12-17 00:00:00'),
+  ('7a0870b6-4122-4e03-9ec4-ec6861e56888', '4000 1000 0016 0006', 'member_linked', 'mer-mob', '2026-03-17 00:00:00', 'mem-mob-6', '2026-03-17 00:00:00', NULL, '2026-03-17 00:00:00'),
+  ('19a205db-a54f-4e39-bc92-afc4eabca3e4', 'CARD-tier_merch_  5_vip_family_club-1', 'member_linked', 'merch_  5', '2026-06-22 00:00:00', 'mem_merch_  5_vip_family_club_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
+  ('b7301646-cf4f-40cb-9d38-235ca4e6e925', 'CARD-ea2bc841-f304-4a67-91db-c58ee4fa3273-1', 'member_linked', '9f5a3fe4-f21f-4fed-beaf-67dcb9c6cffc', '2026-06-22 00:00:00', 'mem_ea2bc841-f304-4a67-91db-c58ee4fa3273_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
+  ('2b923a84-1933-48a5-8f03-869791dfa4ba', 'CARD-94d50169-c4e7-4c8d-9f9d-b7e23e6ca82f-1', 'member_linked', '4bf2fb6b-bdf3-49d3-ac1b-1e6e746c6643', '2026-06-22 00:00:00', 'mem_94d50169-c4e7-4c8d-9f9d-b7e23e6ca82f_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
+  ('9485039e-58a4-4eca-bb20-97916ecf3cd3', 'CARD-tier_merch_  1_heritage_vip-1', 'member_linked', 'merch_  1', '2026-06-22 00:00:00', 'mem_merch_  1_heritage_vip_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
+  ('1ed2ce41-c110-4def-a4e8-b69f4a5909ad', 'CARD-tier_merch_  2_home_owner_preferred-1', 'member_linked', 'merch_  2', '2026-06-22 00:00:00', 'mem_merch_  2_home_owner_preferred_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
+  ('e0828096-4626-43fb-a39c-2bd16b3a8d2d', 'CARD-tier_merch_  3_explorer-1', 'member_linked', 'merch_  3', '2026-06-22 00:00:00', 'mem_merch_  3_explorer_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
+  ('ef06e6bc-841d-464f-bef4-fc13a144e16a', 'CARD-tier_merch_  4_amc_gold_vip-1', 'member_linked', 'merch_  4', '2026-06-22 00:00:00', 'mem_merch_  4_amc_gold_vip_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
+  ('bd8b0b1c-0921-4ca9-839b-648c1ded4e82', 'CARD-tier_merch_  5_smart_saver-1', 'member_linked', 'merch_  5', '2026-06-22 00:00:00', 'mem_merch_  5_smart_saver_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00');
 
 INSERT IGNORE INTO `card_inventory` (`id`, `card_number`, `status`, `allocated_merchant_id`, `allocated_at`, `linked_member_id`, `linked_at`, `created_by_admin_id`, `created_at`) VALUES
-  ('943ebfcc-d672-4a29-96ef-3d8ec8ee7d21', 'CARD-tier_merch_  1_policy_starter-1', 'member_linked', 'merch_  1', '2026-06-22 00:00:00', 'mem_merch_  1_policy_starter_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
-  ('52f74890-9831-4857-8e14-2f3b4b8e1fde', 'CARD-tier_merch_  1_shield_elite-1', 'member_linked', 'merch_  1', '2026-06-22 00:00:00', 'mem_merch_  1_shield_elite_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
-  ('45f09c79-1558-4acf-ae58-d8203f0fa839', 'CARD-tier_merch_  2_prestige_buyer_vip-1', 'member_linked', 'merch_  2', '2026-06-22 00:00:00', 'mem_merch_  2_prestige_buyer_vip_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
-  ('bce3a6d3-b7c2-45d9-9c1b-644b237bcb70', 'CARD-tier_merch_  2_resident_member-1', 'member_linked', 'merch_  2', '2026-06-22 00:00:00', 'mem_merch_  2_resident_member_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
-  ('b3c24466-153f-4eb4-9497-3da81ac13d15', 'CARD-18', 'member_linked', 'merch_  6', '2026-03-19 00:00:00', 'mem-25262c83327365225f36135fed87ad91', '2026-03-19 00:00:00', NULL, '2026-03-19 00:00:00'),
-  ('a87e2703-17b8-4806-85bd-55e68a205df8', 'CARD-tier_merch_  6_elite_champion_vip-1', 'member_linked', 'merch_  6', '2026-06-22 00:00:00', 'mem_merch_  6_elite_champion_vip_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
-  ('55c04f03-1fe4-45bf-b3f2-243ed7f4c635', 'CARD-tier_merch_  7_gold_luxe-1', 'member_linked', 'merch_  7', '2026-06-22 00:00:00', 'mem_merch_  7_gold_luxe_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
-  ('459415bf-c862-4543-8986-56f681b69080', 'CARD-tier_merch_  8_care_starter-1', 'member_linked', 'merch_  8', '2026-06-22 00:00:00', 'mem_merch_  8_care_starter_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
-  ('9cdede4d-fe5a-464d-86d9-aedcb50926ac', 'CARD-tier_merch_  9_brew_master-1', 'member_linked', 'merch_  9', '2026-06-22 00:00:00', 'mem_merch_  9_brew_master_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
-  ('2e6c4d41-e6e0-415f-8c05-75cbe170b794', 'CARD-tier_merch_ 10_gold_elite-1', 'member_linked', 'merch_ 10', '2026-06-22 00:00:00', 'mem_merch_ 10_gold_elite_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
-  ('5676e1ca-1eab-4888-aa8a-feea04f9a399', 'CARD-tier_merch_  6_pro_athlete-1', 'member_linked', 'merch_  6', '2026-06-22 00:00:00', 'mem_merch_  6_pro_athlete_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
-  ('6f893b8c-dc43-4d5b-b815-781ad0dbcee2', 'CARD-tier_merch_  6_basic_access-1', 'member_linked', 'merch_  6', '2026-06-22 00:00:00', 'mem_merch_  6_basic_access_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
-  ('2791dbd1-a3e0-4237-a208-a0d2224f8014', 'CARD-2', 'member_linked', '9f5a3fe4-f21f-4fed-beaf-67dcb9c6cffc', '2026-07-09 00:00:00', 'mem-a0e330925e832caedad5e558181a5ebc', '2026-07-09 00:00:00', NULL, '2026-07-09 00:00:00'),
-  ('4bdc9cf2-8614-43e0-b1c6-9bde031e8cc5', 'CARD-3', 'member_linked', 'merch_  1', '2026-07-02 00:00:00', 'mem-e67d69fe2fcfd08b641a1584c8ecb623', '2026-07-02 00:00:00', NULL, '2026-07-02 00:00:00'),
-  ('6a6d0685-e90b-4805-940f-274ac150f289', 'CARD-1', 'member_linked', '4bf2fb6b-bdf3-49d3-ac1b-1e6e746c6643', '2026-07-16 00:00:00', 'mem-cc5e67de2d566c08a1aab2b21dc7ac96', '2026-07-16 00:00:00', NULL, '2026-07-16 00:00:00'),
-  ('0d37b8ef-9a8d-4465-bd9a-cbad541361b5', '4000 1000 0011 0001', 'member_linked', 'mer-grm', '2026-05-12 00:00:00', 'mem-grm-1', '2026-05-12 00:00:00', NULL, '2026-05-12 00:00:00'),
-  ('946effcb-583e-42e5-88b5-39b729c4a04b', 'CARD-6', 'member_linked', 'merch_  2', '2026-06-11 00:00:00', 'mem-38d9f52d770d33cbcdeb1ce7ed89b9fc', '2026-06-11 00:00:00', NULL, '2026-06-11 00:00:00'),
-  ('81bdb8a0-9d9f-4175-8ab0-e40e4005ffee', 'CARD-9', 'member_linked', 'merch_  3', '2026-05-21 00:00:00', 'mem-2b52f66809911c7d95ff07a3de005ada', '2026-05-21 00:00:00', NULL, '2026-05-21 00:00:00'),
-  ('46d09e7f-84ba-434e-92e6-6c6504d22ab6', 'CARD-12', 'member_linked', 'merch_  4', '2026-04-30 00:00:00', 'mem-4f4737a85a664b67dec607c19edaff06', '2026-04-30 00:00:00', NULL, '2026-04-30 00:00:00'),
-  ('3c06bdff-8929-4971-807a-6a73caff4284', 'CARD-15', 'member_linked', 'merch_  5', '2026-04-09 00:00:00', 'mem-1b6a1e36581fbdfc52c6a135974e1675', '2026-04-09 00:00:00', NULL, '2026-04-09 00:00:00'),
-  ('0d79bb2c-ca3f-474d-b604-e2b52f305d3e', 'CARD-27', 'member_linked', 'merch_  9', '2026-01-15 00:00:00', 'mem-ab0c31deb9b57cbc978b310c5bcf7392', '2026-01-15 00:00:00', NULL, '2026-01-15 00:00:00'),
-  ('f44a0f91-c8f0-4b9d-b4d3-5e3ac1a41845', 'CARD-19', 'member_linked', 'merch_  6', '2026-03-12 00:00:00', 'mem-49fc317efc4f12be586f231a2b65607d', '2026-03-12 00:00:00', NULL, '2026-03-12 00:00:00'),
-  ('3b26f3d0-36d8-438f-8529-ef0876b85f4d', 'CARD-24', 'member_linked', 'merch_  8', '2026-02-05 00:00:00', 'mem-98d874e771a317826afc2643d80fac79', '2026-02-05 00:00:00', NULL, '2026-02-05 00:00:00'),
-  ('67cc03b9-723d-4bf8-8471-0d9370b2cf12', 'CARD-21', 'member_linked', 'merch_  7', '2026-02-26 00:00:00', 'mem-27df0ea3c95f20b238b999ea9c157c09', '2026-02-26 00:00:00', NULL, '2026-02-26 00:00:00'),
-  ('a16ef7ea-eba5-4ab4-aef3-ae7f299262a0', 'CARD-32', 'member_linked', 'merch_ 10', '2025-12-11 00:00:00', 'mem-cb185ed34ca062a228aabd125b7e5545', '2025-12-11 00:00:00', NULL, '2025-12-11 00:00:00'),
-  ('7fdd5643-d136-45b9-918b-7afc65f43115', 'CARD-30', 'member_linked', 'merch_ 10', '2025-12-25 00:00:00', 'mem-35edcb7d4107bdd2dcc77e64e9e1d85b', '2025-12-25 00:00:00', NULL, '2025-12-25 00:00:00'),
-  ('0dd838b5-3b41-4dfa-af6b-3ece500e5c75', 'CARD-31', 'member_linked', 'merch_ 10', '2025-12-18 00:00:00', 'mem-6664df069dbbf8741f98bf986444a3f0', '2025-12-18 00:00:00', NULL, '2025-12-18 00:00:00'),
-  ('2f1a34cb-eb09-44b5-baf7-987df38716e5', 'CARD-4', 'member_linked', 'merch_  1', '2026-06-25 00:00:00', 'mem-dafe7c867c4e002408c1850fbda2c400', '2026-06-25 00:00:00', NULL, '2026-06-25 00:00:00'),
-  ('79df07c7-c523-44d9-aa73-2f62d2fcef4f', 'CARD-5', 'member_linked', 'merch_  1', '2026-06-18 00:00:00', 'mem-eb892d3adc43b7bc4f8cb9604cdbf8ec', '2026-06-18 00:00:00', NULL, '2026-06-18 00:00:00'),
-  ('ebc9efc2-befa-4760-89eb-cf3760e66f68', 'CARD-7', 'member_linked', 'merch_  2', '2026-06-04 00:00:00', 'mem-80c518dc99a2188908fb98a5e0796bed', '2026-06-04 00:00:00', NULL, '2026-06-04 00:00:00'),
-  ('085d9e1e-619d-4ca6-9ae6-6621f2901957', 'CARD-8', 'member_linked', 'merch_  2', '2026-05-28 00:00:00', 'mem-01ac1e4ead82598395e52bb04b258746', '2026-05-28 00:00:00', NULL, '2026-05-28 00:00:00'),
-  ('79dee6c4-6766-492c-aa8a-1c4b849d5ec9', 'CARD-10', 'member_linked', 'merch_  3', '2026-05-14 00:00:00', 'mem-12edd4e3a8858bd4db960380b29b3724', '2026-05-14 00:00:00', NULL, '2026-05-14 00:00:00'),
-  ('a1754b7f-f061-41b0-9c48-8f975ff37cf4', 'CARD-tier_merch_  3_first_class_vip-1', 'member_linked', 'merch_  3', '2026-06-22 00:00:00', 'mem_merch_  3_first_class_vip_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
-  ('eb163274-83f6-4785-b49d-2e0078b4562e', 'CARD-11', 'member_linked', 'merch_  3', '2026-05-07 00:00:00', 'mem-4f4f8c1d7defa12e603d8211399a4308', '2026-05-07 00:00:00', NULL, '2026-05-07 00:00:00'),
-  ('f4e44fd0-16ce-4e75-aee2-0d5335abe21d', 'CARD-tier_merch_  3_globetrotter-1', 'member_linked', 'merch_  3', '2026-06-22 00:00:00', 'mem_merch_  3_globetrotter_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
-  ('72d18c17-d311-4f99-9e2c-00b9de385d39', 'CARD-13', 'member_linked', 'merch_  4', '2026-04-23 00:00:00', 'mem-62d2ea23a3559c0b1e6b157e3fc075bc', '2026-04-23 00:00:00', NULL, '2026-04-23 00:00:00'),
-  ('14865870-db43-4519-8206-071531e7185a', 'CARD-tier_merch_  4_amc_silver-1', 'member_linked', 'merch_  4', '2026-06-22 00:00:00', 'mem_merch_  4_amc_silver_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
-  ('249ca475-d0cb-4b20-be41-9c71a9ef1091', 'CARD-14', 'member_linked', 'merch_  4', '2026-04-16 00:00:00', 'mem-56be375883bc6ae8416dac05b3d6b6c5', '2026-04-16 00:00:00', NULL, '2026-04-16 00:00:00'),
-  ('1acc302b-dded-4df1-8196-495af30d0199', 'CARD-tier_merch_  4_pay-per-service-1', 'member_linked', 'merch_  4', '2026-06-22 00:00:00', 'mem_merch_  4_pay-per-service_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
-  ('385c8cf3-9d66-4193-a9f1-f45449b29388', 'CARD-16', 'member_linked', 'merch_  5', '2026-04-02 00:00:00', 'mem-5c2dc7423a0c677e54c64500d7af5642', '2026-04-02 00:00:00', NULL, '2026-04-02 00:00:00'),
-  ('34cded92-14ef-42ae-a728-ab0596173310', 'CARD-tier_merch_  5_super_shopper-1', 'member_linked', 'merch_  5', '2026-06-22 00:00:00', 'mem_merch_  5_super_shopper_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
-  ('d34f7e64-a2a9-45b9-b95a-5963d3e1bb7b', 'CARD-17', 'member_linked', 'merch_  5', '2026-03-26 00:00:00', 'mem-5b8d4a96465c19fe045644cbb681631f', '2026-03-26 00:00:00', NULL, '2026-03-26 00:00:00'),
-  ('e122cd63-d719-489f-b886-7496af3564e1', 'CARD-22', 'member_linked', 'merch_  7', '2026-02-19 00:00:00', 'mem-a8ab70a6200ce8faaec876906805a3f7', '2026-02-19 00:00:00', NULL, '2026-02-19 00:00:00'),
-  ('01597786-182b-416d-b107-76746cd94f28', 'CARD-tier_merch_  7_platinum_royalty-1', 'member_linked', 'merch_  7', '2026-06-22 00:00:00', 'mem_merch_  7_platinum_royalty_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
-  ('f79406a8-2749-48a1-9413-02cc8389cdf9', 'CARD-23', 'member_linked', 'merch_  7', '2026-02-12 00:00:00', 'mem-0e3b579efefa397745a21162cb940394', '2026-02-12 00:00:00', NULL, '2026-02-12 00:00:00'),
-  ('0229a0bc-9232-4404-81e6-d0f2d8e4246b', 'CARD-tier_merch_  7_silver_beauty-1', 'member_linked', 'merch_  7', '2026-06-22 00:00:00', 'mem_merch_  7_silver_beauty_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
-  ('d768a67e-efd0-498f-853a-7caf7c4e4ba2', 'CARD-25', 'member_linked', 'merch_  8', '2026-01-29 00:00:00', 'mem-dee482b42443f2baca67985e1a5433fc', '2026-01-29 00:00:00', NULL, '2026-01-29 00:00:00'),
-  ('1d327eba-fafb-4903-9705-62431eb4ebfc', 'CARD-tier_merch_  8_drive_pro-1', 'member_linked', 'merch_  8', '2026-06-22 00:00:00', 'mem_merch_  8_drive_pro_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
-  ('d5b767a6-aae2-46ef-aa68-198aa289518f', 'CARD-26', 'member_linked', 'merch_  8', '2026-01-22 00:00:00', 'mem-b05bedb6ed3a7b966f82759856eb4b7c', '2026-01-22 00:00:00', NULL, '2026-01-22 00:00:00'),
-  ('855559f8-b8b3-411f-9000-ff6fcbd7c882', 'CARD-tier_merch_  8_shield_ceramic_vip-1', 'member_linked', 'merch_  8', '2026-06-22 00:00:00', 'mem_merch_  8_shield_ceramic_vip_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00');
+  ('2d1ecbe0-69d3-4379-990a-d6f7c73f8002', 'CARD-tier_merch_  1_policy_starter-1', 'member_linked', 'merch_  1', '2026-06-22 00:00:00', 'mem_merch_  1_policy_starter_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
+  ('48ebe3ce-ec2a-4f69-8cb1-adc4f3f06257', 'CARD-tier_merch_  1_shield_elite-1', 'member_linked', 'merch_  1', '2026-06-22 00:00:00', 'mem_merch_  1_shield_elite_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
+  ('d7b7b3fd-9362-47a9-9ea3-e2c65093d5ed', 'CARD-tier_merch_  2_prestige_buyer_vip-1', 'member_linked', 'merch_  2', '2026-06-22 00:00:00', 'mem_merch_  2_prestige_buyer_vip_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
+  ('c2ddd8b0-4392-40e6-9e87-bc13944830af', 'CARD-tier_merch_  2_resident_member-1', 'member_linked', 'merch_  2', '2026-06-22 00:00:00', 'mem_merch_  2_resident_member_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
+  ('be051f84-ba35-4810-a12e-ede80cc4cfe7', 'CARD-18', 'member_linked', 'merch_  6', '2026-03-19 00:00:00', 'mem-25262c83327365225f36135fed87ad91', '2026-03-19 00:00:00', NULL, '2026-03-19 00:00:00'),
+  ('1ff510e0-9573-4030-9efa-f4e0d079647c', 'CARD-tier_merch_  6_elite_champion_vip-1', 'member_linked', 'merch_  6', '2026-06-22 00:00:00', 'mem_merch_  6_elite_champion_vip_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
+  ('56211bdd-ccb4-4a1e-ada8-5b1a0706c129', 'CARD-tier_merch_  7_gold_luxe-1', 'member_linked', 'merch_  7', '2026-06-22 00:00:00', 'mem_merch_  7_gold_luxe_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
+  ('0fa4e005-9646-47c2-8c2e-3d812e2f65bd', 'CARD-tier_merch_  8_care_starter-1', 'member_linked', 'merch_  8', '2026-06-22 00:00:00', 'mem_merch_  8_care_starter_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
+  ('b818b381-50eb-4f8e-aa15-41a476cc55e2', 'CARD-tier_merch_  9_brew_master-1', 'member_linked', 'merch_  9', '2026-06-22 00:00:00', 'mem_merch_  9_brew_master_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
+  ('b5f66848-fd18-4c40-957c-12957788cdd3', 'CARD-tier_merch_ 10_gold_elite-1', 'member_linked', 'merch_ 10', '2026-06-22 00:00:00', 'mem_merch_ 10_gold_elite_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
+  ('65d49d60-d0b3-4c71-a698-0289fc280150', 'CARD-tier_merch_  6_pro_athlete-1', 'member_linked', 'merch_  6', '2026-06-22 00:00:00', 'mem_merch_  6_pro_athlete_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
+  ('b0d6aa9a-184a-41da-8dde-4ca19e3c8718', 'CARD-tier_merch_  6_basic_access-1', 'member_linked', 'merch_  6', '2026-06-22 00:00:00', 'mem_merch_  6_basic_access_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
+  ('e4ac0655-a755-4d93-ba39-0ca491dc6476', 'CARD-2', 'member_linked', '9f5a3fe4-f21f-4fed-beaf-67dcb9c6cffc', '2026-07-09 00:00:00', 'mem-a0e330925e832caedad5e558181a5ebc', '2026-07-09 00:00:00', NULL, '2026-07-09 00:00:00'),
+  ('a6f2fafe-88ae-495c-a30b-6a41166a6f03', 'CARD-3', 'member_linked', 'merch_  1', '2026-07-02 00:00:00', 'mem-e67d69fe2fcfd08b641a1584c8ecb623', '2026-07-02 00:00:00', NULL, '2026-07-02 00:00:00'),
+  ('ab1ca121-faab-4440-aa6a-52178570ae50', 'CARD-1', 'member_linked', '4bf2fb6b-bdf3-49d3-ac1b-1e6e746c6643', '2026-07-16 00:00:00', 'mem-cc5e67de2d566c08a1aab2b21dc7ac96', '2026-07-16 00:00:00', NULL, '2026-07-16 00:00:00'),
+  ('ca8da007-f912-495a-bf00-ccb3a60b22b9', '4000 1000 0011 0001', 'member_linked', 'mer-grm', '2026-05-12 00:00:00', 'mem-grm-1', '2026-05-12 00:00:00', NULL, '2026-05-12 00:00:00'),
+  ('89a36b27-bf1a-43ed-92b0-55c698024d18', 'CARD-6', 'member_linked', 'merch_  2', '2026-06-11 00:00:00', 'mem-38d9f52d770d33cbcdeb1ce7ed89b9fc', '2026-06-11 00:00:00', NULL, '2026-06-11 00:00:00'),
+  ('3e9b10f0-2ed3-49e9-b663-a7be8fc805ef', 'CARD-9', 'member_linked', 'merch_  3', '2026-05-21 00:00:00', 'mem-2b52f66809911c7d95ff07a3de005ada', '2026-05-21 00:00:00', NULL, '2026-05-21 00:00:00'),
+  ('7e9347bf-aac5-41b1-b2e6-f97acbb50679', 'CARD-12', 'member_linked', 'merch_  4', '2026-04-30 00:00:00', 'mem-4f4737a85a664b67dec607c19edaff06', '2026-04-30 00:00:00', NULL, '2026-04-30 00:00:00'),
+  ('1418665b-1f08-408c-9ee4-a79ed0498407', 'CARD-15', 'member_linked', 'merch_  5', '2026-04-09 00:00:00', 'mem-1b6a1e36581fbdfc52c6a135974e1675', '2026-04-09 00:00:00', NULL, '2026-04-09 00:00:00'),
+  ('e0b93e8a-39a3-464c-84f5-1732eddfbd10', 'CARD-27', 'member_linked', 'merch_  9', '2026-01-15 00:00:00', 'mem-ab0c31deb9b57cbc978b310c5bcf7392', '2026-01-15 00:00:00', NULL, '2026-01-15 00:00:00'),
+  ('324b3a29-b180-4706-9ec8-7e5b2305eee9', 'CARD-19', 'member_linked', 'merch_  6', '2026-03-12 00:00:00', 'mem-49fc317efc4f12be586f231a2b65607d', '2026-03-12 00:00:00', NULL, '2026-03-12 00:00:00'),
+  ('c509fef4-b64d-4083-aadb-820c8ce5e768', 'CARD-24', 'member_linked', 'merch_  8', '2026-02-05 00:00:00', 'mem-98d874e771a317826afc2643d80fac79', '2026-02-05 00:00:00', NULL, '2026-02-05 00:00:00'),
+  ('319e0e27-e34b-48f7-9c97-0aa4777d187a', 'CARD-21', 'member_linked', 'merch_  7', '2026-02-26 00:00:00', 'mem-27df0ea3c95f20b238b999ea9c157c09', '2026-02-26 00:00:00', NULL, '2026-02-26 00:00:00'),
+  ('7f380d03-d92e-493e-ac9a-7741ec582e06', 'CARD-32', 'member_linked', 'merch_ 10', '2025-12-11 00:00:00', 'mem-cb185ed34ca062a228aabd125b7e5545', '2025-12-11 00:00:00', NULL, '2025-12-11 00:00:00'),
+  ('c6bbd5b9-f4c1-4b5a-90b6-4660b8958a2b', 'CARD-30', 'member_linked', 'merch_ 10', '2025-12-25 00:00:00', 'mem-35edcb7d4107bdd2dcc77e64e9e1d85b', '2025-12-25 00:00:00', NULL, '2025-12-25 00:00:00'),
+  ('ebc68639-36a0-471c-82e3-39be5d267b14', 'CARD-31', 'member_linked', 'merch_ 10', '2025-12-18 00:00:00', 'mem-6664df069dbbf8741f98bf986444a3f0', '2025-12-18 00:00:00', NULL, '2025-12-18 00:00:00'),
+  ('bbbfe9c5-1f3d-4c29-8de2-8134607437b3', 'CARD-4', 'member_linked', 'merch_  1', '2026-06-25 00:00:00', 'mem-dafe7c867c4e002408c1850fbda2c400', '2026-06-25 00:00:00', NULL, '2026-06-25 00:00:00'),
+  ('57f66a1f-df1b-4c73-979a-237374309d15', 'CARD-5', 'member_linked', 'merch_  1', '2026-06-18 00:00:00', 'mem-eb892d3adc43b7bc4f8cb9604cdbf8ec', '2026-06-18 00:00:00', NULL, '2026-06-18 00:00:00'),
+  ('faafed51-2ffb-468e-8f25-e1459fe3735a', 'CARD-7', 'member_linked', 'merch_  2', '2026-06-04 00:00:00', 'mem-80c518dc99a2188908fb98a5e0796bed', '2026-06-04 00:00:00', NULL, '2026-06-04 00:00:00'),
+  ('7b43715d-63af-42fa-8aa8-82b45c0035fd', 'CARD-8', 'member_linked', 'merch_  2', '2026-05-28 00:00:00', 'mem-01ac1e4ead82598395e52bb04b258746', '2026-05-28 00:00:00', NULL, '2026-05-28 00:00:00'),
+  ('1951086d-a86f-45e9-87d0-08408e53b101', 'CARD-10', 'member_linked', 'merch_  3', '2026-05-14 00:00:00', 'mem-12edd4e3a8858bd4db960380b29b3724', '2026-05-14 00:00:00', NULL, '2026-05-14 00:00:00'),
+  ('1b6659b7-633a-4538-952b-0d05e3e58f31', 'CARD-tier_merch_  3_first_class_vip-1', 'member_linked', 'merch_  3', '2026-06-22 00:00:00', 'mem_merch_  3_first_class_vip_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
+  ('8a2d9fbf-54b2-49a2-8de5-c95edcb46d59', 'CARD-11', 'member_linked', 'merch_  3', '2026-05-07 00:00:00', 'mem-4f4f8c1d7defa12e603d8211399a4308', '2026-05-07 00:00:00', NULL, '2026-05-07 00:00:00'),
+  ('d20f2b4d-2298-41e4-b181-9b519f3da195', 'CARD-tier_merch_  3_globetrotter-1', 'member_linked', 'merch_  3', '2026-06-22 00:00:00', 'mem_merch_  3_globetrotter_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
+  ('bfb24562-f26b-4fca-87de-8ae1245117f2', 'CARD-13', 'member_linked', 'merch_  4', '2026-04-23 00:00:00', 'mem-62d2ea23a3559c0b1e6b157e3fc075bc', '2026-04-23 00:00:00', NULL, '2026-04-23 00:00:00'),
+  ('e803d8e8-e77d-495a-b5d6-5263899553d5', 'CARD-tier_merch_  4_amc_silver-1', 'member_linked', 'merch_  4', '2026-06-22 00:00:00', 'mem_merch_  4_amc_silver_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
+  ('d4992824-20b3-4667-b19b-b815c04e583d', 'CARD-14', 'member_linked', 'merch_  4', '2026-04-16 00:00:00', 'mem-56be375883bc6ae8416dac05b3d6b6c5', '2026-04-16 00:00:00', NULL, '2026-04-16 00:00:00'),
+  ('a0af31ef-a642-4953-b87a-775d7689b346', 'CARD-tier_merch_  4_pay-per-service-1', 'member_linked', 'merch_  4', '2026-06-22 00:00:00', 'mem_merch_  4_pay-per-service_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
+  ('39baec06-f163-4be3-a84c-ff29bce577db', 'CARD-16', 'member_linked', 'merch_  5', '2026-04-02 00:00:00', 'mem-5c2dc7423a0c677e54c64500d7af5642', '2026-04-02 00:00:00', NULL, '2026-04-02 00:00:00'),
+  ('26b2d2de-2505-4bac-bb9e-410f5c589c7e', 'CARD-tier_merch_  5_super_shopper-1', 'member_linked', 'merch_  5', '2026-06-22 00:00:00', 'mem_merch_  5_super_shopper_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
+  ('c72d23da-2877-49f3-a63b-fd39a7ec0ec1', 'CARD-17', 'member_linked', 'merch_  5', '2026-03-26 00:00:00', 'mem-5b8d4a96465c19fe045644cbb681631f', '2026-03-26 00:00:00', NULL, '2026-03-26 00:00:00'),
+  ('f7b1ab24-b932-4ee3-be98-254c8620d8e9', 'CARD-22', 'member_linked', 'merch_  7', '2026-02-19 00:00:00', 'mem-a8ab70a6200ce8faaec876906805a3f7', '2026-02-19 00:00:00', NULL, '2026-02-19 00:00:00'),
+  ('6e88eceb-ff64-4bfc-bc24-b71d6fbd9d92', 'CARD-tier_merch_  7_platinum_royalty-1', 'member_linked', 'merch_  7', '2026-06-22 00:00:00', 'mem_merch_  7_platinum_royalty_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
+  ('b10dbbc8-a70f-4e33-b455-fca6e2d2fdd0', 'CARD-23', 'member_linked', 'merch_  7', '2026-02-12 00:00:00', 'mem-0e3b579efefa397745a21162cb940394', '2026-02-12 00:00:00', NULL, '2026-02-12 00:00:00'),
+  ('6afd4ff8-5f50-4ebb-aaa8-6f71b7671c24', 'CARD-tier_merch_  7_silver_beauty-1', 'member_linked', 'merch_  7', '2026-06-22 00:00:00', 'mem_merch_  7_silver_beauty_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
+  ('9b294c43-76a1-46f6-a9a3-815d798dfa8d', 'CARD-25', 'member_linked', 'merch_  8', '2026-01-29 00:00:00', 'mem-dee482b42443f2baca67985e1a5433fc', '2026-01-29 00:00:00', NULL, '2026-01-29 00:00:00'),
+  ('83f9f8f7-f762-4387-bd2f-39e9d5a98b33', 'CARD-tier_merch_  8_drive_pro-1', 'member_linked', 'merch_  8', '2026-06-22 00:00:00', 'mem_merch_  8_drive_pro_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
+  ('32372659-3967-4c9c-9971-32c0f7ff0588', 'CARD-26', 'member_linked', 'merch_  8', '2026-01-22 00:00:00', 'mem-b05bedb6ed3a7b966f82759856eb4b7c', '2026-01-22 00:00:00', NULL, '2026-01-22 00:00:00'),
+  ('481615bc-bd91-4c76-a07c-3755a4e29655', 'CARD-tier_merch_  8_shield_ceramic_vip-1', 'member_linked', 'merch_  8', '2026-06-22 00:00:00', 'mem_merch_  8_shield_ceramic_vip_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00');
 
 INSERT IGNORE INTO `card_inventory` (`id`, `card_number`, `status`, `allocated_merchant_id`, `allocated_at`, `linked_member_id`, `linked_at`, `created_by_admin_id`, `created_at`) VALUES
-  ('37452726-b767-4a06-9848-354bd041cf1d', 'CARD-28', 'member_linked', 'merch_  9', '2026-01-08 00:00:00', 'mem-fb7e86eb5589243d51fd9cf05cca630e', '2026-01-08 00:00:00', NULL, '2026-01-08 00:00:00'),
-  ('1d1e7a58-d290-4cd9-97af-d26a9455c5ee', 'CARD-tier_merch_  9_coffee_lover-1', 'member_linked', 'merch_  9', '2026-06-22 00:00:00', 'mem_merch_  9_coffee_lover_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
-  ('af77c75c-75f3-4f51-b136-8703b0c8ee79', 'CARD-29', 'member_linked', 'merch_  9', '2026-01-01 00:00:00', 'mem-f9697cc4810d664d1915dc2812b6a7cb', '2026-01-01 00:00:00', NULL, '2026-01-01 00:00:00'),
-  ('46dd90b4-bbc1-49d7-b84c-894bf3491028', 'CARD-tier_merch_  9_work-from-cafe_vip-1', 'member_linked', 'merch_  9', '2026-06-22 00:00:00', 'mem_merch_  9_work-from-cafe_vip_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
-  ('766395ad-686e-48e5-9642-c9ad13bfee0b', 'CARD-tier_merch_ 10_ornament_club-1', 'member_linked', 'merch_ 10', '2026-06-22 00:00:00', 'mem_merch_ 10_ornament_club_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
-  ('df53495b-a921-4a0f-b031-b328dfe7ce6d', 'CARD-tier_merch_ 10_solitaire_crown_vip-1', 'member_linked', 'merch_ 10', '2026-06-22 00:00:00', 'mem_merch_ 10_solitaire_crown_vip_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
-  ('dd95ac46-edee-4be0-b73e-d75eb7f996f2', 'CARD-20', 'member_linked', 'merch_  6', '2026-03-05 00:00:00', 'mem-f3ffcc249446e5bde5a241af9ad9e60a', '2026-03-05 00:00:00', NULL, '2026-03-05 00:00:00');
+  ('2a3b2642-4583-4154-a5f1-d2a3c324350e', 'CARD-28', 'member_linked', 'merch_  9', '2026-01-08 00:00:00', 'mem-fb7e86eb5589243d51fd9cf05cca630e', '2026-01-08 00:00:00', NULL, '2026-01-08 00:00:00'),
+  ('31dab303-21de-428f-96bb-8e9a2c7d1217', 'CARD-tier_merch_  9_coffee_lover-1', 'member_linked', 'merch_  9', '2026-06-22 00:00:00', 'mem_merch_  9_coffee_lover_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
+  ('0df25392-9904-4b8c-8faf-e680f80c002d', 'CARD-29', 'member_linked', 'merch_  9', '2026-01-01 00:00:00', 'mem-f9697cc4810d664d1915dc2812b6a7cb', '2026-01-01 00:00:00', NULL, '2026-01-01 00:00:00'),
+  ('a7777f2a-e275-48fa-86c6-8cae017b9bb4', 'CARD-tier_merch_  9_work-from-cafe_vip-1', 'member_linked', 'merch_  9', '2026-06-22 00:00:00', 'mem_merch_  9_work-from-cafe_vip_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
+  ('a72323fa-c30e-4499-9e6e-27af9db2e0ce', 'CARD-tier_merch_ 10_ornament_club-1', 'member_linked', 'merch_ 10', '2026-06-22 00:00:00', 'mem_merch_ 10_ornament_club_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
+  ('22dc878c-c648-4e32-bc42-7e5b9b2b5f1a', 'CARD-tier_merch_ 10_solitaire_crown_vip-1', 'member_linked', 'merch_ 10', '2026-06-22 00:00:00', 'mem_merch_ 10_solitaire_crown_vip_1', '2026-06-22 00:00:00', NULL, '2026-06-22 00:00:00'),
+  ('c5d45d4b-affc-404a-9f94-42011048e590', 'CARD-20', 'member_linked', 'merch_  6', '2026-03-05 00:00:00', 'mem-f3ffcc249446e5bde5a241af9ad9e60a', '2026-03-05 00:00:00', NULL, '2026-03-05 00:00:00');
 
 -- ── Table: reward_catalog  (51 rows) ──────────────────
 
@@ -4965,7 +4996,7 @@ INSERT IGNORE INTO `member_wallet_passes` (`id`, `member_id`, `wallet_class_id`,
   ('05ded1d4-3397-4050-9243-e3426279ac1e', '2c7b5004-39f8-4574-8da9-0785df662e4a', 'ea2b8e31-ad2f-4610-9878-f2f3c5801cd8', '.2c7b5004-39f8-4574-8da9-0785df662e4a', 'added', '2026-09-09 05:02:11', '2026-09-09 05:02:10'),
   ('053b032d-8a71-4c2f-bd97-1a3af6b9a92e', '5c1ff2eb-f55e-41bf-bf10-a5001daab129', 'ea2b8e31-ad2f-4610-9878-f2f3c5801cd8', '.5c1ff2eb-f55e-41bf-bf10-a5001daab129', 'added', '2026-09-15 14:11:42', '2026-09-15 14:11:40');
 
--- ── Table: event_logs  (205 rows) ──────────────────
+-- ── Table: event_logs  (212 rows) ──────────────────
 
 INSERT IGNORE INTO `event_logs` (`id`, `merchant_id`, `member_id`, `event_type`, `payload`, `actor_id`, `created_at`) VALUES
   ('4cc63907-a79a-409f-a7ec-4b00bac2011c', '4bf2fb6b-bdf3-49d3-ac1b-1e6e746c6643', '73713194-e86f-45ae-9e9c-44d9b199ea64', 'member.enrolled', '{"member_id":"73713194-e86f-45ae-9e9c-44d9b199ea64","member_code":"MC0001","name":"sharvil more","phone":"9987379000","email":null}', 'f8b0ae73-5c2a-4120-bb56-576ff628420c', '2026-07-22 06:29:20'),
@@ -5180,12 +5211,24 @@ INSERT IGNORE INTO `event_logs` (`id`, `merchant_id`, `member_id`, `event_type`,
   ('7f28b0ed-b921-43fd-992e-28efe4550c81', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', 'e8ef481f-2aeb-46de-b9a2-73c11b33838b', 'member.enrolled', '{"member_id":"e8ef481f-2aeb-46de-b9a2-73c11b33838b","member_code":"MC0029","name":"MAYUR BHAI","phone":"9104848549","email":null}', 'a8261c94-07d2-4e78-8828-8ffd3cf2b485', '2026-10-20 11:17:09'),
   ('f6315eea-6b2a-4798-b957-760f402cf6a7', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '1ba57a60-1b19-4bb5-aa1c-37c8fa6dba97', 'member.enrolled', '{"member_id":"1ba57a60-1b19-4bb5-aa1c-37c8fa6dba97","member_code":"MC0030","name":"RAJKUMAR","phone":"9974846586","email":null}', 'a8261c94-07d2-4e78-8828-8ffd3cf2b485', '2026-10-20 11:18:21'),
   ('634ebdda-657d-47b7-bd9e-15c69adbc0cf', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '468dfda3-23e6-413e-a891-ed2417b85d48', 'member.enrolled', '{"member_id":"468dfda3-23e6-413e-a891-ed2417b85d48","member_code":"MC0031","name":"SUNIL SALUNKE","phone":"7383069173","email":null}', 'a8261c94-07d2-4e78-8828-8ffd3cf2b485', '2026-10-20 11:20:50'),
-  ('c2083ae9-cff4-44ea-83fe-3f847aec1e2d', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '9ed2ac95-2318-4316-8c69-0f7b98b4f9b8', 'member.enrolled', '{"member_id":"9ed2ac95-2318-4316-8c69-0f7b98b4f9b8","member_code":"MC0032","name":"ANIL KUMBHAR","phone":"7048151650","email":null}', 'a8261c94-07d2-4e78-8828-8ffd3cf2b485', '2026-10-20 11:28:02');
+  ('c2083ae9-cff4-44ea-83fe-3f847aec1e2d', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '9ed2ac95-2318-4316-8c69-0f7b98b4f9b8', 'member.enrolled', '{"member_id":"9ed2ac95-2318-4316-8c69-0f7b98b4f9b8","member_code":"MC0032","name":"ANIL KUMBHAR","phone":"7048151650","email":null}', 'a8261c94-07d2-4e78-8828-8ffd3cf2b485', '2026-10-20 11:28:02'),
+  ('113e9bae-2a8e-4a98-ac09-bccd4cb2b413', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', 'b7ff14e8-2e4c-46a6-ba99-ce7f15afe235', 'member.enrolled', '{"member_id":"b7ff14e8-2e4c-46a6-ba99-ce7f15afe235","member_code":"MC0033","name":"JAGTAP MONOJ","phone":"8000551137","email":null}', 'a8261c94-07d2-4e78-8828-8ffd3cf2b485', '2026-10-20 13:56:05'),
+  ('9e56389d-66b5-4933-bcb7-ceafc7775eb2', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', 'c2b4c816-7823-4051-9782-ea8abbf7debb', 'member.enrolled', '{"member_id":"c2b4c816-7823-4051-9782-ea8abbf7debb","member_code":"MC0034","name":"VIMAL BHAI","phone":"9512879104","email":null}', 'a8261c94-07d2-4e78-8828-8ffd3cf2b485', '2026-10-20 14:05:57'),
+  ('009b082a-0875-401e-acff-301b66559b34', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', 'cd84fc62-3c9f-46c0-9cfc-ec9d308f3d79', 'member.enrolled', '{"member_id":"cd84fc62-3c9f-46c0-9cfc-ec9d308f3d79","member_code":"MC0035","name":"RAKESH PATIL","phone":"9664614208","email":null}', 'a8261c94-07d2-4e78-8828-8ffd3cf2b485', '2026-10-20 17:53:24'),
+  ('990a66fb-d0cc-4924-80d1-354e83a6e066', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', 'c97278f9-45d7-4971-97bf-b5700d7fafc4', 'member.enrolled', '{"member_id":"c97278f9-45d7-4971-97bf-b5700d7fafc4","member_code":"MC0036","name":"NYANU PATIL","phone":"9773453020","email":null}', 'a8261c94-07d2-4e78-8828-8ffd3cf2b485', '2026-10-20 17:55:23'),
+  ('11882488-93ae-46da-9780-dc49b0620554', 'c74f8bef-6fd7-40f2-a363-1daa167d0439', '25990cab-dcb1-4151-95cf-d1fd107f7b83', 'member.enrolled', '{"member_id":"25990cab-dcb1-4151-95cf-d1fd107f7b83","member_code":"MC0037","name":"Rohidas PATIL","phone":"7046246822","email":null}', 'a8261c94-07d2-4e78-8828-8ffd3cf2b485', '2026-10-20 17:57:59'),
+  ('b6b90f36-7ac5-4297-97b4-f7c51f9c4f3e', '75eff299-f162-4427-8b08-04f404141ef9', '42fec350-e43c-43e3-80fe-b6d307f308f4', 'member.enrolled', '{"member_id":"42fec350-e43c-43e3-80fe-b6d307f308f4","member_code":"MC0013","name":"Ronit Varma","phone":"9920638707","email":null}', 'd9ee3bf3-8676-4c2b-8f9f-7f72835ff9b0', '2026-10-21 05:42:39'),
+  ('0438b54f-8d60-4fd8-8e6d-94698aebf0b5', '75eff299-f162-4427-8b08-04f404141ef9', 'c9e4ebb0-fe5a-4160-9fa5-7c009b5cb6a9', 'member.enrolled', '{"member_id":"c9e4ebb0-fe5a-4160-9fa5-7c009b5cb6a9","member_code":"MC0014","name":"Ronit Varma","phone":"9820638707","email":null}', 'd9ee3bf3-8676-4c2b-8f9f-7f72835ff9b0', '2026-10-21 06:01:16');
 
 -- ── Table: alembic_version  (1 rows) ──────────────────
+
+CREATE TABLE IF NOT EXISTS `alembic_version` (
+  `version_num` VARCHAR(32) NOT NULL,
+  PRIMARY KEY (`version_num`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT IGNORE INTO `alembic_version` (`version_num`) VALUES
   ('008_fix_points_rule_type');
 
 SET FOREIGN_KEY_CHECKS=1;
--- Export completed successfully: 4910 total rows across all tables.
+-- Export completed successfully: 4946 total rows across all tables.
