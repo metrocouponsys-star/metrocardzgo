@@ -197,7 +197,7 @@ model OfferTemplate {
   merchantId          String    @map("merchant_id") @db.VarChar(36)
   title               String    @db.VarChar(500)
   description         String?   @db.Text
-  imageUrl            String?   @map("image_url") @db.Text
+  imageUrl            String?   @map("image_url") @db.LongText
   offerType           OfferType @map("offer_type")
   value               Decimal?  @default(0)
   active              Boolean?  @default(true)
@@ -478,7 +478,7 @@ model RewardCatalog {
   merchantId        String   @map("merchant_id") @db.VarChar(36)
   name              String   @db.VarChar(500)
   description       String?  @db.Text
-  imageUrl          String?  @map("image_url") @db.Text
+  imageUrl          String?  @map("image_url") @db.LongText
   pointsCost        Decimal  @map("points_cost")
   quantityAvailable Int?     @map("quantity_available")
   isActive          Boolean  @default(true) @map("is_active")
@@ -807,7 +807,7 @@ model Deal {
   lastVerifiedDate DateTime  @map("last_verified_date")
   featured         Boolean   @default(false)
   active           Boolean   @default(true)
-  heroImageUrl     String?   @map("hero_image_url") @db.Text
+  heroImageUrl     String?   @map("hero_image_url") @db.LongText
   createdAt        DateTime  @default(now()) @map("created_at")
 
   clicks ClickLog[]

@@ -422,118 +422,138 @@ export function DealForm({ initialData, dealId, isEdit = false }: DealFormProps)
               )}
 
               {/* ── Hero Image — URL + File Upload ────────────────────── */}
+              {/* ── Deal Image — JPG / PNG File Upload (Not URL) ────────────────────── */}
               <div>
-                <label style={labelStyle}>Hero Image</label>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <input
-                    id="heroImageUrl"
-                    type="url"
-                    value={form.heroImageUrl}
-                    onChange={(e) => update('heroImageUrl', e.target.value)}
-                    placeholder="https://... or upload below"
-                    style={{ ...inputStyle(), flex: 1 }}
-                  />
-                  {/* Hidden file input */}
-                  <input
-                    ref={imageInputRef}
-                    type="file"
-                    accept="image/jpeg,image/jpg,image/png,image/webp"
-                    style={{ display: 'none' }}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleImageFile(file);
-                      e.target.value = '';
-                    }}
-                  />
-                  {/* Upload button */}
-                  <button
-                    type="button"
-                    onClick={() => imageInputRef.current?.click()}
-                    disabled={imageUploading}
-                    style={{
-                      height: 42,
-                      padding: '0 14px',
-                      background: T.orangeLight,
-                      border: `1px solid #FDE8CC`,
-                      borderRadius: 10,
-                      color: T.orangeDark,
-                      fontSize: 13,
-                      fontWeight: 700,
-                      cursor: imageUploading ? 'not-allowed' : 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 5,
-                      whiteSpace: 'nowrap',
-                      flexShrink: 0,
-                      opacity: imageUploading ? 0.6 : 1,
-                    }}
-                  >
-                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>
-                      {imageUploading ? 'progress_activity' : 'upload_file'}
-                    </span>
-                    {imageUploading ? 'Processing…' : 'Upload'}
-                  </button>
-                  {/* Clear image */}
-                  {form.heroImageUrl && (
-                    <button
-                      type="button"
-                      onClick={() => update('heroImageUrl', '')}
-                      title="Remove image"
-                      style={{
-                        height: 42,
-                        width: 42,
-                        background: T.redBg,
-                        border: `1px solid #FECACA`,
-                        borderRadius: 10,
-                        color: T.red,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                      }}
-                    >
-                      <span className="material-symbols-outlined" style={{ fontSize: 16 }}>close</span>
-                    </button>
-                  )}
-                </div>
+                <label style={labelStyle}>Deal Image (JPG / JPEG / PNG)</label>
+                {/* Hidden file input */}
+                <input
+                  ref={imageInputRef}
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/webp,.jpeg,.jpg,.png,.webp"
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleImageFile(file);
+                    e.target.value = '';
+                  }}
+                />
 
-                {/* Image preview */}
-                {form.heroImageUrl && (
+                {form.heroImageUrl ? (
                   <div
                     style={{
-                      marginTop: 10,
-                      width: '100%',
-                      height: 140,
-                      borderRadius: 10,
+                      borderRadius: 12,
                       overflow: 'hidden',
                       border: `1px solid ${T.border}`,
                       position: 'relative',
-                      background: T.inputBg,
+                      background: '#0F172A',
                     }}
                   >
                     <img
                       src={form.heroImageUrl}
-                      alt="Hero preview"
-                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                      alt="Deal JPG preview"
+                      style={{ width: '100%', height: 160, objectFit: 'cover', display: 'block' }}
                       onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                     />
                     <div
                       style={{
                         position: 'absolute',
-                        bottom: 8,
-                        right: 8,
-                        background: 'rgba(255,255,255,0.9)',
-                        backdropFilter: 'blur(6px)',
-                        borderRadius: 6,
-                        padding: '2px 8px',
-                        fontSize: 10,
-                        fontWeight: 700,
-                        color: T.textMuted,
+                        inset: 0,
+                        background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 60%)',
+                        display: 'flex',
+                        alignItems: 'flex-end',
+                        justifyContent: 'space-between',
+                        padding: '12px 14px',
                       }}
                     >
-                      Preview
+                      <span
+                        style={{
+                          background: 'rgba(255,255,255,0.92)',
+                          backdropFilter: 'blur(6px)',
+                          borderRadius: 6,
+                          padding: '3px 8px',
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: '#0F172A',
+                        }}
+                      >
+                        JPG Photo Loaded
+                      </span>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button
+                          type="button"
+                          onClick={() => imageInputRef.current?.click()}
+                          disabled={imageUploading}
+                          style={{
+                            background: '#FFFFFF',
+                            border: 'none',
+                            borderRadius: 8,
+                            padding: '6px 12px',
+                            fontWeight: 700,
+                            fontSize: 12,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 5,
+                            color: '#0F172A',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                          }}
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: 15 }}>photo_camera</span>
+                          Change JPG
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => update('heroImageUrl', '')}
+                          style={{
+                            background: '#EF4444',
+                            border: 'none',
+                            borderRadius: 8,
+                            padding: '6px 12px',
+                            fontWeight: 700,
+                            fontSize: 12,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 5,
+                            color: '#FFFFFF',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                          }}
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: 15 }}>delete</span>
+                          Remove
+                        </button>
+                      </div>
                     </div>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => imageInputRef.current?.click()}
+                    style={{
+                      border: `2px dashed ${T.border}`,
+                      borderRadius: 14,
+                      padding: '28px 16px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 8,
+                      cursor: imageUploading ? 'wait' : 'pointer',
+                      background: T.inputBg,
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    <span
+                      className="material-symbols-outlined"
+                      style={{ fontSize: 32, color: T.orange }}
+                    >
+                      {imageUploading ? 'progress_activity' : 'add_photo_alternate'}
+                    </span>
+                    <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: T.text }}>
+                      {imageUploading ? 'Optimizing JPG image…' : 'Click to select JPG photo'}
+                    </p>
+                    <p style={{ margin: 0, fontSize: 11, color: T.textMuted }}>
+                      Upload directly from your device (.jpg, .jpeg, .png) · auto-compressed for speed
+                    </p>
                   </div>
                 )}
               </div>

@@ -1,6 +1,8 @@
 -- ============================================================================
 -- METRO CARDZ — HOSTINGER PHPMYADMIN SQL SCRIPT
--- Purpose: Enable image uploads for Offers, Rewards, and GO Deals in MySQL
+-- Purpose: Enable JPG Image uploads (not URLs) for Offers, Rewards, and Deals
+-- Type: LONGTEXT (Supports direct JPG photos up to 4GB without truncation)
+--
 -- Instructions:
 --   1. Log in to Hostinger hPanel -> Databases -> Open phpMyAdmin
 --   2. Click on your Metro Cardz database name on the left sidebar
@@ -8,7 +10,7 @@
 --   4. Paste the queries below and click "Go"
 -- ============================================================================
 
--- 1. Add `image_url` to `offer_templates` (for Merchant Loyalty Offers)
+-- 1. Add or modify `image_url` to LONGTEXT on `offer_templates` (Loyalty Offers)
 SET @exist_col := (
     SELECT COUNT(*) 
     FROM INFORMATION_SCHEMA.COLUMNS 
@@ -18,15 +20,15 @@ SET @exist_col := (
 );
 
 SET @sql_stmt := IF(@exist_col = 0,
-    'ALTER TABLE `offer_templates` ADD COLUMN `image_url` TEXT NULL AFTER `description`',
-    'SELECT "image_url already exists in offer_templates" AS status'
+    'ALTER TABLE `offer_templates` ADD COLUMN `image_url` LONGTEXT NULL AFTER `description`',
+    'ALTER TABLE `offer_templates` MODIFY COLUMN `image_url` LONGTEXT NULL'
 );
 PREPARE stmt FROM @sql_stmt;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
 
--- 2. Add `image_url` to `reward_catalog` (for Merchant Loyalty Rewards)
+-- 2. Add or modify `image_url` to LONGTEXT on `reward_catalog` (Loyalty Rewards)
 SET @exist_col := (
     SELECT COUNT(*) 
     FROM INFORMATION_SCHEMA.COLUMNS 
@@ -36,15 +38,15 @@ SET @exist_col := (
 );
 
 SET @sql_stmt := IF(@exist_col = 0,
-    'ALTER TABLE `reward_catalog` ADD COLUMN `image_url` TEXT NULL AFTER `description`',
-    'SELECT "image_url already exists in reward_catalog" AS status'
+    'ALTER TABLE `reward_catalog` ADD COLUMN `image_url` LONGTEXT NULL AFTER `description`',
+    'ALTER TABLE `reward_catalog` MODIFY COLUMN `image_url` LONGTEXT NULL'
 );
 PREPARE stmt FROM @sql_stmt;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
 
--- 3. Ensure `hero_image_url` exists in `deals_deals` (for Metro Cardz GO Deals)
+-- 3. Ensure `hero_image_url` is LONGTEXT on `deals_deals` (Metro Cardz GO Deals)
 SET @exist_col := (
     SELECT COUNT(*) 
     FROM INFORMATION_SCHEMA.COLUMNS 
@@ -54,15 +56,15 @@ SET @exist_col := (
 );
 
 SET @sql_stmt := IF(@exist_col = 0,
-    'ALTER TABLE `deals_deals` ADD COLUMN `hero_image_url` TEXT NULL AFTER `active`',
-    'SELECT "hero_image_url already exists in deals_deals" AS status'
+    'ALTER TABLE `deals_deals` ADD COLUMN `hero_image_url` LONGTEXT NULL AFTER `active`',
+    'ALTER TABLE `deals_deals` MODIFY COLUMN `hero_image_url` LONGTEXT NULL'
 );
 PREPARE stmt FROM @sql_stmt;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
 
--- 4. Ensure `logo_url` exists in `deals_brands` (for Metro Cardz GO Brand Logos)
+-- 4. Ensure `logo_url` is LONGTEXT on `deals_brands` (Metro Cardz GO Brands)
 SET @exist_col := (
     SELECT COUNT(*) 
     FROM INFORMATION_SCHEMA.COLUMNS 
@@ -72,14 +74,14 @@ SET @exist_col := (
 );
 
 SET @sql_stmt := IF(@exist_col = 0,
-    'ALTER TABLE `deals_brands` ADD COLUMN `logo_url` TEXT NULL AFTER `description`',
-    'SELECT "logo_url already exists in deals_brands" AS status'
+    'ALTER TABLE `deals_brands` ADD COLUMN `logo_url` LONGTEXT NULL AFTER `description`',
+    'ALTER TABLE `deals_brands` MODIFY COLUMN `logo_url` LONGTEXT NULL'
 );
 PREPARE stmt FROM @sql_stmt;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
--- Verification check query
+-- Verification check query (Shows all 4 columns configured as longtext)
 SELECT TABLE_NAME, COLUMN_NAME, DATA_TYPE, IS_NULLABLE 
 FROM INFORMATION_SCHEMA.COLUMNS 
 WHERE TABLE_SCHEMA = DATABASE() 

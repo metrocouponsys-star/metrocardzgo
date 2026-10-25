@@ -260,18 +260,70 @@ function RewardCatalogTab({ active }: { active?: boolean }) {
             <input className="input-field" placeholder="e.g. Free Coffee" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} autoFocus />
           </div>
           <div>
-            <label className="form-label">Reward Image <span className="text-on-surface-variant font-normal text-label-xs">(optional — URL or photo)</span></label>
-            <div className="flex gap-2 items-center">
-              <input
-                type="text"
-                className="input-field flex-1"
-                placeholder="https://... or click upload"
-                value={form.image_url}
-                onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))}
-              />
-              <label className="btn-outline !py-2 !px-3 cursor-pointer text-label-sm shrink-0 flex items-center gap-1">
-                <span className="material-symbols-outlined text-[16px]">upload_file</span>
-                Upload
+            <label className="form-label">Reward Image (JPG / JPEG / PNG) <span className="text-on-surface-variant font-normal text-label-xs">(optional photo)</span></label>
+            {form.image_url ? (
+              <div className="relative rounded-xl overflow-hidden border border-outline-variant/60 bg-slate-900 w-full h-32 flex items-center justify-center">
+                <img src={form.image_url} alt="Reward preview" className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end justify-between p-3">
+                  <span className="text-[11px] font-bold text-white bg-black/40 px-2 py-0.5 rounded backdrop-blur-xs">
+                    JPG Photo Loaded
+                  </span>
+                  <div className="flex gap-2">
+                    <label className="btn-outline !py-1 !px-2.5 !text-xs !bg-white !text-slate-900 cursor-pointer font-bold flex items-center gap-1 shadow-sm">
+                      <span className="material-symbols-outlined text-[14px]">photo_camera</span>
+                      Change JPG
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/jpg,image/png,image/webp,.jpeg,.jpg,.png,.webp"
+                        className="hidden"
+                        onChange={e => {
+                          const f = e.target.files?.[0];
+                          if (!f) return;
+                          const r = new FileReader();
+                          r.onload = ev => {
+                            const img = new Image();
+                            img.onload = () => {
+                              const canvas = document.createElement('canvas');
+                              let w = img.width;
+                              let h = img.height;
+                              const maxDim = 600;
+                              if (w > maxDim || h > maxDim) {
+                                if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
+                                else { w = Math.round((w * maxDim) / h); h = maxDim; }
+                              }
+                              canvas.width = w;
+                              canvas.height = h;
+                              const ctx = canvas.getContext('2d');
+                              if (ctx) {
+                                ctx.drawImage(img, 0, 0, w, h);
+                                setForm(prev => ({ ...prev, image_url: canvas.toDataURL('image/jpeg', 0.82) }));
+                              } else {
+                                setForm(prev => ({ ...prev, image_url: ev.target?.result as string }));
+                              }
+                            };
+                            img.onerror = () => setForm(prev => ({ ...prev, image_url: ev.target?.result as string }));
+                            img.src = ev.target?.result as string;
+                          };
+                          r.readAsDataURL(f);
+                        }}
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setForm(f => ({ ...f, image_url: '' }))}
+                      className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs py-1 px-2.5 rounded-lg flex items-center gap-1 shadow-sm"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">delete</span>
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <label className="border-2 border-dashed border-outline-variant/60 hover:border-primary rounded-xl p-5 flex flex-col items-center justify-center gap-1.5 cursor-pointer bg-surface-container-low transition-all">
+                <span className="material-symbols-outlined text-2xl text-primary">add_photo_alternate</span>
+                <span className="text-xs font-bold text-on-surface">Click to select JPG photo</span>
+                <span className="text-[11px] text-on-surface-variant">JPG, JPEG, PNG from device · auto-compressed</span>
                 <input
                   type="file"
                   accept="image/jpeg,image/jpg,image/png,image/webp,.jpeg,.jpg,.png,.webp"
@@ -308,21 +360,6 @@ function RewardCatalogTab({ active }: { active?: boolean }) {
                   }}
                 />
               </label>
-              {form.image_url && (
-                <button
-                  type="button"
-                  onClick={() => setForm(f => ({ ...f, image_url: '' }))}
-                  className="p-2 text-error hover:bg-error-container/30 rounded-xl"
-                  title="Remove image"
-                >
-                  <span className="material-symbols-outlined text-[16px]">close</span>
-                </button>
-              )}
-            </div>
-            {form.image_url && (
-              <div className="mt-2 w-20 h-20 rounded-xl overflow-hidden border border-outline-variant/60 shadow-2xs">
-                <img src={form.image_url} alt="Preview" className="w-full h-full object-cover" />
-              </div>
             )}
           </div>
           <div>
