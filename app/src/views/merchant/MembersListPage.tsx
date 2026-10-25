@@ -187,23 +187,23 @@ export default function MembersListPage() {
         </div>
 
         {/* ── Summary Stat Cards ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px', marginBottom: '22px' }}>
+        <div className="members-stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px', marginBottom: '22px' }}>
           {[
             { label: 'Regd. Members', value: counts.registered, icon: 'badge', color: T.orange, bg: T.orangeLight, filter: 'all' as const },
             { label: 'Active', value: counts.active, icon: 'check_circle', color: '#16A34A', bg: '#F0FDF4', filter: 'active' as const },
             { label: 'Expired', value: counts.expired, icon: 'schedule', color: '#D97706', bg: '#FEF3C7', filter: 'expired' as const },
             { label: 'Points Issued', value: counts.totalPoints.toLocaleString(), icon: 'stars', color: T.violet, bg: T.violetLight, filter: 'all' as const },
           ].map(c => (
-            <button key={c.label} onClick={() => setStatusFilter(c.filter)} style={{
+            <button key={c.label} onClick={() => setStatusFilter(c.filter)} aria-label={`Filter by ${c.label}`} style={{
               background: 'linear-gradient(180deg, #ffffff 0%, #fffaf7 100%)', borderRadius: '18px', padding: '16px 18px', border: `1px solid ${statusFilter === c.filter && c.filter !== 'all' ? c.color + '40' : T.border}`,
-              boxShadow: T.shadow, cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease',
+              boxShadow: T.shadow, cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s ease', minHeight: '44px',
               outline: statusFilter === c.filter && c.filter !== 'all' ? `2px solid ${c.color}30` : 'none',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: c.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <span className="material-symbols-outlined" style={{ fontSize: '18px', color: c.color, fontVariationSettings: "'FILL' 1" }}>{c.icon}</span>
                 </div>
-                <div>
+                <div style={{ minWidth: 0 }}>
                   <p style={{ fontSize: '11px', fontWeight: 700, color: T.textLight, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 2px' }}>{c.label}</p>
                   <p style={{ fontSize: '22px', fontWeight: 800, color: T.text, margin: 0, lineHeight: 1, fontFamily: '"Plus Jakarta Sans", Inter, sans-serif' }}>{c.value}</p>
                 </div>
@@ -214,11 +214,11 @@ export default function MembersListPage() {
 
         {/* ── Filter + Search ── */}
         <div style={{ background: T.white, borderRadius: '18px', border: `1px solid ${T.border}`, boxShadow: T.shadow, padding: '12px 14px', marginBottom: '16px', display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
-          <div style={{ display: 'flex', gap: '4px', background: T.soft, padding: '4px', borderRadius: '12px', border: `1px solid ${T.border}` }}>
+          <div style={{ display: 'flex', gap: '4px', background: T.soft, padding: '4px', borderRadius: '12px', border: `1px solid ${T.border}`, flexWrap: 'wrap' }}>
             {STATUS_TABS.map(tab => (
-              <button key={tab.key} onClick={() => setStatusFilter(tab.key)} style={{
-                padding: '5px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 700,
-                border: 'none', cursor: 'pointer', transition: 'all 0.15s',
+              <button key={tab.key} onClick={() => setStatusFilter(tab.key)} aria-label={`Show ${tab.label} members`} style={{
+                padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 700,
+                border: 'none', cursor: 'pointer', transition: 'all 0.15s', minHeight: '36px',
                 background: statusFilter === tab.key ? T.white : 'transparent',
                 color: statusFilter === tab.key ? T.orangeDark : T.textMuted,
                 boxShadow: statusFilter === tab.key ? T.shadow : 'none',
@@ -236,10 +236,11 @@ export default function MembersListPage() {
               placeholder="Name, phone, member code…"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              style={{ width: '100%', height: '42px', paddingLeft: '38px', paddingRight: searchQuery ? '36px' : '12px', border: `1.5px solid ${T.border}`, borderRadius: '12px', fontSize: '13px', background: T.soft, color: T.text, outline: 'none', boxSizing: 'border-box' }}
+              aria-label="Search members by name, phone or member code"
+              style={{ width: '100%', height: '44px', paddingLeft: '38px', paddingRight: searchQuery ? '36px' : '12px', border: `1.5px solid ${T.border}`, borderRadius: '12px', fontSize: '16px', background: T.soft, color: T.text, outline: 'none', boxSizing: 'border-box' }}
             />
             {searchQuery && (
-              <button onClick={() => setSearchQuery('')} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+              <button onClick={() => setSearchQuery('')} aria-label="Clear member search" style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px', minHeight: '36px', display: 'flex', alignItems: 'center' }}>
                 <span className="material-symbols-outlined" style={{ fontSize: '16px', color: T.textLight }}>close</span>
               </button>
             )}
@@ -372,13 +373,17 @@ export default function MembersListPage() {
         .members-table-desktop { display: block; }
         .members-table-mobile { display: none; }
         .btn-label { display: inline; }
+        @media (max-width: 900px) {
+          .members-stat-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        }
         @media (max-width: 767px) {
           .members-table-desktop { display: none; }
           .members-table-mobile { display: block; }
           .btn-label { display: none; }
         }
-        @media (max-width: 640px) {
-          div[style*="repeat(4, 1fr)"] { grid-template-columns: repeat(2, 1fr) !important; }
+        @media (max-width: 480px) {
+          .members-stat-grid { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+          .members-stat-grid button { padding: 12px 10px !important; }
         }
       `}</style>
 

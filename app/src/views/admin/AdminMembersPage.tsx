@@ -16,6 +16,7 @@ export default function AdminMembersPage() {
   const [merchantFilter, setMerchantFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [detail, setDetail] = useState<any | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
 
@@ -25,13 +26,19 @@ export default function AdminMembersPage() {
 
   useEffect(() => {
     setLoading(true);
+    setError(null);
     api.getAdminAllMembers({ search, merchant_id: merchantFilter, status: statusFilter, limit: 200 })
-      .then(setMembers)
-      .catch(() => setMembers([]))
+      .then((data) => setMembers(Array.isArray(data) ? data : []))
+      .catch((err) => {
+        console.error('[AdminMembersPage] Failed to load members:', err);
+        setMembers([]);
+        setError('Could not load members. Check your backend connection.');
+      })
       .finally(() => setLoading(false));
   }, [search, merchantFilter, statusFilter]);
 
   const openDetail = async (merchantId: string) => {
+    if (!merchantId) return;
     try {
       const d = await api.getAdminMerchantDetail(merchantId);
       setDetail(d);
@@ -40,7 +47,7 @@ export default function AdminMembersPage() {
   };
 
   return (
-    <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-7xl mx-auto space-y-xl animate-fade-in">
+    <div className="px-container-margin-mobile md:px-container-margin-desktop py-6 max-w-7xl mx-auto space-y-xl animate-fade-in" style={{ overflowX: 'hidden', width: '100%', boxSizing: 'border-box' }}>
       {/* Page Header */}
       <div className="page-header">
         <h2 className="page-title flex items-center gap-2">
@@ -49,6 +56,14 @@ export default function AdminMembersPage() {
         </h2>
         <p className="page-subtitle">Search, filter, and inspect members across all onboarded merchants.</p>
       </div>
+
+      {/* Error Banner */}
+      {error && (
+        <div className="flex items-center gap-3 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
+          <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>error</span>
+          {error}
+        </div>
+      )}
 
       {/* Filters Bar */}
       <div className="flex flex-wrap gap-3 items-center bg-surface-container-low p-md rounded-2xl border border-outline-variant/20 shadow-sm">
@@ -125,19 +140,25 @@ export default function AdminMembersPage() {
                 </tr>
               ) : (
                 members.map(m => {
-                  const statusCfg = STATUS_CONFIG[m.status] || { badge: 'bg-surface-container text-on-surface-variant', label: m.status };
+                  const statusCfg = STATUS_CONFIG[m.status] || { badge: 'bg-surface-container text-on-surface-variant', label: m.status ?? 'Unknown' };
+                  const merchantLabel = m.merchant_name || (m.merchant_id ? String(m.merchant_id).slice(0, 8) : '—');
+                  const points = m.loyalty_points != null ? Number(m.loyalty_points).toFixed(0) : '0';
                   return (
                     <tr key={m.id} className="hover:bg-surface-container-low transition-colors group">
-                      <td className="px-4 py-3 text-body-md font-mono font-bold text-on-surface-variant">{m.member_code}</td>
-                      <td className="px-4 py-3 text-body-md font-bold text-on-surface">{m.name}</td>
-                      <td className="px-4 py-3 text-body-md text-on-surface-variant whitespace-nowrap">{m.phone}</td>
+                      <td className="px-4 py-3 text-body-md font-mono font-bold text-on-surface-variant">{m.member_code || '—'}</td>
+                      <td className="px-4 py-3 text-body-md font-bold text-on-surface">{m.name || '—'}</td>
+                      <td className="px-4 py-3 text-body-md text-on-surface-variant whitespace-nowrap">{m.phone || '—'}</td>
                       <td className="px-4 py-3 text-body-md">
-                        <button
-                          onClick={() => openDetail(m.merchant_id)}
-                          className="text-primary hover:underline font-semibold text-left transition-colors"
-                        >
-                          {m.merchant_name || m.merchant_id.slice(0, 8)}
-                        </button>
+                        {m.merchant_id ? (
+                          <button
+                            onClick={() => openDetail(m.merchant_id)}
+                            className="text-primary hover:underline font-semibold text-left transition-colors"
+                          >
+                            {merchantLabel}
+                          </button>
+                        ) : (
+                          <span className="text-on-surface-variant">{merchantLabel}</span>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-body-md text-on-surface-variant">{m.membership_type_name || '—'}</td>
                       <td className="px-4 py-3">
@@ -145,9 +166,9 @@ export default function AdminMembersPage() {
                           {statusCfg.label}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-body-md font-bold text-primary">{Number(m.loyalty_points).toFixed(0)}</td>
-                      <td className="px-4 py-3 text-body-md text-on-surface-variant font-mono">{m.total_visits || 0}</td>
-                      <td className="px-4 py-3 text-body-md text-on-surface-variant whitespace-nowrap">{m.expiry_date}</td>
+                      <td className="px-4 py-3 text-body-md font-bold text-primary">{points}</td>
+                      <td className="px-4 py-3 text-body-md text-on-surface-variant font-mono">{m.total_visits ?? 0}</td>
+                      <td className="px-4 py-3 text-body-md text-on-surface-variant whitespace-nowrap">{m.expiry_date || '—'}</td>
                     </tr>
                   );
                 })

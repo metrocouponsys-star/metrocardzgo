@@ -71,121 +71,148 @@ export function GoLandingClient() {
   return (
     <div
       style={{
-        background: '#FFFFFF',
-        minHeight: '100vh',
+        background: '#FAFAFA',
+        minHeight: '100dvh',
         color: '#111827',
         fontFamily: '"Inter", system-ui, sans-serif',
+        overflowX: 'hidden',
+        width: '100%',
       }}
     >
       <div
         style={{
           maxWidth: 520,
           margin: '0 auto',
-          paddingBottom: 80,
+          paddingBottom: 90,
           position: 'relative',
+          width: '100%',
+          boxSizing: 'border-box',
         }}
       >
-        {/* Header */}
+        {/* ── Header ─────────────────────────────────────────────────────── */}
         <header
           style={{
             position: 'sticky',
             top: 0,
-            zIndex: 30,
-            background: 'rgba(255,255,255,0.95)',
-            backdropFilter: 'blur(18px)',
-            WebkitBackdropFilter: 'blur(18px)',
-            borderBottom: '1px solid #F1F5F9',
+            zIndex: 50,
+            background: 'rgba(255,255,255,0.96)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            borderBottom: '1px solid rgba(241,245,249,0.8)',
+            boxShadow: '0 1px 0 rgba(0,0,0,0.04)',
           }}
         >
           <div
             style={{
-              padding: '12px 16px 10px',
+              padding: '10px 16px',
               display: 'flex',
               alignItems: 'center',
-              gap: 12,
+              gap: 10,
+              minHeight: 56,
+              boxSizing: 'border-box',
+              width: '100%',
             }}
           >
+            {/* Logo */}
             <div
               style={{
-                width: 38,
-                height: 38,
-                borderRadius: 12,
-                background: 'linear-gradient(135deg, #FF8A3D 0%, #EA580C 100%)',
+                width: 36,
+                height: 36,
+                borderRadius: 11,
+                background: 'linear-gradient(135deg, #FF8A3D 0%, #C2410C 100%)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: '#fff',
-                fontWeight: 800,
-                fontSize: 17,
-                boxShadow: '0 8px 18px rgba(234,88,12,0.18)',
+                fontWeight: 900,
+                fontSize: 16,
+                boxShadow: '0 4px 12px rgba(234,88,12,0.28)',
                 flexShrink: 0,
+                letterSpacing: '-0.03em',
               }}
             >
               M
             </div>
+
+            {/* Brand name */}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontWeight: 800, fontSize: 17, letterSpacing: '-0.02em', color: '#111827' }}>
+              <div style={{ fontWeight: 800, fontSize: 15, letterSpacing: '-0.025em', color: '#0F172A', lineHeight: 1.2 }}>
                 Metro Cardz GO
               </div>
               <div
                 style={{
-                  fontSize: 10,
-                  color: '#9CA3AF',
-                  letterSpacing: '0.12em',
+                  fontSize: 9,
+                  color: '#94A3B8',
+                  letterSpacing: '0.1em',
                   textTransform: 'uppercase',
+                  fontWeight: 600,
                 }}
               >
                 Exclusive Member Offers
               </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+
+            {/* Actions */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
               <Link href="/go/discover" style={{ textDecoration: 'none' }}>
                 <button
                   style={{
-                    border: '1px solid #FDE8CC',
+                    border: '1.5px solid #FDBA74',
                     background: '#FFF7ED',
                     color: '#C2410C',
-                    padding: '7px 12px',
-                    borderRadius: 999,
+                    padding: '6px 11px',
+                    borderRadius: 20,
                     fontWeight: 700,
-                    fontSize: 12,
+                    fontSize: 11,
                     cursor: 'pointer',
                     whiteSpace: 'nowrap',
+                    letterSpacing: '-0.01em',
                   }}
                 >
-                  Explore deals
+                  Explore
                 </button>
               </Link>
+
               {customer ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                   <div
                     style={{
-                      background: '#FFF7ED',
-                      border: '1px solid #FFEDD5',
-                      color: '#EA580C',
-                      padding: '5px 10px',
-                      borderRadius: 999,
+                      background: '#F0FDF4',
+                      border: '1.5px solid #BBF7D0',
+                      color: '#15803D',
+                      padding: '5px 9px',
+                      borderRadius: 20,
                       fontWeight: 700,
-                      fontSize: 12,
+                      fontSize: 11,
                       display: 'flex',
                       alignItems: 'center',
                       gap: 4,
+                      maxWidth: 90,
+                      overflow: 'hidden',
                     }}
                   >
-                    <span>✓</span>
-                    <span>{customer.name}</span>
+                    <span
+                      className="material-symbols-outlined"
+                      style={{ fontSize: 13, fontVariationSettings: "'FILL' 1", flexShrink: 0 }}
+                    >
+                      check_circle
+                    </span>
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {customer.name}
+                    </span>
                   </div>
                   <button
                     onClick={handleSignOut}
                     style={{
-                      border: '1px solid #E5E7EB',
+                      border: '1px solid #E2E8F0',
                       background: '#fff',
-                      color: '#6B7280',
-                      padding: '5px 9px',
-                      borderRadius: 999,
+                      color: '#64748B',
+                      padding: '5px 8px',
+                      borderRadius: 20,
                       fontWeight: 600,
                       fontSize: 11,
                       cursor: 'pointer',
+                      whiteSpace: 'nowrap',
                     }}
                   >
                     Logout
@@ -196,43 +223,50 @@ export function GoLandingClient() {
                   onClick={() => setAuthModalOpen(true)}
                   style={{
                     border: 'none',
-                    background: 'linear-gradient(135deg, #FF8A3D 0%, #EA580C 100%)',
+                    background: 'linear-gradient(135deg, #FF8A3D 0%, #C2410C 100%)',
                     color: '#fff',
                     padding: '7px 13px',
-                    borderRadius: 999,
+                    borderRadius: 20,
                     fontWeight: 700,
-                    fontSize: 12,
+                    fontSize: 11,
                     cursor: 'pointer',
-                    boxShadow: '0 2px 6px rgba(234, 88, 12, 0.25)',
+                    boxShadow: '0 3px 10px rgba(194, 65, 12, 0.30)',
                     whiteSpace: 'nowrap',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 5,
                   }}
                 >
-                  🔒 Sign in
+                  <span className="material-symbols-outlined" style={{ fontSize: 13, fontVariationSettings: "'FILL' 1" }}>
+                    lock
+                  </span>
+                  Sign in
                 </button>
               )}
             </div>
           </div>
         </header>
 
-        <main style={{ padding: '18px 16px 0' }}>
+        {/* ── Main Content ───────────────────────────────────────────────── */}
+        <main style={{ padding: '16px 16px 0', boxSizing: 'border-box', width: '100%' }}>
 
-          {/* Hero Card with Real or Gated Stats */}
-          <section style={{ marginBottom: 20 }}>
+          {/* Hero Card */}
+          <section style={{ marginBottom: 16 }}>
             <div
               style={{
                 position: 'relative',
                 overflow: 'hidden',
-                borderRadius: 24,
-                border: '1px solid #F1F5F9',
-                boxShadow: '0 12px 30px rgba(0,0,0,0.07)',
+                borderRadius: 22,
+                border: '1px solid #E2E8F0',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
                 background: '#fff',
               }}
             >
               <div
                 style={{
-                  height: 200,
+                  height: 190,
                   backgroundImage:
-                    'linear-gradient(180deg, rgba(17,24,39,0.15), rgba(17,24,39,0.6)), url(https://images.unsplash.com/photo-1527631746610-bca00a040d60?auto=format&fit=crop&w=1200&q=80)',
+                    'linear-gradient(180deg, rgba(15,23,42,0.10), rgba(15,23,42,0.65)), url(https://images.unsplash.com/photo-1527631746610-bca00a040d60?auto=format&fit=crop&w=1200&q=80)',
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                   position: 'relative',
@@ -242,27 +276,28 @@ export function GoLandingClient() {
                   style={{
                     position: 'absolute',
                     inset: 0,
-                    background: 'linear-gradient(180deg, rgba(17,24,39,0.06) 0%, rgba(17,24,39,0.55) 100%)',
+                    background: 'linear-gradient(180deg, rgba(15,23,42,0.04) 0%, rgba(15,23,42,0.58) 100%)',
                   }}
                 />
                 <div style={{ position: 'absolute', left: 18, right: 18, bottom: 18 }}>
                   <div
                     style={{
-                      fontSize: 10,
-                      color: '#FFDDBB',
+                      fontSize: 9,
+                      color: '#FED7AA',
                       fontWeight: 700,
-                      letterSpacing: '0.12em',
+                      letterSpacing: '0.14em',
                       textTransform: 'uppercase',
+                      marginBottom: 6,
                     }}
                   >
                     {customer ? `Verified Member · ${customer.tier}` : 'Membership Pass Required'}
                   </div>
                   <h1
                     style={{
-                      margin: '8px 0 0',
-                      fontSize: 24,
+                      margin: 0,
+                      fontSize: 22,
                       fontWeight: 800,
-                      lineHeight: 1.15,
+                      lineHeight: 1.2,
                       color: '#fff',
                       letterSpacing: '-0.04em',
                     }}
@@ -274,105 +309,127 @@ export function GoLandingClient() {
                 </div>
               </div>
 
-              {/* Real / Gated Customer Metrics */}
+              {/* Stats row */}
               <div
                 style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(3, 1fr)',
                   gap: 8,
-                  padding: 12,
+                  padding: '10px 10px',
                   background: '#fff',
                 }}
               >
-                <div
-                  style={{
-                    background: '#F9FAFB',
-                    borderRadius: 12,
-                    padding: '10px 8px',
-                    border: '1px solid #F3F4F6',
-                    textAlign: 'center',
-                  }}
-                >
-                  <div style={{ fontSize: 15, fontWeight: 800, color: customer ? '#EA580C' : '#9CA3AF', letterSpacing: '-0.02em' }}>
-                    {customer ? customer.points.toLocaleString() : '🔒 Locked'}
+                {[
+                  {
+                    value: customer ? customer.points.toLocaleString() : '—',
+                    label: 'Points',
+                    color: customer ? '#EA580C' : '#94A3B8',
+                    locked: !customer,
+                  },
+                  {
+                    value: customer ? `${claimedCount}/${GO_CATALOG_DEALS.length}` : `${GO_CATALOG_DEALS.length} Offers`,
+                    label: customer ? 'Claimed' : 'Active',
+                    color: customer ? '#2563EB' : '#0F172A',
+                    locked: false,
+                  },
+                  {
+                    value: customer ? `₹${customer.totalSavedMoney.toLocaleString()}` : '—',
+                    label: 'Saved',
+                    color: customer ? '#059669' : '#94A3B8',
+                    locked: !customer,
+                  },
+                ].map((stat, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      background: '#F8FAFC',
+                      borderRadius: 12,
+                      padding: '10px 6px',
+                      border: '1px solid #F1F5F9',
+                      textAlign: 'center',
+                      position: 'relative',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {stat.locked && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          inset: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: 'rgba(248,250,252,0.85)',
+                          backdropFilter: 'blur(3px)',
+                          borderRadius: 12,
+                        }}
+                      >
+                        <span
+                          className="material-symbols-outlined"
+                          style={{ fontSize: 16, color: '#CBD5E1', fontVariationSettings: "'FILL' 1" }}
+                        >
+                          lock
+                        </span>
+                      </div>
+                    )}
+                    <div style={{ fontSize: 14, fontWeight: 800, color: stat.color, letterSpacing: '-0.03em', lineHeight: 1 }}>
+                      {stat.value}
+                    </div>
+                    <div style={{ fontSize: 10, color: '#64748B', marginTop: 4, fontWeight: 500 }}>{stat.label}</div>
                   </div>
-                  <div style={{ fontSize: 10, color: '#6B7280', marginTop: 3 }}>Points</div>
-                </div>
-
-                <div
-                  style={{
-                    background: '#F9FAFB',
-                    borderRadius: 12,
-                    padding: '10px 8px',
-                    border: '1px solid #F3F4F6',
-                    textAlign: 'center',
-                  }}
-                >
-                  <div style={{ fontSize: 15, fontWeight: 800, color: customer ? '#2563EB' : '#111827', letterSpacing: '-0.02em' }}>
-                    {customer ? `${claimedCount} claimed (${remainingCount} left)` : `${GO_CATALOG_DEALS.length} Offers`}
-                  </div>
-                  <div style={{ fontSize: 10, color: '#6B7280', marginTop: 3 }}>
-                    {customer ? 'Claimed / Remaining' : 'Active Offers'}
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    background: '#F9FAFB',
-                    borderRadius: 12,
-                    padding: '10px 8px',
-                    border: '1px solid #F3F4F6',
-                    textAlign: 'center',
-                  }}
-                >
-                  <div style={{ fontSize: 15, fontWeight: 800, color: customer ? '#059669' : '#9CA3AF', letterSpacing: '-0.02em' }}>
-                    {customer ? `₹${customer.totalSavedMoney.toLocaleString()}` : 'Auth to view'}
-                  </div>
-                  <div style={{ fontSize: 10, color: '#6B7280', marginTop: 3 }}>Money Saved</div>
-                </div>
+                ))}
               </div>
             </div>
           </section>
 
-          {/* Authentication Banner (If unauthenticated) */}
+          {/* Auth Banner (unauthenticated) */}
           {!customer && (
             <section
               style={{
-                marginBottom: 20,
+                marginBottom: 16,
                 background: 'linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%)',
                 border: '1.5px solid #FDBA74',
-                borderRadius: 18,
-                padding: '16px',
+                borderRadius: 16,
+                padding: '14px 16px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                gap: 12,
+                gap: 10,
+                boxSizing: 'border-box',
+                width: '100%',
               }}
             >
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 800, color: '#9A3412' }}>
-                  🔒 Offers & Discounts Protected
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: '#9A3412', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span
+                    className="material-symbols-outlined"
+                    style={{ fontSize: 15, fontVariationSettings: "'FILL' 1", flexShrink: 0 }}
+                  >
+                    shield_lock
+                  </span>
+                  Offers &amp; Discounts Protected
                 </div>
-                <div style={{ fontSize: 12, color: '#7C2D12', marginTop: 2 }}>
-                  Verify your membership card or mobile to view full deals and claim passes.
+                <div style={{ fontSize: 11, color: '#7C2D12', marginTop: 3, lineHeight: 1.4 }}>
+                  Verify your membership card to view and claim exclusive deals.
                 </div>
               </div>
               <button
                 onClick={() => setAuthModalOpen(true)}
                 style={{
-                  background: 'linear-gradient(135deg, #FF8A3D 0%, #EA580C 100%)',
+                  background: 'linear-gradient(135deg, #FF8A3D 0%, #C2410C 100%)',
                   color: '#fff',
                   border: 'none',
                   borderRadius: 10,
                   padding: '9px 14px',
-                  fontWeight: 800,
+                  fontWeight: 700,
                   fontSize: 12,
                   cursor: 'pointer',
                   whiteSpace: 'nowrap',
-                  boxShadow: '0 3px 10px rgba(234,88,12,0.25)',
+                  boxShadow: '0 3px 10px rgba(194,65,12,0.28)',
+                  flexShrink: 0,
                 }}
               >
-                Authenticate →
+                Verify now
               </button>
             </section>
           )}
@@ -385,13 +442,15 @@ export function GoLandingClient() {
                 alignItems: 'center',
                 gap: 8,
                 background: '#fff',
-                border: '1px solid #E5E7EB',
-                borderRadius: 16,
+                border: '1.5px solid #E2E8F0',
+                borderRadius: 14,
                 padding: '10px 14px',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                boxSizing: 'border-box',
+                width: '100%',
               }}
             >
-              <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#9CA3AF' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 17, color: '#94A3B8', flexShrink: 0 }}>
                 search
               </span>
               <input
@@ -406,6 +465,7 @@ export function GoLandingClient() {
                   fontSize: 14,
                   outline: 'none',
                   fontFamily: 'inherit',
+                  minWidth: 0,
                 }}
               />
             </div>
@@ -418,14 +478,14 @@ export function GoLandingClient() {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                marginBottom: 12,
+                marginBottom: 10,
               }}
             >
               <div
                 style={{
                   fontSize: 11,
-                  color: '#6B7280',
-                  letterSpacing: '0.1em',
+                  color: '#475569',
+                  letterSpacing: '0.08em',
                   textTransform: 'uppercase',
                   fontWeight: 700,
                 }}
@@ -443,30 +503,32 @@ export function GoLandingClient() {
             <div
               style={{
                 display: 'flex',
-                gap: 10,
+                gap: 9,
                 overflowX: 'auto',
-                paddingBottom: 8,
+                paddingBottom: 6,
                 scrollbarWidth: 'none',
                 WebkitOverflowScrolling: 'touch',
+                paddingLeft: 0,
+                paddingRight: 2,
               } as React.CSSProperties}
             >
               {categories.map((category) => (
                 <Link
                   key={category.name}
                   href="/go/discover"
-                  style={{ textDecoration: 'none' }}
+                  style={{ textDecoration: 'none', flexShrink: 0 }}
                 >
                   <div
                     style={{
-                      border: '1px solid #E5E7EB',
+                      border: '1.5px solid #F1F5F9',
                       background: '#fff',
                       borderRadius: 16,
-                      minWidth: 120,
+                      width: 108,
                       padding: '12px 10px',
                       textAlign: 'left',
                       cursor: 'pointer',
-                      flexShrink: 0,
                       boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                      transition: 'transform 0.15s, box-shadow 0.15s',
                     }}
                   >
                     <div
@@ -474,7 +536,7 @@ export function GoLandingClient() {
                         width: 34,
                         height: 34,
                         borderRadius: 10,
-                        background: '#FFF7ED',
+                        background: 'linear-gradient(135deg, #FFF7ED, #FFEDD5)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -488,9 +550,9 @@ export function GoLandingClient() {
                         {category.icon}
                       </span>
                     </div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>{category.name}</div>
-                    <div style={{ fontSize: 11, color: '#6B7280', marginTop: 3 }}>{category.tag}</div>
-                    <div style={{ fontSize: 10, color: '#EA580C', marginTop: 6, fontWeight: 700 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#0F172A', lineHeight: 1.3 }}>{category.name}</div>
+                    <div style={{ fontSize: 10, color: '#64748B', marginTop: 2 }}>{category.tag}</div>
+                    <div style={{ fontSize: 10, color: '#EA580C', marginTop: 5, fontWeight: 700 }}>
                       {category.count}
                     </div>
                   </div>
@@ -499,21 +561,21 @@ export function GoLandingClient() {
             </div>
           </section>
 
-          {/* Wallet Card (Dynamic & Customer Isolated) */}
-          <section style={{ marginBottom: 22 }}>
+          {/* Member Wallet */}
+          <section style={{ marginBottom: 20 }}>
             <div
               style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                marginBottom: 12,
+                marginBottom: 10,
               }}
             >
               <div
                 style={{
                   fontSize: 11,
-                  color: '#6B7280',
-                  letterSpacing: '0.1em',
+                  color: '#475569',
+                  letterSpacing: '0.08em',
                   textTransform: 'uppercase',
                   fontWeight: 700,
                 }}
@@ -521,12 +583,21 @@ export function GoLandingClient() {
                 My Member Wallet
               </div>
               {customer ? (
-                <span style={{ color: '#059669', fontSize: 12, fontWeight: 700 }}>
-                  Active Pass · {customer.memberCode}
+                <span style={{ color: '#059669', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 12, fontVariationSettings: "'FILL' 1" }}>
+                    check_circle
+                  </span>
+                  {customer.memberCode}
                 </span>
               ) : (
-                <span style={{ color: '#EA580C', fontSize: 12, fontWeight: 700 }}>
-                  🔒 Auth to Access
+                <span
+                  style={{ color: '#EA580C', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}
+                  onClick={() => setAuthModalOpen(true)}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: 12, fontVariationSettings: "'FILL' 1" }}>
+                    lock
+                  </span>
+                  Auth to Access
                 </span>
               )}
             </div>
@@ -536,10 +607,12 @@ export function GoLandingClient() {
                 background: customer
                   ? 'linear-gradient(135deg, #fff 0%, #FFF4EE 100%)'
                   : 'linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%)',
-                border: customer ? '1.5px solid #FDE8CC' : '1px solid #E2E8F0',
-                borderRadius: 20,
-                padding: '18px',
-                boxShadow: customer ? '0 8px 22px rgba(234,88,12,0.07)' : 'none',
+                border: customer ? '1.5px solid #FED7AA' : '1.5px solid #E2E8F0',
+                borderRadius: 18,
+                padding: '16px',
+                boxShadow: customer ? '0 6px 20px rgba(234,88,12,0.08)' : 'none',
+                boxSizing: 'border-box',
+                width: '100%',
               }}
             >
               {customer ? (
@@ -550,79 +623,106 @@ export function GoLandingClient() {
                       justifyContent: 'space-between',
                       alignItems: 'center',
                       marginBottom: 14,
+                      gap: 8,
                     }}
                   >
-                    <div>
+                    <div style={{ minWidth: 0 }}>
                       <div
                         style={{
-                          color: '#9CA3AF',
-                          fontSize: 10,
-                          letterSpacing: '0.12em',
+                          color: '#94A3B8',
+                          fontSize: 9,
+                          letterSpacing: '0.14em',
                           textTransform: 'uppercase',
                           fontWeight: 700,
                         }}
                       >
                         Metro Cardz GO
                       </div>
-                      <div style={{ fontSize: 17, fontWeight: 800, marginTop: 3, color: '#111827' }}>
+                      <div style={{ fontSize: 16, fontWeight: 800, marginTop: 3, color: '#0F172A', letterSpacing: '-0.02em' }}>
                         {customer.name}
                       </div>
                     </div>
                     <div
                       style={{
-                        background: '#FFF7ED',
-                        border: '1px solid #FDE8CC',
+                        background: 'linear-gradient(135deg, #FFF7ED, #FFEDD5)',
+                        border: '1px solid #FED7AA',
                         borderRadius: 999,
-                        padding: '6px 10px',
-                        color: '#EA580C',
-                        fontSize: 11,
+                        padding: '5px 10px',
+                        color: '#C2410C',
+                        fontSize: 10,
                         fontWeight: 800,
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0,
                       }}
                     >
                       {customer.tier}
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 8 }}>
                     <div>
-                      <div style={{ color: '#9CA3AF', fontSize: 11 }}>Available points</div>
+                      <div style={{ color: '#94A3B8', fontSize: 10, fontWeight: 500 }}>Available points</div>
                       <div
-                        style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.04em', color: '#111827' }}
+                        style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.05em', color: '#0F172A', lineHeight: 1 }}
                       >
                         {customer.points.toLocaleString()}
                       </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <div style={{ color: '#9CA3AF', fontSize: 11 }}>Total Saved Money</div>
-                      <div style={{ fontSize: 18, fontWeight: 800, color: '#059669' }}>
+                      <div style={{ color: '#94A3B8', fontSize: 10, fontWeight: 500 }}>Total Saved</div>
+                      <div style={{ fontSize: 18, fontWeight: 800, color: '#059669', letterSpacing: '-0.03em' }}>
                         ₹{customer.totalSavedMoney.toLocaleString()}
                       </div>
                     </div>
                   </div>
                 </>
               ) : (
-                <div style={{ textAlign: 'center', padding: '10px 0' }}>
-                  <div style={{ fontSize: 24, marginBottom: 6 }}>🔒</div>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: '#1E293B' }}>
+                <div style={{ textAlign: 'center', padding: '12px 0' }}>
+                  <div
+                    style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: 14,
+                      background: 'linear-gradient(135deg, #F1F5F9, #E2E8F0)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      margin: '0 auto 12px',
+                    }}
+                  >
+                    <span
+                      className="material-symbols-outlined"
+                      style={{ fontSize: 24, color: '#94A3B8', fontVariationSettings: "'FILL' 1" }}
+                    >
+                      lock
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em' }}>
                     Membership Wallet Locked
                   </div>
-                  <p style={{ fontSize: 12, color: '#64748B', margin: '4px 0 14px' }}>
-                    Authenticate your membership to access your wallet, points balance, and saved money history.
+                  <p style={{ fontSize: 12, color: '#64748B', margin: '6px 0 14px', lineHeight: 1.5 }}>
+                    Authenticate your membership to access your wallet, points balance, and savings history.
                   </p>
                   <button
                     onClick={() => setAuthModalOpen(true)}
                     style={{
-                      background: 'linear-gradient(135deg, #FF8A3D 0%, #EA580C 100%)',
+                      background: 'linear-gradient(135deg, #FF8A3D 0%, #C2410C 100%)',
                       color: '#fff',
                       border: 'none',
                       borderRadius: 10,
-                      padding: '9px 18px',
-                      fontSize: 12,
-                      fontWeight: 800,
+                      padding: '10px 20px',
+                      fontSize: 13,
+                      fontWeight: 700,
                       cursor: 'pointer',
-                      boxShadow: '0 3px 10px rgba(234, 88, 12, 0.25)',
+                      boxShadow: '0 4px 14px rgba(194, 65, 12, 0.28)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
                     }}
                   >
+                    <span className="material-symbols-outlined" style={{ fontSize: 15, fontVariationSettings: "'FILL' 1" }}>
+                      fingerprint
+                    </span>
                     Authenticate Membership
                   </button>
                 </div>
@@ -631,20 +731,20 @@ export function GoLandingClient() {
           </section>
 
           {/* Curated collections */}
-          <section style={{ marginBottom: 22 }}>
+          <section style={{ marginBottom: 20 }}>
             <div
               style={{
                 fontSize: 11,
-                color: '#6B7280',
-                letterSpacing: '0.1em',
+                color: '#475569',
+                letterSpacing: '0.08em',
                 textTransform: 'uppercase',
                 fontWeight: 700,
-                marginBottom: 12,
+                marginBottom: 10,
               }}
             >
               Curated collections
             </div>
-            <div style={{ display: 'grid', gap: 10 }}>
+            <div style={{ display: 'grid', gap: 9, width: '100%', boxSizing: 'border-box' }}>
               {collections.map((collection) => (
                 <Link
                   key={collection.title}
@@ -654,12 +754,13 @@ export function GoLandingClient() {
                   <div
                     style={{
                       position: 'relative',
-                      borderRadius: 18,
+                      borderRadius: 16,
                       overflow: 'hidden',
-                      minHeight: 110,
+                      minHeight: 100,
                       background: '#fff',
-                      border: '1px solid #E5E7EB',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                      border: '1px solid #E2E8F0',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+                      width: '100%',
                     }}
                   >
                     <img
@@ -678,28 +779,29 @@ export function GoLandingClient() {
                       style={{
                         position: 'absolute',
                         inset: 0,
-                        background: 'linear-gradient(90deg, rgba(17,24,39,0.62) 0%, rgba(17,24,39,0.15) 100%)',
+                        background: 'linear-gradient(90deg, rgba(15,23,42,0.68) 0%, rgba(15,23,42,0.14) 100%)',
                       }}
                     />
                     <div
                       style={{
                         position: 'relative',
                         zIndex: 1,
-                        padding: '16px 18px',
+                        padding: '14px 16px',
                         height: '100%',
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'flex-end',
+                        minHeight: 100,
                       }}
                     >
                       <span
                         className="material-symbols-outlined"
-                        style={{ fontSize: 22, color: 'rgba(255,255,255,0.8)', marginBottom: 6, fontVariationSettings: "'FILL' 1" }}
+                        style={{ fontSize: 20, color: 'rgba(255,255,255,0.85)', marginBottom: 5, fontVariationSettings: "'FILL' 1" }}
                       >
                         {collection.icon}
                       </span>
-                      <div style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>{collection.title}</div>
-                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', letterSpacing: '-0.02em' }}>{collection.title}</div>
+                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.72)', marginTop: 2 }}>
                         {collection.subtitle}
                       </div>
                     </div>
@@ -709,26 +811,26 @@ export function GoLandingClient() {
             </div>
           </section>
 
-          {/* Trending Deals (Gated / Unlocked) */}
+          {/* Featured Deals */}
           <section style={{ marginBottom: 20 }}>
             <div
               style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                marginBottom: 12,
+                marginBottom: 10,
               }}
             >
               <div
                 style={{
                   fontSize: 11,
-                  color: '#6B7280',
-                  letterSpacing: '0.1em',
+                  color: '#475569',
+                  letterSpacing: '0.08em',
                   textTransform: 'uppercase',
                   fontWeight: 700,
                 }}
               >
-                {customer ? 'Featured Member Offers' : 'Featured Deals (Auth to Unlock)'}
+                {customer ? 'Featured Member Offers' : 'Featured Deals'}
               </div>
               <Link
                 href="/go/discover"
@@ -738,7 +840,7 @@ export function GoLandingClient() {
               </Link>
             </div>
 
-            <div style={{ display: 'grid', gap: 12 }}>
+            <div style={{ display: 'grid', gap: 10, width: '100%', boxSizing: 'border-box' }}>
               {filteredDeals.map((deal) => {
                 const isClaimed = customer?.claimedOffers.some((c) => c.dealId === deal.id);
 
@@ -747,13 +849,15 @@ export function GoLandingClient() {
                     key={deal.id}
                     style={{
                       background: '#fff',
-                      border: '1px solid #E5E7EB',
+                      border: '1.5px solid #F1F5F9',
                       borderRadius: 18,
                       overflow: 'hidden',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                      boxShadow: '0 4px 14px rgba(0,0,0,0.06)',
+                      width: '100%',
+                      boxSizing: 'border-box',
                     }}
                   >
-                    <div style={{ position: 'relative', height: 160 }}>
+                    <div style={{ position: 'relative', height: 150, overflow: 'hidden' }}>
                       <img
                         src={deal.image}
                         alt={deal.brand}
@@ -762,45 +866,85 @@ export function GoLandingClient() {
                           height: '100%',
                           objectFit: 'cover',
                           display: 'block',
-                          filter: !customer ? 'blur(1px) brightness(0.92)' : 'none',
+                          filter: !customer ? 'blur(2px) brightness(0.88)' : 'none',
                         }}
                       />
+                      {/* Blur overlay lock badge when not authenticated */}
+                      {!customer && (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            inset: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <div
+                            style={{
+                              background: 'rgba(15,23,42,0.55)',
+                              backdropFilter: 'blur(2px)',
+                              borderRadius: 12,
+                              padding: '8px 14px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 6,
+                              color: '#fff',
+                              fontSize: 12,
+                              fontWeight: 700,
+                            }}
+                          >
+                            <span
+                              className="material-symbols-outlined"
+                              style={{ fontSize: 15, fontVariationSettings: "'FILL' 1" }}
+                            >
+                              lock
+                            </span>
+                            Members Only
+                          </div>
+                        </div>
+                      )}
                       <div
                         style={{
                           position: 'absolute',
                           top: 10,
                           left: 10,
-                          background: 'rgba(255,255,255,0.92)',
+                          background: 'rgba(255,255,255,0.94)',
+                          backdropFilter: 'blur(6px)',
                           borderRadius: 999,
-                          padding: '5px 10px',
+                          padding: '4px 10px',
                           fontSize: 11,
                           fontWeight: 800,
-                          color: '#EA580C',
+                          color: '#C2410C',
+                          border: '1px solid rgba(253,186,116,0.5)',
                         }}
                       >
                         {deal.badge}
                       </div>
                     </div>
 
-                    <div style={{ padding: '14px 14px 12px' }}>
+                    <div style={{ padding: '12px 14px 12px' }}>
                       <div
                         style={{
                           display: 'flex',
                           justifyContent: 'space-between',
-                          gap: 10,
+                          gap: 8,
                           alignItems: 'flex-start',
                         }}
                       >
-                        <div>
-                          <div style={{ fontSize: 11, color: '#9CA3AF', marginBottom: 3 }}>{deal.area} · {deal.category}</div>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 10, color: '#94A3B8', marginBottom: 3, fontWeight: 500 }}>{deal.area} · {deal.category}</div>
                           <h3
                             style={{
                               margin: 0,
-                              fontSize: 18,
-                              lineHeight: 1.2,
+                              fontSize: 16,
+                              lineHeight: 1.25,
                               letterSpacing: '-0.03em',
                               fontWeight: 800,
-                              color: '#111827',
+                              color: '#0F172A',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
                             }}
                           >
                             {deal.brand}
@@ -811,10 +955,10 @@ export function GoLandingClient() {
                             background: '#FFF7ED',
                             color: '#C2410C',
                             borderRadius: 999,
-                            fontSize: 11,
+                            fontSize: 10,
                             fontWeight: 700,
-                            padding: '5px 8px',
-                            border: '1px solid #FDE8CC',
+                            padding: '4px 8px',
+                            border: '1px solid #FED7AA',
                             whiteSpace: 'nowrap',
                             flexShrink: 0,
                           }}
@@ -823,7 +967,7 @@ export function GoLandingClient() {
                         </div>
                       </div>
 
-                      <p style={{ margin: '10px 0', color: '#374151', fontWeight: 700, fontSize: 15 }}>
+                      <p style={{ margin: '8px 0', color: '#334155', fontWeight: 600, fontSize: 14, lineHeight: 1.4 }}>
                         {deal.offer}
                       </p>
 
@@ -833,11 +977,12 @@ export function GoLandingClient() {
                           justifyContent: 'space-between',
                           alignItems: 'center',
                           paddingTop: 10,
-                          borderTop: '1px solid #F3F4F6',
+                          borderTop: '1px solid #F1F5F9',
+                          gap: 8,
                         }}
                       >
                         <span style={{ color: '#059669', fontSize: 12, fontWeight: 700 }}>
-                          {customer ? `Saves ₹${deal.savingsAmount} · +${deal.pointsReward} pts` : '🔒 Members Only'}
+                          {customer ? `Saves ₹${deal.savingsAmount} · +${deal.pointsReward} pts` : 'Sign in to view savings'}
                         </span>
 
                         {!customer ? (
@@ -845,20 +990,34 @@ export function GoLandingClient() {
                             onClick={() => setAuthModalOpen(true)}
                             style={{
                               border: 'none',
-                              background: '#EA580C',
+                              background: 'linear-gradient(135deg, #FF8A3D, #C2410C)',
                               color: '#fff',
                               borderRadius: 8,
                               padding: '6px 12px',
-                              fontWeight: 800,
-                              fontSize: 12,
+                              fontWeight: 700,
+                              fontSize: 11,
                               cursor: 'pointer',
+                              whiteSpace: 'nowrap',
+                              flexShrink: 0,
                             }}
                           >
-                            Unlock Deal
+                            Unlock
                           </button>
                         ) : isClaimed ? (
-                          <span style={{ color: '#059669', fontWeight: 800, fontSize: 12 }}>
-                            ✓ Pass Claimed
+                          <span
+                            style={{
+                              color: '#059669',
+                              fontWeight: 700,
+                              fontSize: 12,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 4,
+                            }}
+                          >
+                            <span className="material-symbols-outlined" style={{ fontSize: 13, fontVariationSettings: "'FILL' 1" }}>
+                              check_circle
+                            </span>
+                            Claimed
                           </span>
                         ) : (
                           <Link
@@ -866,11 +1025,17 @@ export function GoLandingClient() {
                             style={{
                               textDecoration: 'none',
                               color: '#EA580C',
-                              fontWeight: 800,
+                              fontWeight: 700,
                               fontSize: 12,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 3,
                             }}
                           >
-                            Claim Deal →
+                            Claim
+                            <span className="material-symbols-outlined" style={{ fontSize: 13 }}>
+                              chevron_right
+                            </span>
                           </Link>
                         )}
                       </div>
@@ -886,28 +1051,30 @@ export function GoLandingClient() {
             <div
               style={{
                 fontSize: 11,
-                color: '#6B7280',
-                letterSpacing: '0.1em',
+                color: '#475569',
+                letterSpacing: '0.08em',
                 textTransform: 'uppercase',
                 fontWeight: 700,
-                marginBottom: 12,
+                marginBottom: 10,
               }}
             >
               Why members choose Metro Cardz GO
             </div>
-            <div style={{ display: 'grid', gap: 10 }}>
+            <div style={{ display: 'grid', gap: 8 }}>
               {perks.map((perk) => (
                 <div
                   key={perk.title}
                   style={{
                     background: '#fff',
-                    border: '1px solid #E5E7EB',
-                    borderRadius: 16,
+                    border: '1.5px solid #F1F5F9',
+                    borderRadius: 14,
                     padding: '14px 16px',
                     boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
                     display: 'flex',
                     alignItems: 'flex-start',
                     gap: 12,
+                    boxSizing: 'border-box',
+                    width: '100%',
                   }}
                 >
                   <div
@@ -915,7 +1082,7 @@ export function GoLandingClient() {
                       width: 36,
                       height: 36,
                       borderRadius: 10,
-                      background: '#FFF7ED',
+                      background: 'linear-gradient(135deg, #FFF7ED, #FFEDD5)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -924,16 +1091,16 @@ export function GoLandingClient() {
                   >
                     <span
                       className="material-symbols-outlined"
-                      style={{ fontSize: 18, color: '#EA580C', fontVariationSettings: "'FILL' 1" }}
+                      style={{ fontSize: 17, color: '#EA580C', fontVariationSettings: "'FILL' 1" }}
                     >
                       {perk.icon}
                     </span>
                   </div>
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: '#111827', marginBottom: 4 }}>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A', marginBottom: 3 }}>
                       {perk.title}
                     </div>
-                    <div style={{ color: '#6B7280', fontSize: 13, lineHeight: 1.55 }}>{perk.text}</div>
+                    <div style={{ color: '#64748B', fontSize: 12, lineHeight: 1.55 }}>{perk.text}</div>
                   </div>
                 </div>
               ))}
@@ -941,7 +1108,7 @@ export function GoLandingClient() {
           </section>
         </main>
 
-        {/* Bottom Nav */}
+        {/* ── Premium Bottom Nav ─────────────────────────────────────────── */}
         <nav
           style={{
             position: 'fixed',
@@ -951,18 +1118,21 @@ export function GoLandingClient() {
             width: '100%',
             maxWidth: 520,
             background: 'rgba(255,255,255,0.97)',
-            borderTop: '1px solid #E5E7EB',
-            backdropFilter: 'blur(14px)',
-            WebkitBackdropFilter: 'blur(14px)',
-            zIndex: 20,
+            borderTop: '1px solid rgba(226,232,240,0.9)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            zIndex: 40,
+            boxShadow: '0 -4px 20px rgba(0,0,0,0.06)',
           }}
         >
           <div
             style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr 1fr',
-              height: 60,
+              height: 58,
               paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+              paddingLeft: 8,
+              paddingRight: 8,
             }}
           >
             {[
@@ -980,26 +1150,51 @@ export function GoLandingClient() {
                   alignItems: 'center',
                   justifyContent: 'center',
                   textDecoration: 'none',
-                  color: item.active ? '#EA580C' : '#9CA3AF',
                   gap: 3,
+                  position: 'relative',
                 }}
               >
+                {item.active && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 6,
+                      width: 32,
+                      height: 32,
+                      borderRadius: 10,
+                      background: 'linear-gradient(135deg, #FFF7ED, #FFEDD5)',
+                      border: '1px solid #FED7AA',
+                    }}
+                  />
+                )}
                 <span
                   className="material-symbols-outlined"
                   style={{
-                    fontSize: 22,
+                    fontSize: 21,
+                    color: item.active ? '#EA580C' : '#94A3B8',
                     fontVariationSettings: item.active ? "'FILL' 1" : "'FILL' 0",
+                    position: 'relative',
+                    zIndex: 1,
                   }}
                 >
                   {item.icon}
                 </span>
-                <span style={{ fontSize: 10, fontWeight: 700 }}>{item.label}</span>
+                <span
+                  style={{
+                    fontSize: 10,
+                    fontWeight: item.active ? 700 : 500,
+                    color: item.active ? '#EA580C' : '#94A3B8',
+                    letterSpacing: '-0.01em',
+                  }}
+                >
+                  {item.label}
+                </span>
               </Link>
             ))}
           </div>
         </nav>
 
-        {/* Member Authentication Modal */}
+        {/* Member Auth Modal */}
         <MemberAuthGateModal
           isOpen={authModalOpen}
           onClose={() => setAuthModalOpen(false)}

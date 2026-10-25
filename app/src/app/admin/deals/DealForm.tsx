@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { PartnerBadge } from '@/components/deals/PartnerBadge';
@@ -39,11 +39,30 @@ interface DealFormProps {
 const OFFER_TYPES = ['percentage', 'bogo', 'flat', 'package', 'complimentary'];
 const today = new Date().toISOString().split('T')[0];
 
+// Light-theme design tokens matching the GO Admin shell
+const T = {
+  bg: '#F8FAFC',
+  surface: '#FFFFFF',
+  border: '#E5E7EB',
+  text: '#111827',
+  textMuted: '#6B7280',
+  textLight: '#9CA3AF',
+  orange: '#F97316',
+  orangeLight: '#FFF7ED',
+  orangeDark: '#EA580C',
+  inputBg: '#F9FAFB',
+  shadow: '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03)',
+  red: '#EF4444',
+  redBg: '#FEF2F2',
+};
+
 export function DealForm({ initialData, dealId, isEdit = false }: DealFormProps) {
   const router = useRouter();
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [imageUploading, setImageUploading] = useState(false);
   const [form, setForm] = useState<DealFormData>({
     brandId:         '',
     offerTitle:      '',
@@ -74,6 +93,41 @@ export function DealForm({ initialData, dealId, isEdit = false }: DealFormProps)
   function update(field: keyof DealFormData, value: unknown) {
     setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => { const n = { ...prev }; delete n[field]; return n; });
+  }
+
+  // ── Image file upload handler ──────────────────────────────────────────────
+  function handleImageFile(file: File) {
+    setImageUploading(true);
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let w = img.width;
+        let h = img.height;
+        const maxDim = 900;
+        if (w > maxDim || h > maxDim) {
+          if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
+          else { w = Math.round((w * maxDim) / h); h = maxDim; }
+        }
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, w, h);
+          update('heroImageUrl', canvas.toDataURL('image/jpeg', 0.85));
+        } else {
+          update('heroImageUrl', ev.target?.result as string);
+        }
+        setImageUploading(false);
+      };
+      img.onerror = () => {
+        update('heroImageUrl', ev.target?.result as string);
+        setImageUploading(false);
+      };
+      img.src = ev.target?.result as string;
+    };
+    reader.readAsDataURL(file);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -113,62 +167,142 @@ export function DealForm({ initialData, dealId, isEdit = false }: DealFormProps)
     }
   }
 
+  const inputStyle = (hasError?: boolean): React.CSSProperties => ({
+    width:        '100%',
+    height:       '42px',
+    background:   T.inputBg,
+    border:       `1px solid ${hasError ? '#FECACA' : T.border}`,
+    borderRadius: '10px',
+    padding:      '0 12px',
+    color:        T.text,
+    fontSize:     '14px',
+    outline:      'none',
+    fontFamily:   '"Inter", system-ui, sans-serif',
+    boxSizing:    'border-box' as const,
+    transition:   'border-color 0.15s',
+  });
+
+  const labelStyle: React.CSSProperties = {
+    display:       'block',
+    fontSize:      '11px',
+    fontWeight:    700,
+    letterSpacing: '0.08em',
+    color:         T.textMuted,
+    marginBottom:  '5px',
+    textTransform: 'uppercase',
+  };
+
   function field(label: string, id: string, content: React.ReactNode, error?: string) {
     return (
       <div>
-        <label htmlFor={id} style={{ display: 'block', fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', color: '#9CA3AF', marginBottom: '6px' }}>
-          {label}
-        </label>
+        <label htmlFor={id} style={labelStyle}>{label}</label>
         {content}
-        {error && <div style={{ fontSize: '12px', color: '#FF8A80', marginTop: '4px' }}>⚠ {error}</div>}
+        {error && (
+          <div style={{ fontSize: '12px', color: T.red, marginTop: '4px', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 13, fontVariationSettings: "'FILL' 1" }}>error</span>
+            {error}
+          </div>
+        )}
       </div>
     );
   }
 
-  const inputStyle = (hasError?: boolean): React.CSSProperties => ({
-    width:        '100%',
-    height:       '44px',
-    background:   '#1C212B',
-    border:       `1px solid ${hasError ? 'rgba(186,26,26,0.6)' : '#2A303C'}`,
-    borderRadius: '10px',
-    padding:      '0 14px',
-    color:        '#F8FAFC',
-    fontSize:     '14px',
-    outline:      'none',
-    fontFamily:   '"Plus Jakarta Sans", sans-serif',
-    boxSizing:    'border-box' as const,
-  });
-
   return (
-    <div style={{ background: '#0D0F12', minHeight: '100dvh', color: '#F8FAFC', fontFamily: '"Plus Jakarta Sans", sans-serif' }}>
-      {/* Header */}
-      <header style={{ background: '#14171F', borderBottom: '1px solid #2A303C', padding: '12px 24px', display: 'flex', alignItems: 'center', gap: '16px', position: 'sticky', top: 0, zIndex: 40 }}>
-        <Link href="/admin/deals" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#9CA3AF', textDecoration: 'none', fontSize: '13px' }}>← Back</Link>
-        <div style={{ fontFamily: 'Syne, sans-serif', fontSize: '16px', fontWeight: 700, color: '#D4AF37' }}>
+    <div style={{ background: T.bg, minHeight: '100dvh', color: T.text, fontFamily: '"Inter", system-ui, sans-serif' }}>
+
+      {/* ── Header ─────────────────────────────────────────────────────── */}
+      <header style={{
+        background: T.surface,
+        borderBottom: `1px solid ${T.border}`,
+        padding: '0 24px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '16px',
+        position: 'sticky',
+        top: 0,
+        zIndex: 40,
+        height: 56,
+        boxShadow: T.shadow,
+      }}>
+        <Link
+          href="/admin/deals"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            color: T.textMuted,
+            textDecoration: 'none',
+            fontSize: '13px',
+            fontWeight: 500,
+          }}
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: 16 }}>arrow_back</span>
+          Back
+        </Link>
+        <div style={{ width: 1, height: 20, background: T.border }} />
+        <div style={{ fontWeight: 800, fontSize: '16px', color: T.text }}>
           {isEdit ? 'Edit Deal' : 'New Deal'}
         </div>
+        {isEdit && (
+          <div
+            style={{
+              fontSize: 10,
+              fontWeight: 700,
+              color: T.orange,
+              background: T.orangeLight,
+              border: `1px solid #FDE8CC`,
+              borderRadius: 6,
+              padding: '2px 7px',
+              letterSpacing: '0.06em',
+            }}
+          >
+            EDITING
+          </div>
+        )}
       </header>
 
-      <main style={{ maxWidth: '700px', margin: '0 auto', padding: '24px' }}>
+      {/* ── Form Body ──────────────────────────────────────────────────── */}
+      <main style={{ maxWidth: '720px', margin: '0 auto', padding: '24px 16px 48px', boxSizing: 'border-box' }}>
+
         {errors._form && (
-          <div style={{ background: 'rgba(186,26,26,0.1)', border: '1px solid rgba(186,26,26,0.3)', borderRadius: '10px', padding: '12px 16px', fontSize: '13px', color: '#FF8A80', marginBottom: '20px' }}>
-            ⚠ {errors._form}
+          <div style={{
+            background: T.redBg,
+            border: '1px solid #FECACA',
+            borderRadius: '12px',
+            padding: '12px 16px',
+            fontSize: '13px',
+            color: T.red,
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+          }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 16, fontVariationSettings: "'FILL' 1" }}>error</span>
+            {errors._form}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
-          {/* Section: Brand */}
-          <section style={{ background: '#14171F', border: '1px solid #2A303C', borderRadius: '14px', padding: '20px' }}>
-            <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: '16px', fontWeight: 600, color: '#FFFFFF', marginBottom: '16px' }}>Brand</h2>
+          {/* ── Brand Section ─────────────────────────────────────────── */}
+          <section style={{
+            background: T.surface,
+            border: `1px solid ${T.border}`,
+            borderRadius: '14px',
+            padding: '20px',
+            boxShadow: T.shadow,
+          }}>
+            <h2 style={{ fontSize: '14px', fontWeight: 800, color: T.text, marginBottom: '16px', letterSpacing: '-0.01em' }}>
+              Brand
+            </h2>
 
-            {field('BRAND *', 'brandId',
+            {field('Brand *', 'brandId',
               <select
                 id="brandId"
                 value={form.brandId}
                 onChange={(e) => update('brandId', e.target.value)}
                 required
-                style={{ ...inputStyle(!!errors.brandId), cursor: 'pointer' }}
+                style={{ ...inputStyle(!!errors.brandId), cursor: 'pointer', appearance: 'none' }}
               >
                 <option value="">Select a brand...</option>
                 {brands.map((b) => (
@@ -181,118 +315,391 @@ export function DealForm({ initialData, dealId, isEdit = false }: DealFormProps)
             {selectedBrand && (
               <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <PartnerBadge status={selectedBrand.partnerStatus} />
-                <span style={{ fontSize: '12px', color: '#9CA3AF' }}>{selectedBrand.category} · {selectedBrand.city}</span>
+                <span style={{ fontSize: '12px', color: T.textMuted }}>{selectedBrand.category} · {selectedBrand.city}</span>
               </div>
             )}
           </section>
 
-          {/* Section: Offer */}
-          <section style={{ background: '#14171F', border: '1px solid #2A303C', borderRadius: '14px', padding: '20px' }}>
-            <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: '16px', fontWeight: 600, color: '#FFFFFF', marginBottom: '16px' }}>Offer Details</h2>
-            <div style={{ display: 'grid', gap: '16px' }}>
+          {/* ── Offer Details ─────────────────────────────────────────── */}
+          <section style={{
+            background: T.surface,
+            border: `1px solid ${T.border}`,
+            borderRadius: '14px',
+            padding: '20px',
+            boxShadow: T.shadow,
+          }}>
+            <h2 style={{ fontSize: '14px', fontWeight: 800, color: T.text, marginBottom: '16px', letterSpacing: '-0.01em' }}>
+              Offer Details
+            </h2>
+            <div style={{ display: 'grid', gap: '14px' }}>
 
-              {field('OFFER TITLE *', 'offerTitle',
-                <input id="offerTitle" type="text" value={form.offerTitle} onChange={(e) => update('offerTitle', e.target.value)} required placeholder="e.g. 40% Off All Wave Pool Passes" style={inputStyle(!!errors.offerTitle)} />,
+              {field('Offer Title *', 'offerTitle',
+                <input
+                  id="offerTitle"
+                  type="text"
+                  value={form.offerTitle}
+                  onChange={(e) => update('offerTitle', e.target.value)}
+                  required
+                  placeholder="e.g. 40% Off All Wave Pool Passes"
+                  style={inputStyle(!!errors.offerTitle)}
+                />,
                 errors.offerTitle
               )}
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                {field('OFFER TYPE *', 'offerType',
-                  <select id="offerType" value={form.offerType} onChange={(e) => update('offerType', e.target.value)} style={{ ...inputStyle(), cursor: 'pointer' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                {field('Offer Type *', 'offerType',
+                  <select
+                    id="offerType"
+                    value={form.offerType}
+                    onChange={(e) => update('offerType', e.target.value)}
+                    style={{ ...inputStyle(), cursor: 'pointer', appearance: 'none' }}
+                  >
                     {OFFER_TYPES.map((t) => <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>)}
                   </select>
                 )}
-                {field('PERCENTAGE (if applicable)', 'offerPercentage',
-                  <input id="offerPercentage" type="number" min="1" max="100" value={form.offerPercentage} onChange={(e) => update('offerPercentage', e.target.value)} placeholder="e.g. 40" style={inputStyle()} />
+                {field('Percentage (if applicable)', 'offerPercentage',
+                  <input
+                    id="offerPercentage"
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={form.offerPercentage}
+                    onChange={(e) => update('offerPercentage', e.target.value)}
+                    placeholder="e.g. 40"
+                    style={inputStyle()}
+                  />
                 )}
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                {field('START DATE *', 'startDate',
-                  <input id="startDate" type="date" value={form.startDate} onChange={(e) => update('startDate', e.target.value)} required style={inputStyle(!!errors.startDate)} />,
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                {field('Start Date *', 'startDate',
+                  <input
+                    id="startDate"
+                    type="date"
+                    value={form.startDate}
+                    onChange={(e) => update('startDate', e.target.value)}
+                    required
+                    style={inputStyle(!!errors.startDate)}
+                  />,
                   errors.startDate
                 )}
-                {field('END DATE *', 'endDate',
-                  <input id="endDate" type="date" value={form.endDate} onChange={(e) => update('endDate', e.target.value)} required style={inputStyle(!!errors.endDate)} />,
+                {field('End Date *', 'endDate',
+                  <input
+                    id="endDate"
+                    type="date"
+                    value={form.endDate}
+                    onChange={(e) => update('endDate', e.target.value)}
+                    required
+                    style={inputStyle(!!errors.endDate)}
+                  />,
                   errors.endDate
                 )}
               </div>
 
-              {field('BOOKING URL', 'bookingUrl',
-                <input id="bookingUrl" type="url" value={form.bookingUrl} onChange={(e) => update('bookingUrl', e.target.value)} placeholder="https://..." style={inputStyle()} />
-              )}
-
-              {field(
-                `AFFILIATE URL${selectedBrand?.partnerStatus === 'affiliate' ? ' *' : ''}`,
-                'affiliateUrl',
-                <input id="affiliateUrl" type="url" value={form.affiliateUrl} onChange={(e) => update('affiliateUrl', e.target.value)} placeholder="https://..." style={inputStyle(!!errors.affiliateUrl)} />,
-                errors.affiliateUrl
-              )}
-
-              {field('HERO IMAGE URL', 'heroImageUrl',
-                <input id="heroImageUrl" type="url" value={form.heroImageUrl} onChange={(e) => update('heroImageUrl', e.target.value)} placeholder="https://..." style={inputStyle()} />
-              )}
-            </div>
-          </section>
-
-          {/* Section: Terms & Settings */}
-          <section style={{ background: '#14171F', border: '1px solid #2A303C', borderRadius: '14px', padding: '20px' }}>
-            <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: '16px', fontWeight: 600, color: '#FFFFFF', marginBottom: '16px' }}>Terms & Settings</h2>
-            <div style={{ display: 'grid', gap: '16px' }}>
-
-              {field('OFFER TERMS', 'terms',
-                <textarea
-                  id="terms"
-                  value={form.terms}
-                  onChange={(e) => update('terms', e.target.value)}
-                  rows={5}
-                  placeholder="Valid on weekends and public holidays only. Max 2 passes per card. Not applicable during school holidays..."
-                  style={{ ...inputStyle(), height: 'auto', padding: '12px 14px', resize: 'vertical', lineHeight: '20px' }}
+              {field('Booking URL', 'bookingUrl',
+                <input
+                  id="bookingUrl"
+                  type="url"
+                  value={form.bookingUrl}
+                  onChange={(e) => update('bookingUrl', e.target.value)}
+                  placeholder="https://..."
+                  style={inputStyle()}
                 />
               )}
 
-              {field('LAST VERIFIED DATE *', 'lastVerifiedDate',
-                <input id="lastVerifiedDate" type="date" value={form.lastVerifiedDate} onChange={(e) => update('lastVerifiedDate', e.target.value)} required style={inputStyle(!!errors.lastVerifiedDate)} />,
-                errors.lastVerifiedDate
+              {field(
+                `Affiliate URL${selectedBrand?.partnerStatus === 'affiliate' ? ' *' : ''}`,
+                'affiliateUrl',
+                <input
+                  id="affiliateUrl"
+                  type="url"
+                  value={form.affiliateUrl}
+                  onChange={(e) => update('affiliateUrl', e.target.value)}
+                  placeholder="https://..."
+                  style={inputStyle(!!errors.affiliateUrl)}
+                />,
+                errors.affiliateUrl
               )}
 
-              <div style={{ display: 'flex', gap: '20px' }}>
-                {[
-                  { id: 'featured', label: 'Featured Deal', desc: 'Appears on Flash Privilege banner' },
-                  { id: 'active',   label: 'Active',        desc: 'Visible to public' },
-                ].map(({ id, label, desc }) => (
-                  <label key={id} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-                    <div
-                      style={{ width: '20px', height: '20px', background: (form as unknown as Record<string, unknown>)[id] ? '#D4AF37' : '#2A303C', border: '1px solid #3F3722', borderRadius: '5px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-                      onClick={() => update(id as keyof DealFormData, !(form as unknown as Record<string, unknown>)[id])}
+              {/* ── Hero Image — URL + File Upload ────────────────────── */}
+              <div>
+                <label style={labelStyle}>Hero Image</label>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <input
+                    id="heroImageUrl"
+                    type="url"
+                    value={form.heroImageUrl}
+                    onChange={(e) => update('heroImageUrl', e.target.value)}
+                    placeholder="https://... or upload below"
+                    style={{ ...inputStyle(), flex: 1 }}
+                  />
+                  {/* Hidden file input */}
+                  <input
+                    ref={imageInputRef}
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    style={{ display: 'none' }}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleImageFile(file);
+                      e.target.value = '';
+                    }}
+                  />
+                  {/* Upload button */}
+                  <button
+                    type="button"
+                    onClick={() => imageInputRef.current?.click()}
+                    disabled={imageUploading}
+                    style={{
+                      height: 42,
+                      padding: '0 14px',
+                      background: T.orangeLight,
+                      border: `1px solid #FDE8CC`,
+                      borderRadius: 10,
+                      color: T.orangeDark,
+                      fontSize: 13,
+                      fontWeight: 700,
+                      cursor: imageUploading ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 5,
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0,
+                      opacity: imageUploading ? 0.6 : 1,
+                    }}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>
+                      {imageUploading ? 'progress_activity' : 'upload_file'}
+                    </span>
+                    {imageUploading ? 'Processing…' : 'Upload'}
+                  </button>
+                  {/* Clear image */}
+                  {form.heroImageUrl && (
+                    <button
+                      type="button"
+                      onClick={() => update('heroImageUrl', '')}
+                      title="Remove image"
+                      style={{
+                        height: 42,
+                        width: 42,
+                        background: T.redBg,
+                        border: `1px solid #FECACA`,
+                        borderRadius: 10,
+                        color: T.red,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
                     >
-                      {!!(form as unknown as Record<string, unknown>)[id] && <span style={{ color: '#0D0F12', fontSize: '12px', fontWeight: 700 }}>✓</span>}
+                      <span className="material-symbols-outlined" style={{ fontSize: 16 }}>close</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Image preview */}
+                {form.heroImageUrl && (
+                  <div
+                    style={{
+                      marginTop: 10,
+                      width: '100%',
+                      height: 140,
+                      borderRadius: 10,
+                      overflow: 'hidden',
+                      border: `1px solid ${T.border}`,
+                      position: 'relative',
+                      background: T.inputBg,
+                    }}
+                  >
+                    <img
+                      src={form.heroImageUrl}
+                      alt="Hero preview"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                    />
+                    <div
+                      style={{
+                        position: 'absolute',
+                        bottom: 8,
+                        right: 8,
+                        background: 'rgba(255,255,255,0.9)',
+                        backdropFilter: 'blur(6px)',
+                        borderRadius: 6,
+                        padding: '2px 8px',
+                        fontSize: 10,
+                        fontWeight: 700,
+                        color: T.textMuted,
+                      }}
+                    >
+                      Preview
                     </div>
-                    <div>
-                      <div style={{ fontSize: '13px', fontWeight: 600, color: '#FFFFFF' }}>{label}</div>
-                      <div style={{ fontSize: '11px', color: '#6B7280' }}>{desc}</div>
-                    </div>
-                  </label>
-                ))}
+                  </div>
+                )}
               </div>
             </div>
           </section>
 
-          {/* Action buttons */}
-          <div style={{ display: 'flex', gap: '12px' }}>
+          {/* ── Terms & Settings ──────────────────────────────────────── */}
+          <section style={{
+            background: T.surface,
+            border: `1px solid ${T.border}`,
+            borderRadius: '14px',
+            padding: '20px',
+            boxShadow: T.shadow,
+          }}>
+            <h2 style={{ fontSize: '14px', fontWeight: 800, color: T.text, marginBottom: '16px', letterSpacing: '-0.01em' }}>
+              Terms &amp; Settings
+            </h2>
+            <div style={{ display: 'grid', gap: '14px' }}>
+
+              {field('Offer Terms', 'terms',
+                <textarea
+                  id="terms"
+                  value={form.terms}
+                  onChange={(e) => update('terms', e.target.value)}
+                  rows={4}
+                  placeholder="Valid on weekends and public holidays only. Max 2 passes per card..."
+                  style={{
+                    ...inputStyle(),
+                    height: 'auto',
+                    padding: '10px 12px',
+                    resize: 'vertical',
+                    lineHeight: '1.5',
+                  }}
+                />
+              )}
+
+              {field('Last Verified Date *', 'lastVerifiedDate',
+                <input
+                  id="lastVerifiedDate"
+                  type="date"
+                  value={form.lastVerifiedDate}
+                  onChange={(e) => update('lastVerifiedDate', e.target.value)}
+                  required
+                  style={inputStyle(!!errors.lastVerifiedDate)}
+                />,
+                errors.lastVerifiedDate
+              )}
+
+              {/* Toggles */}
+              <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                {[
+                  { id: 'featured', label: 'Featured Deal', desc: 'Appears on Flash Privilege banner', icon: 'star' },
+                  { id: 'active',   label: 'Active',        desc: 'Visible to public', icon: 'visibility' },
+                ].map(({ id, label, desc, icon }) => {
+                  const checked = !!(form as unknown as Record<string, unknown>)[id];
+                  return (
+                    <label
+                      key={id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        cursor: 'pointer',
+                        flex: '1 1 180px',
+                        background: checked ? T.orangeLight : T.inputBg,
+                        border: `1px solid ${checked ? '#FDE8CC' : T.border}`,
+                        borderRadius: 10,
+                        padding: '10px 12px',
+                        transition: 'all 0.15s',
+                      }}
+                      onClick={() => update(id as keyof DealFormData, !checked)}
+                    >
+                      {/* Custom checkbox */}
+                      <div
+                        style={{
+                          width: 20,
+                          height: 20,
+                          background: checked ? T.orange : '#fff',
+                          border: `2px solid ${checked ? T.orange : T.border}`,
+                          borderRadius: '5px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                          transition: 'all 0.15s',
+                        }}
+                      >
+                        {checked && (
+                          <span className="material-symbols-outlined" style={{ color: '#fff', fontSize: '13px', fontVariationSettings: "'FILL' 1" }}>
+                            check
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '13px', fontWeight: 700, color: checked ? T.orangeDark : T.text, display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <span className="material-symbols-outlined" style={{ fontSize: 14, color: checked ? T.orange : T.textLight, fontVariationSettings: "'FILL' 1" }}>
+                            {icon}
+                          </span>
+                          {label}
+                        </div>
+                        <div style={{ fontSize: '11px', color: T.textMuted, marginTop: 1 }}>{desc}</div>
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+
+          {/* ── Action Buttons ────────────────────────────────────────── */}
+          <div style={{ display: 'flex', gap: '10px' }}>
             <button
               type="submit"
               disabled={saving}
-              style={{ flex: 1, height: '52px', background: saving ? '#2A303C' : 'linear-gradient(135deg, #E5C158, #D4AF37)', border: 'none', borderRadius: '12px', color: '#0D0F12', fontSize: '15px', fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', boxShadow: saving ? 'none' : '0 4px 16px rgba(212,175,55,0.3)' }}
+              style={{
+                flex: 1,
+                height: '48px',
+                background: saving ? T.border : `linear-gradient(135deg, ${T.orange}, ${T.orangeDark})`,
+                border: 'none',
+                borderRadius: '12px',
+                color: saving ? T.textMuted : '#fff',
+                fontSize: '14px',
+                fontWeight: 700,
+                cursor: saving ? 'not-allowed' : 'pointer',
+                boxShadow: saving ? 'none' : '0 4px 14px rgba(249,115,22,0.28)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
+                transition: 'all 0.15s',
+              }}
             >
-              {saving ? 'Saving...' : isEdit ? 'Update Deal' : 'Create Deal'}
+              {saving && (
+                <span className="material-symbols-outlined" style={{ fontSize: 16, animation: 'spin 0.8s linear infinite' }}>
+                  progress_activity
+                </span>
+              )}
+              {saving ? 'Saving…' : isEdit ? 'Update Deal' : 'Create Deal'}
             </button>
-            <Link href="/admin/deals" style={{ height: '52px', padding: '0 24px', background: '#14171F', border: '1px solid #2A303C', borderRadius: '12px', color: '#9CA3AF', fontSize: '15px', display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+            <Link
+              href="/admin/deals"
+              style={{
+                height: '48px',
+                padding: '0 20px',
+                background: T.surface,
+                border: `1px solid ${T.border}`,
+                borderRadius: '12px',
+                color: T.textMuted,
+                fontSize: '14px',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                textDecoration: 'none',
+                whiteSpace: 'nowrap',
+                boxShadow: T.shadow,
+              }}
+            >
               Cancel
             </Link>
           </div>
         </form>
       </main>
+
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   );
 }

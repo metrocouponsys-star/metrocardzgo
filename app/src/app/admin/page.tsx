@@ -8,26 +8,26 @@ import { useRouter, usePathname } from 'next/navigation';
 const T = {
   bg: '#F8FAFC',
   white: '#FFFFFF',
-  border: '#E5E7EB',
-  text: '#111827',
-  textMuted: '#6B7280',
-  textLight: '#9CA3AF',
-  orange: '#F97316',
+  border: '#E2E8F0',
+  text: '#0F172A',
+  textMuted: '#64748B',
+  textLight: '#94A3B8',
+  orange: '#FF6B35',
   orangeLight: '#FFF7ED',
-  orangeDark: '#EA580C',
-  inputBg: '#F9FAFB',
-  shadow: '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03)',
-  shadowMd: '0 4px 16px rgba(0,0,0,0.07)',
-  green: '#10B981',
+  orangeDark: '#C2410C',
+  inputBg: '#F8FAFC',
+  shadow: '0 1px 3px rgba(15,23,42,0.04), 0 2px 6px rgba(15,23,42,0.03)',
+  shadowMd: '0 4px 16px rgba(15,23,42,0.08)',
+  green: '#059669',
   greenBg: '#ECFDF5',
-  blue: '#3B82F6',
+  blue: '#2563EB',
   blueBg: '#EFF6FF',
-  purple: '#8B5CF6',
+  purple: '#7C3AED',
   purpleBg: '#F5F3FF',
-  red: '#EF4444',
+  red: '#DC2626',
   redBg: '#FEF2F2',
-  amber: '#F59E0B',
-  amberBg: '#FFFBEB',
+  amber: '#D97706',
+  amberBg: '#FEF3C7',
 };
 
 // ─── Nav config ────────────────────────────────────────────────────────────────
@@ -507,18 +507,50 @@ export default function AdminDashboard() {
       pageSubtitle={now.toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
     >
       {/* Page heading */}
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 800, color: T.text, margin: '0 0 4px' }}>
-          {greeting}, Admin
-        </h1>
-        <p style={{ fontSize: 14, color: T.textMuted, margin: 0 }}>
-          Here is an overview of the GO platform today.
-        </p>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
+        <div>
+          <h1 style={{ fontSize: 22, fontWeight: 800, color: T.text, margin: '0 0 4px', letterSpacing: '-0.02em' }}>
+            {greeting}, Admin
+          </h1>
+          <p style={{ fontSize: 14, color: T.textMuted, margin: 0 }}>
+            Here is an overview of the GO platform today.
+          </p>
+        </div>
+        <button
+          onClick={() => loadStats()}
+          disabled={loading}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '9px 16px',
+            background: T.white,
+            border: `1.5px solid ${T.border}`,
+            borderRadius: 10,
+            fontSize: 13,
+            fontWeight: 700,
+            color: T.textMuted,
+            cursor: loading ? 'default' : 'pointer',
+            boxShadow: T.shadow,
+            minHeight: '44px',
+            transition: 'all 0.15s ease',
+          }}
+          aria-label="Refresh platform statistics"
+        >
+          <span
+            className="material-symbols-outlined"
+            style={{ fontSize: 16, animation: loading ? 'spin 1s linear infinite' : 'none' }}
+          >
+            refresh
+          </span>
+          {loading ? 'Refreshing…' : 'Refresh'}
+        </button>
       </div>
 
       {/* Error */}
       {error && (
         <div
+          role="alert"
           style={{
             background: T.redBg,
             border: '1px solid #FECACA',
@@ -540,9 +572,10 @@ export default function AdminDashboard() {
       {/* Stats Grid */}
       {loading ? (
         <div
+          className="admin-stats-grid"
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
             gap: 14,
             marginBottom: 28,
           }}
@@ -562,9 +595,10 @@ export default function AdminDashboard() {
         </div>
       ) : stats ? (
         <div
+          className="admin-stats-grid"
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
             gap: 14,
             marginBottom: 28,
           }}

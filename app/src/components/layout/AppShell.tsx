@@ -285,7 +285,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div style={{ padding: '10px 10px 14px', borderTop: `1px solid ${T.border}` }}>
           {originalAdminUser && (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', marginBottom: '8px', background: T.amberLight, borderRadius: '8px', fontSize: '12px', color: '#92400E' }}>
-              <span style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>👁 {user?.merchant_name}</span>
+              <span style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>visibility</span>
+                {user?.merchant_name}
+              </span>
               <button onClick={stopImpersonating} style={{ background: 'none', border: 'none', color: '#92400E', cursor: 'pointer', fontWeight: 700, fontSize: '11px', flexShrink: 0 }}>Exit</button>
             </div>
           )}

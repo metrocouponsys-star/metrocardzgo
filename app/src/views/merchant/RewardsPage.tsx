@@ -29,21 +29,66 @@ export default function RewardsPage() {
         <p className="page-subtitle">Manage your reward catalog, coupon codes, gift vouchers, and loyalty points rules.</p>
       </div>
 
-      {/* Tab Bar */}
-      <div className="flex bg-surface-container rounded-2xl p-1.5 gap-1 flex-wrap">
-        {TABS.map(t => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`flex-1 min-w-[120px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all whitespace-nowrap
-              ${tab === t.key
-                ? 'bg-accent text-white shadow-sm'
-                : 'text-on-surface-variant hover:bg-surface-container-high'}`}
-          >
-            <span className="material-symbols-outlined text-[18px]" style={tab === t.key ? { fontVariationSettings: "'FILL' 1" } : undefined}>{t.icon}</span>
-            {t.label}
-          </button>
-        ))}
+      {/* Tab Bar (MakeMyTrip / Swiggy modern card navigation) */}
+      <div
+        role="tablist"
+        aria-label="Rewards management tabs"
+        style={{
+          display: 'flex',
+          background: '#FFFFFF',
+          borderRadius: '16px',
+          padding: '6px',
+          gap: '6px',
+          border: '1px solid #E2E8F0',
+          boxShadow: '0 2px 8px rgba(15,23,42,0.04)',
+          overflowX: 'auto',
+          scrollbarWidth: 'none',
+        }}
+      >
+        {TABS.map(t => {
+          const isActive = tab === t.key;
+          return (
+            <button
+              key={t.key}
+              role="tab"
+              aria-selected={isActive}
+              aria-controls={`tabpanel-${t.key}`}
+              onClick={() => setTab(t.key)}
+              style={{
+                flex: '1 1 0px',
+                minWidth: '140px',
+                minHeight: '44px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                padding: '10px 16px',
+                borderRadius: '12px',
+                fontSize: '13px',
+                fontWeight: 700,
+                border: 'none',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                transition: 'all 0.15s ease',
+                background: isActive ? 'linear-gradient(135deg, #FF6B35 0%, #EA580C 100%)' : 'transparent',
+                color: isActive ? '#FFFFFF' : '#64748B',
+                boxShadow: isActive ? '0 4px 14px rgba(255,107,53,0.25)' : 'none',
+              }}
+            >
+              <span
+                className="material-symbols-outlined"
+                style={{
+                  fontSize: '18px',
+                  color: isActive ? '#FFFFFF' : '#94A3B8',
+                  fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0",
+                }}
+              >
+                {t.icon}
+              </span>
+              {t.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Tab Content — always mounted, hidden via CSS to preserve state across tab switches */}

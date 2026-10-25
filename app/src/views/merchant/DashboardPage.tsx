@@ -175,11 +175,14 @@ export default function DashboardPage() {
       <div style={{ maxWidth: '1080px', margin: '0 auto', padding: '24px 20px 40px' }}>
 
         {/* ── Page Header ── */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '24px', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '24px', gap: '16px', flexWrap: 'wrap' }}>
           <div>
-            <p style={{ fontSize: '13px', color: T.orange, fontWeight: 700, margin: '0 0 4px', letterSpacing: '0.02em' }}>
-              {greeting()} 👋
-            </p>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: T.orangeLight, border: `1px solid ${T.orange}25`, borderRadius: '999px', padding: '3px 10px', marginBottom: '6px' }}>
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: T.orange }} />
+              <span style={{ fontSize: '11px', color: T.orangeDark, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                {greeting()}
+              </span>
+            </div>
             <h1 style={{ fontSize: '24px', fontWeight: 800, color: T.text, margin: '0 0 4px', fontFamily: '"Plus Jakarta Sans", Inter, sans-serif', letterSpacing: '-0.3px' }}>
               {user?.merchant_name || user?.name || 'Dashboard'}
             </h1>
@@ -196,14 +199,15 @@ export default function DashboardPage() {
             <button
               onClick={() => fetchStats(true)}
               disabled={refreshing}
+              aria-label="Refresh dashboard data"
               style={{
-                display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px',
+                display: 'flex', alignItems: 'center', gap: '6px', padding: '9px 14px',
                 background: T.white, border: `1px solid ${T.border}`, borderRadius: '10px',
                 fontSize: '12px', fontWeight: 700, color: T.textMuted, cursor: 'pointer',
-                boxShadow: T.shadow, transition: 'all 0.15s',
+                boxShadow: T.shadow, minHeight: '44px', transition: 'all 0.15s',
               }}
             >
-              <span className="material-symbols-outlined" style={{ fontSize: '15px', animation: refreshing ? 'spin 1s linear infinite' : 'none' }}>refresh</span>
+              <span className="material-symbols-outlined" style={{ fontSize: '16px', animation: refreshing ? 'spin 1s linear infinite' : 'none' }}>refresh</span>
               Refresh
             </button>
           </div>
@@ -212,11 +216,13 @@ export default function DashboardPage() {
         {/* ── Scan Bar — always-visible primary CTA ── */}
         <button
           onClick={() => navigate('/portal/members/search?tab=qr')}
+          aria-label="Scan or search customer pass"
           style={{
             width: '100%', display: 'flex', alignItems: 'center', gap: '16px',
             padding: '18px 22px', background: T.text, borderRadius: '16px',
             border: 'none', cursor: 'pointer', marginBottom: '24px',
             boxShadow: `0 4px 20px rgba(15,23,42,0.15)`,
+            minHeight: '64px',
             transition: 'transform 0.15s, box-shadow 0.15s',
           }}
           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 32px rgba(15,23,42,0.2)'; }}
@@ -233,7 +239,7 @@ export default function DashboardPage() {
         </button>
 
         {/* ── Quick Actions ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px', marginBottom: '28px' }}>
+        <div className="dash-actions" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px', marginBottom: '28px' }}>
           <QuickAction icon="person_add" label="+ Add Member" color={T.orange} bg={T.orangeLight} onClick={() => navigate('/portal/members/new')} />
           <QuickAction icon="credit_card" label="Assign / Issue Card" color="#7C3AED" bg="#F5F3FF" onClick={() => navigate('/portal/cards')} />
           <QuickAction icon="groups" label="Regd. Members" color="#2563EB" bg="#EFF6FF" onClick={() => navigate('/portal/members')} />
@@ -247,7 +253,7 @@ export default function DashboardPage() {
           </div>
 
           {error && (
-            <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '12px', padding: '14px 16px', fontSize: '13px', color: '#DC2626', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div role="alert" style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '12px', padding: '14px 16px', fontSize: '13px', color: '#DC2626', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span className="material-symbols-outlined" style={{ fontSize: '18px', fontVariationSettings: "'FILL' 1" }}>error</span>
               Could not load stats. Check your connection.
             </div>
@@ -270,7 +276,7 @@ export default function DashboardPage() {
         </div>
 
         {/* ── Two-column layout ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '20px', alignItems: 'start' }}>
+        <div className="dash-two-col" style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '20px', alignItems: 'start' }}>
 
           {/* Recent Activity */}
           <div>
@@ -316,8 +322,9 @@ export default function DashboardPage() {
           <div>
             <div style={{ background: T.white, borderRadius: '16px', border: `1px solid ${T.border}`, boxShadow: T.shadow, overflow: 'hidden' }}>
               <div style={{ padding: '16px 18px 12px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h3 style={{ fontSize: '14px', fontWeight: 800, color: T.text, margin: 0, display: 'flex', alignItems: 'center', gap: '6px', fontFamily: '"Plus Jakarta Sans", Inter, sans-serif' }}>
-                  🎂 Upcoming Celebrations
+                <h3 style={{ fontSize: '14px', fontWeight: 800, color: T.text, margin: 0, display: 'flex', alignItems: 'center', gap: '8px', fontFamily: '"Plus Jakarta Sans", Inter, sans-serif' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px', color: T.orange, fontVariationSettings: "'FILL' 1" }}>cake</span>
+                  Upcoming Celebrations
                 </h3>
                 <button onClick={() => navigate('/portal/celebrations')} style={{ fontSize: '12px', color: T.orange, fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer' }}>All →</button>
               </div>
@@ -338,7 +345,7 @@ export default function DashboardPage() {
                   filteredCelebs.slice(0, 8).map((c, i) => {
                     const isBirthday = c.event_type === 'birthday';
                     const cleanPhone = (c.phone || '').replace(/\D/g, '');
-                    const waText = encodeURIComponent(`Dear ${c.name}, Wishing you a very Happy ${isBirthday ? 'Birthday 🎂' : 'Anniversary 🎊'} from ${user?.merchant_name || 'our store'}! Visit us to enjoy special celebration discounts on your loyalty pass.`);
+                    const waText = encodeURIComponent(`Dear ${c.name}, Wishing you a very Happy ${isBirthday ? 'Birthday' : 'Anniversary'} from ${user?.merchant_name || 'our store'}! Visit us to enjoy special celebration discounts on your loyalty pass.`);
                     const waLink = `https://wa.me/${cleanPhone.startsWith('91') ? cleanPhone : '91' + cleanPhone}?text=${waText}`;
 
                     return (
@@ -353,9 +360,11 @@ export default function DashboardPage() {
                         <div style={{
                           width: '34px', height: '34px', borderRadius: '50%', flexShrink: 0,
                           background: isBirthday ? '#FFF4EF' : '#F0FDF4',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
                         }}>
-                          {isBirthday ? '🎂' : '💍'}
+                          <span className="material-symbols-outlined" style={{ fontSize: '18px', color: isBirthday ? T.orange : '#16A34A', fontVariationSettings: "'FILL' 1" }}>
+                            {isBirthday ? 'cake' : 'celebration'}
+                          </span>
                         </div>
                         <div style={{ flex: 1, minWidth: 0, cursor: 'pointer' }} onClick={() => navigate(`/portal/members/${c.member_id}`)}>
                           <p style={{ fontSize: '13px', fontWeight: 700, color: T.text, margin: '0 0 1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</p>
