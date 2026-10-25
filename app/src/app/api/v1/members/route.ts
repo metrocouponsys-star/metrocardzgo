@@ -33,31 +33,36 @@ function parseOptionalDate(val: unknown): Date | null {
 
 // ── GET /api/v1/members ───────────────────────────────────────────────────────
 export async function GET(request: NextRequest) {
-  const auth = await requireAuth(request);
-  if (auth instanceof NextResponse) return auth;
+  try {
+    const auth = await requireAuth(request);
+    if (auth instanceof NextResponse) return auth;
 
-  const merchantId = getMerchantId(auth, request);
-  if (!merchantId) return NextResponse.json({ detail: 'Merchant ID required' }, { status: 400 });
+    const merchantId = getMerchantId(auth, request);
+    if (!merchantId) return NextResponse.json({ detail: 'Merchant ID required' }, { status: 400 });
 
-  const url = new URL(request.url);
-  const status = url.searchParams.get('status') ?? undefined;
-  const membershipTypeId = url.searchParams.get('membership_type_id') ?? undefined;
-  const limit = Math.min(parseInt(url.searchParams.get('limit') ?? '100'), 500);
-  const offset = Math.max(parseInt(url.searchParams.get('offset') ?? '0'), 0);
+    const url = new URL(request.url);
+    const status = url.searchParams.get('status') ?? undefined;
+    const membershipTypeId = url.searchParams.get('membership_type_id') ?? undefined;
+    const limit = Math.min(parseInt(url.searchParams.get('limit') ?? '100'), 500);
+    const offset = Math.max(parseInt(url.searchParams.get('offset') ?? '0'), 0);
 
-  const members = await prisma.member.findMany({
-    where: {
-      merchantId,
-      ...(status ? { status: status as any } : {}),
-      ...(membershipTypeId ? { membershipTypeId } : {}),
-    },
-    include: { membershipType: true, offerStates: { include: { offerTemplate: true } } },
-    orderBy: { createdAt: 'desc' },
-    take: limit,
-    skip: offset,
-  });
+    const members = await prisma.member.findMany({
+      where: {
+        merchantId,
+        ...(status ? { status: status as any } : {}),
+        ...(membershipTypeId ? { membershipTypeId } : {}),
+      },
+      include: { membershipType: true, offerStates: { include: { offerTemplate: true } } },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      skip: offset,
+    });
 
-  return NextResponse.json(members.map(normalizeMemberData));
+    return NextResponse.json(members.map(normalizeMemberData));
+  } catch (error: any) {
+    console.error('GET /api/v1/members error:', error);
+    return NextResponse.json({ detail: error.message || 'Failed to fetch members' }, { status: 500 });
+  }
 }
 
 // ── POST /api/v1/members ──────────────────────────────────────────────────────

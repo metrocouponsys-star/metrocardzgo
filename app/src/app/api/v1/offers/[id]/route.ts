@@ -44,7 +44,6 @@ async function handleUpdate(request: NextRequest, { params }: Params) {
     data: {
       title: body.title !== undefined ? body.title : existing.title,
       description: body.description !== undefined ? body.description : existing.description,
-      imageUrl: body.image_url !== undefined ? body.image_url : (existing as any).imageUrl,
       offerType: body.offer_type !== undefined ? body.offer_type : existing.offerType,
       value: body.value !== undefined ? body.value : existing.value,
       active: body.active !== undefined ? body.active : existing.active,

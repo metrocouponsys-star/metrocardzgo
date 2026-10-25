@@ -5,45 +5,50 @@ import { prisma } from '@/lib/prisma';
 import crypto from 'crypto';
 
 export async function GET(request: NextRequest) {
-  const auth = await requireAuth(request);
-  if (auth instanceof NextResponse) return auth;
-  const merchantId = getMerchantId(auth, request);
-  if (!merchantId) return NextResponse.json({ detail: 'Merchant ID required' }, { status: 400 });
+  try {
+    const auth = await requireAuth(request);
+    if (auth instanceof NextResponse) return auth;
+    const merchantId = getMerchantId(auth, request);
+    if (!merchantId) return NextResponse.json({ detail: 'Merchant ID required' }, { status: 400 });
 
-  const offers = await prisma.offerTemplate.findMany({
-    where: { merchantId },
-    include: { membershipTypeLinks: { include: { membershipType: true } } },
-    orderBy: { title: 'asc' },
-  });
-  return NextResponse.json(offers);
+    const offers = await prisma.offerTemplate.findMany({
+      where: { merchantId },
+      include: { membershipTypeLinks: { include: { membershipType: true } } },
+      orderBy: { title: 'asc' },
+    });
+    return NextResponse.json(offers);
+  } catch (err: any) {
+    console.error('[GET /api/v1/offers] Error:', err);
+    return NextResponse.json({ detail: err.message || 'Failed to fetch offers' }, { status: 500 });
+  }
 }
 
 export async function POST(request: NextRequest) {
-  const auth = await requireAuth(request);
-  if (auth instanceof NextResponse) return auth;
-  const merchantId = getMerchantId(auth, request);
-  if (!merchantId) return NextResponse.json({ detail: 'Merchant ID required' }, { status: 400 });
+  try {
+    const auth = await requireAuth(request);
+    if (auth instanceof NextResponse) return auth;
+    const merchantId = getMerchantId(auth, request);
+    if (!merchantId) return NextResponse.json({ detail: 'Merchant ID required' }, { status: 400 });
 
-  const body = await request.json();
-  const offerId = crypto.randomUUID();
+    const body = await request.json();
+    const offerId = crypto.randomUUID();
 
-  const offer = await prisma.offerTemplate.create({
-    data: {
-      id: offerId,
-      merchantId,
-      title: body.title,
-      description: body.description ?? '',
-      imageUrl: body.image_url ?? null,
-      offerType: body.offer_type,
-      value: body.value ?? 0,
-      active: body.active ?? true,
-      loyaltyPointsEarn: body.loyalty_points_earn ?? null,
-      isPointsRedemption: body.is_points_redemption ?? false,
-      loyaltyPointsCost: body.loyalty_points_cost ?? null,
-      minVisits: body.min_visits ?? null,
-      minPurchaseAmount: body.min_purchase_amount ?? null,
-    },
-  });
+    const offer = await prisma.offerTemplate.create({
+      data: {
+        id: offerId,
+        merchantId,
+        title: body.title,
+        description: body.description ?? '',
+        offerType: body.offer_type,
+        value: body.value ?? 0,
+        active: body.active ?? true,
+        loyaltyPointsEarn: body.loyalty_points_earn ?? null,
+        isPointsRedemption: body.is_points_redemption ?? false,
+        loyaltyPointsCost: body.loyalty_points_cost ?? null,
+        minVisits: body.min_visits ?? null,
+        minPurchaseAmount: body.min_purchase_amount ?? null,
+      },
+    });
 
   // Link to membership types if provided
   if (body.applicable_membership_type_ids?.length) {
@@ -75,4 +80,8 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json(offer, { status: 201 });
+  } catch (err: any) {
+    console.error('[POST /api/v1/offers] Error:', err);
+    return NextResponse.json({ detail: err.message || 'Failed to create offer' }, { status: 500 });
+  }
 }
