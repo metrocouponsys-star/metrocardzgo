@@ -664,12 +664,6 @@ export default function AdminDashboard() {
               prisma/HOSTINGER_FIX_AND_SEED.sql
             </code>.
           </div>
-          <div style={{ marginTop: 10, fontSize: 13, color: '#92400E' }}>
-            <strong>Default credentials after seeding:</strong>
-            <br />
-            Email: <code style={{ background: '#FEF3C7', padding: '1px 5px', borderRadius: 4 }}>metrocouponsys@gmail.com</code>
-            &nbsp; Password: <code style={{ background: '#FEF3C7', padding: '1px 5px', borderRadius: 4 }}>9029999614</code>
-          </div>
         </div>
       </div>
 
