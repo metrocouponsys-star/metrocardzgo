@@ -114,25 +114,11 @@ export function GoLandingClient() {
             }}
           >
             {/* Logo */}
-            <div
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 11,
-                background: 'linear-gradient(135deg, #FF8A3D 0%, #C2410C 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#fff',
-                fontWeight: 900,
-                fontSize: 16,
-                boxShadow: '0 4px 12px rgba(234,88,12,0.28)',
-                flexShrink: 0,
-                letterSpacing: '-0.03em',
-              }}
-            >
-              M
-            </div>
+            <img
+              src="/logo.png"
+              alt="Metro Cardz"
+              style={{ height: 36, width: 'auto', objectFit: 'contain', flexShrink: 0 }}
+            />
 
             {/* Brand name */}
             <div style={{ flex: 1, minWidth: 0 }}>

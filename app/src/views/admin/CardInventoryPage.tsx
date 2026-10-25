@@ -457,7 +457,7 @@ export default function CardInventoryPage() {
             title="Batch revoke or delete cards (e.g. 500 cards in 1 click)"
           >
             <span className="material-symbols-outlined text-[18px]">bolt</span>
-            ⚡ Batch Actions
+            Batch Actions
           </button>
           <button
             onClick={async () => {
@@ -481,7 +481,7 @@ export default function CardInventoryPage() {
       </div>
 
       {/* Stats Row */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-md">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5">
         {[
           { label: 'Total Cards',  value: stats.total,       icon: 'credit_card',          cls: 'bg-primary-container/20 text-primary' },
           { label: 'Unassigned',   value: stats.unassigned,  icon: 'inventory_2',           cls: 'bg-surface-container text-on-surface-variant' },
@@ -1376,7 +1376,7 @@ export default function CardInventoryPage() {
       <Modal
         isOpen={showBatchModal}
         onClose={() => setShowBatchModal(false)}
-        title="⚡ Quick Batch Card Actions"
+        title="Quick Batch Card Actions"
       >
         <div className="space-y-5">
           <p className="text-body-sm text-on-surface-variant">

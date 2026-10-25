@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
     ATTEMPTS.set(ip, entry);
 
     return NextResponse.json(
-      { error: true, message: 'Invalid credentials. Only authorized GO deal managers (9029999614 / metrocouponsys@gmail.com) can access.' },
+      { error: true, message: 'Invalid credentials. Only authorized GO deal managers can access.' },
       { status: 401 }
     );
   }

@@ -99,26 +99,11 @@ export function GoAdminShell({ children, pageTitle, pageSubtitle }: {
             gap: 10,
           }}
         >
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 10,
-              background: 'linear-gradient(135deg, #F97316 0%, #EA580C 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-              boxShadow: '0 4px 12px rgba(249,115,22,0.25)',
-            }}
-          >
-            <span
-              className="material-symbols-outlined"
-              style={{ color: '#fff', fontSize: 18, fontVariationSettings: "'FILL' 1" }}
-            >
-              storefront
-            </span>
-          </div>
+          <img
+            src="/logo.png"
+            alt="Metro Cardz"
+            style={{ height: 34, width: 'auto', objectFit: 'contain', flexShrink: 0 }}
+          />
           <div style={{ minWidth: 0 }}>
             <div style={{ fontWeight: 800, fontSize: 14, color: T.text }}>Metro Cardz GO</div>
             <div

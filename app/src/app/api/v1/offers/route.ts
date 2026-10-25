@@ -33,6 +33,7 @@ export async function POST(request: NextRequest) {
       merchantId,
       title: body.title,
       description: body.description ?? '',
+      imageUrl: body.image_url ?? null,
       offerType: body.offer_type,
       value: body.value ?? 0,
       active: body.active ?? true,

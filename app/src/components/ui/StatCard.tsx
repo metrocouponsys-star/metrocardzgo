@@ -78,12 +78,12 @@ export function StatCard({ label, value, trend, trendUp, icon, iconColor, varian
   return (
     <div
       onClick={onClick}
-      className={`${colors.card} animate-slide-up group ${
+      className={`${colors.card} min-h-[128px] flex flex-col justify-between animate-slide-up group ${
         onClick ? 'cursor-pointer active:scale-[0.98]' : ''
       } ${className}`}
     >
       {/* Header row: label + icon */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between gap-2">
         <p className="text-[12px] font-semibold text-on-surface-variant leading-tight flex items-center gap-1.5 uppercase tracking-wide">
           {label}
           {onClick && (
@@ -93,14 +93,14 @@ export function StatCard({ label, value, trend, trendUp, icon, iconColor, varian
           )}
         </p>
         {icon && (
-          <div className={`w-10 h-10 rounded-xl ${colors.icon} flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform`}>
-            <span className={`material-symbols-outlined text-[20px]`} style={{ fontVariationSettings: "'FILL' 1" }}>{icon}</span>
+          <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl ${colors.icon} flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform`}>
+            <span className={`material-symbols-outlined text-[19px] sm:text-[20px]`} style={{ fontVariationSettings: "'FILL' 1" }}>{icon}</span>
           </div>
         )}
       </div>
 
       {/* Big number */}
-      <p className="text-[28px] leading-[34px] font-extrabold text-on-surface tabular-nums tracking-tight font-display">
+      <p className="text-[22px] sm:text-[26px] md:text-[28px] leading-[32px] sm:leading-[34px] font-extrabold text-on-surface tabular-nums tracking-tight font-display truncate">
         {displayValue}
       </p>
 

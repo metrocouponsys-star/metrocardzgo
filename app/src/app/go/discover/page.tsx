@@ -361,15 +361,11 @@ export default function GoDiscoverPage() {
         >
           <div style={{ padding: '12px 16px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
             <Link href="/go" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }} aria-label="Metro Cardz GO home">
-              <div style={{
-                width: 38, height: 38, borderRadius: T.radMd,
-                background: 'linear-gradient(135deg, #FF8A3D 0%, #C2410C 100%)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: '#fff', fontWeight: 800, fontSize: 16,
-                boxShadow: '0 4px 12px rgba(234,88,12,0.22)', flexShrink: 0,
-              }}>
-                M
-              </div>
+              <img
+                src="/logo.png"
+                alt="Metro Cardz"
+                style={{ height: 36, width: 'auto', objectFit: 'contain', flexShrink: 0 }}
+              />
               <div>
                 <div style={{ fontWeight: 800, fontSize: 15, letterSpacing: '-0.025em', color: T.text }}>Metro Cardz GO</div>
                 <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.textLight, marginTop: 1 }}>Exclusive Deals</div>

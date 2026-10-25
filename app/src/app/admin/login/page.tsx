@@ -100,25 +100,11 @@ export default function AdminLoginPage() {
         {/* Brand */}
         <div style={{ position: 'relative', zIndex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 48 }}>
-            <div
-              style={{
-                width: 42,
-                height: 42,
-                borderRadius: 12,
-                background: 'linear-gradient(135deg, #F97316 0%, #EA580C 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 6px 20px rgba(249,115,22,0.35)',
-              }}
-            >
-              <span
-                className="material-symbols-outlined"
-                style={{ color: '#fff', fontSize: 22, fontVariationSettings: "'FILL' 1" }}
-              >
-                storefront
-              </span>
-            </div>
+            <img
+              src="/logo.png"
+              alt="Metro Cardz"
+              style={{ height: 42, width: 'auto', objectFit: 'contain', flexShrink: 0 }}
+            />
             <div>
               <div style={{ color: '#fff', fontWeight: 800, fontSize: 16 }}>Metro Cardz GO</div>
               <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>Admin Platform</div>
@@ -203,26 +189,11 @@ export default function AdminLoginPage() {
         <div style={{ width: '100%', maxWidth: 400 }}>
           {/* Mobile brand (hidden on desktop) */}
           <div className="go-admin-mobile-brand" style={{ textAlign: 'center', marginBottom: 32 }}>
-            <div
-              style={{
-                width: 52,
-                height: 52,
-                borderRadius: 14,
-                margin: '0 auto 12px',
-                background: 'linear-gradient(135deg, #F97316 0%, #EA580C 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 6px 20px rgba(249,115,22,0.3)',
-              }}
-            >
-              <span
-                className="material-symbols-outlined"
-                style={{ color: '#fff', fontSize: 26, fontVariationSettings: "'FILL' 1" }}
-              >
-                storefront
-              </span>
-            </div>
+            <img
+              src="/logo.png"
+              alt="Metro Cardz"
+              style={{ height: 48, width: 'auto', objectFit: 'contain', margin: '0 auto 12px', display: 'block' }}
+            />
             <h1 style={{ fontSize: 20, fontWeight: 800, color: '#111827', margin: '0 0 4px' }}>Metro Cardz GO</h1>
             <p style={{ fontSize: 13, color: '#6B7280', margin: 0 }}>Admin Platform</p>
           </div>
@@ -313,7 +284,7 @@ export default function AdminLoginPage() {
                     required
                     disabled={loading}
                     autoComplete="username"
-                    placeholder="9029999614 or metrocouponsys@gmail.com"
+                    placeholder="Enter email or mobile number"
                     style={{
                       width: '100%',
                       height: 48,

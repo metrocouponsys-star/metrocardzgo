@@ -197,6 +197,7 @@ model OfferTemplate {
   merchantId          String    @map("merchant_id") @db.VarChar(36)
   title               String    @db.VarChar(500)
   description         String?   @db.Text
+  imageUrl            String?   @map("image_url") @db.Text
   offerType           OfferType @map("offer_type")
   value               Decimal?  @default(0)
   active              Boolean?  @default(true)
@@ -477,6 +478,7 @@ model RewardCatalog {
   merchantId        String   @map("merchant_id") @db.VarChar(36)
   name              String   @db.VarChar(500)
   description       String?  @db.Text
+  imageUrl          String?  @map("image_url") @db.Text
   pointsCost        Decimal  @map("points_cost")
   quantityAvailable Int?     @map("quantity_available")
   isActive          Boolean  @default(true) @map("is_active")

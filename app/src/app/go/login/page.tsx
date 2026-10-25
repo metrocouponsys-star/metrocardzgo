@@ -215,7 +215,7 @@ export default function GoLoginPage() {
   const [activePass, setActivePass] = useState<any | null>(null);
 
   // Admin flow
-  const [adminIdentifier, setAdminIdentifier] = useState('9029999614');
+  const [adminIdentifier, setAdminIdentifier] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
   const [adminLoading, setAdminLoading] = useState(false);
   const [adminError, setAdminError] = useState('');
@@ -412,13 +412,11 @@ export default function GoLoginPage() {
       {/* Header */}
       <header style={{ padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `1px solid ${T.border}` }}>
         <Link href="/go" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }} aria-label="Metro Cardz GO home">
-          <div style={{
-            width: 38, height: 38, borderRadius: T.radMd,
-            background: 'linear-gradient(135deg, #FF8A3D 0%, #C2410C 100%)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#fff', fontWeight: 800, fontSize: 16,
-            boxShadow: '0 4px 12px rgba(234,88,12,0.22)', flexShrink: 0,
-          }}>M</div>
+          <img
+            src="/logo.png"
+            alt="Metro Cardz"
+            style={{ height: 36, width: 'auto', objectFit: 'contain', flexShrink: 0 }}
+          />
           <div>
             <div style={{ fontWeight: 800, fontSize: 15, color: T.text, letterSpacing: '-0.02em' }}>Metro Cardz GO</div>
             <div style={{ fontSize: 10, color: T.textLight, letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 1 }}>Deals Platform</div>
@@ -791,26 +789,11 @@ export default function GoLoginPage() {
               borderRadius: T.radXl, padding: '24px 20px', boxShadow: T.shadowMd,
               animation: 'login-fadeIn 0.25s ease',
             }}>
-              {/* Warning banner */}
-              <div style={{
-                background: T.errorBg, border: `1px solid ${T.errorBorder}`,
-                borderRadius: T.radMd, padding: '12px 14px', marginBottom: 20,
-                display: 'flex', alignItems: 'flex-start', gap: 10,
-              }}>
-                <IconAdmin size={20} color={T.error} />
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#991B1B' }}>GO Deals Admin Authentication</div>
-                  <div style={{ fontSize: 11, color: '#7F1D1D', marginTop: 2 }}>
-                    Authorized: 9029999614 / metrocouponsys@gmail.com
-                  </div>
-                </div>
-              </div>
-
               <form onSubmit={handleAdminLogin} style={{ display: 'flex', flexDirection: 'column', gap: 16 }} noValidate>
                 <InputField
                   id="admin-identifier"
                   label="Email or Mobile Number"
-                  placeholder="9029999614 or metrocouponsys@gmail.com"
+                  placeholder="Enter email or mobile number"
                   value={adminIdentifier}
                   onChange={(v) => { setAdminIdentifier(v); setAdminError(''); }}
                   leftIcon={<IconPerson size={16} color={T.textLight} />}

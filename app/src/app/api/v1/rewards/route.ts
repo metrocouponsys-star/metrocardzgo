@@ -80,6 +80,7 @@ export async function POST(request: NextRequest) {
       merchantId,
       name: body.name,
       description: body.description ?? '',
+      imageUrl: body.image_url ?? null,
       pointsCost: body.points_cost,
       quantityAvailable: body.quantity_available ?? null,
       isActive: body.is_active ?? true,

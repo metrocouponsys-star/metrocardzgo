@@ -72,16 +72,23 @@ export default function AdminDashboardPage() {
       <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-accent/[0.07] via-surface to-secondary/[0.05] p-6 md:p-8 border border-accent/[0.12]">
         <div className="absolute top-0 right-0 w-48 h-48 rounded-full opacity-25" style={{ background: 'radial-gradient(circle, #FF6B35 0%, transparent 70%)', filter: 'blur(50px)' }} />
         <div className="absolute bottom-0 left-1/4 w-32 h-32 rounded-full opacity-15" style={{ background: 'radial-gradient(circle, #00D4AA 0%, transparent 70%)', filter: 'blur(40px)' }} />
-        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center">
-                <span className="material-symbols-outlined text-accent text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>admin_panel_settings</span>
+        <div className="relative z-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex items-center gap-4">
+            <img
+              src="/logo.png"
+              alt="Metro Cardz"
+              className="h-12 w-auto object-contain shrink-0 rounded-lg shadow-sm bg-white p-1"
+            />
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-6 h-6 rounded-md bg-accent/10 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-accent text-[15px]" style={{ fontVariationSettings: "'FILL' 1" }}>admin_panel_settings</span>
+                </div>
+                <p className="text-accent text-[12px] font-bold tracking-wide uppercase">Super Admin Portal</p>
               </div>
-              <p className="text-accent text-[13px] font-bold tracking-wide">Super Admin</p>
+              <h1 className="text-2xl md:text-3xl font-extrabold text-on-surface font-display tracking-tight mb-0.5">Platform Overview</h1>
+              <p className="text-on-surface-variant text-[13px]">Metro Cardz Loyalty Management System</p>
             </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold text-on-surface font-display tracking-tight mb-1">Platform Overview</h1>
-            <p className="text-on-surface-variant text-[14px]">Metro Cardz — Admin Control Panel</p>
           </div>
         </div>
       </section>
@@ -108,8 +115,8 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* Stats Cards Grid */}
-      <section className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+      {/* Stats Cards Grid (Responsive 5-card layout without awkward stretching) */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5">
         {loading ? (
           Array.from({ length: 5 }).map((_, i) => <StatCardSkeleton key={i} />)
         ) : stats ? (

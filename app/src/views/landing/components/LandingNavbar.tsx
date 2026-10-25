@@ -78,24 +78,12 @@ export const LandingNavbar: React.FC = () => {
           }}
           className="flex items-center gap-2.5 group shrink-0 select-none py-1"
         >
-          <div
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: 11,
-              background: 'linear-gradient(135deg, #FFD700 0%, #D4AF37 50%, #C9A227 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#0C0C0E',
-              fontWeight: 900,
-              fontSize: 18,
-              fontFamily: 'Poppins, sans-serif',
-              boxShadow: '0 4px 16px rgba(212,175,55,0.3)',
-            }}
-          >
-            M
-          </div>
+          <img
+            src="/logo.png"
+            alt="Metro Cardz"
+            style={{ height: 38, width: 'auto', objectFit: 'contain' }}
+            className="rounded shrink-0"
+          />
           <div className="flex items-baseline">
             <span className="font-poppins font-black tracking-tight text-lg sm:text-xl text-white">
               Metro

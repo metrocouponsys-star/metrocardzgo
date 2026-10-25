@@ -25,6 +25,7 @@ async function handleUpdate(request: NextRequest, { params }: Params) {
     data: {
       name: body.name !== undefined ? body.name : existing.name,
       description: body.description !== undefined ? body.description : existing.description,
+      imageUrl: body.image_url !== undefined ? body.image_url : (existing as any).imageUrl,
       pointsCost: body.points_cost !== undefined ? body.points_cost : existing.pointsCost,
       quantityAvailable: body.quantity_available !== undefined ? body.quantity_available : existing.quantityAvailable,
       isActive: body.is_active !== undefined ? body.is_active : existing.isActive,

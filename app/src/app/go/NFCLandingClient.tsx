@@ -304,9 +304,11 @@ function AuthScreen({ onSuccess }: { onSuccess: (name: string) => void }) {
         {/* Branding & NFC Pulse */}
         <div style={{ textAlign: 'center', marginBottom: '28px' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-            <div style={{ width: '44px', height: '44px', background: `linear-gradient(135deg, ${T.primary}, ${T.primaryDark})`, borderRadius: T.radMd, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: T.glowOrange }}>
-              <span style={{ color: '#FFFFFF', fontWeight: 800, fontSize: '20px', fontFamily: '"Syne", sans-serif' }}>M</span>
-            </div>
+            <img
+              src="/logo.png"
+              alt="Metro Cardz"
+              style={{ height: '44px', width: 'auto', objectFit: 'contain' }}
+            />
             <span style={{ fontFamily: '"Syne", sans-serif', fontSize: '24px', fontWeight: 800, color: T.text, letterSpacing: '-0.02em' }}>Metro Cardz</span>
           </div>
 
@@ -556,9 +558,11 @@ export function NFCLandingClient({
       <header style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(8px)', borderBottom: `1px solid ${T.border}`, boxShadow: T.shadowSm }}>
         <div style={{ maxWidth: '480px', margin: '0 auto', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: T.radSm, background: `linear-gradient(135deg, ${T.primary}, ${T.primaryDark})`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: '16px', fontFamily: '"Syne", sans-serif', boxShadow: T.glowOrange }}>
-              M
-            </div>
+            <img
+              src="/logo.png"
+              alt="Metro Cardz"
+              style={{ height: '36px', width: 'auto', objectFit: 'contain', flexShrink: 0 }}
+            />
             <div>
               <div style={{ fontFamily: '"Syne", sans-serif', fontSize: '17px', fontWeight: 800, color: T.text, lineHeight: 1.1 }}>Metro Cardz</div>
               <div style={{ fontSize: '10px', letterSpacing: '0.08em', color: T.primary, fontWeight: 700, textTransform: 'uppercase' }}>GOLD MEMBER PRIVILEGES</div>
