@@ -835,7 +835,8 @@ export async function getAdminAllMembers(params?: { search?: string; merchant_id
   if (params?.status) q.set('status', params.status);
   if (params?.limit) q.set('limit', String(params.limit));
   if (params?.offset) q.set('offset', String(params.offset));
-  return get(`/admin/members?${q.toString()}`);
+  const res: any = await get(`/admin/members?${q.toString()}`);
+  return Array.isArray(res) ? res : (res?.members ?? []);
 }
 export async function getAdminReportStats(params?: { date_from?: string; date_to?: string }): Promise<any> {
   const q = new URLSearchParams();

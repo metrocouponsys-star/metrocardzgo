@@ -28,7 +28,7 @@ export default function AdminMembersPage() {
     setLoading(true);
     setError(null);
     api.getAdminAllMembers({ search, merchant_id: merchantFilter, status: statusFilter, limit: 200 })
-      .then((data) => setMembers(Array.isArray(data) ? data : []))
+      .then((data: any) => setMembers(Array.isArray(data) ? data : (data?.members ?? [])))
       .catch((err) => {
         console.error('[AdminMembersPage] Failed to load members:', err);
         setMembers([]);
